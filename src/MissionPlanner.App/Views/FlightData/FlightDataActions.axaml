@@ -1,0 +1,102 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             x:Class="MissionPlanner.App.Views.FlightData.FlightDataActions"
+             x:DataType="vm:FlightDataViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="Button">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="MinHeight" Value="32" />
+    </Style>
+    <Style Selector="ComboBox, NumericUpDown">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="MinHeight" Value="32" />
+    </Style>
+    <Style Selector="TextBlock.caption">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+      <Setter Property="Margin" Value="2,0,0,-2" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="*,Auto">
+    <ScrollViewer>
+      <StackPanel Margin="8" Spacing="8" IsEnabled="{Binding IsConnected}">
+
+        <!-- the big four -->
+        <UniformGrid Columns="4" ColumnSpacing="6">
+          <Button Content="{Binding ArmText}" Classes.danger="{Binding IsArmed}" Classes.accent="{Binding !IsArmed}"
+                  Command="{Binding ArmDisarmCommand}" IsEnabled="{Binding CanCommand}" ToolTip.Tip="Arm or disarm the motors" />
+          <Button Content="Auto" Classes="accent" Command="{Binding AutoCommand}" IsEnabled="{Binding CanCommand}" />
+          <Button Content="Loiter" Classes="accent" Command="{Binding LoiterCommand}" IsEnabled="{Binding CanCommand}" />
+          <Button Content="RTL" Classes="accent" Command="{Binding RtlCommand}" IsEnabled="{Binding CanCommand}" />
+        </UniformGrid>
+
+        <Grid ColumnDefinitions="*,120" ColumnSpacing="6" RowDefinitions="Auto,Auto">
+          <TextBlock Classes="caption" Text="Flight mode" />
+          <ComboBox Grid.Row="1" ItemsSource="{Binding Modes}" SelectedItem="{Binding SelectedMode}"
+                    PlaceholderText="No modes for this firmware" x:Name="ModeCombo" />
+          <Button Grid.Row="1" Grid.Column="1" Content="Set Mode" Classes="accent" Command="{Binding SetModeCommand}"
+                  IsEnabled="{Binding CanCommand}" />
+        </Grid>
+
+        <Grid ColumnDefinitions="*,120" ColumnSpacing="6" RowDefinitions="Auto,Auto">
+          <TextBlock Classes="caption" Text="Waypoint" />
+          <ComboBox Grid.Row="1" ItemsSource="{Binding WaypointNumbers}" SelectedIndex="{Binding SelectedWaypoint}" />
+          <Button Grid.Row="1" Grid.Column="1" Content="Set WP" Classes="accent" Command="{Binding SetWaypointCommand}"
+                  IsEnabled="{Binding CanCommand}" ToolTip.Tip="Fly to this mission item next" />
+        </Grid>
+
+        <Grid ColumnDefinitions="*,120" ColumnSpacing="6" RowDefinitions="Auto,Auto">
+          <TextBlock Classes="caption" Text="Action" />
+          <ComboBox Grid.Row="1" ItemsSource="{Binding DoActions}" SelectedItem="{Binding SelectedDoAction}" />
+          <Button Grid.Row="1" Grid.Column="1" Content="Do Action" Classes="accent" Command="{Binding DoActionCommand}"
+                  IsEnabled="{Binding CanCommand}" />
+        </Grid>
+
+        <Grid ColumnDefinitions="*,120" ColumnSpacing="6" RowDefinitions="Auto,Auto">
+          <TextBlock Classes="caption" Text="{Binding AltitudeUnit, StringFormat='Altitude ({0})'}" />
+          <NumericUpDown Grid.Row="1" Value="{Binding NewAltitude}" Minimum="-1000" Maximum="100000" Increment="5"
+                         FormatString="0.#" />
+          <Button Grid.Row="1" Grid.Column="1" Content="Change Alt" Classes="accent" Command="{Binding ChangeAltitudeCommand}"
+                  IsEnabled="{Binding CanCommand}" ToolTip.Tip="New altitude for the current target" />
+        </Grid>
+
+        <Grid ColumnDefinitions="*,120" ColumnSpacing="6" RowDefinitions="Auto,Auto">
+          <TextBlock Classes="caption" Text="{Binding SpeedUnit, StringFormat='Speed ({0})'}" />
+          <NumericUpDown Grid.Row="1" Value="{Binding NewSpeed}" Minimum="0" Maximum="1000" Increment="1" FormatString="0.#" />
+          <Button Grid.Row="1" Grid.Column="1" Content="Change Speed" Classes="accent" Command="{Binding ChangeSpeedCommand}"
+                  IsEnabled="{Binding CanCommand}" />
+        </Grid>
+
+        <UniformGrid Columns="2" ColumnSpacing="6">
+          <Button Content="Restart Mission" Command="{Binding RestartMissionCommand}" IsEnabled="{Binding CanCommand}"
+                  ToolTip.Tip="Start the mission again from the first item" />
+          <ToggleButton Content="Set Home Alt" IsChecked="{Binding HomeAltOffsetActive, Mode=OneWay}"
+                        Command="{Binding ToggleHomeAltCommand}" HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center" MinHeight="32"
+                        ToolTip.Tip="Show altitude above sea level instead of above home" />
+        </UniformGrid>
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- outcome of the last command -->
+    <Border Grid.Row="1" Background="{StaticResource Bg0}" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0"
+            Padding="10,6">
+      <Panel>
+        <TextBlock Text="Connect to a vehicle to send commands." Classes="muted" FontSize="12"
+                   IsVisible="{Binding !IsConnected}" />
+        <TextBlock Text="{Binding ActionStatus}" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding IsConnected}"
+                   Foreground="{StaticResource Text}" Classes.err="{Binding ActionStatusIsError}">
+          <TextBlock.Styles>
+            <Style Selector="TextBlock.err">
+              <Setter Property="Foreground" Value="{StaticResource Danger}" />
+            </Style>
+          </TextBlock.Styles>
+        </TextBlock>
+      </Panel>
+    </Border>
+  </Grid>
+</UserControl>

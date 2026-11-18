@@ -2,30 +2,184 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
              xmlns:controls="using:MissionPlanner.App.Controls"
+             xmlns:views="using:MissionPlanner.App.Views.FlightData"
              x:Class="MissionPlanner.App.Views.FlightData.FlightDataView"
              x:DataType="vm:FlightDataViewModel">
 
-  <!-- skeleton: HUD and tabs on the left, map on the right, as in Mission Planner -->
-  <Grid ColumnDefinitions="480,4,*">
-    <Grid RowDefinitions="360,*" Background="{StaticResource Bg1}">
-      <controls:Hud x:Name="HudControl" Model="{Binding Hud}" />
-      <TabControl Grid.Row="1" Padding="6">
+  <UserControl.Styles>
+    <!-- compact tab headers so all six fit in the left column -->
+    <Style Selector="TabControl.fd">
+      <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="TabControl.fd > TabItem">
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="MinHeight" Value="34" />
+      <Setter Property="Padding" Value="8,0" />
+      <Setter Property="Margin" Value="0" />
+    </Style>
+
+    <!-- translucent panels over the map -->
+    <Style Selector="Border.overlay">
+      <Setter Property="Background" Value="#d0101317" />
+      <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style Selector="Button.mapbtn">
+      <Setter Property="Width" Value="30" />
+      <Setter Property="Height" Value="30" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="FontSize" Value="17" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Background" Value="#e0161a1f" />
+    </Style>
+
+    <Style Selector="Border.toast">
+      <Setter Property="Background" Value="#f0161a1f" />
+      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+    </Style>
+    <Style Selector="Border.toast.error">
+      <Setter Property="BorderBrush" Value="{StaticResource Danger}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="480" MinWidth="320" MaxWidth="960" />
+      <ColumnDefinition Width="5" />
+      <ColumnDefinition Width="*" MinWidth="300" />
+    </Grid.ColumnDefinitions>
+
+    <!-- left: HUD over the telemetry tabs -->
+    <Grid x:Name="LeftColumn" RowDefinitions="Auto,*" Background="{StaticResource Bg1}">
+      <Border x:Name="HudHost" Height="360" Background="#0b0d10">
+        <controls:Hud x:Name="HudControl" Model="{Binding Hud}" />
+      </Border>
+
+      <TabControl Grid.Row="1" Classes="fd" SelectedIndex="{Binding SelectedTabIndex}">
         <TabItem Header="Quick">
-          <TextBlock Classes="muted" Margin="8" Text="Telemetry tabs arrive with the Flight Data page." />
+          <views:FlightDataQuick />
+        </TabItem>
+        <TabItem Header="Actions">
+          <views:FlightDataActions />
+        </TabItem>
+        <TabItem Header="Messages">
+          <views:FlightDataMessages />
+        </TabItem>
+        <TabItem Header="Status">
+          <views:FlightDataStatus />
+        </TabItem>
+        <TabItem Header="Telemetry Logs">
+          <ContentControl Content="{Binding Tlogs}" Margin="6" />
+        </TabItem>
+        <TabItem Header="DataFlash Logs">
+          <StackPanel Margin="14" Spacing="10" HorizontalAlignment="Stretch">
+            <TextBlock Classes="muted" TextWrapping="Wrap"
+                       Text="Logs recorded on the autopilot's SD card. Download them over the MAVLink link, or open one you already have." />
+            <Button Classes="accent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Height="40"
+                    Content="Download DataFlash Log Via Mavlink" Command="{Binding OpenLogDownloadCommand}" />
+            <Button Classes="accent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Height="40"
+                    Content="Review a Log" Command="{Binding OpenLogBrowserCommand}" />
+          </StackPanel>
         </TabItem>
       </TabControl>
     </Grid>
 
     <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="{StaticResource Line}" />
 
-    <Panel Grid.Column="2">
-      <controls:MapView x:Name="Map"
-                        Provider="{Binding SelectedMapProvider.Provider}"
-                        CenterLat="{Binding CenterLat}"
-                        CenterLng="{Binding CenterLng}"
-                        Zoom="{Binding Zoom}" />
-      <ComboBox Margin="10" MinWidth="200" HorizontalAlignment="Right" VerticalAlignment="Top"
-                ItemsSource="{Binding MapProviders}" SelectedItem="{Binding SelectedMapProvider}" />
-    </Panel>
+    <!-- right: map with its overlays, thin status bar underneath -->
+    <Grid Grid.Column="2" RowDefinitions="*,Auto">
+      <Panel ClipToBounds="True">
+        <controls:MapView x:Name="Map"
+                          Provider="{Binding SelectedMapProvider.Provider}"
+                          CenterLat="{Binding CenterLat}"
+                          CenterLng="{Binding CenterLng}"
+                          Zoom="{Binding Zoom}" />
+
+        <!-- provider, top right; zoom slider on the right edge below it -->
+        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10" Spacing="10">
+          <ComboBox MinWidth="200" HorizontalAlignment="Right" ToolTip.Tip="Map type"
+                    ItemsSource="{Binding MapProviders}" SelectedItem="{Binding SelectedMapProvider}" />
+          <Border Classes="overlay" HorizontalAlignment="Right" Padding="3">
+            <StackPanel Spacing="4">
+              <Button Classes="mapbtn" Content="+" Command="{Binding ZoomInCommand}" ToolTip.Tip="Zoom in" />
+              <Slider Orientation="Vertical" Height="180" HorizontalAlignment="Center"
+                      Minimum="{Binding MinZoom}" Maximum="{Binding MaxZoom}" Value="{Binding ZoomValue}"
+                      TickFrequency="1" IsSnapToTickEnabled="True" SmallChange="1" LargeChange="2"
+                      ToolTip.Tip="Zoom" />
+              <TextBlock Text="{Binding Zoom}" HorizontalAlignment="Center" FontSize="11" Classes="muted" />
+              <Button Classes="mapbtn" Content="−" Command="{Binding ZoomOutCommand}" ToolTip.Tip="Zoom out" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- command outcomes -->
+        <Border Classes="overlay toast" Classes.error="{Binding ToastIsError}" IsVisible="{Binding IsToastVisible}"
+                HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,12,0,0" Padding="14,8"
+                MaxWidth="560" BorderThickness="0,0,0,2">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="{Binding ToastText}" TextWrapping="Wrap" VerticalAlignment="Center" FontWeight="SemiBold" />
+            <Button Grid.Column="1" Content="✕" Padding="6,0" Margin="10,0,0,0" Background="Transparent"
+                    VerticalAlignment="Center" Command="{Binding DismissToastCommand}" />
+          </Grid>
+        </Border>
+
+        <!-- heading legend, then the tuning graph across the bottom -->
+        <DockPanel LastChildFill="False">
+          <Border DockPanel.Dock="Bottom" Classes="overlay" IsVisible="{Binding ShowTuning}" Height="260"
+                  Margin="8,0,8,8" Padding="4" CornerRadius="8">
+            <ContentControl Content="{Binding Tuning}" />
+          </Border>
+          <Border DockPanel.Dock="Bottom" Classes="overlay" HorizontalAlignment="Left" Margin="8,0,0,8" Padding="10,6">
+            <StackPanel Spacing="3">
+              <StackPanel.Styles>
+                <Style Selector="TextBlock">
+                  <Setter Property="FontSize" Value="11.5" />
+                  <Setter Property="VerticalAlignment" Value="Center" />
+                </Style>
+                <Style Selector="Border.swatch">
+                  <Setter Property="Width" Value="18" />
+                  <Setter Property="Height" Value="3" />
+                  <Setter Property="CornerRadius" Value="1.5" />
+                  <Setter Property="VerticalAlignment" Value="Center" />
+                  <Setter Property="Margin" Value="0,0,8,0" />
+                </Style>
+              </StackPanel.Styles>
+              <StackPanel Orientation="Horizontal">
+                <Border Classes="swatch" Background="#ff3b30" />
+                <TextBlock Text="Current Heading" />
+              </StackPanel>
+              <StackPanel Orientation="Horizontal">
+                <Border Classes="swatch" Background="#ff8000" />
+                <TextBlock Text="Direct to current WP" />
+              </StackPanel>
+              <StackPanel Orientation="Horizontal">
+                <Border Classes="swatch" Background="#2ecc40" />
+                <TextBlock Text="Target Heading" />
+              </StackPanel>
+              <StackPanel Orientation="Horizontal">
+                <Border Classes="swatch" Background="Black" BorderBrush="#9aa4b0" BorderThickness="0.5" />
+                <TextBlock Text="GPS Track" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </DockPanel>
+      </Panel>
+
+      <!-- under the map: pointer coordinates, tuning and auto pan -->
+      <Border Grid.Row="1" Background="{StaticResource Bg0}" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0"
+              Padding="10,3">
+        <Grid ColumnDefinitions="*,Auto,Auto">
+          <TextBlock Text="{Binding PointerText}" VerticalAlignment="Center" FontSize="12" Classes="muted" />
+          <CheckBox Grid.Column="1" Content="Tuning" IsChecked="{Binding ShowTuning}" Margin="0,0,16,0" MinHeight="26"
+                    FontSize="12" ToolTip.Tip="Graph telemetry over the map" />
+          <CheckBox Grid.Column="2" Content="Auto Pan" IsChecked="{Binding AutoPan}" MinHeight="26" FontSize="12"
+                    ToolTip.Tip="Keep the vehicle in the middle of the map" />
+        </Grid>
+      </Border>
+    </Grid>
   </Grid>
 </UserControl>
