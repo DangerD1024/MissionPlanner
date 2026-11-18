@@ -35,6 +35,9 @@ public static class AppStartup
             Log.Error("settings", ex);
         }
 
+        // saved telemetry rates and display units, as the WinForms app applies them at start
+        ViewModels.ConfigScreens.PlannerSettings.ApplyStored();
+
         // the libraries call this from any thread and wait for the answer
         CustomMessageBox.ShowEvent += ShowMessageBox;
 

@@ -54,7 +54,9 @@ public sealed partial class FlightDataViewModel : PageViewModel
     {
         Services = services;
         MapProviders = MapTiles.CommonProviders.Select(p => new MapProviderOption(p.Name, p)).ToArray();
-        _selectedMapProvider = MapProviders.FirstOrDefault(p => p.Name == Settings.Instance["MapType"]) ?? MapProviders[0];
+        _selectedMapProvider = MapProviders.FirstOrDefault(p => p.Name == Settings.Instance["MapType"])
+                               ?? MapProviders.FirstOrDefault(p => p.Name == Settings.Instance[ConfigScreens.PlannerSettingsViewModel.MapProviderKey])
+                               ?? MapProviders[0];
         Tlogs = new TlogPlayerViewModel(services);
         Tuning = new TuningGraphViewModel(services);
 

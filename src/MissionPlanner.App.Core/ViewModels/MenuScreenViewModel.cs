@@ -75,9 +75,22 @@ public abstract partial class MenuScreenViewModel : PageViewModel
             return;
         }
 
-        Content?.OnHidden();
         Content = newValue?.GetPage();
-        Content?.OnShown();
+        if (_visible)
+            Activate(Content);
+    }
+
+    private bool _visible;
+    private PageViewModel? _active;
+
+    /// <summary>Shows/hides pages exactly once per change, however the selection arrived.</summary>
+    private void Activate(PageViewModel? page)
+    {
+        if (ReferenceEquals(page, _active))
+            return;
+        _active?.OnHidden();
+        _active = page;
+        _active?.OnShown();
     }
 
     protected void Add(MenuItemViewModel item) => Items.Add(item);
@@ -107,10 +120,15 @@ public abstract partial class MenuScreenViewModel : PageViewModel
 
     public override void OnShown()
     {
+        _visible = true;
         UpdateVisibility();
         SelectedItem ??= Items.FirstOrDefault(i => i.IsPage && i.IsVisible);
-        Content?.OnShown();
+        Activate(Content);
     }
 
-    public override void OnHidden() => Content?.OnHidden();
+    public override void OnHidden()
+    {
+        _visible = false;
+        Activate(null);
+    }
 }

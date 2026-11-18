@@ -41,7 +41,10 @@ public static class ParamMetadata
 {
     private static readonly ILog Log = LogManager.GetLogger(typeof(ParamMetadata));
     private static readonly object Gate = new();
-    private static readonly Dictionary<string, Dictionary<string, ParamMeta>> Indexes = new();
+    private static readonly Dictionary<string, Indexed> Indexes = new();
+
+    /// <summary>An index and the file it came from, so a newer download replaces it.</summary>
+    private sealed record Indexed(Dictionary<string, ParamMeta> Index, string? Source, DateTime SourceTime);
 
     /// <summary>Key of the pdef file set for a firmware ("ArduPlane", "ArduCopter", "Rover"...).</summary>
     public static string VehicleKey(Firmwares firmware) => firmware switch
@@ -69,7 +72,7 @@ public static class ParamMetadata
     public static IReadOnlyDictionary<string, ParamMeta>? For(Firmwares firmware, Version? version = null)
     {
         lock (Gate)
-            return Indexes.GetValueOrDefault(CacheKey(firmware, version));
+            return Indexes.GetValueOrDefault(CacheKey(firmware, version))?.Index;
     }
 
     /// <summary>
@@ -82,8 +85,8 @@ public static class ParamMetadata
         var key = CacheKey(firmware, version);
         lock (Gate)
         {
-            if (Indexes.TryGetValue(key, out var ready))
-                return ready;
+            if (Indexes.TryGetValue(key, out var ready) && IsCurrent(ready))
+                return ready.Index;
         }
 
         if (download)
@@ -100,16 +103,26 @@ public static class ParamMetadata
             }
         }
 
-        var index = await Task.Run(() => Build(firmware, version)).ConfigureAwait(false);
+        var built = await Task.Run(() => Build(firmware, version)).ConfigureAwait(false);
         lock (Gate)
-            Indexes[key] = index;
-        return index;
+            Indexes[key] = built;
+        return built.Index;
     }
+
+    /// <summary>Forgets every index, e.g. after the documentation files were downloaded again.</summary>
+    public static void Invalidate()
+    {
+        lock (Gate)
+            Indexes.Clear();
+    }
+
+    private static bool IsCurrent(Indexed indexed) =>
+        indexed.Source == null || !File.Exists(indexed.Source) || File.GetLastWriteTimeUtc(indexed.Source) == indexed.SourceTime;
 
     private static string CacheKey(Firmwares firmware, Version? version) =>
         VehicleKey(firmware) + "|" + (version?.ToString(3) ?? "");
 
-    private static Dictionary<string, ParamMeta> Build(Firmwares firmware, Version? version)
+    private static Indexed Build(Firmwares firmware, Version? version)
     {
         var dir = Settings.GetDataDirectory();
         var candidates = new List<string>();
@@ -125,7 +138,7 @@ public static class ParamMetadata
                 if (index.Count > 0)
                 {
                     Log.Info($"parameter metadata: {index.Count} from {file}");
-                    return index;
+                    return new Indexed(index, file, File.GetLastWriteTimeUtc(file));
                 }
             }
             catch (Exception ex)
@@ -139,7 +152,10 @@ public static class ParamMetadata
         {
             try
             {
-                return ParseLegacy(legacy, firmware);
+                // the generic file may still arrive; leave no source so the next connect looks again
+                return new Indexed(ParseLegacy(legacy, firmware), null, default) is { Index.Count: > 0 } found
+                    ? found with { Source = Path.Combine(dir, VehicleKey(firmware) + ".apm.pdef.xml") }
+                    : new Indexed(new Dictionary<string, ParamMeta>(StringComparer.Ordinal), null, default);
             }
             catch (Exception ex)
             {
@@ -147,7 +163,7 @@ public static class ParamMetadata
             }
         }
 
-        return new Dictionary<string, ParamMeta>(StringComparer.Ordinal);
+        return new Indexed(new Dictionary<string, ParamMeta>(StringComparer.Ordinal), null, default);
     }
 
     /// <summary>Parses apm.pdef.xml: vehicle and library parameters alike.</summary>

@@ -69,7 +69,9 @@ public sealed partial class FlightPlanViewModel : PageViewModel
 
         MapProviders = MapTiles.CommonProviders.Select(p => new PlanMapProvider(p.Name, p)).ToArray();
         var savedProvider = ReadSetting(KeyMapProvider);
-        _selectedMapProvider = MapProviders.FirstOrDefault(p => p.Name == savedProvider) ?? MapProviders[0];
+        _selectedMapProvider = MapProviders.FirstOrDefault(p => p.Name == savedProvider)
+                               ?? MapProviders.FirstOrDefault(p => p.Name == Settings.Instance[ConfigScreens.PlannerSettingsViewModel.MapProviderKey])
+                               ?? MapProviders[0];
 
         _catalog = MavCmdCatalog.Load(Firmwares.ArduCopter2);
         LoadDefaults();
