@@ -58,7 +58,24 @@ public sealed partial class ParamService : ObservableObject
     public double? Get(string name)
     {
         var p = Session.Vehicle.param[name];
-        return p?.Value;
+        return p == null ? null : Clean(p);
+    }
+
+    /// <summary>
+    /// The value as the autopilot holds it. The library decodes REAL32 through double, so an
+    /// integer parameter of 57 can read back as 56.99999999999999 and fail equality with its
+    /// documented values; integers are rounded and floats reduced to float precision.
+    /// </summary>
+    public static double Clean(MAVLink.MAVLinkParam p)
+    {
+        var v = p.Value;
+        if (double.IsNaN(v) || double.IsInfinity(v))
+            return v;
+        return p.TypeAP switch
+        {
+            MAVLink.MAV_PARAM_TYPE.REAL32 or MAVLink.MAV_PARAM_TYPE.REAL64 => (double)(decimal)(float)v,
+            _ => Math.Round(v),
+        };
     }
 
     /// <summary>The first of several aliases (renamed parameters) that exists on this vehicle.</summary>
@@ -90,7 +107,7 @@ public sealed partial class ParamService : ObservableObject
         return list
             .Where(p => p != null)
             .OrderBy(p => p.Name, StringComparer.Ordinal)
-            .Select(p => new ParamEntry(p.Name, p.Value, p.default_value, Meta(p.Name)))
+            .Select(p => new ParamEntry(p.Name, Clean(p), p.default_value, Meta(p.Name)))
             .ToList();
     }
 
