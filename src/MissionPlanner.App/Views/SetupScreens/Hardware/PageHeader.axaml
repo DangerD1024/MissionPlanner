@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
+             x:Class="MissionPlanner.App.Views.SetupScreens.Hardware.PageHeader"
+             x:DataType="hw:HardwarePageViewModel">
+
+  <!-- page title, a one-line description, the status line and the reboot banner -->
+  <StackPanel Spacing="8">
+    <Grid ColumnDefinitions="Auto,*,Auto">
+      <TextBlock Classes="h1" Text="{Binding Title}" VerticalAlignment="Center" />
+      <ProgressBar Grid.Column="2" IsIndeterminate="True" Width="120" VerticalAlignment="Center"
+                   IsVisible="{Binding IsBusy}" />
+    </Grid>
+    <TextBlock Name="DescriptionText" Classes="muted" TextWrapping="Wrap" />
+
+    <Border Background="#33f0b429" BorderBrush="{StaticResource Warn}" BorderThickness="1" CornerRadius="6"
+            Padding="12,8" IsVisible="{Binding RebootRequired}">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock VerticalAlignment="Center" TextWrapping="Wrap"
+                   Text="Reboot required: the changed settings take effect after the autopilot restarts." />
+        <Button Grid.Column="1" Margin="12,0,0,0" Content="Reboot autopilot" Command="{Binding RebootCommand}" />
+      </Grid>
+    </Border>
+
+    <TextBlock Text="{Binding Status}" IsVisible="{Binding HasStatus}" Foreground="{StaticResource Info}"
+               TextWrapping="Wrap" />
+  </StackPanel>
+</UserControl>
