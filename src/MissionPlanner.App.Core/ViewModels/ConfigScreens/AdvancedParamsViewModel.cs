@@ -2,16 +2,11 @@ using MissionPlanner.App.Core.Services;
 
 namespace MissionPlanner.App.Core.ViewModels.ConfigScreens;
 
-/// <summary>Advanced Params: documented advanced-level parameters with friendly editors. STUB - replaced by the page's implementation.</summary>
-public sealed partial class AdvancedParamsViewModel : PageViewModel
+/// <summary>Advanced Params: every documented parameter (standard and advanced) with friendly editors.</summary>
+public sealed partial class AdvancedParamsViewModel : FriendlyParamsViewModel
 {
     public AdvancedParamsViewModel(AppServices services)
-        : base("Advanced Params")
+        : base("Advanced Params", services, includeAdvanced: true)
     {
-        Services = services;
     }
-
-    public AppServices Services { get; }
-
-    public string Arrives => "documented advanced-level parameters with friendly editors";
 }

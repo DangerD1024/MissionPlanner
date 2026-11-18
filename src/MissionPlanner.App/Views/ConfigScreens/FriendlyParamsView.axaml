@@ -1,0 +1,151 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.ConfigScreens"
+             x:Class="MissionPlanner.App.Views.ConfigScreens.FriendlyParamsView"
+             x:DataType="vm:FriendlyParamsViewModel">
+
+  <!-- shared by Standard Params and Advanced Params (the view locator falls back to the base view-model) -->
+
+  <UserControl.KeyBindings>
+    <KeyBinding Gesture="Ctrl+S" Command="{Binding WriteCommand}" />
+  </UserControl.KeyBindings>
+
+  <UserControl.Styles>
+    <Style Selector="Border.param">
+      <Setter Property="Background" Value="{StaticResource Bg1}" />
+      <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="14,10" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+    </Style>
+    <Style Selector="Border.param.modified">
+      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+      <Setter Property="BorderThickness" Value="3,1,1,1" />
+      <Setter Property="Padding" Value="12,10,14,10" />
+    </Style>
+    <Style Selector="Border.badge">
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="5,1" />
+      <Setter Property="Background" Value="{StaticResource Bg3}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.badge TextBlock">
+      <Setter Property="FontSize" Value="10.5" />
+      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+    </Style>
+    <Style Selector="Border.badge.warn TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource Warn}" />
+    </Style>
+    <Style Selector="CheckBox.bit">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="MinHeight" Value="26" />
+      <Setter Property="Padding" Value="4,0,0,0" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,Auto,*">
+    <ProgressBar Height="3" MinHeight="3" CornerRadius="0" IsIndeterminate="True" Background="Transparent"
+                 Foreground="{StaticResource Accent}" IsVisible="{Binding IsBusy}" />
+
+    <!-- header: title, search and the write button -->
+    <Border Grid.Row="1" Background="{StaticResource Bg1}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1"
+            Padding="18,12">
+      <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+        <StackPanel Spacing="2">
+          <TextBlock Classes="h1" Text="{Binding Title}" />
+          <TextBlock Classes="muted" FontSize="12.5" Text="{Binding Intro}" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <TextBox x:Name="SearchBox" Width="280" PlaceholderText="Search name or description" Text="{Binding SearchText}" />
+          <Button Content="Discard edits" Command="{Binding DiscardEditsCommand}" IsVisible="{Binding HasPending}" />
+          <Button Command="{Binding RefreshCommand}" ToolTip.Tip="Read every parameter from the vehicle again">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Path Classes="icon" Data="{StaticResource IconRefresh}" />
+              <TextBlock Text="Refresh Params" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+          <Button Classes="accent" Command="{Binding WriteCommand}" ToolTip.Tip="Write the edited values to the vehicle (Ctrl+S)">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Path Classes="icon" Data="{StaticResource IconUp}" />
+              <TextBlock Text="Write Params" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="14" Margin="0,8,0,0">
+          <TextBlock Text="{Binding Summary}" FontSize="12" FontWeight="SemiBold" />
+          <TextBlock Text="{Binding StatusText}" FontSize="12" Classes="muted" TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <Panel Grid.Row="2">
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <ItemsControl ItemsSource="{Binding VisibleItems}" Margin="18,12,18,4">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <VirtualizingStackPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:FriendlyParamItem">
+              <Border Classes="param" Classes.modified="{Binding IsModified}">
+                <Grid ColumnDefinitions="*,20,360">
+                  <StackPanel Spacing="4" VerticalAlignment="Top">
+                    <WrapPanel Orientation="Horizontal">
+                      <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="14" Margin="0,0,8,0" />
+                      <TextBlock Text="{Binding Name}" Classes="muted" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />
+                      <Border Classes="badge warn" IsVisible="{Binding RebootRequired}" Margin="0,0,6,0">
+                        <TextBlock Text="reboot required" />
+                      </Border>
+                      <Border Classes="badge" IsVisible="{Binding IsReadOnly}" Margin="0,0,6,0">
+                        <TextBlock Text="read only" />
+                      </Border>
+                      <Border Classes="badge warn" IsVisible="{Binding IsOutOfRange}">
+                        <TextBlock Text="outside documented range" />
+                      </Border>
+                    </WrapPanel>
+                    <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Classes="muted" FontSize="12.5" />
+                  </StackPanel>
+
+                  <StackPanel Grid.Column="2" Spacing="4" VerticalAlignment="Top">
+                    <ComboBox IsVisible="{Binding IsOptions}" ItemsSource="{Binding Options}"
+                              SelectedItem="{Binding SelectedOption}" IsEnabled="{Binding IsEditable}"
+                              HorizontalAlignment="Stretch" MaxDropDownHeight="360" />
+                    <NumericUpDown IsVisible="{Binding IsNumber}" Value="{Binding NumericValue}"
+                                   Minimum="{Binding Minimum}" Maximum="{Binding Maximum}"
+                                   Increment="{Binding Increment}" FormatString="0.#######"
+                                   IsEnabled="{Binding IsEditable}" HorizontalAlignment="Stretch" />
+                    <ItemsControl IsVisible="{Binding IsBitmask}" ItemsSource="{Binding Bits}" IsEnabled="{Binding IsEditable}">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <WrapPanel ItemWidth="180" />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:BitOption">
+                          <CheckBox Classes="bit" IsChecked="{Binding IsChecked}" ToolTip.Tip="{Binding Bit, StringFormat='bit {0}'}">
+                            <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                          </CheckBox>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <WrapPanel Orientation="Horizontal">
+                      <TextBlock Text="{Binding Units}" IsVisible="{Binding HasUnits}" Classes="muted" FontSize="11.5" Margin="0,0,10,0" />
+                      <TextBlock Text="{Binding RangeText}" IsVisible="{Binding IsNumber}" Classes="muted" FontSize="11.5" Margin="0,0,10,0" />
+                      <TextBlock Text="{Binding ValueText, StringFormat='value {0}'}" IsVisible="{Binding IsBitmask}"
+                                 Classes="muted" FontSize="11.5" />
+                    </WrapPanel>
+                  </StackPanel>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+
+      <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Classes="muted"
+                 Text="{Binding EmptyText}" IsVisible="{Binding IsEmpty}" />
+    </Panel>
+  </Grid>
+</UserControl>
