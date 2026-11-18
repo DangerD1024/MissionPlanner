@@ -1,0 +1,153 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Video"
+             x:Class="MissionPlanner.App.Views.Video.VideoSettingsView"
+             x:DataType="vm:VideoSettingsViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.label">
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Margin" Value="0,0,0,3" />
+    </Style>
+    <Style Selector="TextBlock.mono">
+      <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, Menlo, DejaVu Sans Mono, monospace" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="TextBox.mono">
+      <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, Menlo, DejaVu Sans Mono, monospace" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="18">
+
+    <!-- heading and whether GStreamer is there at all -->
+    <StackPanel Spacing="4" Margin="0,0,0,12">
+      <TextBlock Classes="h2" Text="Video behind the HUD" />
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Ellipse Width="8" Height="8" VerticalAlignment="Center" Fill="{DynamicResource Accent}" IsVisible="{Binding !GStreamerMissing}" />
+        <Ellipse Width="8" Height="8" VerticalAlignment="Center" Fill="{DynamicResource Danger}" IsVisible="{Binding GStreamerMissing}" />
+        <TextBlock Classes="muted" FontSize="12" Text="{Binding GStreamerStatus}" TextWrapping="Wrap" VerticalAlignment="Center" />
+      </StackPanel>
+      <TextBlock FontSize="12" Foreground="{DynamicResource Danger}" TextWrapping="Wrap" IsVisible="{Binding GStreamerMissing}"
+                 Text="Download GStreamer from gstreamer.freedesktop.org (Windows: the runtime installer, &quot;Complete&quot;; Linux: your distribution's gstreamer1.0-plugins-good/bad/ugly and gstreamer1.0-libav; macOS: the runtime .pkg or Homebrew)." />
+    </StackPanel>
+
+    <Grid Grid.Row="1" ColumnDefinitions="270,14,*">
+
+      <!-- saved sources -->
+      <Border Classes="card" Padding="0">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top" Classes="label" Text="SAVED SOURCES" Margin="12,10,12,6" FontWeight="SemiBold" />
+          <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="10">
+            <Button Content="Add" Command="{Binding AddCommand}" ToolTip.Tip="Add a source" />
+            <Button Content="Duplicate" Command="{Binding DuplicateCommand}" ToolTip.Tip="Copy the selected source" />
+            <Button Command="{Binding DeleteCommand}" ToolTip.Tip="Delete the selected source" Padding="8,4">
+              <Path Classes="icon" Data="{StaticResource IconDelete}" Width="18" Height="18" Stretch="Uniform" />
+            </Button>
+          </StackPanel>
+          <ListBox ItemsSource="{Binding Sources}" SelectedItem="{Binding Selected}" Background="Transparent">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:VideoSourceItem">
+                <StackPanel Spacing="1" Margin="2,2">
+                  <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Text="{Binding Summary}" Classes="muted" FontSize="11.5" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+      </Border>
+
+      <!-- the selected source -->
+      <Border Grid.Column="2" Classes="card" Padding="0">
+        <Panel>
+          <TextBlock Classes="muted" Text="Add a source to get started." HorizontalAlignment="Center" VerticalAlignment="Center"
+                     IsVisible="{Binding !HasSelection}" />
+          <ScrollViewer IsVisible="{Binding HasSelection}">
+            <StackPanel Spacing="14" Margin="16" DataContext="{Binding Selected}" x:DataType="vm:VideoSourceItem">
+              <Grid ColumnDefinitions="*,14,*">
+                <StackPanel>
+                  <TextBlock Classes="label" Text="Name" />
+                  <TextBox Text="{Binding Name}" PlaceholderText="{Binding Summary}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                  <TextBlock Classes="label" Text="Source" />
+                  <ComboBox HorizontalAlignment="Stretch" ItemsSource="{x:Static vm:VideoSettingsViewModel.Types}"
+                            SelectedItem="{Binding Type}" />
+                </StackPanel>
+              </Grid>
+
+              <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{Binding Type.Help}" />
+
+              <StackPanel IsVisible="{Binding ShowUrl}">
+                <TextBlock Classes="label" Text="{Binding UrlLabel}" />
+                <TextBox Text="{Binding Url}" PlaceholderText="{Binding UrlWatermark}" />
+              </StackPanel>
+
+              <StackPanel Orientation="Horizontal" Spacing="14" IsVisible="{Binding ShowPort}">
+                <StackPanel IsVisible="{Binding ShowHost}" Width="300">
+                  <TextBlock Classes="label" Text="TCP server (host or IP address)" />
+                  <TextBox Text="{Binding Host}" PlaceholderText="192.168.1.10" />
+                </StackPanel>
+                <StackPanel Width="170">
+                  <TextBlock Classes="label" Text="{Binding PortLabel}" />
+                  <NumericUpDown Value="{Binding Port}" Minimum="1" Maximum="65535" Increment="1" FormatString="0"
+                                 HorizontalAlignment="Stretch" />
+                </StackPanel>
+              </StackPanel>
+
+              <StackPanel IsVisible="{Binding ShowPipeline}">
+                <TextBlock Classes="label" Text="GStreamer pipeline (gst-launch syntax)" />
+                <TextBox Classes="mono" Text="{Binding Pipeline}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="96"
+                         PlaceholderText="udpsrc port=5600 caps=&quot;application/x-rtp&quot; ! rtph264depay ! avdec_h264 ! videoconvert ! video/x-raw,format=BGRA ! appsink name=outsink" />
+              </StackPanel>
+
+              <Grid ColumnDefinitions="*,14,*">
+                <StackPanel IsVisible="{Binding ShowTransport}">
+                  <TextBlock Classes="label" Text="RTSP transport" />
+                  <ComboBox HorizontalAlignment="Stretch" ItemsSource="{x:Static vm:VideoSettingsViewModel.Transports}"
+                            SelectedItem="{Binding Transport}" />
+                </StackPanel>
+                <StackPanel IsVisible="{Binding ShowDecoder}">
+                  <TextBlock Classes="label" Text="Decoder" />
+                  <ComboBox HorizontalAlignment="Stretch" ItemsSource="{x:Static vm:VideoSettingsViewModel.Decoders}"
+                            SelectedItem="{Binding Decoder}" />
+                </StackPanel>
+              </Grid>
+
+              <CheckBox IsChecked="{Binding LowLatency}" IsVisible="{Binding ShowLowLatency}"
+                        Content="Low latency (no jitter buffer: least delay, may glitch on a poor link)" />
+
+              <Border Background="{DynamicResource Bg0}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="6"
+                      Padding="10,8">
+                <StackPanel Spacing="4">
+                  <TextBlock Classes="label" Text="PIPELINE THAT WILL RUN" FontWeight="SemiBold" />
+                  <SelectableTextBlock Classes="mono" Text="{Binding PipelinePreview}" TextWrapping="Wrap"
+                                       IsVisible="{Binding ValidationError, Converter={x:Static ObjectConverters.IsNull}}" />
+                  <TextBlock FontSize="12.5" Foreground="{DynamicResource Danger}" TextWrapping="Wrap" Text="{Binding ValidationError}"
+                             IsVisible="{Binding ValidationError, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </ScrollViewer>
+        </Panel>
+      </Border>
+    </Grid>
+
+    <!-- HUD options and the dialog buttons -->
+    <Grid Grid.Row="2" ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto" Margin="0,14,0,0">
+      <CheckBox IsChecked="{Binding AutoStart}" Content="Start video when the app starts" VerticalAlignment="Center" />
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="20,0,0,0" VerticalAlignment="Center">
+        <TextBlock Classes="muted" Text="Aspect" VerticalAlignment="Center" />
+        <ComboBox MinWidth="220" ItemsSource="{x:Static vm:VideoSettingsViewModel.Aspects}" SelectedItem="{Binding Aspect}" />
+      </StackPanel>
+      <Button Grid.Column="3" Content="Cancel" Margin="8,0,0,0" Command="{Binding CancelCommand}" IsCancel="True" />
+      <Button Grid.Column="4" Content="Save" Margin="8,0,0,0" Command="{Binding SaveCommand}"
+              ToolTip.Tip="Save the sources; a running video restarts if its source changed" />
+      <Button Grid.Column="5" Classes="accent" Content="Save and play" Margin="8,0,0,0" Command="{Binding SaveAndPlayCommand}"
+              IsDefault="True" ToolTip.Tip="Save and show the selected source behind the HUD" />
+    </Grid>
+  </Grid>
+</UserControl>
