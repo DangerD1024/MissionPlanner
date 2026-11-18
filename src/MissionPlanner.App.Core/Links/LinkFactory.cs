@@ -24,8 +24,16 @@ public static class LinkFactory
         };
     }
 
-    /// <summary>Serial ports the OS reports, plus stable /dev/serial/by-id names on Linux.</summary>
-    public static IReadOnlyList<string> GetSerialPortNames() => SerialPort.GetPortNames();
+    /// <summary>
+    /// Serial ports the OS reports, plus stable /dev/serial/by-id names on Linux. Console devices
+    /// (/dev/tty, /dev/console, /dev/ttyN virtual terminals) are never vehicles and are left out.
+    /// </summary>
+    public static IReadOnlyList<string> GetSerialPortNames() =>
+        SerialPort.GetPortNames().Where(p => !IsConsoleDevice(p)).ToList();
+
+    internal static bool IsConsoleDevice(string port) =>
+        port is "/dev/tty" or "/dev/console" or "/dev/ptmx" ||
+        (port.StartsWith("/dev/tty", StringComparison.Ordinal) && port.Length > 8 && port[8..].All(char.IsDigit));
 
     private static string? Answer(string name, string host, string port)
     {

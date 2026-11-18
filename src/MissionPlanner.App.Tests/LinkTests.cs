@@ -108,3 +108,20 @@ public class LinkTests
         return ((System.Net.IPEndPoint)probe.Client.LocalEndPoint!).Port;
     }
 }
+
+[TestClass]
+public class SerialPortFilterTests
+{
+    [TestMethod]
+    [DataRow("/dev/tty", true)]
+    [DataRow("/dev/tty0", true)]
+    [DataRow("/dev/tty12", true)]
+    [DataRow("/dev/console", true)]
+    [DataRow("/dev/ttyACM0", false)]
+    [DataRow("/dev/ttyUSB1", false)]
+    [DataRow("/dev/ttyS0", false)]
+    [DataRow("/dev/serial/by-id/usb-ArduPilot_X-if00", false)]
+    [DataRow("COM3", false)]
+    public void ConsoleDevicesAreNotOffered(string port, bool console) =>
+        Assert.AreEqual(console, LinkFactory.IsConsoleDevice(port));
+}

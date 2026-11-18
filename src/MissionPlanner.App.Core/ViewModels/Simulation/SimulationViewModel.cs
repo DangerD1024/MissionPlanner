@@ -498,7 +498,9 @@ public sealed partial class SimulationViewModel : PageViewModel
             {
                 SetStatus("Connecting to the simulator on TCP " + spec.Value + "…", -1);
                 await Services.Session.ConnectAsync(spec, getParams: true, progress, cancel);
-                SetStatus("Simulator running and connected. Open DATA to fly it.", 100);
+                SetStatus("Simulator running and connected.", 100);
+                // as the WinForms app does: go fly it
+                Services.ShowScreen(Screen.Data);
                 return;
             }
             catch (ConnectException ex)

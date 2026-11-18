@@ -1,17 +1,30 @@
 # Mission Planner — cross-platform app (preview)
 
 A new user interface for Mission Planner on .NET 10 and Avalonia 12, running natively on Windows,
-Linux and macOS. It reuses the existing protocol and vehicle libraries in `ExtLibs/` unchanged
-(MAVLink, Comms, ArduPilot, Utilities, GMap.NET.Core, Maps); only the UI layer is new. The
-WinForms app (`MissionPlanner.sln`) is untouched and keeps building as before.
+Linux and macOS. It reuses the protocol and vehicle libraries in `ExtLibs/` (MAVLink, Comms,
+ArduPilot, Utilities, GMap.NET.Core, Maps); only the UI layer is new. The WinForms app
+(`MissionPlanner.sln`) keeps building as before.
 
-## Layout
+## Screens
+
+Mission Planner's layout, flattened: top navigation with the port/baud/vehicle/connect controls,
+left menus on SETUP and CONFIG (pages appear only when they apply to the connected vehicle).
+
+| Screen | Contents |
+|---|---|
+| DATA | HUD; tabs Quick (6 configurable values), Actions (mode, arm/disarm, Auto/Loiter/RTL, set WP, change alt/speed, Do Action), Messages, Status, Telemetry Logs (tlog playback), DataFlash Logs (download window, log browser with graphs and GPS track); map with vehicle, track, mission/fence/rally, heading lines, Fly To Here, Set Home Here; live tuning graph |
+| PLAN | Mission / fence / rally editor: map editing (click, drag, insert, polygon tools), waypoint grid with per-command headers from `mavcmd.xml`, home, file load/save (QGC WPL), read/write to the vehicle, Survey (Grid) dialog |
+| SETUP | Install Firmware (manifest, board detection, bootloader upload), Frame Type, Accel / Compass / Radio calibration, Servo Output, Serial Ports, ESC Calibration, Flight Modes, FailSafe, Battery Monitor, Motor Test |
+| CONFIG | Basic / Extended Tuning, Standard / Advanced Params, Full Parameter List (tree, search, compare, file load/save), MAVFtp browser, MAVLink Inspector, Planner settings |
+| SIMULATION | Download and run ArduPilot SITL (Plane, Copter, Rover, Heli) and connect to it |
+
+## Projects
 
 | Project | What it holds |
 |---|---|
-| `MissionPlanner.App.Core` | Services and view-models. No UI framework types. |
-| `MissionPlanner.App` | Avalonia views, controls and the desktop entry point. |
-| `MissionPlanner.App.Tests` | MSTest: link parsing, connects against a fake vehicle (TCP, UDP, serial via a socat pty pair), data paths, tile cache. |
+| `MissionPlanner.App.Core` | Services (session, parameters, mission, map tiles) and view-models. No UI framework types. |
+| `MissionPlanner.App` | Avalonia views, controls (map, HUD, layers) and the desktop entry point. |
+| `MissionPlanner.App.Tests` | MSTest: protocol flows against scripted fake vehicles (TCP/UDP/serial pty), page logic, parsers. |
 
 ## Build, run, test (any OS with the .NET 10 SDK)
 
@@ -21,14 +34,27 @@ dotnet run --project src/MissionPlanner.App
 dotnet test src/MissionPlanner.App.Tests      # serial test needs socat on Linux/macOS
 ```
 
+Opt-in check against a real flight controller (read-only: connect, parameters, telemetry):
+
+```sh
+MP_TEST_SERIAL_PORT=/dev/serial/by-id/usb-ArduPilot_...-if00 dotnet test src/MissionPlanner.App.Tests --filter TestCategory=Hardware
+```
+
 `MP_LOG_TILES=1` prints map tile request failures to the console.
+
+## Data and settings
+
+Shared with the WinForms app: the data folder (`~/.local/share/Mission Planner/` on Linux, the
+usual folders on Windows/macOS) — map tile cache, parameter documentation, logs, SITL binaries.
+Settings are kept separately in `config.next.xml` so the two apps never overwrite each other.
 
 ## Notes for contributors
 
+- Pages are found by name: `ViewModels.<Area>.<Name>ViewModel` is shown by `Views.<Area>.<Name>View`.
+- `VehicleSession` owns the one `MAVLinkInterface` and its reader task; library calls that talk to
+  the vehicle block, so run them with `Task.Run`, never on the UI thread.
+- `PageViewModel.Tick()` runs at 20 Hz on the UI thread for visible pages: copy telemetry there,
+  without reflection.
 - Opening a link never prompts: `LinkFactory` answers the transports' settings/input hooks from a
   `LinkSpec` (`tcp:host:port`, `udp:port`, `udpout:host:port`, `serial:port[:baud]`).
-- `MAVLinkInterface.Open` blocks until connected. Call it off the UI thread with a
-  `BackgroundProgressReporter` in scope (`BackgroundProgressReporter.Scope.Use`).
-- Call `MapTiles.Initialize()` before anything touches `GMaps.Instance`; otherwise GMap looks for
-  the WinForms assembly.
-- Map tiles share the WinForms app's cache: `<data dir>/gmapcache/TileDBv3`.
+- Call `MapTiles.Initialize()` before anything touches `GMaps.Instance`.

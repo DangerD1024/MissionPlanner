@@ -82,4 +82,10 @@ public sealed class AppServices
 
     /// <summary>Planned mission, fence and rally points, shared by Flight Data and Flight Plan.</summary>
     public Mission.MissionStore Mission { get; }
+
+    /// <summary>Raised when a page asks to switch the main screen; the shell handles it.</summary>
+    public event EventHandler<ViewModels.Screen>? ScreenRequested;
+
+    /// <summary>Switches the main window to a screen (call on the UI thread).</summary>
+    public void ShowScreen(ViewModels.Screen screen) => ScreenRequested?.Invoke(this, screen);
 }

@@ -68,6 +68,7 @@ public sealed partial class ShellViewModel : ObservableObject
         _currentPage = GetPage(Screen.Data);
         _currentPage.OnShown();
         services.Session.StateChanged += (_, _) => services.Dispatcher.Post(() => OnPropertyChanged(nameof(Title)));
+        services.ScreenRequested += (_, screen) => services.Dispatcher.Post(() => Navigate(screen));
     }
 
     public ConnectionViewModel Connection { get; }
