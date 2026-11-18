@@ -112,6 +112,7 @@ public sealed class MapView : Control
     private long _frame;
 
     private Point? _pressAt;
+    private Point _lastPress = new(double.NaN, double.NaN);
     private bool _panning;
     private object? _dragItem;
     private GPoint _dragCenterPx;
@@ -225,9 +226,10 @@ public sealed class MapView : Control
         var th = (double)proj.TileSize.Height;
         var maxTile = proj.GetTileMatrixMaxXY(zoom);
 
+        // whole-pixel origin: fractional tile positions leave hairline seams between tiles
         var center = proj.FromLatLngToPixel(CenterLat, CenterLng, zoom);
-        var originX = center.X - size.Width / 2;
-        var originY = center.Y - size.Height / 2;
+        var originX = Math.Floor(center.X - size.Width / 2);
+        var originY = Math.Floor(center.Y - size.Height / 2);
         var vp = new MapViewport(proj, zoom, originX, originY, size);
         _lastViewport = vp;
 
@@ -244,7 +246,8 @@ public sealed class MapView : Control
                 // wrap around the antimeridian
                 var wx = Mod(tx, maxTile.Width + 1);
                 var entry = GetOrRequest(provider, new TileKey(provider.DbId, zoom, wx, ty));
-                var dest = new Rect(tx * tw - originX, ty * th - originY, tw, th);
+                // a half-pixel overlap hides seams left by display scaling
+                var dest = new Rect(tx * tw - originX, ty * th - originY, tw + 0.5, th + 0.5);
                 foreach (var layer in entry.Layers)
                     context.DrawImage(layer, dest);
             }
@@ -300,7 +303,10 @@ public sealed class MapView : Control
         if (!point.Properties.IsLeftButtonPressed)
             return;
 
-        if (e.ClickCount == 2)
+        // a quick second click elsewhere is a new click, not a double-click
+        var nearLast = Math.Abs(pos.X - _lastPress.X) + Math.Abs(pos.Y - _lastPress.Y) <= ClickSlop * 2;
+        _lastPress = pos;
+        if (e.ClickCount == 2 && nearLast)
         {
             MapDoubleClick?.Invoke(this, new MapPointerEventArgs(vp.ToLatLng(pos), pos, HitTestLayers(pos, vp), e.KeyModifiers));
             e.Handled = true;
