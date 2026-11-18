@@ -24,6 +24,11 @@ public static class AppStartup
         _dispatcher = dispatcher;
         _dialogs = dialogs;
 
+        // the shared libraries block thread-pool threads while they wait for the vehicle
+        // (sync-over-async); start with enough threads that this never stalls other work
+        ThreadPool.GetMinThreads(out var workers, out var io);
+        ThreadPool.SetMinThreads(Math.Max(workers, 32), io);
+
         // must be set before the first Settings.Instance access, which loads the file
         Settings.FileName = ConfigFileName;
         try

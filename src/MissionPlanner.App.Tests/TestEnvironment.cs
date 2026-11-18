@@ -13,6 +13,11 @@ public static class TestEnvironment
     [AssemblyInitialize]
     public static void Init(TestContext _)
     {
+        // the shared libraries block pool threads (sync-over-async); with many fake-vehicle sessions
+        // in one run the pool would otherwise starve and background work misses test timeouts
+        ThreadPool.GetMinThreads(out var workers, out var io);
+        ThreadPool.SetMinThreads(Math.Max(workers, 64), io);
+
         DataRoot = Path.Combine(Path.GetTempPath(), "mp-app-tests-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(DataRoot);
         Settings.CustomUserDataDirectory = DataRoot;
