@@ -2,16 +2,11 @@ using MissionPlanner.App.Core.Services;
 
 namespace MissionPlanner.App.Core.ViewModels.ConfigScreens;
 
-/// <summary>Standard Params: documented standard-level parameters with friendly editors. STUB - replaced by the page's implementation.</summary>
-public sealed partial class StandardParamsViewModel : PageViewModel
+/// <summary>Standard Params: documented standard-level parameters with friendly editors.</summary>
+public sealed partial class StandardParamsViewModel : FriendlyParamsViewModel
 {
     public StandardParamsViewModel(AppServices services)
-        : base("Standard Params")
+        : base("Standard Params", services, includeAdvanced: false)
     {
-        Services = services;
     }
-
-    public AppServices Services { get; }
-
-    public string Arrives => "documented standard-level parameters with friendly editors";
 }
