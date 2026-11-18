@@ -1,0 +1,257 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:fw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Firmware"
+             xmlns:fwc="using:MissionPlanner.App.Controls.SetupScreens.Firmware"
+             x:Class="MissionPlanner.App.Views.SetupScreens.FirmwareView"
+             x:DataType="vm:FirmwareViewModel">
+
+  <UserControl.Resources>
+    <fwc:VehicleIconConverter x:Key="VehicleIcon" />
+  </UserControl.Resources>
+
+  <UserControl.Styles>
+    <Style Selector="Button.vehicle">
+      <Setter Property="Background" Value="{StaticResource Bg2}" />
+      <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="10" />
+      <Setter Property="Margin" Value="0,0,12,12" />
+      <Setter Property="Width" Value="168" />
+      <Setter Property="Height" Value="150" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="VerticalContentAlignment" Value="Stretch" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.vehicle:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource Bg3}" />
+      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+    </Style>
+    <Style Selector="Path.vehicleicon">
+      <Setter Property="Stroke" Value="{StaticResource Accent}" />
+      <Setter Property="StrokeThickness" Value="1.8" />
+      <Setter Property="StrokeJoin" Value="Round" />
+      <Setter Property="StrokeLineCap" Value="Round" />
+      <Setter Property="Width" Value="56" />
+      <Setter Property="Height" Value="56" />
+      <Setter Property="Stretch" Value="Uniform" />
+    </Style>
+    <Style Selector="Button.vehicle:disabled Path.vehicleicon">
+      <Setter Property="Stroke" Value="{StaticResource Muted}" />
+    </Style>
+    <Style Selector="TextBlock.caption">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+    </Style>
+    <Style Selector="ListBox.ports ListBoxItem">
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Margin" Value="0,1" />
+    </Style>
+    <Style Selector="ListBox.ports ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#1f2a17" />
+      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="ListBox.ports ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#26331b" />
+    </Style>
+    <Style Selector="ListBox.ports ListBoxItem:selected">
+      <Setter Property="Foreground" Value="{StaticResource Text}" />
+    </Style>
+    <Style Selector="ListBox.log">
+      <Setter Property="Background" Value="{StaticResource Bg0}" />
+      <Setter Property="FontFamily" Value="monospace" />
+      <Setter Property="FontSize" Value="11.5" />
+    </Style>
+    <Style Selector="ListBox.log ListBoxItem">
+      <Setter Property="Padding" Value="8,1" />
+      <Setter Property="MinHeight" Value="0" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="*,380" Margin="24,20">
+
+    <!-- left: release, vehicles, options -->
+    <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Spacing="16" Margin="0,0,8,0">
+        <StackPanel Spacing="4">
+          <TextBlock Classes="h1" Text="Install Firmware" />
+          <TextBlock Classes="muted" TextWrapping="Wrap"
+                     Text="Plug the autopilot in with USB (do not connect), then click the vehicle type to download and install the latest firmware for your board." />
+        </StackPanel>
+
+        <!-- manifest problems -->
+        <Border Classes="card" BorderBrush="{StaticResource Danger}" IsVisible="{Binding HasError}">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="{Binding ErrorText}" TextWrapping="Wrap" VerticalAlignment="Center" />
+            <Button Grid.Column="1" Content="Retry" Margin="12,0,0,0" Command="{Binding ReloadManifestCommand}" />
+          </Grid>
+        </Border>
+
+        <!-- release type -->
+        <StackPanel Spacing="8">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <TextBlock Text="Release" VerticalAlignment="Center" FontWeight="SemiBold" />
+            <ComboBox ItemsSource="{Binding Releases}" SelectedItem="{Binding SelectedRelease}" MinWidth="150"
+                      IsEnabled="{Binding IsIdle}">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="fw:ReleaseOption">
+                  <TextBlock Text="{Binding Name}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+            <ProgressBar IsIndeterminate="True" Width="80" MinWidth="0" Height="4" MinHeight="4" VerticalAlignment="Center"
+                         IsVisible="{Binding IsLoading}" />
+            <TextBlock Classes="muted" FontSize="12" Text="{Binding ManifestText}" VerticalAlignment="Center" />
+          </StackPanel>
+          <TextBlock Text="{Binding ReleaseWarning}" IsVisible="{Binding HasReleaseWarning}" Foreground="{StaticResource Warn}"
+                     TextWrapping="Wrap" FontSize="12" />
+        </StackPanel>
+
+        <!-- vehicle tiles -->
+        <ItemsControl ItemsSource="{Binding Tiles}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="fw:VehicleTile">
+              <Button Classes="vehicle"
+                      Command="{Binding $parent[ItemsControl].((vm:FirmwareViewModel)DataContext).InstallCommand}"
+                      CommandParameter="{Binding}" IsEnabled="{Binding IsAvailable}"
+                      ToolTip.Tip="{Binding VersionText, StringFormat='Install {0}'}">
+                <Grid RowDefinitions="*,Auto,Auto">
+                  <Path Classes="vehicleicon" Data="{Binding Icon, Converter={StaticResource VehicleIcon}}"
+                        HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  <TextBlock Grid.Row="1" Classes="h2" Text="{Binding Title}" HorizontalAlignment="Center" Margin="0,6,0,0" />
+                  <TextBlock Grid.Row="2" Classes="muted" FontSize="12" Text="{Binding VersionText}" HorizontalAlignment="Center"
+                             TextTrimming="CharacterEllipsis" />
+                </Grid>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- more ways to pick firmware -->
+        <WrapPanel>
+          <ToggleButton IsChecked="{Binding ShowAllOptions}" Margin="0,0,8,8" IsEnabled="{Binding IsReady}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Path Classes="icon" Data="{StaticResource IconConfig}" Width="16" Height="16" Stretch="Uniform" />
+              <TextBlock Text="All options" />
+            </StackPanel>
+          </ToggleButton>
+          <Button Command="{Binding LoadCustomFirmwareCommand}" Margin="0,0,8,8">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Path Classes="icon" Data="{StaticResource IconFile}" Width="16" Height="16" Stretch="Uniform" />
+              <TextBlock Text="Load custom firmware…" />
+            </StackPanel>
+          </Button>
+        </WrapPanel>
+
+        <!-- every option -->
+        <Border Classes="card" IsVisible="{Binding ShowAllOptions}">
+          <StackPanel Spacing="10" DataContext="{Binding Options}" x:DataType="fw:FirmwareOptionsViewModel">
+            <TextBlock Classes="caption" Text="ALL FIRMWARE FILES" />
+            <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto,Auto,Auto">
+              <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted" FontSize="12" Text="Search boards" />
+              <TextBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Search}" PlaceholderText="e.g. matek, cube, pixhawk"
+                       Margin="0,2,8,8" />
+              <TextBlock Grid.Row="0" Grid.Column="2" Classes="muted" FontSize="12" Text="Board" />
+              <ComboBox Grid.Row="1" Grid.Column="2" ItemsSource="{Binding PlatformOptions}" SelectedItem="{Binding Platform}"
+                        HorizontalAlignment="Stretch" Margin="0,2,0,8" MaxDropDownHeight="400" />
+              <TextBlock Grid.Row="2" Grid.Column="0" Classes="muted" FontSize="12" Text="Vehicle" />
+              <ComboBox Grid.Row="3" Grid.Column="0" ItemsSource="{Binding VehicleOptions}" SelectedItem="{Binding Vehicle}"
+                        HorizontalAlignment="Stretch" Margin="0,2,8,0" />
+              <TextBlock Grid.Row="2" Grid.Column="1" Classes="muted" FontSize="12" Text="Release" />
+              <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding ReleaseOptions}" SelectedItem="{Binding Release}"
+                        HorizontalAlignment="Stretch" Margin="0,2,8,0" MaxDropDownHeight="400" />
+              <TextBlock Grid.Row="2" Grid.Column="2" Classes="muted" FontSize="12" Text="Version" />
+              <ComboBox Grid.Row="3" Grid.Column="2" ItemsSource="{Binding VersionOptions}" SelectedItem="{Binding Version}"
+                        HorizontalAlignment="Stretch" Margin="0,2,0,0" MaxDropDownHeight="400" />
+            </Grid>
+
+            <Border BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="6" Height="280" ClipToBounds="True">
+              <DataGrid ItemsSource="{Binding Rows}" SelectedItem="{Binding Selected}" AutoGenerateColumns="False"
+                        HeadersVisibility="Column" RowHeight="30" CanUserSortColumns="True" CanUserResizeColumns="True"
+                        IsReadOnly="True" SelectionMode="Single" BorderThickness="0">
+                <DataGrid.Columns>
+                  <DataGridTextColumn Header="Board" Width="1.6*" Binding="{Binding Platform}" />
+                  <DataGridTextColumn Header="Vehicle" Width="1.3*" Binding="{Binding Vehicle}" />
+                  <DataGridTextColumn Header="Version" Width="1.3*" Binding="{Binding Version}" />
+                  <DataGridTextColumn Header="Release" Width="1.1*" Binding="{Binding Release}" />
+                  <DataGridTextColumn Header="Id" Width="60" Binding="{Binding BoardId}" />
+                  <DataGridTextColumn Header="File" Width="1.6*" Binding="{Binding File}" />
+                </DataGrid.Columns>
+              </DataGrid>
+            </Border>
+
+            <Grid ColumnDefinitions="*,Auto,Auto">
+              <TextBlock Classes="muted" FontSize="12" Text="{Binding ResultText}" VerticalAlignment="Center" TextWrapping="Wrap" />
+              <Button Grid.Column="1" Content="Clear filters" Margin="8,0,0,0"
+                      Command="{Binding $parent[UserControl].((vm:FirmwareViewModel)DataContext).ClearOptionFiltersCommand}" />
+              <Button Grid.Column="2" Classes="accent" Content="Install selected" Margin="8,0,0,0"
+                      Command="{Binding $parent[UserControl].((vm:FirmwareViewModel)DataContext).InstallSelectedOptionCommand}" />
+            </Grid>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- right: boards and progress -->
+    <Grid Grid.Column="1" Margin="20,0,0,0" RowDefinitions="Auto,14,*">
+      <Border Classes="card">
+        <StackPanel Spacing="8">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Classes="caption" Text="BOARDS ON USB" VerticalAlignment="Center" />
+            <Button Grid.Column="1" Padding="6,4" ToolTip.Tip="Refresh the port list" Command="{Binding RefreshPortsCommand}">
+              <Path Classes="icon" Data="{StaticResource IconRefresh}" Width="16" Height="16" Stretch="Uniform" />
+            </Button>
+          </Grid>
+          <ListBox Classes="ports" ItemsSource="{Binding Ports}" SelectedItem="{Binding SelectedPort}" MaxHeight="220" Background="Transparent">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="fw:PortRow">
+                <StackPanel Spacing="1" Margin="0,2">
+                  <TextBlock Text="{Binding PortName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Text="{Binding BoardText}" FontSize="12" Foreground="{StaticResource Accent}"
+                             IsVisible="{Binding IsRecognised}" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Text="{Binding BoardText}" FontSize="12" Classes="muted"
+                             IsVisible="{Binding !IsRecognised}" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Text="{Binding Description}" FontSize="11" Classes="muted" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <TextBlock Classes="muted" FontSize="12" Text="{Binding PortsText}" TextWrapping="Wrap"
+                     IsVisible="{Binding PortsText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          <Button Content="Detect bootloader" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                  Command="{Binding DetectBootloaderCommand}"
+                  ToolTip.Tip="Probes every serial port for a board in its bootloader for 20 s: plug the board in (or replug it) after clicking." />
+          <Border IsVisible="{Binding HasDetected}" Background="#1f2a17" CornerRadius="6" Padding="10,8">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Text="{Binding DetectedText}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource Accent}" />
+              <Button Grid.Column="1" Padding="4" Margin="6,0,0,0" VerticalAlignment="Top" Command="{Binding ClearDetectedCommand}"
+                      ToolTip.Tip="Forget the detected board">
+                <Path Classes="icon" Data="{StaticResource IconDelete}" Width="14" Height="14" Stretch="Uniform" />
+              </Button>
+            </Grid>
+          </Border>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="2" Classes="card">
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" >
+          <TextBlock Classes="caption" Text="PROGRESS" />
+          <TextBlock Grid.Row="1" Text="{Binding StatusText}" TextWrapping="Wrap" Margin="0,8,0,8" />
+          <ProgressBar Grid.Row="2" Minimum="0" Maximum="100" Value="{Binding ProgressValue}" Height="8" MinHeight="8"
+                       IsIndeterminate="{Binding IsProgressIndeterminate}" />
+          <Button Grid.Row="3" Classes="danger" Content="Cancel" HorizontalAlignment="Right" Margin="0,10,0,0"
+                  Command="{Binding CancelCommand}" IsVisible="{Binding IsBusy}" />
+          <ListBox x:Name="LogList" Grid.Row="4" Classes="log" Margin="0,10,0,0" ItemsSource="{Binding LogLines}" />
+        </Grid>
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>

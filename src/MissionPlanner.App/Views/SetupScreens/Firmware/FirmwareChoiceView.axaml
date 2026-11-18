@@ -1,0 +1,47 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:fw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Firmware"
+             x:Class="MissionPlanner.App.Views.SetupScreens.Firmware.FirmwareChoiceView"
+             x:DataType="fw:FirmwareChoiceViewModel">
+
+  <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
+    <TextBlock Classes="h2" Text="{Binding Prompt}" TextWrapping="Wrap" Margin="0,0,0,12" />
+
+    <Grid Grid.Row="1" ColumnDefinitions="*,*,*" Margin="0,0,0,10" DataContext="{Binding Options}"
+          x:DataType="fw:FirmwareOptionsViewModel">
+      <StackPanel Spacing="2" Margin="0,0,8,0">
+        <TextBlock Classes="muted" FontSize="12" Text="Board" />
+        <ComboBox ItemsSource="{Binding PlatformOptions}" SelectedItem="{Binding Platform}" HorizontalAlignment="Stretch"
+                  MaxDropDownHeight="400" />
+      </StackPanel>
+      <StackPanel Grid.Column="1" Spacing="2" Margin="0,0,8,0">
+        <TextBlock Classes="muted" FontSize="12" Text="Release" />
+        <ComboBox ItemsSource="{Binding ReleaseOptions}" SelectedItem="{Binding Release}" HorizontalAlignment="Stretch" />
+      </StackPanel>
+      <StackPanel Grid.Column="2" Spacing="2">
+        <TextBlock Classes="muted" FontSize="12" Text="Version" />
+        <ComboBox ItemsSource="{Binding VersionOptions}" SelectedItem="{Binding Version}" HorizontalAlignment="Stretch" />
+      </StackPanel>
+    </Grid>
+
+    <Border Grid.Row="2" Classes="card" Padding="0">
+      <DataGrid ItemsSource="{Binding Options.Rows}" SelectedItem="{Binding Options.Selected}" AutoGenerateColumns="False"
+                HeadersVisibility="Column" RowHeight="30" IsReadOnly="True" SelectionMode="Single" BorderThickness="0"
+                CanUserSortColumns="True">
+        <DataGrid.Columns>
+          <DataGridTextColumn Header="Board" Width="2*" Binding="{Binding Platform}" />
+          <DataGridTextColumn Header="Vehicle" Width="*" Binding="{Binding Vehicle}" />
+          <DataGridTextColumn Header="Version" Width="*" Binding="{Binding Version}" />
+          <DataGridTextColumn Header="Release" Width="*" Binding="{Binding Release}" />
+          <DataGridTextColumn Header="File" Width="2*" Binding="{Binding File}" />
+        </DataGrid.Columns>
+      </DataGrid>
+    </Border>
+
+    <Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto" Margin="0,12,0,0">
+      <TextBlock Classes="muted" FontSize="12" Text="{Binding Options.ResultText}" VerticalAlignment="Center" />
+      <Button Grid.Column="1" Content="Cancel" Margin="8,0,0,0" Command="{Binding CancelCommand}" />
+      <Button Grid.Column="2" Classes="accent" Content="Install" Margin="8,0,0,0" Command="{Binding UploadCommand}" />
+    </Grid>
+  </Grid>
+</UserControl>
