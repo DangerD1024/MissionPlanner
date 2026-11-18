@@ -27,5 +27,21 @@ public sealed class SetupViewModel : MenuScreenViewModel
         Add(Header("Optional Hardware"));
         Add(Page("Battery Monitor", () => new BatteryMonitorViewModel(s), () => Ready() && HasParam("BATT_MONITOR")));
         Add(Page("Motor Test", () => new MotorTestViewModel(s), () => Ready() && HasParam("FRAME_CLASS", "Q_FRAME_CLASS", "FRAME", "FRAME_TYPE")));
+        Add(Page("Rangefinder", () => new RangefinderViewModel(s), () => Ready() && HasParam("RNGFND1_TYPE", "RNGFND_TYPE")));
+        Add(Page("Airspeed", () => new AirspeedViewModel(s), () => Ready() && HasParam("ARSPD_TYPE", "ARSPD1_TYPE")));
+        Add(Page("Optical Flow", () => new OpticalFlowViewModel(s), () => Ready() && HasParam("FLOW_TYPE")));
+        Add(Page("OSD", () => new OsdViewModel(s), () => Ready() && HasParam("OSD_TYPE")));
+        Add(Page("Mount", () => new MountViewModel(s), () => Ready() && HasParam("MNT1_TYPE", "MNT_TYPE")));
+        Add(Page("Parachute", () => new ParachuteViewModel(s), () => Ready() && HasParam("CHUTE_ENABLED")));
+        Add(Page("CompassMot", () => new CompassMotViewModel(s), () => Ready() && Multirotor()));
+        Add(Page("ADSB", () => new AdsbSetupViewModel(s), () => Ready() && HasParam("ADSB_TYPE")));
+        Add(Page("HW ID", () => new HardwareIdViewModel(s), Ready));
+        Add(Page("Initial Parameters", () => new InitialParamsViewModel(s), () => Ready() && Multirotor()));
+        Add(Page("RTK/GPS Inject", () => new GpsInjectViewModel(s), () => Connected));
+        Add(Page("Joystick", () => new JoystickViewModel(s)));
+        Add(Page("SiK Radio", () => new SikRadioViewModel(s)));
+        Add(Page("DroneCAN/UAVCAN", () => new DroneCanViewModel(s), () => Ready() && HasParam("CAN_P1_DRIVER")));
+        Add(Header("Advanced"));
+        Add(Page("Terminal", () => new TerminalViewModel(s)));
     }
 }
