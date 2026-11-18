@@ -109,6 +109,8 @@
     <Compile Remove="ExtLibs\ZedGraph\**" />
     <Compile Remove="ExtLibs\Zeroconf\**" />
     <Compile Remove="Linux\**" />
+    <Compile Remove="src\**" />
+    <Compile Remove=".claude\**" />
     <Compile Remove="MissionPlannerTests\**" />
     <Compile Remove="Msi\**" />
     <Compile Remove="obj3\**" />
@@ -213,6 +215,8 @@
     <EmbeddedResource Remove="resedit\**" />
     <EmbeddedResource Remove="SikRadio\**" />
     <EmbeddedResource Remove="Updater\**" />
+    <EmbeddedResource Remove="src\**" />
+    <EmbeddedResource Remove=".claude\**" />
     <EmbeddedResource Remove="wix\**" />
     <None Remove="APMPlannerXplanes\**" />
     <None Remove="ExtLibs\7zip\**" />
@@ -308,6 +312,8 @@
     <None Remove="resedit\**" />
     <None Remove="SikRadio\**" />
     <None Remove="Updater\**" />
+    <None Remove="src\**" />
+    <None Remove=".claude\**" />
     <None Remove="wix\**" />
 
     <Compile Remove="ExtLibs\runtime\**" />   
