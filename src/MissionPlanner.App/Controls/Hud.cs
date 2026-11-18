@@ -3,17 +3,31 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using MissionPlanner.App.Core.ViewModels.FlightData;
+using MissionPlanner.App.Core.ViewModels.Video;
 
 namespace MissionPlanner.App.Controls;
 
 /// <summary>
 /// Primary flight display. Draws from a <see cref="HudModel"/>; the owner calls
 /// <see cref="Refresh"/> after updating it. Pure Avalonia drawing (Skia underneath), no OpenGL.
+/// With a <see cref="VideoFrame"/> set, the video replaces the sky and ground and the overlays
+/// are drawn on top of it, as in Mission Planner.
 /// </summary>
 public sealed class Hud : Control
 {
     public static readonly StyledProperty<HudModel?> ModelProperty =
         AvaloniaProperty.Register<Hud, HudModel?>(nameof(Model));
+
+    /// <summary>Video frame drawn behind the overlays (instead of sky and ground); null for none.</summary>
+    public static readonly StyledProperty<IImage?> VideoFrameProperty =
+        AvaloniaProperty.Register<Hud, IImage?>(nameof(VideoFrame));
+
+    public static readonly StyledProperty<VideoAspect> VideoAspectProperty =
+        AvaloniaProperty.Register<Hud, VideoAspect>(nameof(VideoAspect));
+
+    /// <summary>Video state line ("Connecting video…", "No video", errors), drawn top left; empty for none.</summary>
+    public static readonly StyledProperty<string?> VideoStatusProperty =
+        AvaloniaProperty.Register<Hud, string?>(nameof(VideoStatus));
 
     private static readonly Typeface Face = new(FontFamily.Default, FontStyle.Normal, FontWeight.SemiBold);
     private static readonly Typeface FaceBold = new(FontFamily.Default, FontStyle.Normal, FontWeight.Bold);
@@ -47,10 +61,11 @@ public sealed class Hud : Control
     private static readonly IPen AircraftPen = new Pen(Yellow, 4, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round);
     private static readonly IPen AircraftShadow = new Pen(new SolidColorBrush(Color.FromArgb(160, 0, 0, 0)), 7, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round);
     private static readonly IPen MagentaPen = new Pen(Magenta, 2);
+    private static readonly IBrush VideoBars = Brushes.Black;
 
     static Hud()
     {
-        AffectsRender<Hud>(ModelProperty);
+        AffectsRender<Hud>(ModelProperty, VideoFrameProperty, VideoAspectProperty, VideoStatusProperty);
         ClipToBoundsProperty.OverrideDefaultValue<Hud>(true);
     }
 
@@ -58,6 +73,24 @@ public sealed class Hud : Control
     {
         get => GetValue(ModelProperty);
         set => SetValue(ModelProperty, value);
+    }
+
+    public IImage? VideoFrame
+    {
+        get => GetValue(VideoFrameProperty);
+        set => SetValue(VideoFrameProperty, value);
+    }
+
+    public VideoAspect VideoAspect
+    {
+        get => GetValue(VideoAspectProperty);
+        set => SetValue(VideoAspectProperty, value);
+    }
+
+    public string? VideoStatus
+    {
+        get => GetValue(VideoStatusProperty);
+        set => SetValue(VideoStatusProperty, value);
     }
 
     private long _drawnVersion = -1;
@@ -84,24 +117,71 @@ public sealed class Hud : Control
         var cy = h / 2 + 8 * scale;
         var ppd = h / 50; // pixels per degree of pitch
 
-        DrawHorizon(ctx, m, w, h, cx, cy, ppd, scale);
+        var video = VideoFrame;
+        var hasVideo = video != null && DrawVideo(ctx, video, VideoAspect, w, h);
+
+        DrawHorizon(ctx, m, w, h, cx, cy, ppd, scale, sky: !hasVideo);
         DrawRollScale(ctx, m, cx, cy, h, scale);
         DrawAircraft(ctx, cx, cy, scale);
         DrawHeadingTape(ctx, m, w, scale);
         DrawSpeedTape(ctx, m, h, cy, scale);
         DrawAltTape(ctx, m, w, h, cy, scale);
         DrawText(ctx, m, w, h, cx, cy, scale);
+        DrawVideoStatus(ctx, VideoStatus, w, scale);
     }
 
-    private static void DrawHorizon(DrawingContext ctx, HudModel m, double w, double h, double cx, double cy, double ppd, double scale)
+    /// <summary>The frame scaled to fill (cropped) or fit (with bars); false if it has no size.</summary>
+    private static bool DrawVideo(DrawingContext ctx, IImage frame, VideoAspect aspect, double w, double h)
+    {
+        var size = frame.Size;
+        if (size.Width <= 0 || size.Height <= 0)
+            return false;
+        var (src, dst) = VideoLayout.Place(size.Width, size.Height, w, h, aspect);
+        if (aspect == VideoAspect.Fit)
+            ctx.FillRectangle(VideoBars, new Rect(0, 0, w, h));
+        // bilinear is enough down to half size; beyond that mipmaps avoid shimmer, at a price per frame
+        var mode = dst.Width < src.Width * 0.5
+            ? Avalonia.Media.Imaging.BitmapInterpolationMode.MediumQuality
+            : Avalonia.Media.Imaging.BitmapInterpolationMode.LowQuality;
+        using (ctx.PushRenderOptions(new RenderOptions { BitmapInterpolationMode = mode }))
+        {
+            ctx.DrawImage(frame, new Rect(src.X, src.Y, src.Width, src.Height), new Rect(dst.X, dst.Y, dst.Width, dst.Height));
+        }
+
+        return true;
+    }
+
+    private static void DrawVideoStatus(DrawingContext ctx, string? status, double w, double scale)
+    {
+        if (string.IsNullOrEmpty(status))
+            return;
+        // top left, between the speed tape and the middle, under the link quality
+        var x = 64 * scale;
+        var y = 48 * scale;
+        var t = new FormattedText(status, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, Face, 12 * scale, Amber)
+        {
+            MaxTextWidth = Math.Max(80, w / 2 - x),
+            MaxLineCount = 3,
+            Trimming = TextTrimming.CharacterEllipsis,
+        };
+        var pad = 4 * scale;
+        ctx.FillRectangle(BoxBg, new Rect(x - pad, y - pad / 2, t.Width + 2 * pad, t.Height + pad), 3);
+        ctx.DrawText(t, new Point(x, y));
+    }
+
+    private static void DrawHorizon(DrawingContext ctx, HudModel m, double w, double h, double cx, double cy, double ppd, double scale, bool sky = true)
     {
         var big = Math.Sqrt(w * w + h * h) * 2;
         var transform = Matrix.CreateTranslation(0, m.Pitch * ppd) * Matrix.CreateRotation(-m.Roll * Math.PI / 180) *
                         Matrix.CreateTranslation(cx, cy);
         using (ctx.PushTransform(transform))
         {
-            ctx.FillRectangle(Sky, new Rect(-big / 2, -big, big, big));
-            ctx.FillRectangle(Ground, new Rect(-big / 2, 0, big, big));
+            if (sky)
+            {
+                ctx.FillRectangle(Sky, new Rect(-big / 2, -big, big, big));
+                ctx.FillRectangle(Ground, new Rect(-big / 2, 0, big, big));
+            }
+
             ctx.DrawLine(WhitePen, new Point(-big / 2, 0), new Point(big / 2, 0));
 
             // pitch ladder, 5 degree steps, labelled every 10

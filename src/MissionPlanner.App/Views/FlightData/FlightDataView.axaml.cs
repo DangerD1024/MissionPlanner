@@ -4,6 +4,7 @@ using Avalonia.Input;
 using GMap.NET;
 using MissionPlanner.App.Controls;
 using MissionPlanner.App.Controls.FlightData;
+using MissionPlanner.App.Controls.Video;
 using MissionPlanner.App.Core.ViewModels.FlightData;
 
 namespace MissionPlanner.App.Views.FlightData;
@@ -45,6 +46,9 @@ public sealed partial class FlightDataView : UserControl
         Map.PointerPositionChanged += (_, p) => _vm?.OnPointerMoved(p.Lat, p.Lng);
         Map.MapContextRequested += OnMapContext;
         Map.MapClick += OnMapClick;
+
+        // video behind the HUD, and the HUD's right-click Video menu
+        HudVideoPresenter.Install(HudHost, HudControl);
 
         // keep the HUD at 4:3 of the column width, leaving room for the tabs
         LeftColumn.SizeChanged += (_, e) => SizeHud(e.NewSize);
