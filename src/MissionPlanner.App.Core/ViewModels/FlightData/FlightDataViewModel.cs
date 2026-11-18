@@ -335,7 +335,7 @@ public sealed partial class FlightDataViewModel : PageViewModel
     {
         var h = Hud;
         var c = false;
-        c |= Set(ref h.Connected, s.IsConnected || s.Mav.logreadmode);
+        c |= Set(ref h.Connected, s.IsConnected || s.Mav.logreadmode || s.Mav.logplaybackfile != null); // a paused log still shows its data
         c |= Set(ref h.Roll, cs.roll);
         c |= Set(ref h.Pitch, cs.pitch);
         c |= Set(ref h.Heading, cs.yaw);
