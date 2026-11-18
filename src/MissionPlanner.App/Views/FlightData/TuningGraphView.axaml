@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             xmlns:scottplot="using:ScottPlot.Avalonia"
+             x:Class="MissionPlanner.App.Views.FlightData.TuningGraphView"
+             x:DataType="vm:TuningGraphViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="Button.tool">
+      <Setter Property="Height" Value="26" />
+      <Setter Property="MinWidth" Value="64" />
+      <Setter Property="Padding" Value="10,0" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="CheckBox.field">
+      <Setter Property="MinHeight" Value="26" />
+      <Setter Property="Padding" Value="6,0,0,0" />
+      <Setter Property="Margin" Value="0,0,8,0" />
+    </Style>
+  </UserControl.Styles>
+
+  <Border Background="#15191e" CornerRadius="6" ClipToBounds="True">
+    <Grid RowDefinitions="Auto,*">
+      <!-- title and tools -->
+      <Grid ColumnDefinitions="Auto,*,Auto" Margin="10,5,6,3">
+        <TextBlock Text="Tuning" FontWeight="SemiBold" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="1" Classes="muted" FontSize="11.5" VerticalAlignment="Center" Margin="10,0,0,0"
+                   Text="last 30 s" />
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+          <Button Classes="tool" Content="Select fields" Command="{Binding OpenPickerCommand}"
+                  ToolTip.Tip="Choose which values are graphed" />
+          <Button Classes="tool" Content="{Binding PauseText}" Command="{Binding TogglePauseCommand}"
+                  ToolTip.Tip="Freeze the graph to look at it (drag to pan, wheel to zoom)" />
+          <Button Classes="tool" Content="Clear" Command="{Binding ClearCommand}" ToolTip.Tip="Start a fresh trace" />
+        </StackPanel>
+      </Grid>
+
+      <scottplot:AvaPlot Grid.Row="1" x:Name="Chart" />
+
+      <!-- field picker over the chart -->
+      <Border Grid.Row="1" IsVisible="{Binding IsPickerOpen}" Background="{StaticResource Bg1}" Padding="10,8"
+              BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0">
+        <Grid RowDefinitions="Auto,*" RowSpacing="6">
+          <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+            <TextBox x:Name="FieldSearch" Text="{Binding FieldFilter}" Height="28" MinHeight="28" FontSize="12.5"
+                     VerticalContentAlignment="Center" PlaceholderText="Search values (roll, nav_pitch, alt, ch3out…)" />
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+              <TextBlock Text="{Binding SelectionSummary}" Classes="muted" FontSize="11.5" />
+              <TextBlock Text="{Binding PickerMessage}" Foreground="{StaticResource Warn}" FontSize="11.5"
+                         IsVisible="{Binding PickerMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            </StackPanel>
+            <Button Grid.Column="2" Classes="tool" Content="Default" Command="{Binding ResetFieldsCommand}"
+                    ToolTip.Tip="Roll, pitch, nav roll and nav pitch" />
+            <Button Grid.Column="3" Classes="tool" Content="None" Command="{Binding ClearFieldsCommand}" />
+            <Button Grid.Column="4" Classes="tool accent" Content="Done" Command="{Binding ClosePickerCommand}" />
+          </Grid>
+          <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding FieldOptions}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel ItemWidth="240" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:TuningFieldOption">
+                  <CheckBox Classes="field" IsChecked="{Binding IsSelected}" ToolTip.Tip="{Binding Name}">
+                    <!-- several values share a label (alt, altasl…): the property name tells them apart -->
+                    <TextBlock FontSize="12" TextTrimming="CharacterEllipsis">
+                      <Run Text="{Binding Display}" />
+                      <Run Text="  " />
+                      <Run Text="{Binding Name}" FontSize="10.5" Foreground="{StaticResource Muted}" />
+                    </TextBlock>
+                  </CheckBox>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </Grid>
+      </Border>
+    </Grid>
+  </Border>
+</UserControl>
