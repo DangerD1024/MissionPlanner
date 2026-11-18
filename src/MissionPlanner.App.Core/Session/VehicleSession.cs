@@ -70,9 +70,21 @@ public sealed class VehicleSession : IAsyncDisposable
         RaiseState();
 
         var reporter = new BackgroundProgressReporter(progress, cancel);
+
+        // The reader must already run while Open() works: Open's version request (which tells it
+        // the vehicle supports MAVFTP) and the MAVFTP parameter download only wait for replies that
+        // the reader delivers, as the WinForms app's always-running reader thread does. Without it
+        // the capabilities stay unknown and parameters fall back to the slow one-by-one download.
+        var stop = new CancellationTokenSource();
+        _stop = stop;
+        _reader = Task.Factory.StartNew(() => ReadLoop(stop.Token), stop.Token,
+            TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
+
         try
         {
             Mav.BaseStream = LinkFactory.Create(spec);
+            // log the whole session, parameter download included, as the WinForms app does
+            StartTlog();
 
             await Task.Run(() =>
             {
@@ -87,27 +99,47 @@ public sealed class VehicleSession : IAsyncDisposable
         }
         catch (Exception ex) when (ex is not OperationCanceledException and not ConnectException)
         {
-            CloseQuietly();
-            SetState(LinkState.Disconnected);
+            await FailConnectAsync(stop).ConfigureAwait(false);
             throw new ConnectException(ex.Message, ex);
         }
         catch
         {
-            CloseQuietly();
-            SetState(LinkState.Disconnected);
+            await FailConnectAsync(stop).ConfigureAwait(false);
             throw;
         }
 
         Link = spec;
         ConnectedAt = DateTime.Now;
-        StartTlog();
-
-        var stop = new CancellationTokenSource();
-        _stop = stop;
-        _reader = Task.Factory.StartNew(() => ReadLoop(stop.Token), stop.Token,
-            TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
-
         SetState(LinkState.Connected);
+    }
+
+    private async Task FailConnectAsync(CancellationTokenSource stop)
+    {
+        _stop = null;
+        await stop.CancelAsync().ConfigureAwait(false);
+        try
+        {
+            await _reader.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+
+        stop.Dispose();
+        var tlog = TlogPath;
+        CloseQuietly();
+        // a failed attempt leaves no telemetry log behind
+        try
+        {
+            if (tlog != null && File.Exists(tlog) && new FileInfo(tlog).Length < 4096)
+                File.Delete(tlog);
+        }
+        catch (IOException)
+        {
+        }
+
+        TlogPath = null;
+        SetState(LinkState.Disconnected);
     }
 
     public async Task DisconnectAsync()
@@ -151,8 +183,15 @@ public sealed class VehicleSession : IAsyncDisposable
         {
             try
             {
-                if (!Mav.BaseStream.IsOpen)
+                if (Mav.BaseStream == null || !Mav.BaseStream.IsOpen)
                 {
+                    // Open() has not opened the port yet
+                    if (State == LinkState.Connecting)
+                    {
+                        await Task.Delay(20, stop).ConfigureAwait(false);
+                        continue;
+                    }
+
                     OnLinkLost("The link closed.");
                     return;
                 }
@@ -197,7 +236,7 @@ public sealed class VehicleSession : IAsyncDisposable
             catch (Exception ex)
             {
                 Log.Warn("read loop", ex);
-                if (!Mav.BaseStream.IsOpen)
+                if ((Mav.BaseStream == null || !Mav.BaseStream.IsOpen) && State != LinkState.Connecting)
                 {
                     OnLinkLost(ex.Message);
                     return;
