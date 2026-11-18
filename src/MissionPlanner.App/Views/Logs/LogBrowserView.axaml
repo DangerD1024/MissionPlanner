@@ -1,0 +1,214 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Logs"
+             xmlns:local="using:MissionPlanner.App.Views.Logs"
+             xmlns:controls="using:MissionPlanner.App.Controls"
+             xmlns:scottplot="using:ScottPlot.Avalonia"
+             x:Class="MissionPlanner.App.Views.Logs.LogBrowserView"
+             x:DataType="vm:LogBrowserViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="Button.tool">
+      <Setter Property="Padding" Value="10,6" />
+    </Style>
+    <Style Selector="Button.tool Path.icon">
+      <Setter Property="Width" Value="18" />
+      <Setter Property="Height" Value="18" />
+      <Setter Property="Stretch" Value="Uniform" />
+    </Style>
+    <Style Selector="CheckBox.toggle">
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="Margin" Value="0,0,14,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TreeView.fields TreeViewItem" x:DataType="vm:LogTreeNode">
+      <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+      <Setter Property="MinHeight" Value="26" />
+      <Setter Property="Padding" Value="2,0" />
+    </Style>
+    <Style Selector="TreeView.fields CheckBox">
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="MinHeight" Value="24" />
+      <Setter Property="Padding" Value="6,0,0,0" />
+    </Style>
+    <Style Selector="Border.chip">
+      <Setter Property="Background" Value="{StaticResource Bg2}" />
+      <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="Margin" Value="0,0,6,6" />
+    </Style>
+    <Style Selector="ListBox.events ListBoxItem">
+      <Setter Property="Padding" Value="8,3" />
+      <Setter Property="MinHeight" Value="0" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel>
+
+    <!-- toolbar -->
+    <Border DockPanel.Dock="Top" Background="{StaticResource Bg1}" BorderBrush="{StaticResource Line}"
+            BorderThickness="0,0,0,1" Padding="12,8">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <Button Classes="accent tool" Command="{Binding OpenCommand}" ToolTip.Tip="Open a .bin, .log or .tlog file">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Classes="icon" Data="{StaticResource IconFile}" />
+            <TextBlock Text="Open log…" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+        <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center" Spacing="1">
+          <TextBlock Classes="h2" Text="{Binding FileName, FallbackValue='Log Browser', TargetNullValue='Log Browser'}"
+                     TextTrimming="CharacterEllipsis" />
+          <TextBlock Classes="muted" FontSize="12" Text="{Binding Summary}" TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" IsVisible="{Binding HasLog}">
+          <TextBlock Classes="muted" Text="Markers" VerticalAlignment="Center" Margin="0,0,10,0" />
+          <CheckBox Classes="toggle" Content="Modes" IsChecked="{Binding ShowModes}" />
+          <CheckBox Classes="toggle" Content="Errors" IsChecked="{Binding ShowErrors}" />
+          <CheckBox Classes="toggle" Content="Messages" IsChecked="{Binding ShowMessages}" />
+          <CheckBox Classes="toggle" Content="Events" IsChecked="{Binding ShowEvents}" />
+          <CheckBox Classes="toggle" Content="Map" IsChecked="{Binding ShowMap}" IsEnabled="{Binding HasTrack}" />
+          <Button Classes="tool" Command="{Binding ClearGraphCommand}" IsEnabled="{Binding HasGraph}" ToolTip.Tip="Remove every line">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Path Classes="icon" Data="{StaticResource IconDelete}" />
+              <TextBlock Text="Clear graph" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- status line -->
+    <Border DockPanel.Dock="Bottom" Padding="12,4" Background="{StaticResource Bg1}" IsVisible="{Binding Status, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <TextBlock Text="{Binding Status}" Foreground="{StaticResource Warn}" TextTrimming="CharacterEllipsis" />
+    </Border>
+
+    <Panel>
+      <Grid x:Name="Body" ColumnDefinitions="290,4,*,4,360" IsVisible="{Binding HasLog}">
+
+        <!-- message types and fields -->
+        <Grid RowDefinitions="Auto,*" Background="{StaticResource Bg1}">
+          <Grid Margin="8,8,8,6" ColumnDefinitions="*,Auto">
+            <TextBox Text="{Binding Filter}" PlaceholderText="Filter: ATT, Roll, GPS.Alt…" />
+            <Button Grid.Column="1" Margin="4,0,0,0" Padding="8,4" Content="✕" Command="{Binding ClearFilterCommand}"
+                    IsVisible="{Binding Filter, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          </Grid>
+          <TreeView Grid.Row="1" Classes="fields" ItemsSource="{Binding Nodes}" Background="Transparent">
+            <TreeView.ItemTemplate>
+              <TreeDataTemplate DataType="vm:LogTreeNode" ItemsSource="{Binding Children}">
+                <Panel>
+                  <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding IsGroup}" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Detail}" Classes="muted" FontSize="11" VerticalAlignment="Center" />
+                  </StackPanel>
+                  <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding IsField}">
+                    <CheckBox IsChecked="{Binding IsChecked}" Content="{Binding Name}" VerticalAlignment="Center" />
+                    <Ellipse Width="9" Height="9" VerticalAlignment="Center" IsVisible="{Binding IsChecked}"
+                             Fill="{Binding Color, Converter={x:Static local:LogConverters.HexBrush}}" />
+                    <ProgressBar IsIndeterminate="True" Width="36" MinWidth="0" Height="4" MinHeight="4"
+                                 VerticalAlignment="Center" IsVisible="{Binding IsBusy}" />
+                  </StackPanel>
+                </Panel>
+              </TreeDataTemplate>
+            </TreeView.ItemTemplate>
+          </TreeView>
+        </Grid>
+
+        <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="{StaticResource Line}" />
+
+        <!-- graph -->
+        <Grid Grid.Column="2" RowDefinitions="*,Auto">
+          <scottplot:AvaPlot x:Name="Graph" />
+          <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4" IsHitTestVisible="False"
+                      IsVisible="{Binding !HasGraph}">
+            <TextBlock Classes="h2" HorizontalAlignment="Center" Text="Tick fields on the left to graph them" />
+            <TextBlock Classes="muted" HorizontalAlignment="Center"
+                       Text="Scroll to zoom, drag to pan, right-drag to zoom an axis, double-click to fit." />
+          </StackPanel>
+          <ItemsControl Grid.Row="1" ItemsSource="{Binding Series}" Margin="10,6,10,2">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:GraphSeries">
+                <Border Classes="chip">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Border Width="14" Height="4" CornerRadius="2" VerticalAlignment="Center"
+                            Background="{Binding Color, Converter={x:Static local:LogConverters.HexBrush}}" />
+                    <StackPanel VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                      <TextBlock Text="{Binding Detail}" Classes="muted" FontSize="11" />
+                    </StackPanel>
+                    <ToggleButton Padding="6,2" FontSize="11" Content="R" VerticalAlignment="Center"
+                                  IsChecked="{Binding RightAxis}" ToolTip.Tip="Use the right-hand Y axis" />
+                    <Button Padding="6,2" Content="✕" VerticalAlignment="Center" ToolTip.Tip="Remove"
+                            Command="{Binding $parent[UserControl].((vm:LogBrowserViewModel)DataContext).RemoveSeriesCommand}"
+                            CommandParameter="{Binding}" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Grid>
+
+        <GridSplitter Grid.Column="3" ResizeDirection="Columns" Background="{StaticResource Line}" />
+
+        <!-- map and events -->
+        <Grid Grid.Column="4" x:Name="SidePanel" RowDefinitions="*,4,*" Background="{StaticResource Bg1}">
+          <Panel x:Name="MapPanel" IsVisible="{Binding MapVisible}">
+            <controls:MapView x:Name="Map" />
+            <Border Background="#c0101317" CornerRadius="4" Padding="6,2" Margin="8,6" VerticalAlignment="Top"
+                    HorizontalAlignment="Left" IsHitTestVisible="False">
+              <TextBlock Classes="muted" FontSize="11" Text="GPS track · hover the graph to follow it" />
+            </Border>
+          </Panel>
+          <GridSplitter Grid.Row="1" ResizeDirection="Rows" Background="{StaticResource Line}"
+                        IsVisible="{Binding MapVisible}" />
+          <Grid Grid.Row="2" x:Name="EventsPanel" RowDefinitions="Auto,*">
+            <TextBlock Classes="h2" Margin="10,8,10,4" Text="Events" />
+            <ListBox Grid.Row="1" Classes="events" ItemsSource="{Binding VisibleEvents}" Background="Transparent"
+                     x:Name="EventList">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:LogEvent">
+                  <Grid ColumnDefinitions="56,52,*">
+                    <TextBlock Text="{Binding TimeText}" Classes="muted" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"
+                               Text="{Binding Kind, Converter={x:Static local:LogConverters.EventLabel}}"
+                               Foreground="{Binding Kind, Converter={x:Static local:LogConverters.EventBrush}}" />
+                    <TextBlock Grid.Column="2" Text="{Binding Text}" TextTrimming="CharacterEllipsis" FontSize="12"
+                               VerticalAlignment="Center" ToolTip.Tip="{Binding Text}" />
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Grid>
+        </Grid>
+      </Grid>
+
+      <!-- nothing open yet -->
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" IsVisible="{Binding ShowWelcome}">
+        <Path Classes="icon" Data="{StaticResource IconFile}" Stroke="{StaticResource Muted}" HorizontalAlignment="Center"
+              Width="48" Height="48" Stretch="Uniform" />
+        <TextBlock Classes="h1" HorizontalAlignment="Center" Text="Open a log to explore it" />
+        <TextBlock Classes="muted" HorizontalAlignment="Center" TextAlignment="Center"
+                   Text="DataFlash logs (.bin, .log) from the vehicle, or telemetry logs (.tlog) recorded by the ground station." />
+        <Button Classes="accent tool" HorizontalAlignment="Center" Margin="0,6,0,0" Command="{Binding OpenCommand}"
+                Content="Open log…" />
+      </StackPanel>
+
+      <!-- loading -->
+      <Border Classes="card" HorizontalAlignment="Center" VerticalAlignment="Center" MinWidth="380" Padding="20"
+              IsVisible="{Binding IsLoading}">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="h2" Text="{Binding LoadingText}" TextTrimming="CharacterEllipsis" />
+          <ProgressBar Minimum="0" Maximum="100" Value="{Binding LoadingPercent}"
+                       IsIndeterminate="{Binding LoadingIndeterminate}" />
+          <TextBlock Classes="muted" FontSize="12" Text="Large logs take a few seconds; the window stays usable." />
+        </StackPanel>
+      </Border>
+    </Panel>
+  </DockPanel>
+</UserControl>

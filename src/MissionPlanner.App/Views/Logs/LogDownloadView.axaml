@@ -1,0 +1,184 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Logs"
+             xmlns:local="using:MissionPlanner.App.Views.Logs"
+             x:Class="MissionPlanner.App.Views.Logs.LogDownloadView"
+             x:DataType="vm:LogDownloadViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="Border.row">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="6,4" />
+    </Style>
+    <Style Selector="Border.row:pointerover">
+      <Setter Property="Background" Value="{StaticResource Bg3}" />
+    </Style>
+    <Style Selector="TextBlock.colhead">
+      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.tool">
+      <Setter Property="Padding" Value="10,6" />
+    </Style>
+    <Style Selector="Button.tool > StackPanel > TextBlock">
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.tool Path.icon">
+      <Setter Property="Width" Value="18" />
+      <Setter Property="Height" Value="18" />
+      <Setter Property="Stretch" Value="Uniform" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto" Margin="18,14,18,12">
+
+    <!-- header -->
+    <Grid ColumnDefinitions="*,Auto">
+      <StackPanel Spacing="2">
+        <TextBlock Classes="h1" Text="DataFlash Logs" />
+        <TextBlock Classes="muted" Text="Logs stored on the vehicle's flight controller, downloaded over MAVLink." />
+      </StackPanel>
+      <Button Grid.Column="1" Classes="tool" VerticalAlignment="Center" Command="{Binding ListLogsCommand}"
+              IsEnabled="{Binding CanList}" ToolTip.Tip="Ask the vehicle for its log list">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Path Classes="icon" Data="{StaticResource IconRefresh}" />
+          <TextBlock Text="List logs" />
+        </StackPanel>
+      </Button>
+    </Grid>
+
+    <!-- armed warning, as Mission Planner gives on opening the form -->
+    <Border Grid.Row="1" Margin="0,10,0,0" Padding="12,8" CornerRadius="6" Background="#33f0b429"
+            BorderBrush="{StaticResource Warn}" BorderThickness="1" IsVisible="{Binding IsArmed}">
+      <TextBlock Foreground="{StaticResource Warn}" TextWrapping="Wrap"
+                 Text="The vehicle is armed. Disarm it before downloading logs." />
+    </Border>
+
+    <!-- log list -->
+    <Border Grid.Row="2" Classes="card" Margin="0,12,0,0" Padding="8">
+      <Grid RowDefinitions="Auto,1,*">
+        <Grid ColumnDefinitions="36,56,200,100,*,110" Margin="6,2,6,6">
+          <CheckBox IsChecked="{Binding AllSelected}" MinWidth="0" Padding="0" VerticalAlignment="Center"
+                    IsEnabled="{Binding !IsBusy}" ToolTip.Tip="Select all" />
+          <TextBlock Grid.Column="1" Classes="colhead" Text="#" />
+          <TextBlock Grid.Column="2" Classes="colhead" Text="DATE (VEHICLE CLOCK)" />
+          <TextBlock Grid.Column="3" Classes="colhead" Text="SIZE" HorizontalAlignment="Right" Margin="0,0,16,0" />
+          <TextBlock Grid.Column="4" Classes="colhead" Text="STATUS" />
+          <TextBlock Grid.Column="5" Classes="colhead" Text="{Binding SelectionText}" HorizontalAlignment="Right"
+                     FontWeight="Normal" />
+        </Grid>
+        <Border Grid.Row="1" Background="{StaticResource Line}" />
+
+        <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
+          <ItemsControl ItemsSource="{Binding Entries}" Margin="0,4,0,0">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:LogEntryRow">
+                <Border Classes="row">
+                  <Grid ColumnDefinitions="36,56,200,100,*,110" MinHeight="32">
+                    <CheckBox IsChecked="{Binding IsSelected}" MinWidth="0" Padding="0" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Text="{Binding Id}" VerticalAlignment="Center" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="2" Text="{Binding DateText}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="3" Text="{Binding SizeText}" VerticalAlignment="Center"
+                               HorizontalAlignment="Right" Margin="0,0,16,0" />
+                    <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding StateText}" VerticalAlignment="Center"
+                                 Foreground="{Binding State, Converter={x:Static local:LogConverters.StateBrush}}" />
+                      <ProgressBar Width="160" Height="6" MinHeight="6" Minimum="0" Maximum="100"
+                                   Value="{Binding Progress}" IsVisible="{Binding IsTransferring}" VerticalAlignment="Center" />
+                      <TextBlock Classes="muted" Text="{Binding LocalName}" VerticalAlignment="Center"
+                                 TextTrimming="CharacterEllipsis" IsVisible="{Binding IsDownloaded}" />
+                    </StackPanel>
+                    <Button Grid.Column="5" HorizontalAlignment="Right" Padding="10,3" Content="Review"
+                            IsVisible="{Binding IsDownloaded}"
+                            Command="{Binding $parent[UserControl].((vm:LogDownloadViewModel)DataContext).ReviewCommand}"
+                            CommandParameter="{Binding}" ToolTip.Tip="Open this log in the log browser" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+
+        <!-- empty states -->
+        <StackPanel Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6"
+                    IsVisible="{Binding ShowNotConnected}">
+          <TextBlock Classes="h2" HorizontalAlignment="Center" Text="Not connected" />
+          <TextBlock Classes="muted" HorizontalAlignment="Center" Text="Connect to a vehicle to list and download its logs." />
+          <Button HorizontalAlignment="Center" Margin="0,8,0,0" Command="{Binding ReviewCommand}" CommandParameter="{x:Null}"
+                  Content="Open the log browser" />
+        </StackPanel>
+        <StackPanel Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8"
+                    IsVisible="{Binding IsListing}">
+          <ProgressBar IsIndeterminate="True" Width="220" />
+          <TextBlock Classes="muted" HorizontalAlignment="Center" Text="Asking the vehicle for its logs…" />
+        </StackPanel>
+        <TextBlock Grid.Row="2" Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center"
+                   Text="The vehicle has no logs." IsVisible="{Binding ShowEmpty}" />
+      </Grid>
+    </Border>
+
+    <!-- progress -->
+    <Border Grid.Row="3" Classes="card" Margin="0,10,0,0" IsVisible="{Binding IsDownloading}">
+      <Grid ColumnDefinitions="90,*,Auto" RowDefinitions="Auto,8,Auto" >
+        <TextBlock Classes="muted" Text="This log" VerticalAlignment="Center" />
+        <ProgressBar Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding FileProgress}" Height="8" MinHeight="8"
+                     VerticalAlignment="Center" />
+        <TextBlock Grid.Column="2" Text="{Binding FileProgressText}" Margin="12,0,0,0" MinWidth="230"
+                   VerticalAlignment="Center" />
+        <TextBlock Grid.Row="2" Classes="muted" Text="All" VerticalAlignment="Center" />
+        <ProgressBar Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding OverallProgress}"
+                     Height="8" MinHeight="8" VerticalAlignment="Center" />
+        <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding OverallProgressText}" Margin="12,0,0,0" MinWidth="230"
+                   VerticalAlignment="Center" />
+      </Grid>
+    </Border>
+
+    <!-- actions -->
+    <Grid Grid.Row="4" ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto" Margin="0,12,0,0">
+      <Button Classes="accent tool" Command="{Binding DownloadSelectedCommand}" IsEnabled="{Binding CanDownload}"
+              ToolTip.Tip="Download the ticked logs">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Path Classes="icon" Data="{StaticResource IconDown}" />
+          <TextBlock Text="Download selected" />
+        </StackPanel>
+      </Button>
+      <Button Grid.Column="1" Classes="tool" Margin="8,0,0,0" Command="{Binding DownloadAllCommand}"
+              IsEnabled="{Binding CanDownload}" Content="Download all" />
+      <Button Grid.Column="2" Classes="tool" Margin="8,0,0,0" Command="{Binding CancelCommand}"
+              IsEnabled="{Binding CanCancel}" IsVisible="{Binding IsDownloading}" Content="Cancel" />
+      <Button Grid.Column="3" Classes="tool" Margin="8,0,0,0" Command="{Binding ReviewCommand}"
+              CommandParameter="{x:Null}" ToolTip.Tip="Open the last downloaded log in the log browser">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Path Classes="icon" Data="{StaticResource IconFile}" />
+          <TextBlock Text="Review a log" />
+        </StackPanel>
+      </Button>
+      <Button Grid.Column="5" Classes="danger tool" Command="{Binding ClearLogsCommand}" IsEnabled="{Binding CanErase}"
+              ToolTip.Tip="Erase every log on the vehicle">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Path Classes="icon" Data="{StaticResource IconDelete}" />
+          <TextBlock Text="Clear logs" />
+        </StackPanel>
+      </Button>
+    </Grid>
+
+    <!-- folder and status -->
+    <Grid Grid.Row="5" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" Margin="0,12,0,0">
+      <Path Classes="icon" Data="{StaticResource IconFolder}" Stroke="{StaticResource Muted}" VerticalAlignment="Center" />
+      <SelectableTextBlock Grid.Column="1" Margin="8,0" VerticalAlignment="Center" Text="{Binding Folder}"
+                           Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis" />
+      <Button Grid.Column="2" Classes="tool" Command="{Binding OpenFolderCommand}" Content="Open folder" />
+      <SelectableTextBlock Grid.Row="1" Grid.ColumnSpan="3" Margin="0,8,0,0" TextWrapping="Wrap" Text="{Binding Status}"
+                           Classes.error="{Binding StatusIsError}" Foreground="{StaticResource Text}">
+        <SelectableTextBlock.Styles>
+          <Style Selector="SelectableTextBlock.error">
+            <Setter Property="Foreground" Value="{StaticResource Danger}" />
+          </Style>
+        </SelectableTextBlock.Styles>
+      </SelectableTextBlock>
+    </Grid>
+  </Grid>
+</UserControl>
