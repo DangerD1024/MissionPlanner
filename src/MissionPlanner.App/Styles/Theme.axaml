@@ -31,6 +31,8 @@
       <SolidColorBrush x:Key="Danger" Color="{StaticResource DangerColor}" />
       <SolidColorBrush x:Key="Warn" Color="{StaticResource WarnColor}" />
       <SolidColorBrush x:Key="Info" Color="{StaticResource InfoColor}" />
+      <!-- panels floating over the map or HUD; the theme service replaces it per theme -->
+      <SolidColorBrush x:Key="Overlay" Color="#d8161a1f" />
 
       <!-- Fluent accent follows the palette -->
       <Color x:Key="SystemAccentColor">#8cc63f</Color>

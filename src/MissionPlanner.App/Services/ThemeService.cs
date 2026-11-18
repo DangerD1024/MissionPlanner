@@ -74,6 +74,10 @@ public sealed class ThemeService : IThemeService
         Brush("Danger", p.Danger);
         Brush("Warn", p.Warn);
         Brush("Info", p.Info);
+        // panels floating over the map or the HUD: translucent page colour, readable with Text
+        var overlay = Color.Parse(p.Bg1);
+        res["OverlayColor"] = Color.FromArgb(0xd8, overlay.R, overlay.G, overlay.B);
+        res["Overlay"] = new SolidColorBrush((Color)res["OverlayColor"]!);
 
         // Fluent controls (checkboxes, sliders, selection) follow the accent
         var accent = Color.Parse(p.Accent);
