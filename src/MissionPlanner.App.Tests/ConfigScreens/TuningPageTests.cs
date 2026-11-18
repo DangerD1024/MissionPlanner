@@ -6,10 +6,21 @@ using static MissionPlanner.App.Tests.ConfigScreens.ParamTestSupport;
 
 namespace MissionPlanner.App.Tests.ConfigScreens;
 
-/// <summary>The Basic and Extended Tuning pages over a parameter list (no link): slider links, the roll/pitch lock and large changes.</summary>
+/// <summary>
+/// The Basic and Extended Tuning pages over a parameter list (no link): which page each vehicle
+/// gets, the copter sliders, the cards and their editors, the roll/pitch lock, large changes and
+/// the 4.7 warning.
+/// </summary>
 [TestClass]
 public class TuningPageTests
 {
+    private static (AppServices Services, FakeDialogs Dialogs) Vehicle(string fixture, Firmwares firmware)
+    {
+        var (s, dialogs, _) = CreateServices();
+        TuningFixtures.Apply(s, fixture, firmware);
+        return (s, dialogs);
+    }
+
     private static (AppServices Services, FakeDialogs Dialogs) Copter(params (string Name, double Value)[] values)
     {
         var (s, dialogs, _) = CreateServices();
@@ -22,15 +33,19 @@ public class TuningPageTests
     [
         ("ATC_RAT_RLL_P", 0.135), ("ATC_RAT_RLL_I", 0.135), ("ATC_RAT_RLL_D", 0.0036), ("ATC_RAT_RLL_IMAX", 0.5),
         ("ATC_RAT_PIT_P", 0.135), ("ATC_RAT_PIT_I", 0.135), ("ATC_RAT_PIT_D", 0.0036), ("ATC_RAT_PIT_IMAX", 0.5),
-        ("ATC_RAT_YAW_P", 0.18), ("ATC_ANG_RLL_P", 4.5), ("ATC_ANG_PIT_P", 4.5),
+        ("ATC_RAT_YAW_P", 0.18), ("ATC_ANG_RLL_P", 4.5), ("ATC_ANG_PIT_P", 4.5), ("ATC_ACC_R_MAX", 1100), ("ATC_ACC_P_MAX", 1100),
         ("PSC_ACCZ_P", 0.5), ("PSC_ACCZ_I", 1), ("MOT_THST_HOVER", 0.35), ("ATC_INPUT_TC", 0.15),
         ("INS_HNTCH_ENABLE", 0), ("INS_LOG_BAT_MASK", 1),
     ];
 
     private static BasicTuningViewModel Basic(AppServices s, Func<string, ParamMeta?>? meta = null)
     {
-        var page = new BasicTuningViewModel(s) { XmlPath = Path.Combine(TestEnvironment.DataRoot, "none.xml") };
-        page.MetaSource = meta ?? (_ => null);
+        var page = new BasicTuningViewModel(s)
+        {
+            XmlPath = Path.Combine(TestEnvironment.DataRoot, "none.xml"),
+            MetaSource = meta ?? (_ => null),
+            WriteDelay = Timeout.InfiniteTimeSpan,
+        };
         page.Rebuild();
         return page;
     }
@@ -43,50 +58,128 @@ public class TuningPageTests
     }
 
     [TestMethod]
-    public void RollPitchSensitivityQueuesItsLinkedValues()
+    public void EachVehicleGetsMissionPlannersPages()
+    {
+        // copter: ConfigSimplePids sliders, then ConfigArducopter
+        var (copter, _) = Vehicle(TuningFixtures.Copter, Firmwares.ArduCopter2);
+        var basic = Basic(copter);
+        Assert.IsTrue(basic.HasSliders);
+        Assert.IsFalse(basic.HasCards);
+        Assert.AreEqual("Basic Tuning", basic.Heading);
+        CollectionAssert.AreEqual(new[] { "RC Feel Roll/Pitch", "Roll/Pitch Sensitivity", "Throttle Hover", "Climb Sensitivity" },
+            basic.Sliders.Select(x => x.Title).ToArray());
+        Assert.AreEqual(TuningSimplePids.Note, basic.InfoText);
+        var ext = Extended(copter);
+        Assert.AreEqual("Extended Tuning", ext.Heading);
+        Assert.AreEqual("ArduCopter", ext.VehicleText);
+        Assert.HasCount(17, ext.Rows.SelectMany(r => r.Cells).SelectMany(c => c.Groups).ToList());
+
+        // plane: ConfigArduplane as Basic Tuning, no Extended Tuning without QuadPlane
+        var (plane, _) = Vehicle(TuningFixtures.Plane, Firmwares.ArduPlane);
+        var planeBasic = Basic(plane);
+        Assert.IsTrue(planeBasic.HasCards);
+        Assert.IsFalse(planeBasic.HasSliders);
+        Assert.AreEqual("Basic Tuning", planeBasic.Heading);
+        CollectionAssert.AreEqual(new[] { "Servo Roll Pid", "Servo Pitch Pid", "Servo Yaw" },
+            planeBasic.Rows[0].Cells.SelectMany(c => c.Groups).Select(g => g.Title).ToArray());
+        Assert.IsFalse(planeBasic.CanLockRollPitch);
+        var planeExt = Extended(plane);
+        Assert.IsTrue(planeExt.IsEmpty);
+        StringAssert.Contains(planeExt.EmptyText, "Q_ENABLE");
+
+        // QuadPlane: "QP Extended Tuning" with the Q_ parameters
+        var (qp, _) = Vehicle(TuningFixtures.QuadPlane, Firmwares.ArduPlane);
+        var qpExt = Extended(qp);
+        Assert.AreEqual("QP Extended Tuning", qpExt.Heading);
+        Assert.AreEqual("ArduPlane QuadPlane", qpExt.VehicleText);
+        Assert.IsNotNull(qpExt.Item("Q_A_RAT_RLL_P"));
+        Assert.IsTrue(qpExt.LockRollPitch);
+        Assert.IsTrue(Basic(qp).HasCards);
+
+        // nothing to tune without parameters
+        var (empty, _, _) = CreateServices();
+        empty.Session.Cs.firmware = Firmwares.ArduCopter2;
+        var none = Extended(empty);
+        Assert.IsTrue(none.IsEmpty);
+        StringAssert.Contains(none.EmptyText, "Connect to a vehicle");
+        Assert.IsTrue(Basic(empty).IsEmpty);
+    }
+
+    [TestMethod]
+    public void CardsKeepMissionPlannersArrangement()
+    {
+        var (s, _) = Vehicle(TuningFixtures.Copter, Firmwares.ArduCopter2);
+        var page = Extended(s);
+
+        CollectionAssert.AreEqual(new[] { 4, 4, 4, 1, 1 }, page.Rows.Select(r => r.Cells.Count).ToArray());
+        CollectionAssert.AreEqual(new[] { false, true, false, false, false }, page.Rows.Select(r => r.LockAbove).ToArray());
+        Assert.AreEqual(TuningLayouts.Copter.CardWidth, page.Rows[0].Cells[0].Width);
+        Assert.AreEqual(2 * TuningLayouts.Copter.CardWidth + TuningPageViewModel.Gap, page.Rows[3].Cells[0].Width, "Filter Logs spans two columns");
+
+        // Velocity XY with Basic Filters under it, as in the WinForms designer
+        CollectionAssert.AreEqual(new[] { "Velocity XY (Vel to Accel)", "Basic Filters" },
+            page.Rows[1].Cells[3].Groups.Select(g => g.Title).ToArray());
+        var logs = page.Rows[3].Cells[0].Groups.Single();
+        CollectionAssert.AreEqual(new[] { 1, 1 }, logs.Columns.Select(c => c.Items.Count).ToArray(), "Mask | Options side by side");
+        Assert.AreEqual(TuningLayouts.Copter.LabelWidth, page.Item("ATC_RAT_RLL_P")!.LabelWidth);
+    }
+
+    [TestMethod]
+    public void TwoColumnCardsFillTopToBottom()
+    {
+        var items = Enumerable.Range(0, 8)
+            .Select(i => new TuningParamItem("v" + i, new FriendlyParamItem("P" + i, Meta("P" + i), 0, (_, _) => { }), "", 80))
+            .ToList();
+        var columns = TuningGroupItem.Split(items, 2);
+        CollectionAssert.AreEqual(new[] { "v0", "v1", "v2", "v3" }, columns[0].Items.Select(i => i.Label).ToArray());
+        CollectionAssert.AreEqual(new[] { "v4", "v5", "v6", "v7" }, columns[1].Items.Select(i => i.Label).ToArray());
+        // a card with fewer values keeps its two columns (the second may be empty) so its boxes stay narrow
+        CollectionAssert.AreEqual(new[] { 1, 0 }, TuningGroupItem.Split(items.Take(1).ToList(), 2).Select(c => c.Items.Count).ToArray());
+        CollectionAssert.AreEqual(new[] { 2, 1 }, TuningGroupItem.Split(items.Take(3).ToList(), 2).Select(c => c.Items.Count).ToArray());
+        Assert.HasCount(8, TuningGroupItem.Split(items, 1).Single().Items);
+    }
+
+    [TestMethod]
+    public void SlidersWaitToRestThenWriteWithTheirRelatedValues()
     {
         var (s, _) = Copter(CopterRates);
         var page = Basic(s);
         CollectionAssert.AreEqual(new[] { "ATC_INPUT_TC", "ATC_RAT_RLL_P", "MOT_THST_HOVER", "PSC_ACCZ_P" },
-            page.Sections.SelectMany(x => x.Items).Select(i => i.Name).ToArray());
+            page.Sliders.Select(i => i.Name).ToArray());
 
-        var rate = page.Item("ATC_RAT_RLL_P")!;
+        var rate = page.Slider("ATC_RAT_RLL_P")!;
         CollectionAssert.AreEqual(new[] { "ATC_RAT_RLL_I", "ATC_RAT_PIT_P", "ATC_RAT_PIT_I" }, rate.Links.Select(l => l.Name).ToArray());
+        StringAssert.Contains(rate.Tip, "Also sets ATC_RAT_RLL_I, ATC_RAT_PIT_P, ATC_RAT_PIT_I");
+        Assert.AreEqual("PSC_ACCZ_I (×2)", page.Slider("PSC_ACCZ_P")!.Tip.Split("Also sets ")[1]);
 
+        // a move is held until the slider rests; the tuning pages' Write Params queue is not used
         rate.BoxValue = 0.18m;
         Assert.IsTrue(rate.IsModified);
-        Assert.AreEqual(4, page.PendingCount);
-        foreach (var name in new[] { "ATC_RAT_RLL_P", "ATC_RAT_RLL_I", "ATC_RAT_PIT_P", "ATC_RAT_PIT_I" })
-        {
-            Assert.IsTrue(page.Edits.TryGet(name, out var v), name);
-            Assert.AreEqual(0.18, v, 1e-9, name);
-        }
+        Assert.IsTrue(page.IsWriting);
+        Assert.AreEqual(0, page.PendingCount);
 
-        Assert.IsTrue(rate.Links.All(l => l.IsModified));
-        Assert.AreEqual("0.135 → 0.18", rate.Links[0].ValueText);
-
-        // back to the vehicle's value: nothing is left to write
+        // back where it started: nothing to send
         rate.BoxValue = 0.135m;
         Assert.IsFalse(rate.IsModified);
-        Assert.AreEqual(0, page.PendingCount);
-        Assert.IsFalse(rate.Links.Any(l => l.IsModified));
-        Assert.AreEqual("0.135", rate.Links[0].ValueText);
+        Assert.IsFalse(page.IsWriting);
+        page.Slider("MOT_THST_HOVER")!.BoxValue = 0.35m;
+        Assert.IsFalse(page.Slider("MOT_THST_HOVER")!.IsModified);
     }
 
     [TestMethod]
-    public void ClimbSensitivitySetsITwiceP()
+    public async Task SlidersWriteNothingWhenNotConnected()
     {
         var (s, _) = Copter(CopterRates);
         var page = Basic(s);
-        var climb = page.Item("PSC_ACCZ_P")!;
-        Assert.AreEqual("×2", climb.Links.Single().MultiplierText);
-
+        var climb = page.Slider("PSC_ACCZ_P")!;
         climb.Position = climb.ToPosition(0.6);
-        Assert.IsTrue(page.Edits.TryGet("PSC_ACCZ_P", out var p));
-        Assert.IsTrue(page.Edits.TryGet("PSC_ACCZ_I", out var i));
-        Assert.AreEqual(0.6, p, 1e-9);
-        Assert.AreEqual(1.2, i, 1e-9);
-        Assert.AreEqual(0.6m, climb.BoxValue);
+        Assert.AreEqual(0.6, climb.PendingValue!.Value, 1e-9);
+
+        await page.FlushAsync();
+        Assert.AreEqual("Not connected: nothing was written.", page.InfoText);
+        Assert.IsFalse(climb.IsModified);
+        Assert.IsFalse(page.IsWriting);
+        Assert.AreEqual(0.5m, climb.BoxValue);
     }
 
     [TestMethod]
@@ -100,28 +193,27 @@ public class TuningPageTests
         };
         var page = Basic(s, meta.GetValueOrDefault);
 
-        var rate = page.Item("ATC_RAT_RLL_P")!;
+        var rate = page.Slider("ATC_RAT_RLL_P")!;
         Assert.AreEqual(0.01, rate.Minimum);
         Assert.AreEqual(0.5, rate.Maximum);
         Assert.AreEqual(0.005, rate.Increment);
 
         // a slider position snaps to the documented step
         rate.Position = rate.ToPosition(0.2013);
-        Assert.IsTrue(page.Edits.TryGet("ATC_RAT_RLL_P", out var v));
-        Assert.AreEqual(0.2, v, 1e-9);
+        Assert.AreEqual(0.2, rate.PendingValue!.Value, 1e-9);
 
         // the xml range applies without documentation; the current value is never cut off
         var (s2, _) = Copter(("ATC_RAT_RLL_P", 0.5));
-        var wide = Basic(s2).Item("ATC_RAT_RLL_P")!;
+        var wide = Basic(s2).Slider("ATC_RAT_RLL_P")!;
         Assert.AreEqual(0.08, wide.Minimum);
         Assert.AreEqual(0.5, wide.Maximum);
 
-        var hover = page.Item("MOT_THST_HOVER")!;
+        var hover = page.Slider("MOT_THST_HOVER")!;
         Assert.AreEqual(0.2, hover.Minimum);
         Assert.AreEqual(0.001, hover.Increment);
 
         // the input time constant runs backwards: right is crisper (smaller)
-        var tc = page.Item("ATC_INPUT_TC")!;
+        var tc = page.Slider("ATC_INPUT_TC")!;
         Assert.IsTrue(tc.Reversed);
         Assert.AreEqual("1", tc.LeftText);
         Assert.AreEqual("0", tc.RightText);
@@ -134,6 +226,7 @@ public class TuningPageTests
         var page = Extended(s);
         Assert.IsTrue(page.CanLockRollPitch);
         Assert.IsTrue(page.LockRollPitch, "roll and pitch agree");
+        Assert.IsTrue(page.Rows.Single(r => r.LockAbove).Cells.SelectMany(c => c.Groups).Any(g => g.Title == "Rate Roll"));
 
         page.Item("ATC_RAT_RLL_P")!.Editor.NumericValue = 0.15m;
         Assert.IsTrue(page.Edits.TryGet("ATC_RAT_PIT_P", out var pitch));
@@ -146,9 +239,11 @@ public class TuningPageTests
         Assert.IsTrue(page.Edits.TryGet("ATC_ANG_RLL_P", out var roll));
         Assert.AreEqual(6, roll);
 
-        // yaw has no twin
+        // yaw has no twin; nor has the stabilize accel limit (Mission Planner pairs the P only)
         page.Item("ATC_RAT_YAW_P")!.Editor.NumericValue = 0.2m;
-        Assert.AreEqual(5, page.PendingCount);
+        page.Item("ATC_ACC_R_MAX")!.Editor.NumericValue = 1000m;
+        Assert.AreEqual(6, page.PendingCount);
+        Assert.AreEqual("6 unsaved changes", page.PendingText);
 
         // unlocked: only the edited value
         page.LockRollPitch = false;
@@ -173,7 +268,7 @@ public class TuningPageTests
     }
 
     [TestMethod]
-    public void ExtendedPageShowsCardsWithEditorsByKind()
+    public void CardsUseEditorsByKind()
     {
         var (s, _) = Copter(CopterRates);
         var meta = new Dictionary<string, ParamMeta>
@@ -182,22 +277,57 @@ public class TuningPageTests
             ["INS_LOG_BAT_MASK"] = Meta("INS_LOG_BAT_MASK", "Sensor Bitmask", bits: [new(0, "IMU1"), new(1, "IMU2")]),
             ["ATC_RAT_RLL_P"] = Meta("ATC_RAT_RLL_P", "Roll axis rate controller P gain", units: "", min: 0.01, max: 0.5, increment: 0.005),
             ["ATC_RAT_RLL_D"] = Meta("ATC_RAT_RLL_D", "Roll axis rate controller D gain", min: 0, max: 0.05),
+            ["ATC_ACC_R_MAX"] = Meta("ATC_ACC_R_MAX", "Acceleration Max for Roll", units: "deg/s/s", min: 0, max: 1800),
         };
         var page = Extended(s, meta.GetValueOrDefault);
 
-        Assert.AreEqual("ArduCopter", page.VehicleText);
-        CollectionAssert.AreEqual(new[] { TuningLayouts.RateSection, TuningLayouts.AttitudeSection, TuningLayouts.PositionSection, TuningLayouts.FilterSection },
-            page.Sections.Select(x => x.Title).ToArray());
-        CollectionAssert.AreEqual(new[] { "P", "I", "D", "IMAX" },
-            page.Sections[0].Groups[0].Items.Select(i => i.Label).ToArray());
         Assert.IsTrue(page.Item("INS_HNTCH_ENABLE")!.Editor.IsOptions);
         Assert.IsTrue(page.Item("INS_LOG_BAT_MASK")!.Editor.IsBitmask);
         Assert.AreEqual(0.005m, page.Item("ATC_RAT_RLL_P")!.Editor.Increment);
-        Assert.AreEqual(0.001m, page.Item("ATC_RAT_RLL_D")!.Editor.Increment, "a step is guessed when none is documented");
-        Assert.AreEqual(0.001m, page.Item("ATC_RAT_PIT_P")!.Editor.Increment, "undocumented gains still get a fine step");
+        Assert.AreEqual(0.0001m, page.Item("ATC_RAT_RLL_D")!.Editor.Increment, "Mission Planner's step when none is documented");
+        Assert.AreEqual(0.001m, page.Item("ATC_RAT_PIT_P")!.Editor.Increment);
         StringAssert.Contains(page.Item("ATC_RAT_RLL_P")!.Tip, "Range 0.01 to 0.5");
-        Assert.AreEqual(page.AllItems.Count, page.ShownCount);
+        Assert.AreEqual("deg/s/s", page.Item("ATC_ACC_R_MAX")!.UnitsText);
+        Assert.AreEqual("", page.Item("ATC_RAT_RLL_P")!.UnitsText);
+        Assert.AreEqual(page.AllItems.Count, page.Rows.SelectMany(r => r.Cells).SelectMany(c => c.Groups).Sum(g => g.Items.Count()));
         Assert.IsFalse(page.IsEmpty);
+    }
+
+    [TestMethod]
+    public void LabelsWithUnitsHideTheUnitsColumn()
+    {
+        var (s, _) = Vehicle(TuningFixtures.Plane, Firmwares.ArduPlane);
+        var meta = new Dictionary<string, ParamMeta>
+        {
+            ["TECS_CLMB_MAX"] = Meta("TECS_CLMB_MAX", "Maximum Climb Rate (metres/sec)", units: "m/s", min: 0.1, max: 20),
+            ["NAVL1_PERIOD"] = Meta("NAVL1_PERIOD", "L1 control period", units: "s", min: 1, max: 60),
+        };
+        var page = Basic(s, meta.GetValueOrDefault);
+        Assert.AreEqual("Climb Max (m/s)", page.Item("TECS_CLMB_MAX")!.Label);
+        Assert.AreEqual("", page.Item("TECS_CLMB_MAX")!.UnitsText);
+        Assert.AreEqual("s", page.Item("NAVL1_PERIOD")!.UnitsText);
+        Assert.AreEqual(TuningLayouts.Plane.LabelWidth, page.Item("NAVL1_PERIOD")!.LabelWidth);
+    }
+
+    [TestMethod]
+    public void TheBoxBeingEditedShowsItsCopter47Change()
+    {
+        var (s, _) = Vehicle(TuningFixtures.Copter, Firmwares.ArduCopter2);
+        var page = Extended(s);
+        Assert.IsFalse(page.HasUnitWarning);
+
+        page.FocusedItem = page.Item("PSC_D_ACC_P");
+        Assert.AreEqual("Change in 4.7: PSC_ACCZ_P → PSC_D_ACC_P: value is now 10x smaller", page.UnitWarning);
+        Assert.IsTrue(page.UnitWarningIsScale);
+        StringAssert.Contains(page.Item("PSC_D_ACC_P")!.Tip, "10x smaller");
+
+        page.FocusedItem = page.Item("PSC_NE_VEL_P");
+        StringAssert.Contains(page.UnitWarning, "name only");
+        Assert.IsFalse(page.UnitWarningIsScale);
+
+        page.FocusedItem = page.Item("ATC_RAT_RLL_P");
+        Assert.IsFalse(page.HasUnitWarning);
+        Assert.AreEqual("", TuningEditors.ChangeNote("ATC_RAT_RLL_P"));
     }
 
     [TestMethod]
@@ -219,7 +349,7 @@ public class TuningPageTests
         Assert.IsFalse(TuningEditors.IsSuggestionList(mode));
         Assert.IsFalse(TuningEditors.IsSuggestionList(enable));
 
-        var (s, _) = Copter([.. CopterRates, ("ATC_ACC_R_MAX", 1100), ("INS_HNTCH_MODE", 1)]);
+        var (s, _) = Copter([.. CopterRates, ("INS_HNTCH_MODE", 1)]);
         var meta = new Dictionary<string, ParamMeta>
         {
             ["ATC_INPUT_TC"] = inputTc, ["ATC_ACC_R_MAX"] = accel, ["INS_HNTCH_MODE"] = mode, ["INS_HNTCH_ENABLE"] = enable,
@@ -237,12 +367,23 @@ public class TuningPageTests
         Assert.IsFalse(page.IsEnumerated("ATC_INPUT_TC"));
         Assert.IsTrue(page.IsEnumerated("INS_HNTCH_MODE"));
         Assert.IsFalse(page.IsEnumerated("ATC_RAT_RLL_P"), "undocumented");
+    }
 
-        // the 4.7 badge is for parameters whose units or scale changed, not plain renames
-        StringAssert.Contains(TuningEditors.ChangeNote("PSC_D_ACC_P"), "10x smaller");
-        Assert.AreEqual("", TuningEditors.ChangeNote("PSC_NE_VEL_P"));
-        Assert.AreEqual("", TuningEditors.ChangeNote("ATC_RAT_RLL_P"));
-        Assert.IsTrue(page.Item("ATC_ACC_R_MAX")!.HasChangeNote);
+    [TestMethod]
+    public void RealDocumentationGivesListsForOptionsAndBitmasks()
+    {
+        var file = Path.Combine(AppContext.BaseDirectory, "ParameterMetaDataBackup.xml");
+        var docs = ParamMetadata.ParseLegacy(file, Firmwares.ArduCopter2);
+        var (s, _) = Vehicle(TuningFixtures.Copter, Firmwares.ArduCopter2);
+        var page = Extended(s, docs.GetValueOrDefault);
+
+        var rc6 = page.Item("RC6_OPTION")!.Editor;
+        Assert.IsTrue(rc6.IsOptions);
+        Assert.IsTrue(rc6.Options.Count > 20, "RC option functions");
+        Assert.IsTrue(page.Item("INS_LOG_BAT_MASK")!.Editor.IsBitmask);
+        Assert.IsTrue(page.Item("INS_HNTCH_ENABLE")!.Editor.IsOptions);
+        Assert.IsTrue(page.Item("TUNE")!.Editor.IsOptions);
+        Assert.IsTrue(page.Item("ATC_RAT_RLL_P")!.Editor.IsNumber);
     }
 
     [TestMethod]
@@ -260,11 +401,7 @@ public class TuningPageTests
         Assert.IsFalse(page.Edits.IsModified("ATC_RAT_YAW_P"));
         Assert.IsTrue(page.Item("ATC_RAT_RLL_P")!.Editor.IsModified);
         Assert.AreEqual(0.14m, page.Item("ATC_RAT_RLL_P")!.Editor.NumericValue);
-
-        page.DiscardEditsCommand.Execute(null);
-        Assert.AreEqual(0, page.PendingCount);
-        Assert.IsFalse(page.Item("ATC_RAT_RLL_P")!.Editor.IsModified);
-        Assert.AreEqual(0.135m, page.Item("ATC_RAT_RLL_P")!.Editor.NumericValue);
+        Assert.AreEqual(1, page.PendingCount);
     }
 
     [TestMethod]
@@ -319,36 +456,5 @@ public class TuningPageTests
         await TuningWriteFlow.WriteAsync(s, page.Edits);
         Assert.AreEqual("Not connected", dialogs.Messages.Last().Title);
         Assert.IsTrue(page.Edits.IsModified("ATC_RAT_RLL_P"));
-    }
-
-    [TestMethod]
-    public void PlaneAndRoverPagesUseTheirOwnLayouts()
-    {
-        var (s, _, _) = CreateServices();
-        s.Session.Cs.firmware = Firmwares.ArduPlane;
-        AddParams(s, ("RLL_RATE_P", 0.08, null), ("RLL_RATE_FF", 0.35, null), ("Q_ENABLE", 1, null), ("Q_A_RAT_RLL_P", 0.25, null),
-            ("Q_A_RAT_PIT_P", 0.25, null), ("Q_A_RAT_RLL_I", 0.25, null), ("Q_A_RAT_PIT_I", 0.25, null));
-        var plane = Extended(s);
-        Assert.AreEqual("ArduPlane with QuadPlane", plane.VehicleText);
-        Assert.IsTrue(plane.LockRollPitch, "QuadPlane rate controllers agree");
-        plane.Item("Q_A_RAT_RLL_P")!.Editor.NumericValue = 0.3m;
-        Assert.IsTrue(plane.Edits.IsModified("Q_A_RAT_PIT_P"));
-
-        var basic = Basic(s);
-        CollectionAssert.AreEqual(new[] { "RLL_RATE_FF", "RLL_RATE_P", "Q_A_RAT_RLL_P" }, basic.AllItems.Select(i => i.Name).ToArray());
-
-        var (r, _, _) = CreateServices();
-        r.Session.Cs.firmware = Firmwares.ArduRover;
-        AddParams(r, ("ATC_STR_RAT_P", 0.2, null), ("CRUISE_SPEED", 5, null));
-        var rover = Extended(r);
-        Assert.IsFalse(rover.CanLockRollPitch);
-        Assert.AreEqual(2, rover.ShownCount);
-        Assert.AreEqual(2, Basic(r).ShownCount);
-
-        var (empty, _, _) = CreateServices();
-        empty.Session.Cs.firmware = Firmwares.ArduCopter2;
-        var none = Extended(empty);
-        Assert.IsTrue(none.IsEmpty);
-        StringAssert.Contains(none.EmptyText, "Connect to a vehicle");
     }
 }

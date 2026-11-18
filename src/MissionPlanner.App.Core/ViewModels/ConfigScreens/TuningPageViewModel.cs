@@ -7,30 +7,38 @@ using MissionPlanner.ArduPilot;
 namespace MissionPlanner.App.Core.ViewModels.ConfigScreens;
 
 /// <summary>
-/// What Basic and Extended Tuning share: edits queued until Write Params (with Mission Planner's
-/// "more than doubled" question), Refresh Screen (read this page's values again), Refresh Params,
-/// and keeping the page in step with the vehicle's list and documentation.
+/// What the tuning pages share, after Mission Planner's ConfigArducopter / ConfigArduplane /
+/// ConfigArdurover: cards of values in the WinForms arrangement, edits highlighted and queued until
+/// Write Params (asking first about values that "more than doubled"), Refresh Screen (read the
+/// page's values from the vehicle again and drop the edits), "Lock Pitch and Roll Values", and the
+/// Copter 4.7 change warning for the box being edited.
 /// </summary>
 public abstract partial class TuningPageViewModel : PageViewModel
 {
     private static readonly ILog Log = LogManager.GetLogger(typeof(TuningPageViewModel));
 
+    /// <summary>Space between cards, horizontally and vertically.</summary>
+    public const double Gap = 12;
+
     private bool _shown;
     private bool _dirty = true;
     private int _ticks;
+    private Dictionary<string, TuningParamItem> _byName = new(StringComparer.Ordinal);
+    private ResolvedTuningLayout _layout = ResolvedTuningLayout.Empty;
 
     protected TuningPageViewModel(string title, AppServices services)
         : base(title)
     {
         Services = services;
         MetaSource = services.Params.Meta;
+        _heading = title;
         services.Params.ParamsChanged += (_, _) => Invalidate();
         services.Params.MetadataChanged += (_, _) => Invalidate();
         Edits.Changed += (_, _) =>
         {
             OnPropertyChanged(nameof(PendingCount));
             OnPropertyChanged(nameof(HasPending));
-            OnPropertyChanged(nameof(Summary));
+            OnPropertyChanged(nameof(PendingText));
         };
     }
 
@@ -47,59 +55,102 @@ public abstract partial class TuningPageViewModel : PageViewModel
     protected Firmwares Firmware => Services.Session.Cs.firmware;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(WriteCommand), nameof(RefreshScreenCommand), nameof(RefreshParamsCommand))]
+    [NotifyCanExecuteChangedFor(nameof(WriteCommand), nameof(RefreshScreenCommand))]
     private bool _isConnected;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(WriteCommand), nameof(RefreshScreenCommand), nameof(RefreshParamsCommand))]
+    [NotifyCanExecuteChangedFor(nameof(WriteCommand), nameof(RefreshScreenCommand))]
     private bool _isBusy;
 
     [ObservableProperty]
     private string _statusText = "";
 
+    /// <summary>The page title as Mission Planner names it for this vehicle ("QP Extended Tuning").</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Summary))]
-    private int _shownCount;
+    private string _heading;
+
+    [ObservableProperty]
+    private string _vehicleText = "";
 
     [ObservableProperty]
     private bool _isEmpty = true;
 
+    /// <summary>The cards, in rows of columns.</summary>
     [ObservableProperty]
-    private string _vehicleText = "";
+    private IReadOnlyList<TuningRowItem> _rows = [];
+
+    [ObservableProperty]
+    private bool _hasCards;
+
+    /// <summary>Shown when the vehicle has roll and pitch controllers to lock together.</summary>
+    [ObservableProperty]
+    private bool _canLockRollPitch;
+
+    /// <summary>"Lock Pitch and Roll Values": an edit to a roll value is copied to its pitch twin and back.</summary>
+    [ObservableProperty]
+    private bool _lockRollPitch;
+
+    /// <summary>The value being edited (the view reports focus), for the 4.7 change warning.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UnitWarning), nameof(HasUnitWarning), nameof(UnitWarningIsScale))]
+    private TuningParamItem? _focusedItem;
+
+    /// <summary>Mission Planner's "Change in 4.7: ..." line for the box being edited.</summary>
+    public string UnitWarning => FocusedItem is { HasChangeNote: true } f ? "Change in 4.7: " + f.ChangeNote : "";
+
+    public bool HasUnitWarning => UnitWarning.Length > 0;
+
+    /// <summary>The change is in units or scale, not just the name.</summary>
+    public bool UnitWarningIsScale => FocusedItem is { } f && TuningEditors.IsScaleChange(f.ChangeNote);
 
     public int PendingCount => Edits.Count;
 
     public bool HasPending => Edits.Count > 0;
 
-    /// <summary>What <see cref="ShownCount"/> counts ("parameter", "slider").</summary>
-    protected virtual string ItemNoun => "parameter";
-
-    public string Summary
-    {
-        get
-        {
-            var s = $"{ShownCount} {ItemNoun}{(ShownCount == 1 ? "" : "s")}";
-            if (Edits.Count > 0)
-                s += $" · {Edits.Count} unsaved";
-            return s;
-        }
-    }
+    public string PendingText => Edits.Count == 0 ? "" : $"{Edits.Count} unsaved change{(Edits.Count == 1 ? "" : "s")}";
 
     public virtual string EmptyText => !Services.Params.HasParams
         ? "Connect to a vehicle and download its parameters to tune it."
         : "None of the tuning parameters of this page were found on the vehicle.";
 
+    public ResolvedTuningLayout Layout => _layout;
+
+    public IReadOnlyCollection<TuningParamItem> AllItems => _byName.Values;
+
+    public TuningParamItem? Item(string name) => _byName.GetValueOrDefault(name);
+
+    /// <summary>The cards this page shows for the connected vehicle (null: none).</summary>
+    protected abstract TuningLayout? CardLayout();
+
     /// <summary>The parameters on screen, for Refresh Screen.</summary>
-    protected abstract IEnumerable<string> ScreenParams { get; }
+    protected virtual IEnumerable<string> ScreenParams => _byName.Keys;
+
+    /// <summary>The parameter documentation, null when unknown.</summary>
+    protected ParamMeta? Meta(string name) => MetaSource(name);
+
+    protected static string FirmwareName(Firmwares fw) => fw switch
+    {
+        Firmwares.ArduCopter2 => "ArduCopter",
+        Firmwares.ArduPlane => "ArduPlane",
+        Firmwares.ArduRover => "ArduRover",
+        _ => fw.ToString(),
+    };
 
     /// <summary>Builds the page from the parameter list and documentation.</summary>
-    internal abstract void Rebuild();
+    internal virtual void Rebuild() => BuildCards();
 
     /// <summary>Copies the vehicle's values and the queued edits into the editors.</summary>
-    internal abstract void SyncValues();
-
-    /// <summary>The documentation of a parameter, null when unknown.</summary>
-    protected ParamMeta? Meta(string name) => MetaSource(name);
+    internal virtual void SyncValues()
+    {
+        foreach (var item in _byName.Values)
+        {
+            var editor = item.Editor;
+            var value = Services.Params.Get(item.Name) ?? editor.Value;
+            var pending = PendingFor(item.Name, value);
+            if (!ParamValues.Same(value, editor.Value) || pending != editor.PendingValue)
+                editor.SetValues(value, pending);
+        }
+    }
 
     /// <summary>The queued value of a parameter, dropped if the vehicle now has it.</summary>
     protected double? PendingFor(string name, double current) =>
@@ -109,13 +160,83 @@ public abstract partial class TuningPageViewModel : PageViewModel
     internal bool IsEnumerated(string name) =>
         Meta(name) is { } m && (m.Bitmask.Count > 0 || (m.Values.Count > 0 && !TuningEditors.IsSuggestionList(m)));
 
-    protected static string FirmwareName(Firmwares fw) => fw switch
+    private void BuildCards()
     {
-        Firmwares.ArduCopter2 => "ArduCopter",
-        Firmwares.ArduPlane => "ArduPlane",
-        Firmwares.ArduRover => "ArduRover",
-        _ => fw.ToString(),
-    };
+        var p = Services.Params;
+        var layout = CardLayout();
+        _layout = layout == null ? ResolvedTuningLayout.Empty : TuningLayouts.Resolve(layout, p.Has);
+
+        var byName = new Dictionary<string, TuningParamItem>(StringComparer.Ordinal);
+        var rows = new List<TuningRowItem>();
+        foreach (var row in _layout.Rows)
+        {
+            var cells = new List<TuningCellItem>();
+            foreach (var cell in row.Cells)
+            {
+                var groups = new List<TuningGroupItem>();
+                foreach (var g in cell.Groups)
+                {
+                    var items = new List<TuningParamItem>();
+                    foreach (var rp in g.Params)
+                    {
+                        var value = p.Get(rp.Name) ?? 0;
+                        var meta = Meta(rp.Name);
+                        var editor = new FriendlyParamItem(rp.Name, TuningEditors.EditorMeta(rp.Name, meta, value, rp.Def.Increment), value, OnEdited);
+                        if (PendingFor(rp.Name, value) is { } pending)
+                            editor.SetValues(value, pending);
+                        var item = new TuningParamItem(rp.Label, editor, Tip(rp.Name, meta), layout!.LabelWidth);
+                        items.Add(item);
+                        byName[rp.Name] = item;
+                    }
+
+                    groups.Add(new TuningGroupItem(g.Id, g.Title, TuningGroupItem.Split(items, g.Def.Columns)));
+                }
+
+                cells.Add(new TuningCellItem(groups, cell.Span * layout!.CardWidth + (cell.Span - 1) * Gap));
+            }
+
+            rows.Add(new TuningRowItem(this, cells, row.LockAbove && _layout.HasLocks));
+        }
+
+        // edits of parameters no longer on the page cannot be written from it
+        Edits.RemoveAll(Edits.Pending.Keys.Where(k => !byName.ContainsKey(k)).ToList());
+
+        _byName = byName;
+        FocusedItem = null;
+        Rows = rows;
+        HasCards = rows.Count > 0;
+        CanLockRollPitch = _layout.HasLocks;
+        LockRollPitch = _layout.LockByDefault(p.Get, p.Has);
+        OnPropertyChanged(nameof(AllItems));
+        OnPropertyChanged(nameof(Layout));
+    }
+
+    private static string Tip(string name, ParamMeta? meta)
+    {
+        var tip = TuningEditors.Tip(name, meta);
+        var note = TuningEditors.ChangeNote(name);
+        return note.Length > 0 ? tip + "\n\nChange in 4.7: " + note : tip;
+    }
+
+    private void OnEdited(FriendlyParamItem editor, double value)
+    {
+        if (editor.IsReadOnly)
+            return;
+        editor.SetPending(Edits.Set(editor.Name, value, editor.Value) ? value : null);
+
+        var twin = "";
+        if (LockRollPitch && _layout.LockPartners.TryGetValue(editor.Name, out var partner) && _byName.TryGetValue(partner, out var other)
+            && !other.Editor.IsReadOnly)
+        {
+            var o = other.Editor;
+            o.SetValues(o.Value, Edits.Set(o.Name, value, o.Value) ? value : null);
+            twin = $" and {o.Name}";
+        }
+
+        StatusText = editor.IsModified || twin.Length > 0
+            ? $"{editor.Name}{twin} = {ParamValues.Format(value)} (not written yet)"
+            : "";
+    }
 
     public override void OnShown()
     {
@@ -163,16 +284,14 @@ public abstract partial class TuningPageViewModel : PageViewModel
 
     private bool CanWrite => IsConnected && !IsBusy;
 
+    /// <summary>Write Params (Ctrl+S): the queued edits, as Mission Planner's tuning pages write them.</summary>
     [RelayCommand(CanExecute = nameof(CanWrite))]
     private async Task WriteAsync()
     {
         IsBusy = true;
         try
         {
-            var written = await TuningWriteFlow.WriteAsync(Services, Edits, IsEnumerated, s => StatusText = s);
-            SyncValues();
-            if (written.Count > 0)
-                StatusText = $"Wrote {written.Count} parameter{(written.Count == 1 ? "" : "s")}.";
+            await WriteCoreAsync();
         }
         finally
         {
@@ -180,7 +299,19 @@ public abstract partial class TuningPageViewModel : PageViewModel
         }
     }
 
-    /// <summary>Reads this page's parameters from the vehicle again, one by one (Mission Planner's "Refresh Screen").</summary>
+    /// <summary>What Write Params does; the slider page writes as it goes.</summary>
+    protected virtual async Task WriteCoreAsync()
+    {
+        var written = await TuningWriteFlow.WriteAsync(Services, Edits, IsEnumerated, s => StatusText = s);
+        SyncValues();
+        if (written.Count > 0)
+            StatusText = $"Wrote {written.Count} parameter{(written.Count == 1 ? "" : "s")}.";
+    }
+
+    /// <summary>
+    /// Mission Planner's "Refresh Screen": reads this page's parameters from the vehicle again, one by
+    /// one, then shows them afresh (unwritten edits are dropped).
+    /// </summary>
     [RelayCommand(CanExecute = nameof(CanWrite))]
     private async Task RefreshScreenAsync()
     {
@@ -220,7 +351,8 @@ public abstract partial class TuningPageViewModel : PageViewModel
                 return (ok, missed);
             });
 
-            SyncValues();
+            Edits.Clear();
+            RebuildNow();
             StatusText = failed == 0
                 ? $"Read {read} parameters from the vehicle."
                 : $"Read {read} of {names.Count} parameters; the vehicle did not answer for {failed}.";
@@ -229,28 +361,5 @@ public abstract partial class TuningPageViewModel : PageViewModel
         {
             IsBusy = false;
         }
-    }
-
-    [RelayCommand(CanExecute = nameof(CanWrite))]
-    private async Task RefreshParamsAsync()
-    {
-        IsBusy = true;
-        try
-        {
-            if (await ParamWriteFlow.RefreshAsync(Services, s => StatusText = s))
-                StatusText = "Parameters refreshed.";
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
-
-    [RelayCommand]
-    private void DiscardEdits()
-    {
-        Edits.Clear();
-        SyncValues();
-        StatusText = "Edits discarded.";
     }
 }

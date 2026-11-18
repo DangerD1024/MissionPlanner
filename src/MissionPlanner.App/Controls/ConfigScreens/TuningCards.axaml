@@ -1,0 +1,205 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.ConfigScreens"
+             x:Class="MissionPlanner.App.Controls.ConfigScreens.TuningCards"
+             x:DataType="vm:TuningPageViewModel">
+
+  <!-- Mission Planner's tuning group boxes as flat cards, in the WinForms arrangement, with its
+       Write Params / Refresh Screen buttons and the 4.7 change warning below -->
+  <UserControl.Styles>
+    <Style Selector="Border.tcard">
+      <Setter Property="Background" Value="{DynamicResource Bg1}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="12,9,12,9" />
+    </Style>
+    <Style Selector="TextBlock.ctitle">
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="Foreground" Value="{DynamicResource Accent}" />
+      <Setter Property="Margin" Value="0,0,0,6" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style Selector="TextBlock.plabel">
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style Selector="TextBlock.punits">
+      <Setter Property="FontSize" Value="10.5" />
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Margin" Value="6,0,0,0" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style Selector="Border.mark">
+      <Setter Property="Background" Value="{DynamicResource Accent}" />
+      <Setter Property="Opacity" Value="0.16" />
+      <Setter Property="CornerRadius" Value="4" />
+    </Style>
+    <Style Selector="Border.bar">
+      <Setter Property="Background" Value="{DynamicResource Accent}" />
+      <Setter Property="Width" Value="3" />
+      <Setter Property="CornerRadius" Value="2" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+    <Style Selector="Panel.prow NumericUpDown">
+      <Setter Property="MinHeight" Value="28" />
+      <Setter Property="Height" Value="28" />
+      <Setter Property="FontSize" Value="12.5" />
+    </Style>
+    <Style Selector="Panel.prow ComboBox, Panel.prow DropDownButton">
+      <Setter Property="MinHeight" Value="28" />
+      <Setter Property="Height" Value="28" />
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="Padding" Value="8,0" />
+    </Style>
+    <Style Selector="CheckBox.bit">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="MinHeight" Value="26" />
+      <Setter Property="Padding" Value="4,0,0,0" />
+    </Style>
+    <Style Selector="TextBlock.warning">
+      <Setter Property="Foreground" Value="{DynamicResource Warn}" />
+    </Style>
+    <Style Selector="TextBlock.warning.scale">
+      <Setter Property="Foreground" Value="{DynamicResource Danger}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="*,Auto">
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+      <ItemsControl ItemsSource="{Binding Rows}" Margin="18,14,18,2" HorizontalAlignment="Left">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:TuningRowItem">
+            <StackPanel Margin="0,0,0,12" Spacing="6">
+              <CheckBox Content="Lock Pitch and Roll Values" IsVisible="{Binding LockAbove}"
+                        IsChecked="{Binding Page.LockRollPitch}" Margin="2,-4,0,0"
+                        ToolTip.Tip="Editing a roll value sets its pitch twin to the same value, and back" />
+              <ItemsControl ItemsSource="{Binding Cells}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="12" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:TuningCellItem">
+                    <ItemsControl ItemsSource="{Binding Groups}" Width="{Binding Width}" VerticalAlignment="Top">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <StackPanel Spacing="12" />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:TuningGroupItem">
+                          <Border Classes="tcard">
+                            <StackPanel>
+                              <TextBlock Classes="ctitle" Text="{Binding Title}" ToolTip.Tip="{Binding Title}" />
+                              <ItemsControl ItemsSource="{Binding Columns}">
+                                <ItemsControl.ItemsPanel>
+                                  <ItemsPanelTemplate>
+                                    <UniformGrid Rows="1" ColumnSpacing="14" />
+                                  </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                  <DataTemplate x:DataType="vm:TuningColumnItem">
+                                    <ItemsControl ItemsSource="{Binding Items}" VerticalAlignment="Top">
+                                      <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:TuningParamItem">
+                                          <Panel Classes="prow" Margin="-6,1" Background="Transparent" ToolTip.Tip="{Binding Tip}">
+                                            <Border Classes="mark" IsVisible="{Binding Editor.IsModified}" />
+                                            <Border Classes="bar" IsVisible="{Binding Editor.IsModified}" />
+                                            <DockPanel Margin="6,1">
+                                              <TextBlock DockPanel.Dock="Left" Classes="plabel" Width="{Binding LabelWidth}"
+                                                         Text="{Binding Label}" />
+                                              <TextBlock DockPanel.Dock="Right" Classes="punits" Width="40" Text="{Binding UnitsText}"
+                                                         IsVisible="{Binding Editor.IsNumber}" />
+                                              <Panel>
+                                                <NumericUpDown IsVisible="{Binding Editor.IsNumber}" Value="{Binding Editor.NumericValue}"
+                                                               Minimum="{Binding Editor.Minimum}" Maximum="{Binding Editor.Maximum}"
+                                                               Increment="{Binding Editor.Increment}" FormatString="0.#######"
+                                                               ShowButtonSpinner="False" HorizontalAlignment="Stretch"
+                                                               IsEnabled="{Binding Editor.IsEditable}" ToolTip.Tip="{Binding Tip}" />
+                                                <ComboBox IsVisible="{Binding Editor.IsOptions}" ItemsSource="{Binding Editor.Options}"
+                                                          SelectedItem="{Binding Editor.SelectedOption}" IsEnabled="{Binding Editor.IsEditable}"
+                                                          HorizontalAlignment="Stretch" MaxDropDownHeight="360" ToolTip.Tip="{Binding Tip}" />
+                                                <DropDownButton IsVisible="{Binding Editor.IsBitmask}" IsEnabled="{Binding Editor.IsEditable}"
+                                                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                                                Content="{Binding Editor.ValueText}" ToolTip.Tip="{Binding Tip}">
+                                                  <DropDownButton.Flyout>
+                                                    <Flyout Placement="BottomEdgeAlignedRight">
+                                                      <ItemsControl ItemsSource="{Binding Editor.Bits}" MaxWidth="420">
+                                                        <ItemsControl.ItemsPanel>
+                                                          <ItemsPanelTemplate>
+                                                            <WrapPanel ItemWidth="200" />
+                                                          </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                          <DataTemplate x:DataType="vm:BitOption">
+                                                            <CheckBox Classes="bit" IsChecked="{Binding IsChecked}"
+                                                                      ToolTip.Tip="{Binding Bit, StringFormat='bit {0}'}">
+                                                              <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                                                            </CheckBox>
+                                                          </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                      </ItemsControl>
+                                                    </Flyout>
+                                                  </DropDownButton.Flyout>
+                                                </DropDownButton>
+                                              </Panel>
+                                            </DockPanel>
+                                          </Panel>
+                                        </DataTemplate>
+                                      </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                  </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                              </ItemsControl>
+                            </StackPanel>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <!-- Mission Planner's buttons under the boxes: Write Params, Refresh Screen -->
+    <Border Grid.Row="1" Background="{DynamicResource Bg1}" BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0"
+            Padding="18,10">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Button Classes="accent" Command="{Binding WriteCommand}" MinWidth="130"
+                  ToolTip.Tip="Write the edited values to the vehicle (Ctrl+S)">
+            <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+              <Path Classes="icon" Data="{StaticResource IconUp}" />
+              <TextBlock Text="Write Params" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding RefreshScreenCommand}" MinWidth="130"
+                  ToolTip.Tip="Read the values on this page from the vehicle again (unwritten edits are dropped)">
+            <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+              <Path Classes="icon" Data="{StaticResource IconRefresh}" />
+              <TextBlock Text="Refresh Screen" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
+        <StackPanel Margin="16,0,0,0" VerticalAlignment="Center" Spacing="2">
+          <TextBlock Classes="warning" Classes.scale="{Binding UnitWarningIsScale}" FontSize="12" FontWeight="SemiBold"
+                     Text="{Binding UnitWarning}" IsVisible="{Binding HasUnitWarning}" TextWrapping="Wrap" />
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <TextBlock Text="{Binding PendingText}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource Accent}"
+                       IsVisible="{Binding HasPending}" />
+            <TextBlock Text="{Binding StatusText}" FontSize="12" Classes="muted" TextTrimming="CharacterEllipsis" />
+          </StackPanel>
+        </StackPanel>
+      </DockPanel>
+    </Border>
+  </Grid>
+</UserControl>

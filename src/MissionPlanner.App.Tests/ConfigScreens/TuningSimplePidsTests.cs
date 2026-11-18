@@ -51,7 +51,7 @@ public class TuningSimplePidsTests
     [TestMethod]
     public void CurrentCopterNamesFillTheXmlSlots()
     {
-        var defs = TuningSimplePids.Resolve(TuningSimplePids.For(Firmwares.ArduCopter2, _ => null, xmlPath: null),
+        var defs = TuningSimplePids.Resolve(TuningSimplePids.For(Firmwares.ArduCopter2, xmlPath: null),
             Has("ATC_INPUT_TC", "ATC_RAT_RLL_P", "ATC_RAT_RLL_I", "MOT_THST_HOVER", "PSC_ACCZ_P", "PSC_ACCZ_I"));
 
         CollectionAssert.AreEqual(new[] { "ATC_INPUT_TC", "ATC_RAT_RLL_P", "MOT_THST_HOVER", "PSC_ACCZ_P" }, defs.Select(d => d.Name).ToArray());
@@ -142,33 +142,22 @@ public class TuningSimplePidsTests
     }
 
     [TestMethod]
-    public void PlaneSlidersAndTheirQuadPlaneSection()
+    public void CopterSitlGetsTheFourSlidersUnderTheirCurrentNames()
     {
-        double? Get(string n) => n == "Q_ENABLE" ? 1 : null;
-        var has = Has("RLL_RATE_P", "RLL_RATE_I", "RLL_RATE_D", "RLL_RATE_FF", "PTCH2SRV_P", "NAVL1_PERIOD", "TRIM_THROTTLE",
-            "Q_A_RAT_RLL_P", "Q_A_RAT_RLL_I", "Q_A_RAT_PIT_P", "Q_A_RAT_PIT_I", "Q_M_THST_HOVER", "Q_P_D_ACC_P", "Q_P_D_ACC_I");
+        var p = TuningFixtures.Load(TuningFixtures.Copter);
+        var defs = TuningSimplePids.Resolve(TuningSimplePids.For(Firmwares.ArduCopter2, xmlPath: null), p.ContainsKey);
 
-        var defs = TuningSimplePids.Resolve(TuningSimplePids.For(Firmwares.ArduPlane, Get, null), has);
-        Assert.AreEqual("RLL_RATE_FF", defs[0].Name);
-        Assert.IsTrue(defs.Any(d => d is { Name: "PTCH2SRV_P", Section: TuningSimplePids.PitchSection }), "older pitch names");
-        Assert.IsTrue(defs.Any(d => d.Name == "NAVL1_PERIOD"));
-
-        var q = defs.Where(d => d.Section == TuningLayouts.QuadPlaneSection).ToList();
-        CollectionAssert.AreEqual(new[] { "Q_A_RAT_RLL_P", "Q_M_THST_HOVER", "Q_P_D_ACC_P" }, q.Select(d => d.Name).ToArray());
-        CollectionAssert.AreEqual(new[] { "Q_A_RAT_RLL_I", "Q_A_RAT_PIT_P", "Q_A_RAT_PIT_I" }, q[0].Relations.Select(r => r.Name).ToArray());
-        Assert.AreEqual(new TuningRelation("Q_P_D_ACC_I", 2), q[2].Relations.Single());
-
-        var noQ = TuningSimplePids.Resolve(TuningSimplePids.For(Firmwares.ArduPlane, _ => 0, null), has);
-        Assert.IsFalse(noQ.Any(d => d.Section == TuningLayouts.QuadPlaneSection));
+        CollectionAssert.AreEqual(new[] { "ATC_INPUT_TC", "ATC_RAT_RLL_P", "MOT_THST_HOVER", "PSC_D_ACC_P" }, defs.Select(d => d.Name).ToArray());
+        CollectionAssert.AreEqual(new[] { "ATC_RAT_RLL_I", "ATC_RAT_PIT_P", "ATC_RAT_PIT_I" }, defs[1].Relations.Select(r => r.Name).ToArray());
+        Assert.AreEqual(new TuningRelation("PSC_D_ACC_I", 2), defs[3].Relations.Single());
     }
 
     [TestMethod]
-    public void RoverSliders()
+    public void OnlyCoptersHaveSliders()
     {
-        var defs = TuningSimplePids.Resolve(TuningSimplePids.For(Firmwares.ArduRover, _ => null, null),
-            Has("ATC_STR_RAT_FF", "ATC_STR_RAT_P", "SPEED2THR_P", "CRUISE_SPEED", "CRUISE_THROTTLE"));
-        CollectionAssert.AreEqual(new[] { "ATC_STR_RAT_FF", "ATC_STR_RAT_P", "SPEED2THR_P", "CRUISE_SPEED", "CRUISE_THROTTLE" },
-            defs.Select(d => d.Name).ToArray());
-        Assert.IsEmpty(TuningSimplePids.For(Firmwares.ArduSub, _ => null, null));
+        // planes and rovers get Mission Planner's ConfigArduplane / ConfigArdurover cards as Basic Tuning
+        Assert.IsEmpty(TuningSimplePids.For(Firmwares.ArduPlane, null));
+        Assert.IsEmpty(TuningSimplePids.For(Firmwares.ArduRover, null));
+        Assert.IsEmpty(TuningSimplePids.For(Firmwares.ArduSub, null));
     }
 }

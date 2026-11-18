@@ -30,8 +30,8 @@ public static class TuningEditors
     }
 
     /// <summary>
-    /// Documentation for an editor: the parameter's own (with a step guessed when it has none), or
-    /// an undocumented stand-in so the value can still be edited.
+    /// Documentation for an editor: the parameter's own (with Mission Planner's step, or a guessed
+    /// one, when it documents none), or an undocumented stand-in so the value can still be edited.
     /// </summary>
     public static ParamMeta EditorMeta(string name, ParamMeta? meta, double value, double? increment = null)
     {
@@ -81,76 +81,92 @@ public static class TuningEditors
     }
 
     /// <summary>
-    /// The Copter 4.7 note for a parameter whose units or scale changed with its new name
-    /// ("PSC_ACCZ_P → PSC_D_ACC_P: value is now 10x smaller"), or "" (also for plain renames).
+    /// The Copter/QuadPlane 4.7 note for a parameter under its new name ("PSC_ACCZ_P → PSC_D_ACC_P:
+    /// value is now 10x smaller"), or "". Mission Planner shows it when the box is entered.
     /// </summary>
-    public static string ChangeNote(string name) =>
-        ParamChanges47.changedByNewParamWarning(name) is { } note && !note.Contains("name only", StringComparison.OrdinalIgnoreCase) ? note : "";
+    public static string ChangeNote(string name) => ParamChanges47.changedByNewParamWarning(name) ?? "";
+
+    /// <summary>Whether a 4.7 note means more than a new name (units or scale changed).</summary>
+    public static bool IsScaleChange(string note) =>
+        note.Length > 0 && !note.Contains("name only", StringComparison.OrdinalIgnoreCase);
 }
 
-/// <summary>One value on an Extended Tuning card: a short label and the parameter's editor.</summary>
-public sealed class TuningParamItem(string label, FriendlyParamItem editor, string tip)
+/// <summary>One value on a tuning card: Mission Planner's label and the parameter's editor.</summary>
+public sealed class TuningParamItem(string label, FriendlyParamItem editor, string tip, double labelWidth)
 {
     public string Label { get; } = label;
 
     public FriendlyParamItem Editor { get; } = editor;
 
-    /// <summary>Units beside number boxes (lists and bitmasks use the space).</summary>
-    public bool ShowUnits => Editor.IsNumber && Editor.HasUnits;
-
     public string Name => Editor.Name;
 
     public string Tip { get; } = tip;
 
-    /// <summary>Copter 4.7 renamed and rescaled some parameters; shown so old values are not copied blindly.</summary>
+    public double LabelWidth { get; } = labelWidth;
+
+    /// <summary>Units beside number boxes, unless the label already says them ("Climb Max (m/s)").</summary>
+    public bool ShowUnits => Editor.IsNumber && Editor.HasUnits && !Label.Contains('(');
+
+    /// <summary>The units column of number boxes (kept, empty, so the boxes line up).</summary>
+    public string UnitsText => ShowUnits ? Editor.Units : "";
+
+    /// <summary>What changed in 4.7 for this name; shown below the cards while the box has focus.</summary>
     public string ChangeNote { get; } = TuningEditors.ChangeNote(editor.Name);
 
     public bool HasChangeNote => ChangeNote.Length > 0;
 }
 
-/// <summary>An Extended Tuning card.</summary>
-public sealed class TuningGroupItem(string id, string title, IReadOnlyList<TuningParamItem> items)
+/// <summary>A column of values inside a card.</summary>
+public sealed class TuningColumnItem(IReadOnlyList<TuningParamItem> items)
+{
+    public IReadOnlyList<TuningParamItem> Items { get; } = items;
+}
+
+/// <summary>A tuning card (a Mission Planner group box).</summary>
+public sealed class TuningGroupItem(string id, string title, IReadOnlyList<TuningColumnItem> columns)
 {
     public string Id { get; } = id;
 
     public string Title { get; } = title;
 
-    public IReadOnlyList<TuningParamItem> Items { get; } = items;
+    public IReadOnlyList<TuningColumnItem> Columns { get; } = columns;
+
+    public IEnumerable<TuningParamItem> Items => Columns.SelectMany(c => c.Items);
+
+    /// <summary>
+    /// Splits values into columns filled top to bottom (Enabled, Mode... | Attenuation, Bandwidth...).
+    /// Always <paramref name="columns"/> of them, so a card showing fewer values keeps its boxes narrow.
+    /// </summary>
+    public static IReadOnlyList<TuningColumnItem> Split(IReadOnlyList<TuningParamItem> items, int columns)
+    {
+        if (columns <= 1)
+            return [new TuningColumnItem(items)];
+        var perColumn = Math.Max(1, (int)Math.Ceiling(items.Count / (double)columns));
+        return Enumerable.Range(0, columns)
+            .Select(c => new TuningColumnItem(items.Skip(c * perColumn).Take(perColumn).ToList()))
+            .ToList();
+    }
 }
 
-/// <summary>A heading and its cards.</summary>
-public sealed class TuningSectionItem(string title, IReadOnlyList<TuningGroupItem> groups)
+/// <summary>Cards stacked in one column of a row, <see cref="Width"/> wide.</summary>
+public sealed class TuningCellItem(IReadOnlyList<TuningGroupItem> groups, double width)
 {
-    public string Title { get; } = title;
-
     public IReadOnlyList<TuningGroupItem> Groups { get; } = groups;
+
+    public double Width { get; } = width;
 }
 
-/// <summary>A parameter a Basic Tuning slider also sets, with its current and queued values.</summary>
-public sealed partial class TuningLinkItem(string name, double multiplier) : ObservableObject
+/// <summary>A row of card columns, with Mission Planner's "Lock Pitch and Roll Values" above it when it has one.</summary>
+public sealed class TuningRowItem(TuningPageViewModel page, IReadOnlyList<TuningCellItem> cells, bool lockAbove)
 {
-    public string Name { get; } = name;
+    public TuningPageViewModel Page { get; } = page;
 
-    public double Multiplier { get; } = multiplier;
+    public IReadOnlyList<TuningCellItem> Cells { get; } = cells;
 
-    public string MultiplierText => "×" + ParamValues.Format(Multiplier);
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ValueText), nameof(IsModified))]
-    private double? _current;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ValueText), nameof(IsModified))]
-    private double? _pending;
-
-    public bool IsModified => Pending.HasValue;
-
-    public string ValueText => Pending is { } p
-        ? $"{(Current is { } c ? ParamValues.Format(c) : "?")} → {ParamValues.Format(p)}"
-        : Current is { } v ? ParamValues.Format(v) : "?";
+    public bool LockAbove { get; } = lockAbove;
 }
 
-/// <summary>A Basic Tuning slider with its value box, in the style of Mission Planner's ConfigSimplePids.</summary>
+/// <summary>A Basic Tuning slider with its value box, as Mission Planner's ConfigSimplePids range controls.</summary>
 public sealed partial class TuningSliderItem : ObservableObject
 {
     /// <summary>The slider runs over 0..Steps; the item maps positions to values (and snaps them).</summary>
@@ -161,7 +177,7 @@ public sealed partial class TuningSliderItem : ObservableObject
     private double _position;
     private decimal? _boxValue;
 
-    public TuningSliderItem(TuningSliderDef def, ParamMeta? meta, double value, IReadOnlyList<TuningLinkItem> links,
+    public TuningSliderItem(TuningSliderDef def, ParamMeta? meta, double value, IReadOnlyList<TuningRelation> links,
         Action<TuningSliderItem, double> edit)
     {
         Def = def;
@@ -190,15 +206,18 @@ public sealed partial class TuningSliderItem : ObservableObject
 
     public string Description => Def.Description.Length > 0 ? Def.Description : Meta?.Description ?? "";
 
-    public string Tip => TuningEditors.Tip(Name, Meta);
+    public string Tip
+    {
+        get
+        {
+            var tip = TuningEditors.Tip(Name, Meta);
+            if (Links.Count > 0)
+                tip += "\n\nAlso sets " + string.Join(", ", Links.Select(l => l.Multiplier == 1 ? l.Name : $"{l.Name} (×{ParamValues.Format(l.Multiplier)})"));
+            return tip;
+        }
+    }
 
     public string Units => Meta?.Units ?? "";
-
-    public bool HasUnits => Units.Length > 0;
-
-    public string ChangeNote => TuningEditors.ChangeNote(Name);
-
-    public bool HasChangeNote => ChangeNote.Length > 0;
 
     /// <summary>Right is "less" (e.g. a time constant where smaller is crisper).</summary>
     public bool Reversed => Def.Reversed;
@@ -224,17 +243,17 @@ public sealed partial class TuningSliderItem : ObservableObject
 
     public double LargeChange => Steps / 10;
 
-    public IReadOnlyList<TuningLinkItem> Links { get; }
-
-    public bool HasLinks => Links.Count > 0;
+    /// <summary>The related parameters the vehicle has, set with the slider (value × multiplier).</summary>
+    public IReadOnlyList<TuningRelation> Links { get; }
 
     /// <summary>The vehicle's value.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DisplayValue), nameof(ValueText), nameof(OriginalText))]
+    [NotifyPropertyChangedFor(nameof(DisplayValue), nameof(ValueText))]
     private double _value;
 
+    /// <summary>A value on its way to the vehicle.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DisplayValue), nameof(ValueText), nameof(IsModified), nameof(OriginalText))]
+    [NotifyPropertyChangedFor(nameof(DisplayValue), nameof(ValueText), nameof(IsModified))]
     private double? _pendingValue;
 
     public double DisplayValue => PendingValue ?? Value;
@@ -243,10 +262,7 @@ public sealed partial class TuningSliderItem : ObservableObject
 
     public bool IsModified => PendingValue.HasValue;
 
-    /// <summary>"was 0.135" while an edit is queued.</summary>
-    public string OriginalText => IsModified ? "vehicle " + ParamValues.Format(Value) : "";
-
-    /// <summary>Slider position (0..<see cref="Steps"/>); setting it queues the snapped value.</summary>
+    /// <summary>Slider position (0..<see cref="Steps"/>); setting it reports the snapped value.</summary>
     public double Position
     {
         get => _position;
@@ -293,7 +309,7 @@ public sealed partial class TuningSliderItem : ObservableObject
         return TuningSimplePids.Clean(Math.Clamp(snapped, Minimum, Maximum));
     }
 
-    /// <summary>Sets the vehicle value and the queued edit without reporting an edit.</summary>
+    /// <summary>Sets the vehicle value and the value being written without reporting an edit.</summary>
     internal void SetValues(double value, double? pending)
     {
         Value = value;
@@ -301,7 +317,7 @@ public sealed partial class TuningSliderItem : ObservableObject
         Show();
     }
 
-    /// <summary>Marks the result of an edit the page has queued (or dropped).</summary>
+    /// <summary>Marks a value on its way to the vehicle (or none).</summary>
     internal void SetPending(double? pending)
     {
         PendingValue = pending;
@@ -332,14 +348,4 @@ public sealed partial class TuningSliderItem : ObservableObject
             _updating = false;
         }
     }
-}
-
-/// <summary>A heading and its sliders.</summary>
-public sealed class TuningSliderSection(string title, IReadOnlyList<TuningSliderItem> items)
-{
-    public string Title { get; } = title;
-
-    public bool HasTitle => Title.Length > 0;
-
-    public IReadOnlyList<TuningSliderItem> Items { get; } = items;
 }

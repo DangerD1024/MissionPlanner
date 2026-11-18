@@ -54,19 +54,22 @@ public class TuningVehicleTests
             await services.Params.RefreshAsync();
             Assert.AreEqual(MissionPlanner.ArduPilot.Firmwares.ArduCopter2, services.Session.Cs.firmware);
 
-            // Basic Tuning: climb sensitivity writes P and I = 2 × P
-            var basic = new BasicTuningViewModel(services) { XmlPath = Path.Combine(TestEnvironment.DataRoot, "none.xml"), MetaSource = _ => null };
+            // Basic Tuning: climb sensitivity writes P and I = 2 × P as soon as the slider rests, with no question
+            var basic = new BasicTuningViewModel(services)
+            {
+                XmlPath = Path.Combine(TestEnvironment.DataRoot, "none.xml"), MetaSource = _ => null, WriteDelay = Timeout.InfiniteTimeSpan,
+            };
             basic.Rebuild();
             basic.Tick();
-            Assert.IsTrue(basic.WriteCommand.CanExecute(null));
-            basic.Item("PSC_ACCZ_P")!.BoxValue = 0.6m;
-            await basic.WriteCommand.ExecuteAsync(null);
+            basic.Slider("PSC_ACCZ_P")!.BoxValue = 0.6m;
+            await basic.FlushAsync();
 
             CollectionAssert.AreEquivalent(new[] { ("PSC_ACCZ_I", 1.2f), ("PSC_ACCZ_P", 0.6f) }, vehicle.Sets.ToArray());
-            Assert.AreEqual(0, basic.PendingCount);
-            Assert.IsFalse(basic.Item("PSC_ACCZ_P")!.IsModified);
-            Assert.AreEqual(0.6, basic.Item("PSC_ACCZ_P")!.Value, 1e-6);
-            Assert.AreEqual(1.2, basic.Item("PSC_ACCZ_P")!.Links.Single().Current!.Value, 1e-6);
+            Assert.IsEmpty(dialogs.Confirms);
+            Assert.AreEqual("set PSC_ACCZ_P 0.6\nset PSC_ACCZ_I 1.2", basic.InfoText);
+            Assert.IsFalse(basic.Slider("PSC_ACCZ_P")!.IsModified);
+            Assert.AreEqual(0.6, basic.Slider("PSC_ACCZ_P")!.Value, 1e-6);
+            Assert.AreEqual(1.2, services.Params.Get("PSC_ACCZ_I")!.Value, 1e-6);
 
             // Extended Tuning: a locked roll edit writes pitch too; a large change is asked about first
             vehicle.Sets.Clear();
@@ -91,11 +94,15 @@ public class TuningVehicleTests
             Assert.AreEqual(0, extended.PendingCount);
             Assert.AreEqual(0.15, services.Params.Get("ATC_RAT_PIT_P")!.Value, 1e-6);
 
-            // Refresh Screen reads the page's values one by one
+            // Refresh Screen reads the page's values one by one and drops unwritten edits, as Mission Planner's does
             vehicle.Sets.Clear();
+            extended.Item("ATC_RAT_YAW_P")!.Editor.NumericValue = 0.2m;
+            Assert.AreEqual(1, extended.PendingCount);
             await extended.RefreshScreenCommand.ExecuteAsync(null);
             StringAssert.Contains(extended.StatusText, "Read 7 parameters");
             Assert.IsTrue(vehicle.Sets.IsEmpty);
+            Assert.AreEqual(0, extended.PendingCount);
+            Assert.AreEqual(0.18m, extended.Item("ATC_RAT_YAW_P")!.Editor.NumericValue);
         }
         finally
         {

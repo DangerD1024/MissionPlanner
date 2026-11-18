@@ -13,8 +13,9 @@ public sealed class ConfigViewModel : MenuScreenViewModel
         bool Ready() => Connected && s.Params.HasParams;
         bool Tunable() => Ready() && Firmware is Firmwares.ArduCopter2 or Firmwares.ArduPlane or Firmwares.ArduRover;
 
-        Add(Page("Basic Tuning", () => new BasicTuningViewModel(s), Tunable));
-        Add(Page("Extended Tuning", () => new ExtendedTuningViewModel(s), Tunable));
+        Add(Page(TuningLayouts.BasicTitle, () => new BasicTuningViewModel(s), Tunable));
+        Add(Page(TuningLayouts.ExtendedTitle, () => new ExtendedTuningViewModel(s), () => Ready() && Firmware == Firmwares.ArduCopter2));
+        Add(Page(TuningLayouts.QuadPlaneExtendedTitle, () => new ExtendedTuningViewModel(s), () => Ready() && Firmware == Firmwares.ArduPlane && TuningLayouts.QuadPlaneEnabled(s.Params.Get)));
         Add(Page("Standard Params", () => new StandardParamsViewModel(s), Ready));
         Add(Page("Advanced Params", () => new AdvancedParamsViewModel(s), Ready));
         Add(Page("Full Parameter List", () => new FullParameterListViewModel(s)));
