@@ -1,0 +1,307 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightPlan"
+             xmlns:mission="using:MissionPlanner.App.Core.Mission"
+             xmlns:controls="using:MissionPlanner.App.Controls"
+             x:Class="MissionPlanner.App.Views.FlightPlan.FlightPlanView"
+             x:DataType="vm:FlightPlanViewModel"
+             Focusable="True">
+
+  <UserControl.Resources>
+    <!-- the header's sort arrow space is wasted here (sorting a mission makes no sense) -->
+    <x:Double x:Key="DataGridSortIconMinWidth">0</x:Double>
+  </UserControl.Resources>
+
+  <UserControl.Styles>
+    <!-- right panel -->
+    <Style Selector="TextBlock.label">
+      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Border.overlay">
+      <Setter Property="Background" Value="#D9101317" />
+      <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="10,7" />
+    </Style>
+    <Style Selector="Button.side">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="Height" Value="32" />
+    </Style>
+    <Style Selector="Button.side Path.icon">
+      <Setter Property="RenderTransform" Value="scale(0.8)" />
+    </Style>
+
+    <!-- grid: compact cells -->
+    <Style Selector="DataGrid.plan DataGridCell">
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="DataGrid.plan DataGridColumnHeader">
+      <Setter Property="FontSize" Value="11.5" />
+      <Setter Property="Padding" Value="8,0,0,0" />
+      <Setter Property="MinHeight" Value="28" />
+    </Style>
+    <Style Selector="ComboBox.cell">
+      <Setter Property="Height" Value="26" />
+      <Setter Property="MinHeight" Value="26" />
+      <Setter Property="Padding" Value="8,0,4,0" />
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.rowicon">
+      <Setter Property="Width" Value="28" />
+      <Setter Property="Height" Value="26" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.rowicon Path.icon">
+      <Setter Property="RenderTransform" Value="scale(0.8)" />
+    </Style>
+    <Style Selector="Button.rowicon.delete Path.icon">
+      <Setter Property="Stroke" Value="{StaticResource Danger}" />
+    </Style>
+    <Style Selector="TextBox.field">
+      <Setter Property="MinHeight" Value="28" />
+      <Setter Property="Height" Value="28" />
+      <Setter Property="Padding" Value="6,4" />
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="*,5,260" MinHeight="300">
+
+    <!-- map + right panel -->
+    <Grid ColumnDefinitions="*,236">
+      <Panel>
+        <controls:MapView x:Name="Map"
+                          Provider="{Binding SelectedMapProvider.Provider}"
+                          CenterLat="{Binding CenterLat}"
+                          CenterLng="{Binding CenterLng}"
+                          Zoom="{Binding Zoom}" />
+
+        <!-- distances for the mouse position, as Mission Planner's top-left labels -->
+        <Border Classes="overlay" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10"
+                IsHitTestVisible="False" MinWidth="170">
+          <StackPanel Spacing="1">
+            <TextBlock Text="{Binding DistanceText}" FontWeight="SemiBold" FontSize="13" />
+            <TextBlock Text="{Binding PrevText}" FontSize="12" />
+            <TextBlock Text="{Binding HomeDistanceText}" FontSize="12" />
+            <TextBlock Text="{Binding TerrainText}" FontSize="12" Classes="muted" />
+            <TextBlock Text="{Binding PointerText}" FontSize="11" Classes="muted" FontFamily="monospace"
+                       IsVisible="{Binding PointerText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          </StackPanel>
+        </Border>
+
+        <!-- drawing a polygon: left clicks add points -->
+        <Border Classes="overlay" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10"
+                IsVisible="{Binding PolygonMode}" BorderBrush="#e879f9">
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="Drawing polygon: click the map to add points" FontWeight="SemiBold" FontSize="12.5" />
+              <TextBlock Text="{Binding PolygonInfo}" Classes="muted" FontSize="11.5" />
+            </StackPanel>
+            <Button Classes="accent" Content="Done" Command="{Binding FinishPolygonCommand}" Padding="14,4" VerticalAlignment="Center" />
+            <Button Content="Clear" Command="{Binding ClearPolygonCommand}" Padding="12,4" VerticalAlignment="Center" />
+          </StackPanel>
+        </Border>
+
+        <!-- what a click does here -->
+        <Border Classes="overlay" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10" IsHitTestVisible="False"
+                Padding="8,4">
+          <TextBlock x:Name="HintText" FontSize="11" Classes="muted" />
+        </Border>
+
+        <Button HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="10" Padding="10,5"
+                Command="{Binding ZoomToMissionCommand}" ToolTip.Tip="Zoom to the mission"
+                Background="#D9101317" BorderBrush="{StaticResource Line}" BorderThickness="1">
+          <TextBlock Text="Zoom to mission" FontSize="12" />
+        </Button>
+      </Panel>
+
+      <Border Grid.Column="1" Background="{StaticResource Bg1}" BorderBrush="{StaticResource Line}" BorderThickness="1,0,0,0">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+          <StackPanel Margin="12,12,12,12" Spacing="8">
+
+            <TextBlock Classes="label" Text="LIST" />
+            <ComboBox ItemsSource="{Binding MissionTypes}" SelectedItem="{Binding SelectedMissionType}"
+                      HorizontalAlignment="Stretch" IsEnabled="{Binding IsIdle}" ToolTip.Tip="Mission, fence or rally points" />
+
+            <TextBlock Classes="label" Text="MAP" Margin="0,4,0,0" />
+            <ComboBox ItemsSource="{Binding MapProviders}" SelectedItem="{Binding SelectedMapProvider}" HorizontalAlignment="Stretch" />
+
+            <TextBlock Classes="label" Text="FILE" Margin="0,4,0,0" />
+            <Grid ColumnDefinitions="*,6,*">
+              <Button Classes="side" Command="{Binding LoadFileCommand}" ToolTip.Tip="Load a .waypoints file into this list">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Path Classes="icon" Data="{StaticResource IconFolder}" />
+                  <TextBlock Text="Load File" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+              <Button Grid.Column="2" Classes="side" Command="{Binding SaveFileCommand}" ToolTip.Tip="Save this list as a .waypoints file">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Path Classes="icon" Data="{StaticResource IconFile}" />
+                  <TextBlock Text="Save File" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+            </Grid>
+
+            <TextBlock Classes="label" Text="VEHICLE" Margin="0,4,0,0" />
+            <Grid ColumnDefinitions="*,6,*">
+              <Button Classes="side accent" Command="{Binding ReadCommand}" ToolTip.Tip="Read this list from the vehicle">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Path Classes="icon" Data="{StaticResource IconDown}" Stroke="{StaticResource AccentText}" />
+                  <TextBlock Text="Read" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+              <Button Grid.Column="2" Classes="side accent" Command="{Binding WriteCommand}" ToolTip.Tip="Write this list to the vehicle">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Path Classes="icon" Data="{StaticResource IconUp}" Stroke="{StaticResource AccentText}" />
+                  <TextBlock Text="Write" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+            </Grid>
+
+            <!-- status / progress -->
+            <StackPanel Spacing="4" Margin="0,2,0,0">
+              <ProgressBar IsVisible="{Binding IsBusy}" Height="4" MinHeight="4" CornerRadius="2"
+                           Minimum="0" Maximum="100" Value="{Binding Progress}"
+                           IsIndeterminate="{Binding IsProgressIndeterminate}" Foreground="{StaticResource Accent}" />
+              <TextBlock Text="{Binding Status}" TextWrapping="Wrap" FontSize="11.5" Classes="muted"
+                         IsVisible="{Binding Status, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            </StackPanel>
+
+            <Border Height="1" Background="{StaticResource Line}" Margin="0,6" />
+
+            <TextBlock Classes="label" Text="HOME LOCATION" />
+            <Grid ColumnDefinitions="40,*" RowDefinitions="Auto,6,Auto,6,Auto">
+              <TextBlock Text="Lat" VerticalAlignment="Center" FontSize="12" Classes="muted" />
+              <TextBox Grid.Column="1" Classes="field" Text="{Binding HomeLat, UpdateSourceTrigger=LostFocus, StringFormat={}{0:0.0000000}}" />
+              <TextBlock Grid.Row="2" Text="Long" VerticalAlignment="Center" FontSize="12" Classes="muted" />
+              <TextBox Grid.Row="2" Grid.Column="1" Classes="field" Text="{Binding HomeLng, UpdateSourceTrigger=LostFocus, StringFormat={}{0:0.0000000}}" />
+              <TextBlock Grid.Row="4" Text="ASL" VerticalAlignment="Center" FontSize="12" Classes="muted" />
+              <Grid Grid.Row="4" Grid.Column="1" ColumnDefinitions="*,Auto">
+                <TextBox Classes="field" Text="{Binding HomeAlt, UpdateSourceTrigger=LostFocus, StringFormat={}{0:0.##}}" />
+                <TextBlock Grid.Column="1" Text="m" Margin="6,0,0,0" VerticalAlignment="Center" Classes="muted" />
+              </Grid>
+            </Grid>
+            <TextBlock Text="Right click the map › Set Home Here, or drag the H marker." TextWrapping="Wrap"
+                       FontSize="11" Classes="muted" />
+
+            <Border Height="1" Background="{StaticResource Line}" Margin="0,6" />
+
+            <Button Classes="side" Command="{Binding ClearListCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <Path Classes="icon" Data="{StaticResource IconDelete}" Stroke="{StaticResource Danger}" />
+                <TextBlock Text="{Binding ClearListText}" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+    </Grid>
+
+    <GridSplitter Grid.Row="1" ResizeDirection="Rows" Background="{StaticResource Line}" />
+
+    <!-- waypoint list -->
+    <Grid Grid.Row="2" RowDefinitions="Auto,*" Background="{StaticResource Bg1}">
+      <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="10,6">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="WP Radius" VerticalAlignment="Center" FontSize="12" Classes="muted" />
+            <TextBox Classes="field" Width="62" Text="{Binding WaypointRadius, UpdateSourceTrigger=LostFocus}" ToolTip.Tip="Waypoint radius (m)" />
+            <TextBlock Text="Loiter Radius" VerticalAlignment="Center" FontSize="12" Classes="muted" Margin="8,0,0,0" />
+            <TextBox Classes="field" Width="62" Text="{Binding LoiterRadius, UpdateSourceTrigger=LostFocus}" ToolTip.Tip="Loiter radius (m)" />
+            <TextBlock Text="Default Alt" VerticalAlignment="Center" FontSize="12" Classes="muted" Margin="8,0,0,0" />
+            <TextBox Classes="field" Width="62" Text="{Binding DefaultAlt, UpdateSourceTrigger=LostFocus}" ToolTip.Tip="Altitude of new waypoints (m)" />
+            <ComboBox Width="112" Height="28" MinHeight="28" Padding="8,0" FontSize="12.5" VerticalAlignment="Center"
+                      ItemsSource="{x:Static vm:FlightPlanViewModel.AltFrameOptions}" SelectedItem="{Binding DefaultFrame}"
+                      ToolTip.Tip="Altitude frame of new waypoints" />
+            <Button Content="Add Below" Height="28" Padding="12,0" VerticalContentAlignment="Center" Margin="8,0,0,0"
+                    Command="{Binding AddBelowCommand}" IsVisible="{Binding IsMissionMode}"
+                    ToolTip.Tip="Add a row below the selected one" />
+          </StackPanel>
+          <TextBlock Grid.Column="1" x:Name="CountText" VerticalAlignment="Center" FontSize="12" Classes="muted" />
+        </Grid>
+      </Border>
+
+      <DataGrid Grid.Row="1" x:Name="Rows" Classes="plan"
+                ItemsSource="{Binding CurrentList}" SelectedItem="{Binding SelectedItem}"
+                AutoGenerateColumns="False" CanUserSortColumns="False" CanUserReorderColumns="False"
+                CanUserResizeColumns="True" SelectionMode="Single" HeadersVisibility="Column"
+                RowHeight="30" GridLinesVisibility="Horizontal" BorderThickness="0">
+        <DataGrid.Columns>
+          <DataGridTextColumn Header="#" Binding="{Binding Seq}" IsReadOnly="True" Width="42" />
+          <DataGridTemplateColumn Header="Command" Width="250">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="mission:MissionItem">
+                <ComboBox Classes="cell"
+                          ItemsSource="{Binding $parent[DataGrid].((vm:FlightPlanViewModel)DataContext).CommandOptions}"
+                          SelectedItem="{Binding Command, Mode=OneWay}"
+                          SelectionChanged="OnCommandSelectionChanged" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn Header="P1" Binding="{Binding P1}" Width="78" />
+          <DataGridTextColumn Header="P2" Binding="{Binding P2}" Width="78" />
+          <DataGridTextColumn Header="P3" Binding="{Binding P3}" Width="78" />
+          <DataGridTextColumn Header="P4" Binding="{Binding P4}" Width="78" />
+          <DataGridTextColumn Header="Lat" Binding="{Binding Lat, StringFormat={}{0:0.0000000}}" Width="112" />
+          <DataGridTextColumn Header="Long" Binding="{Binding Lng, StringFormat={}{0:0.0000000}}" Width="112" />
+          <DataGridTextColumn Header="Alt" Binding="{Binding Alt}" Width="86" />
+          <DataGridTemplateColumn Header="Frame" Width="112">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="mission:MissionItem">
+                <ComboBox Classes="cell" ItemsSource="{x:Static vm:FlightPlanViewModel.AltFrameOptions}"
+                          SelectedItem="{Binding Frame, Mode=OneWay}"
+                          SelectionChanged="OnFrameSelectionChanged" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Delete" Width="66">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="mission:MissionItem">
+                <Button Classes="rowicon delete" Click="OnDeleteRow" ToolTip.Tip="Delete this row">
+                  <Path Classes="icon" Data="{StaticResource IconDelete}" />
+                </Button>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Up" Width="50">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="mission:MissionItem">
+                <Button Classes="rowicon" Click="OnMoveUp" ToolTip.Tip="Move up">
+                  <Path Classes="icon" Data="{StaticResource IconUp}" />
+                </Button>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Down" Width="62">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="mission:MissionItem">
+                <Button Classes="rowicon" Click="OnMoveDown" ToolTip.Tip="Move down">
+                  <Path Classes="icon" Data="{StaticResource IconDown}" />
+                </Button>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn Header="Grad %" Binding="{Binding Gradient, StringFormat={}{0:0.0}}" IsReadOnly="True" Width="76" />
+          <DataGridTextColumn Header="Dist" Binding="{Binding Distance, StringFormat={}{0:0}}" IsReadOnly="True" Width="70" />
+          <DataGridTextColumn Header="AZ" Binding="{Binding Azimuth, StringFormat={}{0:0}}" IsReadOnly="True" Width="60" />
+        </DataGrid.Columns>
+      </DataGrid>
+
+      <TextBlock Grid.Row="1" x:Name="EmptyText" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,30,0,0"
+                 Classes="muted" FontSize="12.5" IsHitTestVisible="False" />
+    </Grid>
+  </Grid>
+</UserControl>
