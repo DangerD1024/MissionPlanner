@@ -11,6 +11,9 @@ public class PlatformTests
     [TestMethod]
     public void DataDirectoryIsWritableOnThisRuntime()
     {
+        if (OperatingSystem.IsWindows())
+            Assert.Inconclusive("Windows keeps the shared ProgramData location, as the WinForms app does");
+
         // on Linux/macOS under .NET this used to resolve to /usr/share/Mission Planner/
         var dir = Settings.GetDataDirectory();
 

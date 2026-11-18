@@ -20,11 +20,19 @@ internal sealed class FakeUiServices : IUiDispatcher, IDialogService, IWindowSer
 
     public bool CheckAccess() => true;
 
-    public void Post(Action action) => action();
+    // one "UI thread" at a time, as in the app: posts from parallel loads must not interleave
+    private readonly object _ui = new();
+
+    public void Post(Action action)
+    {
+        lock (_ui)
+            action();
+    }
 
     public Task InvokeAsync(Action action)
     {
-        action();
+        lock (_ui)
+            action();
         return Task.CompletedTask;
     }
 

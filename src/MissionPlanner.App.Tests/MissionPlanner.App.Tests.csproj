@@ -9,6 +9,11 @@
     <PackageReference Include="MSTest" Version="4.5.3" />
   </ItemGroup>
 
+  <!-- mode names come from the parameter docs; ship the offline copy so no test depends on a download -->
+  <ItemGroup>
+    <Content Include="..\..\ParameterMetaDataBackup.xml" Link="ParameterMetaDataBackup.xml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\MissionPlanner.App.Core\MissionPlanner.App.Core.csproj" />
   </ItemGroup>
