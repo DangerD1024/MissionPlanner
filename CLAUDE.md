@@ -28,6 +28,14 @@ msbuild -v:m -restore -t:Build -p:Configuration=Release MissionPlanner.sln
   (they also do appx packaging/signing/rsync — not needed for plain builds).
 - To import the exact VS workload/component set, use `vs2022.vsconfig` (or `vs2019`/`vs2026`).
 
+### New cross-platform app (`MissionPlanner.Next.sln`, `src/`)
+
+A replacement UI on .NET 10 + Avalonia 12 that reuses the `ExtLibs` core libraries, being ported in
+steps. Unlike the WinForms app it **does** build and run on Linux/macOS:
+`dotnet build MissionPlanner.Next.sln`, `dotnet test src/MissionPlanner.App.Tests`. Keep UI types
+out of `MissionPlanner.App.Core`. Changes to shared `ExtLibs` code must keep the WinForms app's
+behaviour unchanged. See `src/README.md`.
+
 ### Cross-platform library build (Android / Mac)
 
 `MissionPlannerLib.csproj` (`netstandard2.0`, `library`) recompiles the same sources with

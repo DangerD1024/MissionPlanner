@@ -1,0 +1,61 @@
+name: Next (cross-platform app)
+
+on:
+  push:
+    branches: [master, avalonia-port]
+    paths:
+      - 'src/**'
+      - 'ExtLibs/**'
+      - 'MissionPlanner.Next.sln'
+      - '.github/workflows/next.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'ExtLibs/**'
+      - 'MissionPlanner.Next.sln'
+      - '.github/workflows/next.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-test:
+    name: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022, macos-14]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      # the serial test runs over a socat pseudo-terminal pair; without socat it reports inconclusive
+      - name: Install socat (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends socat
+      - name: Install socat (macOS)
+        if: runner.os == 'macOS'
+        run: brew install socat
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: next-nuget-${{ runner.os }}-${{ hashFiles('src/**/*.csproj', 'ExtLibs/**/*.csproj') }}
+          restore-keys: next-nuget-${{ runner.os }}-
+      - name: Build
+        run: dotnet build MissionPlanner.Next.sln -c Release
+      - name: Test
+        run: dotnet test src/MissionPlanner.App.Tests -c Release --no-build --logger "trx;LogFileName=results.trx" --logger "console;verbosity=normal"
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-test-results-${{ matrix.os }}
+          path: src/MissionPlanner.App.Tests/TestResults/

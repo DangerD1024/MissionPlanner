@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>MissionPlanner.App</RootNamespace>
+    <AssemblyName>MissionPlanner.App</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- compiled bindings are the default in Avalonia 12; stated so it survives a downgrade -->
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.6" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.6" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.6" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.1.2" />
+    <PackageReference Include="ScottPlot.Avalonia" Version="5.1.59" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MissionPlanner.App.Core\MissionPlanner.App.Core.csproj" />
+  </ItemGroup>
+
+  <!-- data files the shared libraries look for next to the executable, taken from the repo root -->
+  <ItemGroup>
+    <Content Include="..\..\ParameterMetaDataBackup.xml" Link="ParameterMetaDataBackup.xml" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\mavcmd.xml" Link="mavcmd.xml" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\APMotorLayout.json" Link="APMotorLayout.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\SerialOptionRules.json" Link="SerialOptionRules.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\acsimplepids.xml" Link="acsimplepids.xml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

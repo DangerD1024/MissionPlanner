@@ -1,0 +1,10 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels"
+             x:Class="MissionPlanner.App.Views.PlaceholderView"
+             x:DataType="vm:PlaceholderPageViewModel">
+  <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+    <TextBlock Text="{Binding Title}" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center" />
+    <TextBlock Text="{Binding Arrives}" Foreground="#a4adb8" HorizontalAlignment="Center" />
+  </StackPanel>
+</UserControl>

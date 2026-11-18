@@ -324,7 +324,9 @@ namespace MissionPlanner.Utilities
         /// <returns></returns>
         public static string GetDataDirectory()
         {
-            if (isMono())
+            // CommonApplicationData is /usr/share on Linux and macOS, which users cannot write,
+            // so any Unix runtime (Mono or .NET) uses the per-user directory
+            if (isMono() || isUnix)
             {
                 return GetUserDataDirectory();
             }

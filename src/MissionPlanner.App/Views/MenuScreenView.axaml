@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels"
+             x:Class="MissionPlanner.App.Views.MenuScreenView"
+             x:DataType="vm:MenuScreenViewModel">
+
+  <!-- Setup / Config: left menu, page on the right -->
+  <Grid ColumnDefinitions="220,*">
+    <Border Background="{StaticResource Bg1}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,1,0">
+      <ListBox Classes="sidemenu" ItemsSource="{Binding VisibleItems}" SelectedItem="{Binding SelectedItem}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:MenuItemViewModel">
+            <Panel>
+              <TextBlock Text="{Binding Title}" IsVisible="{Binding IsPage}" Padding="14,8" FontSize="13.5" />
+              <TextBlock Text="{Binding Title}" IsVisible="{Binding IsHeader}" Padding="8,12,8,2"
+                         FontSize="11" FontWeight="Bold" Classes="muted" />
+            </Panel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Border>
+
+    <Panel Grid.Column="1">
+      <ContentControl Content="{Binding Content}" />
+      <StackPanel IsVisible="{Binding Content, Converter={x:Static ObjectConverters.IsNull}}"
+                  HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6">
+        <TextBlock Classes="h1" Text="{Binding Title}" HorizontalAlignment="Center" />
+        <TextBlock Classes="muted" Text="Connect to a vehicle to see its setup pages." HorizontalAlignment="Center" />
+      </StackPanel>
+    </Panel>
+  </Grid>
+</UserControl>

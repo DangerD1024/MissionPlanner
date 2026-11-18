@@ -1,0 +1,11 @@
+<Project>
+  <!-- Shared settings for the new cross-platform app (src/ only; ExtLibs and the WinForms app are unaffected). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- the reused ExtLibs assemblies are not strong-name or nullable aware; keep their warnings out of ours -->
+    <NoWarn>$(NoWarn);NU1701;NU1603</NoWarn>
+  </PropertyGroup>
+</Project>

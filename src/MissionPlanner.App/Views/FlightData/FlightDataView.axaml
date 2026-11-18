@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             xmlns:controls="using:MissionPlanner.App.Controls"
+             x:Class="MissionPlanner.App.Views.FlightData.FlightDataView"
+             x:DataType="vm:FlightDataViewModel">
+
+  <!-- skeleton: HUD and tabs on the left, map on the right, as in Mission Planner -->
+  <Grid ColumnDefinitions="480,4,*">
+    <Grid RowDefinitions="360,*" Background="{StaticResource Bg1}">
+      <controls:Hud x:Name="HudControl" Model="{Binding Hud}" />
+      <TabControl Grid.Row="1" Padding="6">
+        <TabItem Header="Quick">
+          <TextBlock Classes="muted" Margin="8" Text="Telemetry tabs arrive with the Flight Data page." />
+        </TabItem>
+      </TabControl>
+    </Grid>
+
+    <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="{StaticResource Line}" />
+
+    <Panel Grid.Column="2">
+      <controls:MapView x:Name="Map"
+                        Provider="{Binding SelectedMapProvider.Provider}"
+                        CenterLat="{Binding CenterLat}"
+                        CenterLng="{Binding CenterLng}"
+                        Zoom="{Binding Zoom}" />
+      <ComboBox Margin="10" MinWidth="200" HorizontalAlignment="Right" VerticalAlignment="Top"
+                ItemsSource="{Binding MapProviders}" SelectedItem="{Binding SelectedMapProvider}" />
+    </Panel>
+  </Grid>
+</UserControl>

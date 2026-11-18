@@ -1,0 +1,54 @@
+namespace MissionPlanner.App.Core.ViewModels.FlightData;
+
+public enum HudLevel
+{
+    Ok,
+    Warning,
+    Bad,
+}
+
+/// <summary>
+/// Everything the HUD draws, copied from CurrentState once per UI tick. Plain fields, no change
+/// notification: the HUD redraws as a whole when <see cref="Version"/> moves.
+/// </summary>
+public sealed class HudModel
+{
+    public long Version;
+
+    public bool Connected;
+    public double Roll;
+    public double Pitch;
+    public double Heading;
+    public double TargetHeading;
+    public double NavBearing;
+    public double Airspeed;
+    public double Groundspeed;
+    public double TargetSpeed;
+    public double Altitude;
+    public double TargetAltitude;
+    public double VerticalSpeed;
+    public string SpeedUnit = "m/s";
+    public string AltUnit = "m";
+
+    public bool Armed;
+    public string Mode = "";
+    public bool ReadyToArm;
+
+    public double BatteryVoltage;
+    public double BatteryCurrent;
+    public int BatteryRemaining = -1;
+
+    public string GpsText = "No GPS";
+    public HudLevel GpsLevel = HudLevel.Bad;
+
+    public double WpDistance;
+    public int WpNumber;
+    public TimeSpan TimeInAir;
+    public int LinkQuality;
+
+    public HudLevel EkfLevel = HudLevel.Ok;
+    public HudLevel VibeLevel = HudLevel.Ok;
+
+    /// <summary>High-severity status text, shown in the middle for a while.</summary>
+    public string Message = "";
+}

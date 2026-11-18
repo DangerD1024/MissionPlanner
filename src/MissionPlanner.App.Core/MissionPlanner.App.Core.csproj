@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Services and view-models for the new app. No UI framework types belong here. -->
+  <PropertyGroup>
+    <RootNamespace>MissionPlanner.App.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ExtLibs\Mavlink\MAVLink.csproj" />
+    <ProjectReference Include="..\..\ExtLibs\Comms\MissionPlanner.Comms.csproj" />
+    <ProjectReference Include="..\..\ExtLibs\ArduPilot\MissionPlanner.ArduPilot.csproj" />
+    <ProjectReference Include="..\..\ExtLibs\Utilities\MissionPlanner.Utilities.csproj" />
+    <ProjectReference Include="..\..\ExtLibs\GMap.NET.Core\GMap.NET.Core.csproj" />
+    <ProjectReference Include="..\..\ExtLibs\Maps\MissionPlanner.Maps.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="MissionPlanner.App.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- the libraries reference 4.7.0; the current package has the maintained Linux/macOS implementation -->
+    <PackageReference Include="System.IO.Ports" Version="10.0.15" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+</Project>

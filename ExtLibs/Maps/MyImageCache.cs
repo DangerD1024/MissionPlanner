@@ -109,7 +109,8 @@ namespace MissionPlanner.Maps
 
                         MemoryStream stm = new MemoryStream(tile, 0, tile.Length, false, true);
 
-                        ret = GMapImageProxy.Instance.FromStream(stm);
+                        // the configured proxy (the WinForms map control enables GMapImageProxy itself)
+                        ret = (GMapProvider.TileImageProxy ?? GMapImageProxy.Instance).FromStream(stm);
                         if (ret != null)
                         {
                             ret.Data = stm;

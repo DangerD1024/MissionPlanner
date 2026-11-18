@@ -1,0 +1,115 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MissionPlanner.App.Core.ViewModels"
+        x:Class="MissionPlanner.App.Views.MainWindow"
+        x:DataType="vm:ShellViewModel"
+        Title="{Binding Title}"
+        Width="1440" Height="900" MinWidth="1000" MinHeight="640"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource Bg2}">
+
+  <Grid RowDefinitions="64,Auto,*">
+
+    <!-- top bar -->
+    <Border Grid.Row="0" Background="{StaticResource Bg0}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="8,0">
+
+        <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+          <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsData, Mode=OneWay}"
+                       Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Data}">
+            <StackPanel Spacing="2">
+              <Path Classes="icon" Data="{StaticResource IconData}" HorizontalAlignment="Center" />
+              <TextBlock Text="DATA" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+            </StackPanel>
+          </RadioButton>
+          <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsPlan, Mode=OneWay}"
+                       Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Plan}">
+            <StackPanel Spacing="2">
+              <Path Classes="icon" Data="{StaticResource IconPlan}" HorizontalAlignment="Center" />
+              <TextBlock Text="PLAN" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+            </StackPanel>
+          </RadioButton>
+          <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsSetup, Mode=OneWay}"
+                       Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Setup}">
+            <StackPanel Spacing="2">
+              <Path Classes="icon" Data="{StaticResource IconSetup}" HorizontalAlignment="Center" />
+              <TextBlock Text="SETUP" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+            </StackPanel>
+          </RadioButton>
+          <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsConfig, Mode=OneWay}"
+                       Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Config}">
+            <StackPanel Spacing="2">
+              <Path Classes="icon" Data="{StaticResource IconConfig}" HorizontalAlignment="Center" />
+              <TextBlock Text="CONFIG" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+            </StackPanel>
+          </RadioButton>
+          <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsSimulation, Mode=OneWay}"
+                       Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Simulation}">
+            <StackPanel Spacing="2">
+              <Path Classes="icon" Data="{StaticResource IconSim}" HorizontalAlignment="Center" />
+              <TextBlock Text="SIMULATION" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+            </StackPanel>
+          </RadioButton>
+          <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsHelp, Mode=OneWay}"
+                       Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Help}">
+            <StackPanel Spacing="2">
+              <Path Classes="icon" Data="{StaticResource IconHelp}" HorizontalAlignment="Center" />
+              <TextBlock Text="HELP" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+            </StackPanel>
+          </RadioButton>
+        </StackPanel>
+
+        <!-- wordmark -->
+        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center"
+                    Margin="0,0,24,0" Spacing="6">
+          <TextBlock Text="MISSION" FontSize="17" FontWeight="Bold" Foreground="{StaticResource Text}" />
+          <TextBlock Text="PLANNER" FontSize="17" FontWeight="Light" Foreground="{StaticResource Accent}" />
+        </StackPanel>
+
+        <!-- link: port + baud, vehicle underneath -->
+        <Grid Grid.Column="2" x:DataType="vm:ConnectionViewModel" DataContext="{Binding Connection}"
+              RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,Auto,Auto" VerticalAlignment="Center"
+              Margin="0,0,10,0">
+          <ComboBox Width="250" Height="26" Padding="8,2" FontSize="12"
+                    ItemsSource="{Binding Ports}" SelectedItem="{Binding SelectedPort}"
+                    IsEnabled="{Binding CanEditLink}" ToolTip.Tip="Port" />
+          <ComboBox Grid.Column="1" Width="104" Height="26" Padding="8,2" FontSize="12" Margin="6,0,0,0"
+                    ItemsSource="{Binding Bauds}" SelectedItem="{Binding SelectedBaud}"
+                    IsEnabled="{Binding CanEditLink}" IsVisible="{Binding IsSerial}" ToolTip.Tip="Baud rate" />
+          <Button Grid.Column="2" Width="26" Height="26" Padding="1" Margin="6,0,0,0" Background="Transparent"
+                  Command="{Binding RefreshPortsCommand}" IsEnabled="{Binding CanEditLink}" ToolTip.Tip="Refresh ports">
+            <Path Classes="icon" Data="{StaticResource IconRefresh}" />
+          </Button>
+          <ComboBox Grid.Row="1" Grid.ColumnSpan="3" Height="26" Padding="8,2" FontSize="12" Margin="0,6,0,0"
+                    HorizontalAlignment="Stretch" PlaceholderText="vehicle"
+                    ItemsSource="{Binding Vehicles}" SelectedItem="{Binding SelectedVehicle}"
+                    IsVisible="{Binding IsConnected}" />
+          <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Margin="2,8,0,0" FontSize="11" Classes="muted"
+                     Text="{Binding ProgressText}" IsVisible="{Binding IsBusy}" TextTrimming="CharacterEllipsis" MaxWidth="390" />
+        </Grid>
+
+        <Button Grid.Column="3" x:DataType="vm:ConnectionViewModel" DataContext="{Binding Connection}"
+                Command="{Binding ToggleConnectCommand}" Width="96" Height="54" Padding="4"
+                Background="Transparent" VerticalAlignment="Center">
+          <StackPanel Spacing="2">
+            <Panel HorizontalAlignment="Center">
+              <Path Classes="icon" Data="{StaticResource IconConnect}" IsVisible="{Binding !IsConnected}"
+                    Stroke="{StaticResource Accent}" />
+              <Path Classes="icon" Data="{StaticResource IconDisconnect}" IsVisible="{Binding IsConnected}"
+                    Stroke="{StaticResource Danger}" />
+            </Panel>
+            <TextBlock Text="{Binding ConnectText}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+          </StackPanel>
+        </Button>
+      </Grid>
+    </Border>
+
+    <!-- connect progress -->
+    <ProgressBar Grid.Row="1" x:DataType="vm:ConnectionViewModel" DataContext="{Binding Connection}"
+                 Height="3" MinHeight="3" CornerRadius="0" IsVisible="{Binding IsBusy}"
+                 IsIndeterminate="True" Foreground="{StaticResource Accent}" Background="Transparent" />
+
+    <ContentControl Grid.Row="2" Content="{Binding CurrentPage}" />
+  </Grid>
+
+</Window>
