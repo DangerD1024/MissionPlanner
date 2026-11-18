@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
+             xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
+             x:Class="MissionPlanner.App.Views.SetupScreens.EscCalibrationView"
+             x:DataType="vm:EscCalibrationViewModel">
+
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1100" HorizontalAlignment="Left">
+      <hwv:PageHeader Description="Calibrates all ESCs together (Copter 3.3 and later): the autopilot passes the throttle range to the ESCs on the next power-up." />
+
+      <WrapPanel>
+        <Border Classes="card" Width="440" Margin="0,0,16,16" VerticalAlignment="Top">
+          <StackPanel Spacing="12">
+            <TextBlock Classes="h2" Text="ESC Calibration (AC3.3+)" />
+            <Border Background="#33e5534b" BorderBrush="{StaticResource Danger}" BorderThickness="1" CornerRadius="6" Padding="12,8">
+              <TextBlock Text="Remove the propellers before calibrating!" FontWeight="SemiBold" Foreground="{StaticResource Danger}" />
+            </Border>
+            <TextBlock Text="{Binding InstructionsText}" TextWrapping="Wrap" LineHeight="20" />
+            <Button Classes="accent" Content="Calibrate ESCs" Command="{Binding CalibrateCommand}"
+                    IsEnabled="{Binding CanCalibrate}" HorizontalAlignment="Left" Padding="18,8" />
+            <TextBlock Classes="muted" TextWrapping="Wrap" IsVisible="{Binding CalibrationArmed}"
+                       Text="Calibration is set. It runs the next time the autopilot starts from the battery; afterwards it clears itself." />
+          </StackPanel>
+        </Border>
+
+        <Border Classes="card" Width="560" Margin="0,0,16,16" VerticalAlignment="Top">
+          <StackPanel Spacing="8">
+            <TextBlock Classes="h2" Text="Motor output" />
+            <TextBlock Classes="muted" TextWrapping="Wrap" FontSize="12"
+                       Text="ESC type and output range. Leave the PWM min/max at 0 to use the RC input range." />
+            <ItemsControl ItemsSource="{Binding OutputFields}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="hw:ParamField">
+                  <hwv:ParamRow />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </WrapPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

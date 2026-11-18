@@ -1,0 +1,81 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
+             x:Class="MissionPlanner.App.Views.SetupScreens.Hardware.ParamEditor"
+             x:DataType="hw:ParamField"
+             ToolTip.Tip="{Binding ToolTip}">
+
+  <!-- the editor for one parameter: number, drop-down, check box or bitmask, picked by Kind -->
+  <UserControl.Styles>
+    <Style Selector="Border.frame">
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="CornerRadius" Value="5" />
+    </Style>
+    <Style Selector="Border.frame.error">
+      <Setter Property="BorderBrush" Value="{StaticResource Danger}" />
+    </Style>
+    <Style Selector="Border.frame.busy">
+      <Setter Property="BorderBrush" Value="{StaticResource Warn}" />
+    </Style>
+    <Style Selector="Border.frame.dirty">
+      <Setter Property="BorderBrush" Value="{StaticResource Info}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Border Name="Root" Classes="frame" IsVisible="False"
+          Classes.error="{Binding HasError}"
+          Classes.busy="{Binding IsBusy}"
+          Classes.dirty="{Binding IsDirty}">
+    <Panel IsEnabled="{Binding IsEditable}">
+      <NumericUpDown Name="Number" IsVisible="{Binding IsNumber}"
+                     Value="{Binding NumberValue}"
+                     Minimum="{Binding Minimum}"
+                     Maximum="{Binding Maximum}"
+                     Increment="{Binding Increment}"
+                     FormatString="{Binding FormatString}"
+                     ClipValueToMinMax="True"
+                     MinWidth="70" />
+
+      <ComboBox IsVisible="{Binding IsOptions}"
+                ItemsSource="{Binding Options}"
+                SelectedItem="{Binding SelectedOption}"
+                HorizontalAlignment="Stretch"
+                MinWidth="120"
+                MaxDropDownHeight="420">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:DataType="hw:ParamOption">
+            <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+
+      <CheckBox IsVisible="{Binding IsToggle}" IsChecked="{Binding IsOn}" />
+
+      <Button IsVisible="{Binding IsBitmask}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" MinWidth="120">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Text="{Binding BitSummary}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+          <Path Grid.Column="1" Classes="icon" Data="{StaticResource IconDown}" Width="16" Height="16" Margin="6,0,0,0"
+                Stretch="Uniform" />
+        </Grid>
+        <Button.Flyout>
+          <Flyout Placement="BottomEdgeAlignedLeft">
+            <StackPanel Spacing="6" MinWidth="240">
+              <TextBlock Classes="h2" Text="{Binding Label}" />
+              <TextBlock Classes="muted" Text="{Binding Name}" FontSize="11" />
+              <ScrollViewer MaxHeight="420">
+                <ItemsControl ItemsSource="{Binding Bits}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="hw:BitOption">
+                      <CheckBox IsChecked="{Binding IsChecked}" Content="{Binding Label}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </StackPanel>
+          </Flyout>
+        </Button.Flyout>
+      </Button>
+    </Panel>
+  </Border>
+</UserControl>

@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
+             xmlns:hwc="using:MissionPlanner.App.Controls.SetupScreens.Hardware"
+             x:Class="MissionPlanner.App.Views.SetupScreens.ServoOutputView"
+             x:DataType="vm:ServoOutputViewModel">
+
+  <Grid RowDefinitions="Auto,Auto,*" Margin="24,20">
+    <hwv:PageHeader Description="Live output of each servo channel and its function, direction and PWM range. Changes are written to the autopilot as you make them." />
+
+    <!-- column headings -->
+    <Grid Grid.Row="1" Margin="0,14,14,6" ColumnDefinitions="44,1.4*,70,2*,90,90,90">
+      <TextBlock Classes="muted" Text="#" FontWeight="SemiBold" />
+      <TextBlock Grid.Column="1" Classes="muted" Text="Position" FontWeight="SemiBold" />
+      <TextBlock Grid.Column="2" Classes="muted" Text="Reverse" FontWeight="SemiBold" HorizontalAlignment="Center" />
+      <TextBlock Grid.Column="3" Classes="muted" Text="Function" FontWeight="SemiBold" Margin="8,0,0,0" />
+      <TextBlock Grid.Column="4" Classes="muted" Text="Min" FontWeight="SemiBold" Margin="6,0,0,0" />
+      <TextBlock Grid.Column="5" Classes="muted" Text="Trim" FontWeight="SemiBold" Margin="6,0,0,0" />
+      <TextBlock Grid.Column="6" Classes="muted" Text="Max" FontWeight="SemiBold" Margin="6,0,0,0" />
+    </Grid>
+
+    <Border Grid.Row="2" Classes="card" Padding="0">
+      <ScrollViewer>
+        <ItemsControl ItemsSource="{Binding Rows}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:ServoRow">
+              <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="0,4">
+                <Grid ColumnDefinitions="44,1.4*,70,2*,90,90,90" Margin="0,0,14,0">
+                  <TextBlock Text="{Binding Number}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  <hwc:PwmBar Grid.Column="1" Value="{Binding Output.Pwm}" Height="22" VerticalAlignment="Center" />
+                  <hwv:ParamEditor Grid.Column="2" DataContext="{Binding Reverse}" HorizontalAlignment="Center" />
+                  <hwv:ParamEditor Grid.Column="3" DataContext="{Binding Function}" Margin="8,0,0,0" />
+                  <hwv:ParamEditor Grid.Column="4" Compact="True" DataContext="{Binding Min}" Margin="6,0,0,0" />
+                  <hwv:ParamEditor Grid.Column="5" Compact="True" DataContext="{Binding Trim}" Margin="6,0,0,0" />
+                  <hwv:ParamEditor Grid.Column="6" Compact="True" DataContext="{Binding Max}" Margin="6,0,0,0" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Border>
+  </Grid>
+</UserControl>

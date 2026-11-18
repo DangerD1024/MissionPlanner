@@ -1,0 +1,99 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
+             xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
+             xmlns:hwc="using:MissionPlanner.App.Controls.SetupScreens.Hardware"
+             x:Class="MissionPlanner.App.Views.SetupScreens.FailsafeView"
+             x:DataType="vm:FailsafeViewModel">
+
+  <UserControl.Resources>
+    <DataTemplate x:Key="BarTemplate" x:DataType="hw:PwmChannel">
+      <Grid ColumnDefinitions="70,*" Margin="0,3">
+        <TextBlock Text="{Binding Label}" Classes="muted" VerticalAlignment="Center" />
+        <hwc:PwmBar Grid.Column="1" Value="{Binding Pwm}" Height="20" />
+      </Grid>
+    </DataTemplate>
+  </UserControl.Resources>
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.fsmode">
+      <Setter Property="Foreground" Value="{StaticResource Text}" />
+    </Style>
+    <Style Selector="TextBlock.fsmode.tripped">
+      <Setter Property="Foreground" Value="{StaticResource Danger}" />
+    </Style>
+    <Style Selector="TextBlock.armstate.armed">
+      <Setter Property="Foreground" Value="{StaticResource Danger}" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1200" HorizontalAlignment="Left">
+      <hwv:PageHeader Description="What the vehicle does when it loses the radio, the ground station or battery. Changes are written as you make them." />
+
+      <Border Background="#33f0b429" BorderBrush="{StaticResource Warn}" BorderThickness="1" CornerRadius="6" Padding="12,8">
+        <TextBlock Text="Ensure your props are not on the Plane/Quad while testing failsafes." FontWeight="SemiBold" />
+      </Border>
+
+      <Grid ColumnDefinitions="Auto,*">
+        <!-- live radio and outputs -->
+        <StackPanel Spacing="16" Width="420">
+          <Border Classes="card">
+            <StackPanel Spacing="4">
+              <Grid ColumnDefinitions="*,*,*">
+                <StackPanel>
+                  <TextBlock Classes="muted" Text="MODE" FontSize="11" FontWeight="Bold" />
+                  <TextBlock Classes="fsmode" Classes.tripped="{Binding ThrottleFailsafe}" Text="{Binding CurrentMode}"
+                             FontSize="17" FontWeight="SemiBold" />
+                </StackPanel>
+                <StackPanel Grid.Column="1">
+                  <TextBlock Classes="muted" Text="STATE" FontSize="11" FontWeight="Bold" />
+                  <TextBlock Classes="armstate" Classes.armed="{Binding Armed}" Text="{Binding ArmedText}" FontSize="17" FontWeight="SemiBold" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                  <TextBlock Classes="muted" Text="GPS" FontSize="11" FontWeight="Bold" />
+                  <TextBlock Text="{Binding GpsText}" FontSize="17" FontWeight="SemiBold" />
+                </StackPanel>
+              </Grid>
+              <TextBlock Classes="muted" FontSize="12" Margin="0,4,0,0" IsVisible="{Binding ThrottleFailsafe}"
+                         Foreground="{StaticResource Danger}" Text="Throttle input is below the failsafe PWM." />
+            </StackPanel>
+          </Border>
+          <Border Classes="card">
+            <Grid ColumnDefinitions="*,16,*">
+              <StackPanel>
+                <TextBlock Classes="h2" Text="Radio IN" Margin="0,0,0,6" />
+                <ItemsControl ItemsSource="{Binding RcIn}" ItemTemplate="{StaticResource BarTemplate}" />
+              </StackPanel>
+              <StackPanel Grid.Column="2">
+                <TextBlock Classes="h2" Text="Servo/Motor OUT" Margin="0,0,0,6" />
+                <ItemsControl ItemsSource="{Binding ServoOut}" ItemTemplate="{StaticResource BarTemplate}" />
+              </StackPanel>
+            </Grid>
+          </Border>
+        </StackPanel>
+
+        <!-- failsafe parameters -->
+        <ItemsControl Grid.Column="1" ItemsSource="{Binding Groups}" Margin="16,0,0,0">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="hw:ParamGroup">
+              <Border Classes="card" Margin="0,0,0,16">
+                <StackPanel Spacing="4">
+                  <TextBlock Classes="h2" Text="{Binding Title}" Margin="0,0,0,4" />
+                  <ItemsControl ItemsSource="{Binding Fields}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="hw:ParamField">
+                        <hwv:ParamRow />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Grid>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

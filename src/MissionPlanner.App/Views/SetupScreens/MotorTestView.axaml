@@ -1,0 +1,88 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
+             xmlns:hwc="using:MissionPlanner.App.Controls.SetupScreens.Hardware"
+             x:Class="MissionPlanner.App.Views.SetupScreens.MotorTestView"
+             x:DataType="vm:MotorTestViewModel">
+
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1200" HorizontalAlignment="Left">
+      <hwv:PageHeader Description="Spin each motor briefly to check it is connected to the right output and turns the right way." />
+
+      <Border Background="#40e5534b" BorderBrush="{StaticResource Danger}" BorderThickness="2" CornerRadius="8" Padding="16,12">
+        <StackPanel Spacing="4">
+          <TextBlock Text="{Binding WarningText}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Danger}" />
+          <TextBlock Text="{Binding NoteText}" TextWrapping="Wrap" />
+        </StackPanel>
+      </Border>
+
+      <Grid ColumnDefinitions="Auto,*">
+        <Border Classes="card" Width="460" VerticalAlignment="Top" IsEnabled="{Binding CanTest}">
+          <StackPanel Spacing="12">
+            <Grid ColumnDefinitions="Auto,120,24,Auto,120">
+              <TextBlock Text="Throttle %" VerticalAlignment="Center" Margin="0,0,10,0" />
+              <NumericUpDown Grid.Column="1" Value="{Binding Throttle}" Minimum="0" Maximum="100" Increment="1" FormatString="0" />
+              <TextBlock Grid.Column="3" Text="Duration (s)" VerticalAlignment="Center" Margin="0,0,10,0" />
+              <NumericUpDown Grid.Column="4" Value="{Binding Duration}" Minimum="0" Maximum="999" Increment="0.5" FormatString="0.#" />
+            </Grid>
+
+            <ItemsControl ItemsSource="{Binding Motors}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:MotorButton">
+                  <Grid ColumnDefinitions="150,*" Margin="0,3">
+                    <Button Content="{Binding Title}" Command="{Binding TestCommand}" HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center" />
+                    <TextBlock Grid.Column="1" Text="{Binding Detail}" Classes="muted" VerticalAlignment="Center" Margin="12,0,0,0" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <WrapPanel>
+              <Button Content="Test all motors" Command="{Binding TestAllCommand}" Margin="0,0,8,8" Padding="14,8" />
+              <Button Content="Test all in sequence" Command="{Binding TestSequenceCommand}" Margin="0,0,8,8" Padding="14,8" />
+              <Button Classes="danger" Content="Stop all motors" Command="{Binding StopAllCommand}" Margin="0,0,8,8" Padding="14,8"
+                      FontWeight="SemiBold" />
+            </WrapPanel>
+          </StackPanel>
+        </Border>
+
+        <StackPanel Grid.Column="1" Spacing="16" Margin="16,0,0,0">
+          <Border Classes="card" VerticalAlignment="Top" MaxWidth="420" HorizontalAlignment="Left">
+            <StackPanel Spacing="8">
+              <TextBlock Classes="muted" Text="FRAME" FontSize="11" FontWeight="Bold" />
+              <TextBlock Text="{Binding ClassText}" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding TypeText}" FontWeight="SemiBold" />
+              <hwc:MotorLayoutView Layout="{Binding Layout}" ShowLabels="True" Width="300" Height="300"
+                                   IsVisible="{Binding HasLayout}" HorizontalAlignment="Center" />
+              <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding HasLayout}">
+                <Ellipse Width="12" Height="12" Fill="{StaticResource Accent}" />
+                <TextBlock Text="Clockwise" Classes="muted" />
+                <Ellipse Width="12" Height="12" Fill="{StaticResource Info}" Margin="12,0,0,0" />
+                <TextBlock Text="Counter-clockwise" Classes="muted" />
+              </StackPanel>
+              <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                         Text="Numbers are motor outputs, letters the test order. Motor order diagrams:" />
+              <SelectableTextBlock Text="{Binding MotorOrderUrl}" Foreground="{StaticResource Info}" FontSize="12" TextWrapping="Wrap" />
+            </StackPanel>
+          </Border>
+
+          <Border Classes="card" MaxWidth="560" HorizontalAlignment="Left">
+            <StackPanel Spacing="8">
+              <TextBlock Classes="h2" Text="Motor spin thresholds" />
+              <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                         Text="Find the throttle % where the motors just start to turn with the test above, then set the spin-when-armed (deadzone + 2%) and minimum spin (arm + 3%)." />
+              <hwv:ParamRow DataContext="{Binding SpinArm}" />
+              <hwv:ParamRow DataContext="{Binding SpinMin}" />
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="Set Motor Spin Arm" Command="{Binding SetSpinArmCommand}" />
+                <Button Content="Set Motor Spin Min" Command="{Binding SetSpinMinCommand}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Grid>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
