@@ -1,0 +1,173 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:cal="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Calibration"
+             xmlns:views="using:MissionPlanner.App.Views.SetupScreens"
+             xmlns:cc="using:MissionPlanner.App.Controls.SetupScreens"
+             x:Class="MissionPlanner.App.Views.SetupScreens.RadioCalibrationView"
+             x:DataType="vm:RadioCalibrationViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.barlabel">
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.big">
+      <Setter Property="MinWidth" Value="180" />
+      <Setter Property="MinHeight" Value="44" />
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBlock.outcome.ok">
+      <Setter Property="Foreground" Value="{StaticResource Accent}" />
+    </Style>
+    <Style Selector="TextBlock.outcome.bad">
+      <Setter Property="Foreground" Value="{StaticResource Danger}" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1240">
+      <TextBlock Classes="h1" Text="Radio Calibration" />
+
+      <Grid ColumnDefinitions="11*,16,9*">
+        <!-- primary controls, laid out as in Mission Planner -->
+        <Border Classes="card" Padding="18">
+          <StackPanel Spacing="14">
+            <StackPanel Spacing="4">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="barlabel" Text="{Binding Roll.Label}" />
+                <CheckBox Grid.Column="1" Content="Reverse" IsVisible="{Binding ShowReverse}"
+                          IsChecked="{Binding ReverseRoll.IsChecked}" IsEnabled="{Binding ReverseRoll.CanEdit}" />
+              </Grid>
+              <cc:RcBar Height="34" Value="{Binding Roll.Value}" MinLine="{Binding Roll.MinLine}" MaxLine="{Binding Roll.MaxLine}"
+                        ShowRange="{Binding Roll.ShowRange}" Reversed="{Binding Roll.Reversed}" />
+            </StackPanel>
+
+            <Grid ColumnDefinitions="92,*,92">
+              <StackPanel Spacing="4" HorizontalAlignment="Center">
+                <TextBlock Classes="barlabel" HorizontalAlignment="Center" Text="{Binding Pitch.Label}" />
+                <cc:RcBar Orientation="Vertical" Width="64" Height="260" Value="{Binding Pitch.Value}"
+                          MinLine="{Binding Pitch.MinLine}" MaxLine="{Binding Pitch.MaxLine}"
+                          ShowRange="{Binding Pitch.ShowRange}" Reversed="{Binding Pitch.Reversed}" />
+                <CheckBox Content="Reverse" HorizontalAlignment="Center" IsVisible="{Binding ShowReverse}"
+                          IsChecked="{Binding ReversePitch.IsChecked}" IsEnabled="{Binding ReversePitch.CanEdit}" />
+              </StackPanel>
+
+              <StackPanel Grid.Column="1" Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="12,0">
+                <Button Classes="accent big" HorizontalAlignment="Center" Content="{Binding CalibrateButtonText}" Command="{Binding CalibrateCommand}" />
+                <Button HorizontalAlignment="Center" Content="Cancel" Command="{Binding CancelCalibrationCommand}" IsVisible="{Binding IsCapturing}" />
+                <TextBlock TextWrapping="Wrap" TextAlignment="Center" MaxWidth="300" FontSize="14" Text="{Binding Instruction}"
+                           IsVisible="{Binding IsCapturing}" />
+                <TextBlock Classes="muted" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="300" FontSize="12.5"
+                           IsVisible="{Binding IsIdle}"
+                           Text="Switch the transmitter on, then move every stick and switch to its extremes during the calibration. Remove the propellers first." />
+              </StackPanel>
+
+              <StackPanel Grid.Column="2" Spacing="4" HorizontalAlignment="Center">
+                <TextBlock Classes="barlabel" HorizontalAlignment="Center" Text="{Binding Throttle.Label}" />
+                <cc:RcBar Orientation="Vertical" Width="64" Height="260" Value="{Binding Throttle.Value}"
+                          MinLine="{Binding Throttle.MinLine}" MaxLine="{Binding Throttle.MaxLine}"
+                          ShowRange="{Binding Throttle.ShowRange}" Reversed="{Binding Throttle.Reversed}" />
+                <CheckBox Content="Reverse" HorizontalAlignment="Center" IsVisible="{Binding ShowReverse}"
+                          IsChecked="{Binding ReverseThrottle.IsChecked}" IsEnabled="{Binding ReverseThrottle.CanEdit}" />
+              </StackPanel>
+            </Grid>
+
+            <StackPanel Spacing="4">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="barlabel" Text="{Binding Yaw.Label}" />
+                <CheckBox Grid.Column="1" Content="Reverse" IsVisible="{Binding ShowReverse}"
+                          IsChecked="{Binding ReverseYaw.IsChecked}" IsEnabled="{Binding ReverseYaw.CanEdit}" />
+              </Grid>
+              <cc:RcBar Height="34" Value="{Binding Yaw.Value}" MinLine="{Binding Yaw.MinLine}" MaxLine="{Binding Yaw.MaxLine}"
+                        ShowRange="{Binding Yaw.ShowRange}" Reversed="{Binding Yaw.Reversed}" />
+            </StackPanel>
+
+            <views:CalibrationStatusBanner DataContext="{Binding Status}" />
+          </StackPanel>
+        </Border>
+
+        <!-- all 16 inputs -->
+        <Border Grid.Column="2" Classes="card" Padding="18">
+          <StackPanel Spacing="10">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Classes="h2" Text="Radio Inputs" />
+              <TextBlock Grid.Column="1" Classes="muted" FontSize="12" VerticalAlignment="Center" Text="PWM µs, 800 – 2200" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding Channels}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <UniformGrid Columns="2" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:RcChannelViewModel">
+                  <cc:RcBar Height="28" Margin="0,0,8,8" Label="{Binding Label}" Value="{Binding Value}"
+                            MinLine="{Binding MinLine}" MaxLine="{Binding MaxLine}" ShowRange="{Binding ShowRange}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <!-- what the calibration found -->
+      <Border Classes="card" Padding="18" IsVisible="{Binding HasResults}">
+        <StackPanel Spacing="8">
+          <TextBlock Classes="h2" Text="Detected radio options" />
+          <TextBlock Classes="muted" FontSize="12.5" TextWrapping="Wrap"
+                     Text="Channels not connected are displayed as 1500 +-2. Normal values are around 1100 | 1900." />
+          <Grid ColumnDefinitions="80,90,90,90,*" Margin="0,4,0,0">
+            <TextBlock Classes="muted" FontWeight="Bold" Text="Channel" />
+            <TextBlock Grid.Column="1" Classes="muted" FontWeight="Bold" Text="Min" />
+            <TextBlock Grid.Column="2" Classes="muted" FontWeight="Bold" Text="Max" />
+            <TextBlock Grid.Column="3" Classes="muted" FontWeight="Bold" Text="Trim" />
+            <TextBlock Grid.Column="4" Classes="muted" FontWeight="Bold" Text="Result" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding Results}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:RadioResultRow">
+                <Grid ColumnDefinitions="80,90,90,90,*" Margin="0,2">
+                  <TextBlock Text="{Binding Channel, StringFormat='CH{0}'}" />
+                  <TextBlock Grid.Column="1" FontFamily="monospace" Text="{Binding Min}" />
+                  <TextBlock Grid.Column="2" FontFamily="monospace" Text="{Binding Max}" />
+                  <TextBlock Grid.Column="3" FontFamily="monospace" Text="{Binding Trim}" />
+                  <TextBlock Grid.Column="4" Classes="outcome" Classes.ok="{Binding Written}" Classes.bad="{Binding Failed}" Text="{Binding Outcome}" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <Grid ColumnDefinitions="*,16,*">
+        <Border Classes="card" Padding="18">
+          <StackPanel Spacing="10">
+            <TextBlock Classes="h2" Text="Spektrum Bind" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Content="Bind DSM2" Command="{Binding BindDsm2Command}" />
+              <Button Content="Bind DSMX" Command="{Binding BindDsmxCommand}" />
+              <Button Content="Bind DSM8" Command="{Binding BindDsm8Command}" />
+            </StackPanel>
+            <views:CalibrationStatusBanner DataContext="{Binding BindStatus}" />
+          </StackPanel>
+        </Border>
+
+        <Border Grid.Column="2" Classes="card" Padding="18" IsVisible="{Binding ShowElevons}">
+          <StackPanel Spacing="8">
+            <TextBlock Classes="h2" Text="Elevon Config" />
+            <ItemsControl ItemsSource="{Binding Elevons}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="cal:ParamToggleViewModel">
+                  <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}" IsEnabled="{Binding CanEdit}" IsVisible="{Binding IsAvailable}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

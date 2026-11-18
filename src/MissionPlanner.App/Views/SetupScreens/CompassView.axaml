@@ -1,0 +1,271 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:cal="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Calibration"
+             xmlns:views="using:MissionPlanner.App.Views.SetupScreens"
+             x:Class="MissionPlanner.App.Views.SetupScreens.CompassView"
+             x:DataType="vm:CompassViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="Button.icon">
+      <Setter Property="Padding" Value="4,2" />
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.icon Path.icon">
+      <Setter Property="Width" Value="20" />
+      <Setter Property="Height" Value="20" />
+      <Setter Property="Stretch" Value="Uniform" />
+    </Style>
+    <Style Selector="ProgressBar.mag">
+      <Setter Property="Height" Value="14" />
+      <Setter Property="MinHeight" Value="14" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Foreground" Value="{StaticResource Info}" />
+      <Setter Property="Background" Value="{StaticResource Bg3}" />
+    </Style>
+    <Style Selector="ProgressBar.mag.ok">
+      <Setter Property="Foreground" Value="{StaticResource Accent}" />
+    </Style>
+    <Style Selector="ProgressBar.mag.bad">
+      <Setter Property="Foreground" Value="{StaticResource Danger}" />
+    </Style>
+    <Style Selector="TextBlock.offsets.bad">
+      <Setter Property="Foreground" Value="{StaticResource Danger}" />
+    </Style>
+    <Style Selector="TextBlock.offsets.warn">
+      <Setter Property="Foreground" Value="{StaticResource Warn}" />
+    </Style>
+    <Style Selector="TextBlock.offsets.good">
+      <Setter Property="Foreground" Value="{StaticResource Accent}" />
+    </Style>
+    <Style Selector="Border.reboot">
+      <Setter Property="Background" Value="#2d2610" />
+      <Setter Property="BorderBrush" Value="{StaticResource Warn}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="12,8" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1180">
+
+      <!-- ===================== ArduPilot 4.1+: priority list ===================== -->
+      <StackPanel Spacing="16" IsVisible="{Binding IsPriorityLayout}">
+        <StackPanel Spacing="4">
+          <TextBlock Classes="h1" Text="Compass Priority" />
+          <TextBlock Classes="muted" Text="Set the Compass Priority by reordering the compasses in the table below (Highest at the top)" />
+        </StackPanel>
+
+        <Border Classes="reboot" IsVisible="{Binding AnyMissing}" BorderBrush="{StaticResource Danger}" Background="#311818">
+          <TextBlock TextWrapping="Wrap" Text="Your compass configuration has changed, please review the missing compass" />
+        </Border>
+
+        <Border Classes="card" Padding="0">
+          <StackPanel>
+            <DataGrid ItemsSource="{Binding Rows}" AutoGenerateColumns="False" IsReadOnly="True"
+                      CanUserSortColumns="False" CanUserReorderColumns="False" CanUserResizeColumns="True"
+                      HeadersVisibility="Column" SelectionMode="Single" MinHeight="120" BorderThickness="0">
+              <DataGrid.Columns>
+                <DataGridTextColumn x:DataType="vm:CompassRowViewModel" Header="Priority" Binding="{Binding Priority}" Width="Auto" />
+                <DataGridTextColumn x:DataType="vm:CompassRowViewModel" Header="DevID" Binding="{Binding DevId}" Width="Auto" />
+                <DataGridTextColumn x:DataType="vm:CompassRowViewModel" Header="BusType" Binding="{Binding BusType}" Width="Auto" />
+                <DataGridTextColumn x:DataType="vm:CompassRowViewModel" Header="Bus" Binding="{Binding Bus}" Width="Auto" />
+                <DataGridTextColumn x:DataType="vm:CompassRowViewModel" Header="Address" Binding="{Binding Address}" Width="Auto" />
+                <DataGridTextColumn x:DataType="vm:CompassRowViewModel" Header="DevType" Binding="{Binding DevType}" Width="*" />
+                <DataGridTemplateColumn Header="Missing" Width="Auto">
+                  <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate x:DataType="vm:CompassRowViewModel">
+                      <TextBlock Text="MISSING" Foreground="{StaticResource Danger}" FontWeight="SemiBold" FontSize="12"
+                                 VerticalAlignment="Center" Margin="8,0" IsVisible="{Binding Missing}" />
+                    </DataTemplate>
+                  </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="External" Width="Auto">
+                  <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate x:DataType="vm:CompassRowViewModel">
+                      <CheckBox IsChecked="{Binding External, Mode=OneWay}" IsHitTestVisible="False" Focusable="False"
+                                HorizontalAlignment="Center" />
+                    </DataTemplate>
+                  </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn x:DataType="vm:CompassRowViewModel" Header="Orientation" Binding="{Binding Orientation}" Width="150" />
+                <DataGridTemplateColumn Header="Up" Width="Auto">
+                  <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate x:DataType="vm:CompassRowViewModel">
+                      <Button Classes="icon" Command="{Binding MoveUpCommand}" ToolTip.Tip="Higher priority" HorizontalAlignment="Center">
+                        <Path Classes="icon" Data="{StaticResource IconUp}" />
+                      </Button>
+                    </DataTemplate>
+                  </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Down" Width="Auto">
+                  <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate x:DataType="vm:CompassRowViewModel">
+                      <Button Classes="icon" Command="{Binding MoveDownCommand}" ToolTip.Tip="Lower priority" HorizontalAlignment="Center">
+                        <Path Classes="icon" Data="{StaticResource IconDown}" />
+                      </Button>
+                    </DataTemplate>
+                  </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+              </DataGrid.Columns>
+            </DataGrid>
+
+            <Grid ColumnDefinitions="Auto,*,Auto" Margin="12,10">
+              <Button Content="Remove Missing" Command="{Binding RemoveMissingCommand}" IsEnabled="{Binding AnyMissing}" />
+              <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" IsVisible="{Binding HasPendingOrder}">
+                <TextBlock Classes="muted" VerticalAlignment="Center" Text="{Binding PendingText}" TextTrimming="CharacterEllipsis" MaxWidth="520" />
+                <Button Content="Undo" Command="{Binding UndoPriorityCommand}" />
+                <Button Classes="accent" Content="Write Priority" Command="{Binding SavePriorityCommand}" />
+              </StackPanel>
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <Grid ColumnDefinitions="*,16,*">
+          <Border Classes="card">
+            <StackPanel Spacing="8">
+              <TextBlock Classes="h2" Text="Compasses" />
+              <TextBlock Classes="muted" TextWrapping="Wrap" Text="Do you want to disable any of the first 3 compasses?" />
+              <ItemsControl ItemsSource="{Binding UseCompass}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="cal:ParamToggleViewModel">
+                    <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}" IsEnabled="{Binding CanEdit}" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <CheckBox Content="{Binding Learn.Label}" IsChecked="{Binding Learn.IsChecked}" IsEnabled="{Binding Learn.CanEdit}" />
+            </StackPanel>
+          </Border>
+          <Border Grid.Column="2" Classes="card">
+            <StackPanel Spacing="10">
+              <TextBlock Classes="h2" Text="After changing the order" />
+              <TextBlock Classes="muted" TextWrapping="Wrap" Text="A reboot is required to adjust the ordering. A mag calibration is required to remap the above changes." />
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="Reboot" Command="{Binding RebootCommand}" />
+                <Button Content="Large Vehicle MagCal" Command="{Binding LargeVehicleMagCalCommand}"
+                        ToolTip.Tip="Calibrate from a known true heading (GPS lock required), for vehicles too large to rotate" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </Grid>
+      </StackPanel>
+
+      <!-- ===================== older firmware: per-compass offsets ===================== -->
+      <StackPanel Spacing="16" IsVisible="{Binding IsLegacyLayout}">
+        <StackPanel Spacing="4">
+          <TextBlock Classes="h1" Text="Compass" />
+          <TextBlock Classes="muted" TextWrapping="Wrap"
+                     Text="This firmware has no compass priority list. Offsets turn red when they are above 600 or not calibrated (all zero), yellow above 400." />
+        </StackPanel>
+
+        <ItemsControl ItemsSource="{Binding LegacyVisible}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <UniformGrid Columns="3" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:LegacyCompassViewModel">
+              <Border Classes="card" Margin="0,0,12,0">
+                <StackPanel Spacing="8">
+                  <TextBlock Classes="h2" Text="{Binding Title}" />
+                  <CheckBox Content="{Binding Use.Label}" IsChecked="{Binding Use.IsChecked}" IsEnabled="{Binding Use.CanEdit}" />
+                  <CheckBox Content="{Binding External.Label}" IsChecked="{Binding External.IsChecked}" IsEnabled="{Binding External.CanEdit}" />
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Classes="muted" Text="Orientation" />
+                    <TextBlock Text="{Binding Orientation}" />
+                  </StackPanel>
+                  <TextBlock Classes="muted" FontSize="12" Text="OFFSETS" />
+                  <TextBlock Classes="offsets" Classes.bad="{Binding OffsetsBad}" Classes.warn="{Binding OffsetsWarn}"
+                             Classes.good="{Binding OffsetsGood}" FontFamily="monospace" Text="{Binding Offsets}" />
+                  <TextBlock Classes="muted" FontSize="12" Text="MOT" IsVisible="{Binding Motor, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                  <TextBlock FontFamily="monospace" Text="{Binding Motor}" IsVisible="{Binding Motor, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Border Classes="card">
+          <StackPanel Spacing="10">
+            <TextBlock Classes="h2" Text="General Compass Settings" />
+            <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding Primary.IsAvailable}">
+              <TextBlock VerticalAlignment="Center" Text="Primary Compass" />
+              <ComboBox MinWidth="160" ItemsSource="{Binding Primary.Options}" SelectedItem="{Binding Primary.Selected}" IsEnabled="{Binding !Primary.IsBusy}">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="cal:ParamOption">
+                    <TextBlock Text="{Binding Label}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+            </StackPanel>
+            <CheckBox Content="{Binding Learn.Label}" IsChecked="{Binding Learn.IsChecked}" IsEnabled="{Binding Learn.CanEdit}" />
+            <CheckBox Content="{Binding AutoDeclination.Label}" IsChecked="{Binding AutoDeclination.IsChecked}"
+                      IsEnabled="{Binding AutoDeclination.CanEdit}" IsVisible="{Binding AutoDeclination.IsAvailable}" />
+            <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding Declination, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <TextBlock Classes="muted" Text="Declination (COMPASS_DEC)" />
+              <TextBlock Text="{Binding Declination}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <views:CalibrationStatusBanner DataContext="{Binding Status}" />
+
+      <Border Classes="reboot" IsVisible="{Binding RebootRequired}">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock VerticalAlignment="Center" TextWrapping="Wrap" Text="Reboot required: the autopilot applies the new compass settings when it restarts." />
+          <Button Grid.Column="1" Classes="accent" Content="Reboot" Command="{Binding RebootCommand}" Margin="12,0,0,0" />
+        </Grid>
+      </Border>
+
+      <!-- ===================== onboard calibration (both layouts) ===================== -->
+      <Border Classes="card" Padding="18">
+        <StackPanel Spacing="12">
+          <TextBlock Classes="h2" Text="Onboard Mag Calibration" />
+          <TextBlock Classes="muted" TextWrapping="Wrap" IsVisible="{Binding !HasOnboardCalibration}"
+                     Text="This firmware does not report onboard compass calibration support; update the firmware to calibrate from here." />
+
+          <Grid ColumnDefinitions="Auto,*,Auto" IsVisible="{Binding HasOnboardCalibration}">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Classes="accent" MinWidth="90" Content="Start" Command="{Binding StartMagCalCommand}" />
+              <Button MinWidth="90" Content="Accept" Command="{Binding AcceptMagCalCommand}" />
+              <Button MinWidth="90" Content="Cancel" Command="{Binding CancelMagCalCommand}" />
+            </StackPanel>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" IsVisible="{Binding Fitness.IsAvailable}">
+              <TextBlock VerticalAlignment="Center" Text="Fitness" />
+              <ComboBox MinWidth="150" ItemsSource="{Binding Fitness.Options}" SelectedItem="{Binding Fitness.Selected}" IsEnabled="{Binding !Fitness.IsBusy}">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="cal:ParamOption">
+                    <TextBlock Text="{Binding Label}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+              <TextBlock Classes="muted" VerticalAlignment="Center" FontSize="12" Text="Relax fitness if calibration fails" />
+            </StackPanel>
+          </Grid>
+
+          <TextBlock Classes="muted" IsVisible="{Binding ShowMagWaiting}" Text="Waiting for the autopilot's progress…" />
+
+          <ItemsControl ItemsSource="{Binding MagBars}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:MagCalBarViewModel">
+                <Grid ColumnDefinitions="60,*" RowDefinitions="Auto,Auto" Margin="0,0,0,8">
+                  <TextBlock Text="{Binding Name}" VerticalAlignment="Center" FontWeight="SemiBold" />
+                  <ProgressBar Grid.Column="1" Classes="mag" Classes.ok="{Binding IsSuccess}" Classes.bad="{Binding IsFailed}"
+                               Minimum="0" Maximum="100" Value="{Binding Percent}" />
+                  <TextBlock Grid.Row="1" Grid.Column="1" Classes="muted" FontFamily="monospace" FontSize="12.5" Margin="0,3,0,0"
+                             Text="{Binding Result}" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <views:CalibrationStatusBanner DataContext="{Binding MagStatus}" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
