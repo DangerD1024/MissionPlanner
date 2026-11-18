@@ -12,19 +12,19 @@
       <Setter Property="Padding" Value="10,7" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="Background" Value="#1b2430" />
-      <Setter Property="BorderBrush" Value="{StaticResource Info}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Info}" />
     </Style>
     <Style Selector="Border.banner.success">
       <Setter Property="Background" Value="#1c2a14" />
-      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="Border.banner.warning">
       <Setter Property="Background" Value="#2d2610" />
-      <Setter Property="BorderBrush" Value="{StaticResource Warn}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Warn}" />
     </Style>
     <Style Selector="Border.banner.error">
       <Setter Property="Background" Value="#311818" />
-      <Setter Property="BorderBrush" Value="{StaticResource Danger}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Danger}" />
     </Style>
   </UserControl.Styles>
 

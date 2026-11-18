@@ -40,15 +40,15 @@
       <scottplot:AvaPlot Grid.Row="1" x:Name="Chart" />
 
       <!-- field picker over the chart -->
-      <Border Grid.Row="1" IsVisible="{Binding IsPickerOpen}" Background="{StaticResource Bg1}" Padding="10,8"
-              BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0">
+      <Border Grid.Row="1" IsVisible="{Binding IsPickerOpen}" Background="{DynamicResource Bg1}" Padding="10,8"
+              BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0">
         <Grid RowDefinitions="Auto,*" RowSpacing="6">
           <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
             <TextBox x:Name="FieldSearch" Text="{Binding FieldFilter}" Height="28" MinHeight="28" FontSize="12.5"
                      VerticalContentAlignment="Center" PlaceholderText="Search values (roll, nav_pitch, alt, ch3out…)" />
             <StackPanel Grid.Column="1" VerticalAlignment="Center">
               <TextBlock Text="{Binding SelectionSummary}" Classes="muted" FontSize="11.5" />
-              <TextBlock Text="{Binding PickerMessage}" Foreground="{StaticResource Warn}" FontSize="11.5"
+              <TextBlock Text="{Binding PickerMessage}" Foreground="{DynamicResource Warn}" FontSize="11.5"
                          IsVisible="{Binding PickerMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
             </StackPanel>
             <Button Grid.Column="2" Classes="tool" Content="Default" Command="{Binding ResetFieldsCommand}"
@@ -70,7 +70,7 @@
                     <TextBlock FontSize="12" TextTrimming="CharacterEllipsis">
                       <Run Text="{Binding Display}" />
                       <Run Text="  " />
-                      <Run Text="{Binding Name}" FontSize="10.5" Foreground="{StaticResource Muted}" />
+                      <Run Text="{Binding Name}" FontSize="10.5" Foreground="{DynamicResource Muted}" />
                     </TextBlock>
                   </CheckBox>
                 </DataTemplate>

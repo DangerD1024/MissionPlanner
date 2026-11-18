@@ -12,10 +12,10 @@
       <Setter Property="Padding" Value="6,4" />
     </Style>
     <Style Selector="Border.row:pointerover">
-      <Setter Property="Background" Value="{StaticResource Bg3}" />
+      <Setter Property="Background" Value="{DynamicResource Bg3}" />
     </Style>
     <Style Selector="TextBlock.colhead">
-      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
       <Setter Property="FontSize" Value="12" />
       <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="VerticalAlignment" Value="Center" />
@@ -52,8 +52,8 @@
 
     <!-- armed warning, as Mission Planner gives on opening the form -->
     <Border Grid.Row="1" Margin="0,10,0,0" Padding="12,8" CornerRadius="6" Background="#33f0b429"
-            BorderBrush="{StaticResource Warn}" BorderThickness="1" IsVisible="{Binding IsArmed}">
-      <TextBlock Foreground="{StaticResource Warn}" TextWrapping="Wrap"
+            BorderBrush="{DynamicResource Warn}" BorderThickness="1" IsVisible="{Binding IsArmed}">
+      <TextBlock Foreground="{DynamicResource Warn}" TextWrapping="Wrap"
                  Text="The vehicle is armed. Disarm it before downloading logs." />
     </Border>
 
@@ -70,7 +70,7 @@
           <TextBlock Grid.Column="5" Classes="colhead" Text="{Binding SelectionText}" HorizontalAlignment="Right"
                      FontWeight="Normal" />
         </Grid>
-        <Border Grid.Row="1" Background="{StaticResource Line}" />
+        <Border Grid.Row="1" Background="{DynamicResource Line}" />
 
         <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
           <ItemsControl ItemsSource="{Binding Entries}" Margin="0,4,0,0">
@@ -167,15 +167,15 @@
 
     <!-- folder and status -->
     <Grid Grid.Row="5" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" Margin="0,12,0,0">
-      <Path Classes="icon" Data="{StaticResource IconFolder}" Stroke="{StaticResource Muted}" VerticalAlignment="Center" />
+      <Path Classes="icon" Data="{StaticResource IconFolder}" Stroke="{DynamicResource Muted}" VerticalAlignment="Center" />
       <SelectableTextBlock Grid.Column="1" Margin="8,0" VerticalAlignment="Center" Text="{Binding Folder}"
-                           Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis" />
+                           Foreground="{DynamicResource Muted}" TextTrimming="CharacterEllipsis" />
       <Button Grid.Column="2" Classes="tool" Command="{Binding OpenFolderCommand}" Content="Open folder" />
       <SelectableTextBlock Grid.Row="1" Grid.ColumnSpan="3" Margin="0,8,0,0" TextWrapping="Wrap" Text="{Binding Status}"
-                           Classes.error="{Binding StatusIsError}" Foreground="{StaticResource Text}">
+                           Classes.error="{Binding StatusIsError}" Foreground="{DynamicResource Text}">
         <SelectableTextBlock.Styles>
           <Style Selector="SelectableTextBlock.error">
-            <Setter Property="Foreground" Value="{StaticResource Danger}" />
+            <Setter Property="Foreground" Value="{DynamicResource Danger}" />
           </Style>
         </SelectableTextBlock.Styles>
       </SelectableTextBlock>

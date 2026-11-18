@@ -201,10 +201,25 @@ public sealed partial class PlannerSettingsViewModel : PageViewModel
 
     private bool _loading = true;
 
+    // ---- appearance -----------------------------------------------------------------------------
+
+    public IReadOnlyList<ThemeInfo> Themes { get; }
+
+    [ObservableProperty]
+    private ThemeInfo _selectedTheme;
+
+    partial void OnSelectedThemeChanged(ThemeInfo value)
+    {
+        if (value != null && value.Name != Services.Themes.Current)
+            Services.Themes.Apply(value.Name);
+    }
+
     public PlannerSettingsViewModel(AppServices services)
-        : base("Planner")
+        : base("App Settings")
     {
         Services = services;
+        Themes = services.Themes.Themes;
+        _selectedTheme = Themes.FirstOrDefault(t => t.Name == services.Themes.Current) ?? Themes[0];
         PlannerSettings.ApplyStored();
 
         MapProviders = MapProviderNames();

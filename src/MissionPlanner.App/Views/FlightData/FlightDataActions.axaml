@@ -16,7 +16,7 @@
     </Style>
     <Style Selector="TextBlock.caption">
       <Setter Property="FontSize" Value="11" />
-      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
       <Setter Property="Margin" Value="2,0,0,-2" />
     </Style>
   </UserControl.Styles>
@@ -83,16 +83,16 @@
     </ScrollViewer>
 
     <!-- outcome of the last command -->
-    <Border Grid.Row="1" Background="{StaticResource Bg0}" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0"
+    <Border Grid.Row="1" Background="{DynamicResource Bg0}" BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0"
             Padding="10,6">
       <Panel>
         <TextBlock Text="Connect to a vehicle to send commands." Classes="muted" FontSize="12"
                    IsVisible="{Binding !IsConnected}" />
         <TextBlock Text="{Binding ActionStatus}" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding IsConnected}"
-                   Foreground="{StaticResource Text}" Classes.err="{Binding ActionStatusIsError}">
+                   Foreground="{DynamicResource Text}" Classes.err="{Binding ActionStatusIsError}">
           <TextBlock.Styles>
             <Style Selector="TextBlock.err">
-              <Setter Property="Foreground" Value="{StaticResource Danger}" />
+              <Setter Property="Foreground" Value="{DynamicResource Danger}" />
             </Style>
           </TextBlock.Styles>
         </TextBlock>

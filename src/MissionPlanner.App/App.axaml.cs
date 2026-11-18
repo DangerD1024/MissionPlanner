@@ -32,7 +32,9 @@ public sealed class App : Application
         }
 
         var windows = new WindowService();
-        _services = new AppServices(dispatcher, dialogs, windows);
+        var themes = new ThemeService();
+        themes.ApplySaved();
+        _services = new AppServices(dispatcher, dialogs, windows) { Themes = themes };
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {

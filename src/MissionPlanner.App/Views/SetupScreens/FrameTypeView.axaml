@@ -8,8 +8,8 @@
 
   <UserControl.Styles>
     <Style Selector="Button.tile">
-      <Setter Property="Background" Value="{StaticResource Bg2}" />
-      <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+      <Setter Property="Background" Value="{DynamicResource Bg2}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
       <Setter Property="BorderThickness" Value="2" />
       <Setter Property="CornerRadius" Value="8" />
       <Setter Property="Padding" Value="8" />
@@ -21,14 +21,14 @@
       <Setter Property="Cursor" Value="Hand" />
     </Style>
     <Style Selector="Button.tile.selected">
-      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="Button.tile.selected /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="#1f2a17" />
-      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="Button.tile.selected TextBlock.tilelabel">
-      <Setter Property="Foreground" Value="{StaticResource Accent}" />
+      <Setter Property="Foreground" Value="{DynamicResource Accent}" />
     </Style>
   </UserControl.Styles>
 
@@ -106,9 +106,9 @@
                                IsVisible="{Binding HasCurrentLayout}" />
           <StackPanel Spacing="4" IsVisible="{Binding HasCurrentLayout}">
             <StackPanel Orientation="Horizontal" Spacing="8">
-              <Ellipse Width="12" Height="12" Fill="{StaticResource Accent}" />
+              <Ellipse Width="12" Height="12" Fill="{DynamicResource Accent}" />
               <TextBlock Text="Clockwise" Classes="muted" />
-              <Ellipse Width="12" Height="12" Fill="{StaticResource Info}" Margin="12,0,0,0" />
+              <Ellipse Width="12" Height="12" Fill="{DynamicResource Info}" Margin="12,0,0,0" />
               <TextBlock Text="Counter-clockwise" Classes="muted" />
             </StackPanel>
             <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"

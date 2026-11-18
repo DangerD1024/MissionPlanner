@@ -12,8 +12,8 @@
 
   <UserControl.Styles>
     <Style Selector="Button.vehicle">
-      <Setter Property="Background" Value="{StaticResource Bg2}" />
-      <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+      <Setter Property="Background" Value="{DynamicResource Bg2}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="8" />
       <Setter Property="Padding" Value="10" />
@@ -25,11 +25,11 @@
       <Setter Property="Cursor" Value="Hand" />
     </Style>
     <Style Selector="Button.vehicle:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="{StaticResource Bg3}" />
-      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+      <Setter Property="Background" Value="{DynamicResource Bg3}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="Path.vehicleicon">
-      <Setter Property="Stroke" Value="{StaticResource Accent}" />
+      <Setter Property="Stroke" Value="{DynamicResource Accent}" />
       <Setter Property="StrokeThickness" Value="1.8" />
       <Setter Property="StrokeJoin" Value="Round" />
       <Setter Property="StrokeLineCap" Value="Round" />
@@ -38,12 +38,12 @@
       <Setter Property="Stretch" Value="Uniform" />
     </Style>
     <Style Selector="Button.vehicle:disabled Path.vehicleicon">
-      <Setter Property="Stroke" Value="{StaticResource Muted}" />
+      <Setter Property="Stroke" Value="{DynamicResource Muted}" />
     </Style>
     <Style Selector="TextBlock.caption">
       <Setter Property="FontSize" Value="11" />
       <Setter Property="FontWeight" Value="Bold" />
-      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
     </Style>
     <Style Selector="ListBox.ports ListBoxItem">
       <Setter Property="CornerRadius" Value="6" />
@@ -51,17 +51,17 @@
     </Style>
     <Style Selector="ListBox.ports ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="#1f2a17" />
-      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
       <Setter Property="BorderThickness" Value="1" />
     </Style>
     <Style Selector="ListBox.ports ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="#26331b" />
     </Style>
     <Style Selector="ListBox.ports ListBoxItem:selected">
-      <Setter Property="Foreground" Value="{StaticResource Text}" />
+      <Setter Property="Foreground" Value="{DynamicResource Text}" />
     </Style>
     <Style Selector="ListBox.log">
-      <Setter Property="Background" Value="{StaticResource Bg0}" />
+      <Setter Property="Background" Value="{DynamicResource Bg0}" />
       <Setter Property="FontFamily" Value="monospace" />
       <Setter Property="FontSize" Value="11.5" />
     </Style>
@@ -83,7 +83,7 @@
         </StackPanel>
 
         <!-- manifest problems -->
-        <Border Classes="card" BorderBrush="{StaticResource Danger}" IsVisible="{Binding HasError}">
+        <Border Classes="card" BorderBrush="{DynamicResource Danger}" IsVisible="{Binding HasError}">
           <Grid ColumnDefinitions="*,Auto">
             <TextBlock Text="{Binding ErrorText}" TextWrapping="Wrap" VerticalAlignment="Center" />
             <Button Grid.Column="1" Content="Retry" Margin="12,0,0,0" Command="{Binding ReloadManifestCommand}" />
@@ -106,7 +106,7 @@
                          IsVisible="{Binding IsLoading}" />
             <TextBlock Classes="muted" FontSize="12" Text="{Binding ManifestText}" VerticalAlignment="Center" />
           </StackPanel>
-          <TextBlock Text="{Binding ReleaseWarning}" IsVisible="{Binding HasReleaseWarning}" Foreground="{StaticResource Warn}"
+          <TextBlock Text="{Binding ReleaseWarning}" IsVisible="{Binding HasReleaseWarning}" Foreground="{DynamicResource Warn}"
                      TextWrapping="Wrap" FontSize="12" />
         </StackPanel>
 
@@ -173,7 +173,7 @@
                         HorizontalAlignment="Stretch" Margin="0,2,0,0" MaxDropDownHeight="400" />
             </Grid>
 
-            <Border BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="6" Height="280" ClipToBounds="True">
+            <Border BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="6" Height="280" ClipToBounds="True">
               <DataGrid ItemsSource="{Binding Rows}" SelectedItem="{Binding Selected}" AutoGenerateColumns="False"
                         HeadersVisibility="Column" RowHeight="30" CanUserSortColumns="True" CanUserResizeColumns="True"
                         IsReadOnly="True" SelectionMode="Single" BorderThickness="0">
@@ -215,7 +215,7 @@
               <DataTemplate x:DataType="fw:PortRow">
                 <StackPanel Spacing="1" Margin="0,2">
                   <TextBlock Text="{Binding PortName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                  <TextBlock Text="{Binding BoardText}" FontSize="12" Foreground="{StaticResource Accent}"
+                  <TextBlock Text="{Binding BoardText}" FontSize="12" Foreground="{DynamicResource Accent}"
                              IsVisible="{Binding IsRecognised}" TextTrimming="CharacterEllipsis" />
                   <TextBlock Text="{Binding BoardText}" FontSize="12" Classes="muted"
                              IsVisible="{Binding !IsRecognised}" TextTrimming="CharacterEllipsis" />
@@ -231,7 +231,7 @@
                   ToolTip.Tip="Probes every serial port for a board in its bootloader for 20 s: plug the board in (or replug it) after clicking." />
           <Border IsVisible="{Binding HasDetected}" Background="#1f2a17" CornerRadius="6" Padding="10,8">
             <Grid ColumnDefinitions="*,Auto">
-              <TextBlock Text="{Binding DetectedText}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource Accent}" />
+              <TextBlock Text="{Binding DetectedText}" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource Accent}" />
               <Button Grid.Column="1" Padding="4" Margin="6,0,0,0" VerticalAlignment="Top" Command="{Binding ClearDetectedCommand}"
                       ToolTip.Tip="Forget the detected board">
                 <Path Classes="icon" Data="{StaticResource IconDelete}" Width="14" Height="14" Stretch="Uniform" />

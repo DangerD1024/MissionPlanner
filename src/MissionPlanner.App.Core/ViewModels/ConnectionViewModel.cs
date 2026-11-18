@@ -33,9 +33,74 @@ public sealed partial class ConnectionViewModel : ObservableObject
         var last = Settings.Instance["comport"];
         _selectedPort = !string.IsNullOrEmpty(last) && Ports.Contains(last) ? last : Ports.FirstOrDefault(p => p.StartsWith('/') || p.StartsWith("COM")) ?? Tcp;
 
+        _auto = new AutoConnectService(() => services.Session.State == LinkState.Disconnected);
+        _auto.StatusChanged += s => services.Dispatcher.Post(() => AutoConnectStatus = s);
+        _auto.Found += (spec, label) => services.Dispatcher.Post(() => _ = AutoConnectToAsync(spec, label));
+
         services.Session.StateChanged += (_, _) => services.Dispatcher.Post(OnStateChanged);
         services.Session.LinkLost += (_, reason) => services.Dispatcher.Post(() =>
-            _ = services.Dialogs.ShowMessageAsync("Connection lost", reason, MessageKind.Warning));
+        {
+            if (AutoConnect)
+            {
+                // a pulled cable is expected with auto-connect: keep looking instead of a dialog
+                AutoConnectStatus = "Link lost: " + reason;
+                _auto.Resume();
+            }
+            else
+            {
+                _ = services.Dialogs.ShowMessageAsync("Connection lost", reason, MessageKind.Warning);
+            }
+        });
+
+        _autoConnect = Settings.Instance.GetBoolean(AutoConnectKey, false);
+        if (_autoConnect)
+            _auto.Start();
+    }
+
+    public const string AutoConnectKey = "next_autoconnect";
+
+    private readonly AutoConnectService _auto;
+
+    /// <summary>Connect by itself to any vehicle found on USB serial or UDP 14550.</summary>
+    [ObservableProperty]
+    private bool _autoConnect;
+
+    [ObservableProperty]
+    private string _autoConnectStatus = "";
+
+    partial void OnAutoConnectChanged(bool value)
+    {
+        Settings.Instance[AutoConnectKey] = value.ToString();
+        Settings.Instance.Save();
+        if (value)
+            _auto.Start();
+        else
+            _auto.Stop();
+    }
+
+    private async Task AutoConnectToAsync(LinkSpec spec, string label)
+    {
+        if (!AutoConnect || State != LinkState.Disconnected)
+        {
+            _auto.Resume();
+            return;
+        }
+
+        // show what was found in the port/baud boxes, as if the user had picked it
+        if (spec.Kind == LinkKind.Serial)
+        {
+            if (!Ports.Contains(spec.Address))
+                Ports.Insert(0, spec.Address);
+            SelectedPort = spec.Address;
+            SelectedBaud = spec.Value;
+        }
+        else
+        {
+            SelectedPort = Udp;
+        }
+
+        var ok = await ConnectSpecAsync(spec, quiet: true);
+        _auto.Resume(ok ? null : label);
     }
 
     public ObservableCollection<string> Ports { get; } = new();
@@ -124,6 +189,12 @@ public sealed partial class ConnectionViewModel : ObservableObject
         Settings.Instance["baudrate"] = SelectedBaud.ToString();
         Settings.Instance.Save();
 
+        await ConnectSpecAsync(spec, quiet: false);
+    }
+
+    /// <summary>Connects to a link; <paramref name="quiet"/> (auto-connect) reports failures in the status line only.</summary>
+    private async Task<bool> ConnectSpecAsync(LinkSpec spec, bool quiet)
+    {
         _connectCancel = new CancellationTokenSource();
         var progress = new Progress<OperationProgress>(p =>
         {
@@ -136,13 +207,19 @@ public sealed partial class ConnectionViewModel : ObservableObject
             ProgressText = "Connecting…";
             await _services.Session.ConnectAsync(spec, getParams: true, progress, _connectCancel.Token);
             Connected?.Invoke(this, EventArgs.Empty);
+            return true;
         }
         catch (OperationCanceledException)
         {
+            return false;
         }
         catch (ConnectException ex)
         {
-            await _services.Dialogs.ShowMessageAsync("Connect failed", ex.Message, MessageKind.Error);
+            if (quiet)
+                AutoConnectStatus = "Connect failed: " + ex.Message.Split('\n')[0];
+            else
+                await _services.Dialogs.ShowMessageAsync("Connect failed", ex.Message, MessageKind.Error);
+            return false;
         }
         finally
         {

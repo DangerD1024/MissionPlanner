@@ -10,8 +10,8 @@
 
   <UserControl.Styles>
     <Style Selector="Border.group">
-      <Setter Property="Background" Value="{StaticResource Bg1}" />
-      <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+      <Setter Property="Background" Value="{DynamicResource Bg1}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="8" />
       <Setter Property="Padding" Value="12,10,12,8" />
@@ -28,7 +28,7 @@
     </Style>
     <Style Selector="Border.prow.modified">
       <Setter Property="Background" Value="#1f8cc63f" />
-      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="Border.prow NumericUpDown">
       <Setter Property="MinHeight" Value="28" />
@@ -50,7 +50,7 @@
     <Style Selector="Border.badge TextBlock">
       <Setter Property="FontSize" Value="9.5" />
       <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Foreground" Value="{StaticResource Warn}" />
+      <Setter Property="Foreground" Value="{DynamicResource Warn}" />
     </Style>
     <Style Selector="CheckBox.bit">
       <Setter Property="FontSize" Value="12" />
@@ -61,10 +61,10 @@
 
   <Grid RowDefinitions="Auto,Auto,*">
     <ProgressBar Height="3" MinHeight="3" CornerRadius="0" IsIndeterminate="True" Background="Transparent"
-                 Foreground="{StaticResource Accent}" IsVisible="{Binding IsBusy}" />
+                 Foreground="{DynamicResource Accent}" IsVisible="{Binding IsBusy}" />
 
     <!-- header: title, lock and the write/refresh buttons -->
-    <Border Grid.Row="1" Background="{StaticResource Bg1}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1"
+    <Border Grid.Row="1" Background="{DynamicResource Bg1}" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1"
             Padding="18,12">
       <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
         <StackPanel Spacing="2">

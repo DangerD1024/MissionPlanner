@@ -32,8 +32,8 @@
       <Setter Property="Padding" Value="6,0,0,0" />
     </Style>
     <Style Selector="Border.chip">
-      <Setter Property="Background" Value="{StaticResource Bg2}" />
-      <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+      <Setter Property="Background" Value="{DynamicResource Bg2}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="6" />
       <Setter Property="Padding" Value="8,4" />
@@ -48,7 +48,7 @@
   <DockPanel>
 
     <!-- toolbar -->
-    <Border DockPanel.Dock="Top" Background="{StaticResource Bg1}" BorderBrush="{StaticResource Line}"
+    <Border DockPanel.Dock="Top" Background="{DynamicResource Bg1}" BorderBrush="{DynamicResource Line}"
             BorderThickness="0,0,0,1" Padding="12,8">
       <Grid ColumnDefinitions="Auto,*,Auto">
         <Button Classes="accent tool" Command="{Binding OpenCommand}" ToolTip.Tip="Open a .bin, .log or .tlog file">
@@ -80,15 +80,15 @@
     </Border>
 
     <!-- status line -->
-    <Border DockPanel.Dock="Bottom" Padding="12,4" Background="{StaticResource Bg1}" IsVisible="{Binding Status, Converter={x:Static ObjectConverters.IsNotNull}}">
-      <TextBlock Text="{Binding Status}" Foreground="{StaticResource Warn}" TextTrimming="CharacterEllipsis" />
+    <Border DockPanel.Dock="Bottom" Padding="12,4" Background="{DynamicResource Bg1}" IsVisible="{Binding Status, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <TextBlock Text="{Binding Status}" Foreground="{DynamicResource Warn}" TextTrimming="CharacterEllipsis" />
     </Border>
 
     <Panel>
       <Grid x:Name="Body" ColumnDefinitions="290,4,*,4,360" IsVisible="{Binding HasLog}">
 
         <!-- message types and fields -->
-        <Grid RowDefinitions="Auto,*" Background="{StaticResource Bg1}">
+        <Grid RowDefinitions="Auto,*" Background="{DynamicResource Bg1}">
           <Grid Margin="8,8,8,6" ColumnDefinitions="*,Auto">
             <TextBox Text="{Binding Filter}" PlaceholderText="Filter: ATT, Roll, GPS.Alt…" />
             <Button Grid.Column="1" Margin="4,0,0,0" Padding="8,4" Content="✕" Command="{Binding ClearFilterCommand}"
@@ -115,7 +115,7 @@
           </TreeView>
         </Grid>
 
-        <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="{StaticResource Line}" />
+        <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="{DynamicResource Line}" />
 
         <!-- graph -->
         <Grid Grid.Column="2" RowDefinitions="*,Auto">
@@ -154,10 +154,10 @@
           </ItemsControl>
         </Grid>
 
-        <GridSplitter Grid.Column="3" ResizeDirection="Columns" Background="{StaticResource Line}" />
+        <GridSplitter Grid.Column="3" ResizeDirection="Columns" Background="{DynamicResource Line}" />
 
         <!-- map and events -->
-        <Grid Grid.Column="4" x:Name="SidePanel" RowDefinitions="*,4,*" Background="{StaticResource Bg1}">
+        <Grid Grid.Column="4" x:Name="SidePanel" RowDefinitions="*,4,*" Background="{DynamicResource Bg1}">
           <Panel x:Name="MapPanel" IsVisible="{Binding MapVisible}">
             <controls:MapView x:Name="Map" />
             <Border Background="#c0101317" CornerRadius="4" Padding="6,2" Margin="8,6" VerticalAlignment="Top"
@@ -165,7 +165,7 @@
               <TextBlock Classes="muted" FontSize="11" Text="GPS track · hover the graph to follow it" />
             </Border>
           </Panel>
-          <GridSplitter Grid.Row="1" ResizeDirection="Rows" Background="{StaticResource Line}"
+          <GridSplitter Grid.Row="1" ResizeDirection="Rows" Background="{DynamicResource Line}"
                         IsVisible="{Binding MapVisible}" />
           <Grid Grid.Row="2" x:Name="EventsPanel" RowDefinitions="Auto,*">
             <TextBlock Classes="h2" Margin="10,8,10,4" Text="Events" />
@@ -190,7 +190,7 @@
 
       <!-- nothing open yet -->
       <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" IsVisible="{Binding ShowWelcome}">
-        <Path Classes="icon" Data="{StaticResource IconFile}" Stroke="{StaticResource Muted}" HorizontalAlignment="Center"
+        <Path Classes="icon" Data="{StaticResource IconFile}" Stroke="{DynamicResource Muted}" HorizontalAlignment="Center"
               Width="48" Height="48" Stretch="Uniform" />
         <TextBlock Classes="h1" HorizontalAlignment="Center" Text="Open a log to explore it" />
         <TextBlock Classes="muted" HorizontalAlignment="Center" TextAlignment="Center"

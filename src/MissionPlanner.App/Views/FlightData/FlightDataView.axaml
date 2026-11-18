@@ -22,7 +22,7 @@
     <!-- translucent panels over the map -->
     <Style Selector="Border.overlay">
       <Setter Property="Background" Value="#d0101317" />
-      <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="6" />
     </Style>
@@ -39,10 +39,10 @@
 
     <Style Selector="Border.toast">
       <Setter Property="Background" Value="#f0161a1f" />
-      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="Border.toast.error">
-      <Setter Property="BorderBrush" Value="{StaticResource Danger}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Danger}" />
     </Style>
   </UserControl.Styles>
 
@@ -54,7 +54,7 @@
     </Grid.ColumnDefinitions>
 
     <!-- left: HUD over the telemetry tabs -->
-    <Grid x:Name="LeftColumn" RowDefinitions="Auto,*" Background="{StaticResource Bg1}">
+    <Grid x:Name="LeftColumn" RowDefinitions="Auto,*" Background="{DynamicResource Bg1}">
       <Border x:Name="HudHost" Height="360" Background="#0b0d10">
         <controls:Hud x:Name="HudControl" Model="{Binding Hud}" />
       </Border>
@@ -88,7 +88,7 @@
       </TabControl>
     </Grid>
 
-    <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="{StaticResource Line}" />
+    <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="{DynamicResource Line}" />
 
     <!-- right: map with its overlays, thin status bar underneath -->
     <Grid Grid.Column="2" RowDefinitions="*,Auto">
@@ -170,7 +170,7 @@
       </Panel>
 
       <!-- under the map: pointer coordinates, tuning and auto pan -->
-      <Border Grid.Row="1" Background="{StaticResource Bg0}" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0"
+      <Border Grid.Row="1" Background="{DynamicResource Bg0}" BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0"
               Padding="10,3">
         <Grid ColumnDefinitions="*,Auto,Auto">
           <TextBlock Text="{Binding PointerText}" VerticalAlignment="Center" FontSize="12" Classes="muted" />

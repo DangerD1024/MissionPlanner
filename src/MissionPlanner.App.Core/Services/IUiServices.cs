@@ -83,6 +83,9 @@ public sealed class AppServices
     /// <summary>Planned mission, fence and rally points, shared by Flight Data and Flight Plan.</summary>
     public Mission.MissionStore Mission { get; }
 
+    /// <summary>Colour themes; the UI layer replaces the default.</summary>
+    public IThemeService Themes { get; set; } = NullThemeService.Instance;
+
     /// <summary>Raised when a page asks to switch the main screen; the shell handles it.</summary>
     public event EventHandler<ViewModels.Screen>? ScreenRequested;
 

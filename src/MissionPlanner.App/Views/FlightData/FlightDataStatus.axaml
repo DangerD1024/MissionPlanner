@@ -11,7 +11,7 @@
       <TextBlock Text="Name" FontSize="11" FontWeight="SemiBold" Classes="muted" />
       <TextBlock Grid.Column="1" Text="Value" FontSize="11" FontWeight="SemiBold" Classes="muted" />
     </Grid>
-    <ListBox Grid.Row="2" ItemsSource="{Binding StatusEntries}" Background="{StaticResource Bg2}" CornerRadius="6">
+    <ListBox Grid.Row="2" ItemsSource="{Binding StatusEntries}" Background="{DynamicResource Bg2}" CornerRadius="6">
       <ListBox.Styles>
         <Style Selector="ListBoxItem">
           <Setter Property="Padding" Value="10,2" />

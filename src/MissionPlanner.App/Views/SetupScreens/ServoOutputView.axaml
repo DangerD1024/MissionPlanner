@@ -25,7 +25,7 @@
         <ItemsControl ItemsSource="{Binding Rows}">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:ServoRow">
-              <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="0,4">
+              <Border BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1" Padding="0,4">
                 <Grid ColumnDefinitions="44,1.4*,70,2*,90,90,90" Margin="0,0,14,0">
                   <TextBlock Text="{Binding Number}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
                   <hwc:PwmBar Grid.Column="1" Value="{Binding Output.Pwm}" Height="22" VerticalAlignment="Center" />

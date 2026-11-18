@@ -19,7 +19,7 @@
     <Style Selector="Button.tool">
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="Padding" Value="8,5" />
-      <Setter Property="Foreground" Value="{StaticResource Text}" />
+      <Setter Property="Foreground" Value="{DynamicResource Text}" />
     </Style>
     <Style Selector="Button.tool:disabled /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="Transparent" />
@@ -45,7 +45,7 @@
     <Style Selector="Rectangle.sep">
       <Setter Property="Width" Value="1" />
       <Setter Property="Margin" Value="6,6" />
-      <Setter Property="Fill" Value="{StaticResource Line}" />
+      <Setter Property="Fill" Value="{DynamicResource Line}" />
     </Style>
     <Style Selector="TreeView.folders TreeViewItem" x:DataType="vm:FtpFolderNode">
       <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
@@ -126,13 +126,13 @@
                VerticalContentAlignment="Center">
         <TextBox.InnerLeftContent>
           <Path Classes="icon i16" Data="{StaticResource FtpIconSearch}" 
-                Stroke="{StaticResource Muted}" Margin="8,0,0,0" />
+                Stroke="{DynamicResource Muted}" Margin="8,0,0,0" />
         </TextBox.InnerLeftContent>
       </TextBox>
     </Grid>
 
     <!-- inline error -->
-    <Border Grid.Row="1" IsVisible="{Binding HasError}" Background="#2ae5534b" BorderBrush="{StaticResource Danger}"
+    <Border Grid.Row="1" IsVisible="{Binding HasError}" Background="#2ae5534b" BorderBrush="{DynamicResource Danger}"
             BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,10">
       <Grid ColumnDefinitions="*,Auto">
         <SelectableTextBlock Text="{Binding Error}" TextWrapping="Wrap" VerticalAlignment="Center" />
@@ -151,7 +151,7 @@
             <TreeDataTemplate x:DataType="vm:FtpFolderNode" ItemsSource="{Binding Children}">
               <StackPanel Orientation="Horizontal" Spacing="7">
                 <Path Classes="icon i16" Data="{StaticResource IconFolder}" 
-                      Stroke="{StaticResource Warn}" IsVisible="{Binding !IsPlaceholder}" />
+                      Stroke="{DynamicResource Warn}" IsVisible="{Binding !IsPlaceholder}" />
                 <TextBlock Text="{Binding Name}" VerticalAlignment="Center"
                            Classes.muted="{Binding IsPlaceholder}" FontStyle="Normal" />
               </StackPanel>
@@ -164,11 +164,11 @@
 
       <Border Grid.Column="2" Classes="card" Padding="0">
         <Grid RowDefinitions="Auto,*">
-          <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="14,10">
+          <Border BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1" Padding="14,10">
             <Grid ColumnDefinitions="*,Auto">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <Path Classes="icon i16" Data="{StaticResource IconFolder}" 
-                      Stroke="{StaticResource Warn}" />
+                      Stroke="{DynamicResource Warn}" />
                 <SelectableTextBlock Text="{Binding CurrentPath}" FontWeight="SemiBold" VerticalAlignment="Center" />
               </StackPanel>
               <TextBlock Grid.Column="1" Classes="muted" Text="{Binding Summary}" VerticalAlignment="Center" />
@@ -186,9 +186,9 @@
                     <StackPanel Orientation="Horizontal" Spacing="8" Margin="10,0" VerticalAlignment="Center">
                       <Panel Width="16" Height="16">
                         <Path Classes="icon i16" Data="{StaticResource IconFolder}" 
-                              Stroke="{StaticResource Warn}" IsVisible="{Binding IsDirectory}" />
+                              Stroke="{DynamicResource Warn}" IsVisible="{Binding IsDirectory}" />
                         <Path Classes="icon i16" Data="{StaticResource IconFile}" 
-                              Stroke="{StaticResource Info}" IsVisible="{Binding !IsDirectory}" />
+                              Stroke="{DynamicResource Info}" IsVisible="{Binding !IsDirectory}" />
                       </Panel>
                       <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
                     </StackPanel>
@@ -196,10 +196,10 @@
                 </DataGridTemplateColumn.CellTemplate>
               </DataGridTemplateColumn>
               <DataGridTextColumn x:DataType="vm:FtpEntry" Header="Type" Tag="Kind" Binding="{Binding Kind}" Width="90"
-                                  Foreground="{StaticResource Muted}" />
+                                  Foreground="{DynamicResource Muted}" />
               <DataGridTextColumn x:DataType="vm:FtpEntry" Header="Size" Tag="Size" Binding="{Binding SizeText}" Width="100" />
               <DataGridTextColumn x:DataType="vm:FtpEntry" Header="Modified" Tag="Modified" Binding="{Binding ModifiedText}"
-                                  Width="170" Foreground="{StaticResource Muted}" />
+                                  Width="170" Foreground="{DynamicResource Muted}" />
             </DataGrid.Columns>
             <DataGrid.ContextMenu>
               <ContextMenu>

@@ -13,7 +13,7 @@
     </Grid>
     <TextBlock Name="DescriptionText" Classes="muted" TextWrapping="Wrap" />
 
-    <Border Background="#33f0b429" BorderBrush="{StaticResource Warn}" BorderThickness="1" CornerRadius="6"
+    <Border Background="#33f0b429" BorderBrush="{DynamicResource Warn}" BorderThickness="1" CornerRadius="6"
             Padding="12,8" IsVisible="{Binding RebootRequired}">
       <Grid ColumnDefinitions="*,Auto">
         <TextBlock VerticalAlignment="Center" TextWrapping="Wrap"
@@ -22,7 +22,7 @@
       </Grid>
     </Border>
 
-    <TextBlock Text="{Binding Status}" IsVisible="{Binding HasStatus}" Foreground="{StaticResource Info}"
+    <TextBlock Text="{Binding Status}" IsVisible="{Binding HasStatus}" Foreground="{DynamicResource Info}"
                TextWrapping="Wrap" />
   </StackPanel>
 </UserControl>

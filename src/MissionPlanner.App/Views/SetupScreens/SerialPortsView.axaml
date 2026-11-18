@@ -8,7 +8,7 @@
   <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="24,20">
     <hwv:PageHeader Description="What each serial port talks to and how fast. Choosing a protocol applies Mission Planner's recommended baud rate and options for it." />
 
-    <Border Grid.Row="1" Margin="0,12,0,0" Background="#33e5534b" BorderBrush="{StaticResource Danger}" BorderThickness="1"
+    <Border Grid.Row="1" Margin="0,12,0,0" Background="#33e5534b" BorderBrush="{DynamicResource Danger}" BorderThickness="1"
             CornerRadius="6" Padding="12,8" IsVisible="{Binding TooManyMavlink}">
       <TextBlock Text="{Binding MavlinkWarning}" TextWrapping="Wrap" />
     </Border>
@@ -28,7 +28,7 @@
         <ItemsControl ItemsSource="{Binding Ports}">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:SerialPortRow">
-              <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="12,8">
+              <Border BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1" Padding="12,8">
                 <Grid ColumnDefinitions="150,1.6*,1*,1.6*,1*">
                   <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
@@ -47,7 +47,7 @@
     </Border>
 
     <StackPanel Grid.Row="4" Margin="0,12,0,0" Spacing="6">
-      <TextBlock Text="{Binding RuleNote}" IsVisible="{Binding HasRuleNote}" Foreground="{StaticResource Info}" TextWrapping="Wrap" />
+      <TextBlock Text="{Binding RuleNote}" IsVisible="{Binding HasRuleNote}" Foreground="{DynamicResource Info}" TextWrapping="Wrap" />
       <TextBlock Classes="muted" Text="{Binding RebootNote, StringFormat='Note: {0}'}" TextWrapping="Wrap" />
     </StackPanel>
   </Grid>

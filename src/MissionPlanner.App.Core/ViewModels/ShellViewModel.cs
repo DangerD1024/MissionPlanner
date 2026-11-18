@@ -42,6 +42,7 @@ public enum Screen
     Config,
     Simulation,
     Help,
+    Settings,
 }
 
 /// <summary>Main window: top navigation, connect controls and the visible screen.</summary>
@@ -64,6 +65,7 @@ public sealed partial class ShellViewModel : ObservableObject
             [Screen.Config] = () => new ConfigScreens.ConfigViewModel(services),
             [Screen.Simulation] = () => new Simulation.SimulationViewModel(services),
             [Screen.Help] = () => new HelpViewModel(),
+            [Screen.Settings] = () => new ConfigScreens.PlannerSettingsViewModel(services),
         };
         _currentPage = GetPage(Screen.Data);
         _currentPage.OnShown();
@@ -86,7 +88,7 @@ public sealed partial class ShellViewModel : ObservableObject
     }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsData), nameof(IsPlan), nameof(IsSetup), nameof(IsConfig), nameof(IsSimulation), nameof(IsHelp))]
+    [NotifyPropertyChangedFor(nameof(IsData), nameof(IsPlan), nameof(IsSetup), nameof(IsConfig), nameof(IsSimulation), nameof(IsHelp), nameof(IsSettings))]
     private Screen _currentScreen;
 
     [ObservableProperty]
@@ -98,6 +100,7 @@ public sealed partial class ShellViewModel : ObservableObject
     public bool IsConfig => CurrentScreen == Screen.Config;
     public bool IsSimulation => CurrentScreen == Screen.Simulation;
     public bool IsHelp => CurrentScreen == Screen.Help;
+    public bool IsSettings => CurrentScreen == Screen.Settings;
 
     [RelayCommand]
     private void Navigate(Screen screen)

@@ -14,8 +14,8 @@
         <Border Classes="card" Width="440" Margin="0,0,16,16" VerticalAlignment="Top">
           <StackPanel Spacing="12">
             <TextBlock Classes="h2" Text="ESC Calibration (AC3.3+)" />
-            <Border Background="#33e5534b" BorderBrush="{StaticResource Danger}" BorderThickness="1" CornerRadius="6" Padding="12,8">
-              <TextBlock Text="Remove the propellers before calibrating!" FontWeight="SemiBold" Foreground="{StaticResource Danger}" />
+            <Border Background="#33e5534b" BorderBrush="{DynamicResource Danger}" BorderThickness="1" CornerRadius="6" Padding="12,8">
+              <TextBlock Text="Remove the propellers before calibrating!" FontWeight="SemiBold" Foreground="{DynamicResource Danger}" />
             </Border>
             <TextBlock Text="{Binding InstructionsText}" TextWrapping="Wrap" LineHeight="20" />
             <Button Classes="accent" Content="Calibrate ESCs" Command="{Binding CalibrateCommand}"

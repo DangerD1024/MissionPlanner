@@ -16,9 +16,21 @@
 
   <ScrollViewer HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="24,18" MaxWidth="900" HorizontalAlignment="Left" Width="900">
-      <TextBlock Classes="h1" Text="Planner" />
+      <TextBlock Classes="h1" Text="App Settings" />
       <TextBlock Classes="muted" Margin="0,2,0,16" FontSize="12.5"
                  Text="Settings of this application. Changes apply and are saved immediately." />
+
+      <!-- appearance -->
+      <Border Classes="card">
+        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto">
+          <TextBlock Grid.ColumnSpan="2" Classes="h2" Text="Appearance" Margin="0,0,0,10" />
+          <TextBlock Grid.Row="1" Classes="label" Text="Theme" />
+          <ComboBox Grid.Row="1" Grid.Column="1" Width="340" ItemsSource="{Binding Themes}"
+                    SelectedItem="{Binding SelectedTheme}" />
+          <TextBlock Grid.Row="2" Grid.Column="1" Classes="muted" FontSize="12" Margin="0,6,0,0"
+                     Text="Applies immediately. Mission Planner and High Contrast follow the WinForms app's themes." />
+        </Grid>
+      </Border>
 
       <!-- map -->
       <Border Classes="card">
@@ -46,7 +58,7 @@
           </Button>
           <Button Grid.Row="1" Grid.Column="3" Margin="8,0,0,0" Content="Default" Command="{Binding ResetLogDirectoryCommand}" />
           <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Margin="0,6,0,0" FontSize="12"
-                     Foreground="{StaticResource Warn}" Text="{Binding LogDirectoryError}" TextWrapping="Wrap"
+                     Foreground="{DynamicResource Warn}" Text="{Binding LogDirectoryError}" TextWrapping="Wrap"
                      IsVisible="{Binding LogDirectoryError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
         </Grid>
       </Border>

@@ -21,7 +21,7 @@
                                  Classes.warn="{Binding IsWarning}">
               <SelectableTextBlock.Styles>
                 <Style Selector="SelectableTextBlock.warn">
-                  <Setter Property="Foreground" Value="{StaticResource Warn}" />
+                  <Setter Property="Foreground" Value="{DynamicResource Warn}" />
                 </Style>
               </SelectableTextBlock.Styles>
             </SelectableTextBlock>

@@ -21,27 +21,27 @@
       <Setter Property="Height" Value="14" />
       <Setter Property="MinHeight" Value="14" />
       <Setter Property="CornerRadius" Value="4" />
-      <Setter Property="Foreground" Value="{StaticResource Info}" />
-      <Setter Property="Background" Value="{StaticResource Bg3}" />
+      <Setter Property="Foreground" Value="{DynamicResource Info}" />
+      <Setter Property="Background" Value="{DynamicResource Bg3}" />
     </Style>
     <Style Selector="ProgressBar.mag.ok">
-      <Setter Property="Foreground" Value="{StaticResource Accent}" />
+      <Setter Property="Foreground" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="ProgressBar.mag.bad">
-      <Setter Property="Foreground" Value="{StaticResource Danger}" />
+      <Setter Property="Foreground" Value="{DynamicResource Danger}" />
     </Style>
     <Style Selector="TextBlock.offsets.bad">
-      <Setter Property="Foreground" Value="{StaticResource Danger}" />
+      <Setter Property="Foreground" Value="{DynamicResource Danger}" />
     </Style>
     <Style Selector="TextBlock.offsets.warn">
-      <Setter Property="Foreground" Value="{StaticResource Warn}" />
+      <Setter Property="Foreground" Value="{DynamicResource Warn}" />
     </Style>
     <Style Selector="TextBlock.offsets.good">
-      <Setter Property="Foreground" Value="{StaticResource Accent}" />
+      <Setter Property="Foreground" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="Border.reboot">
       <Setter Property="Background" Value="#2d2610" />
-      <Setter Property="BorderBrush" Value="{StaticResource Warn}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Warn}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="6" />
       <Setter Property="Padding" Value="12,8" />
@@ -58,7 +58,7 @@
           <TextBlock Classes="muted" Text="Set the Compass Priority by reordering the compasses in the table below (Highest at the top)" />
         </StackPanel>
 
-        <Border Classes="reboot" IsVisible="{Binding AnyMissing}" BorderBrush="{StaticResource Danger}" Background="#311818">
+        <Border Classes="reboot" IsVisible="{Binding AnyMissing}" BorderBrush="{DynamicResource Danger}" Background="#311818">
           <TextBlock TextWrapping="Wrap" Text="Your compass configuration has changed, please review the missing compass" />
         </Border>
 
@@ -77,7 +77,7 @@
                 <DataGridTemplateColumn Header="Missing" Width="Auto">
                   <DataGridTemplateColumn.CellTemplate>
                     <DataTemplate x:DataType="vm:CompassRowViewModel">
-                      <TextBlock Text="MISSING" Foreground="{StaticResource Danger}" FontWeight="SemiBold" FontSize="12"
+                      <TextBlock Text="MISSING" Foreground="{DynamicResource Danger}" FontWeight="SemiBold" FontSize="12"
                                  VerticalAlignment="Center" Margin="8,0" IsVisible="{Binding Missing}" />
                     </DataTemplate>
                   </DataGridTemplateColumn.CellTemplate>

@@ -20,6 +20,5 @@ public sealed class ConfigViewModel : MenuScreenViewModel
         Add(Page("Full Parameter List", () => new FullParameterListViewModel(s)));
         Add(Page("MAVFtp", () => new MavFtpViewModel(s), () => Connected));
         Add(Page("MAVLink Inspector", () => new InspectorViewModel(s), () => Connected));
-        Add(Page("Planner", () => new PlannerSettingsViewModel(s)));
     }
 }

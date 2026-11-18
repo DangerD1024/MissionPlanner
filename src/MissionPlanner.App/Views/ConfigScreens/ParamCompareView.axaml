@@ -29,7 +29,7 @@
             <DataGridTemplateColumn.CellTemplate>
               <DataTemplate x:DataType="vm:ParamCompareRow">
                 <TextBlock Margin="12,0" VerticalAlignment="Center" Text="{Binding FromFileText}"
-                           Foreground="{StaticResource Accent}" FontWeight="SemiBold" />
+                           Foreground="{DynamicResource Accent}" FontWeight="SemiBold" />
               </DataTemplate>
             </DataGridTemplateColumn.CellTemplate>
           </DataGridTemplateColumn>

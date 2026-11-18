@@ -16,10 +16,10 @@
     </Style>
     <Style Selector="Border.slot.active">
       <Setter Property="Background" Value="#1f2a17" />
-      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="Border.slot.active TextBlock.slottitle">
-      <Setter Property="Foreground" Value="{StaticResource Accent}" />
+      <Setter Property="Foreground" Value="{DynamicResource Accent}" />
     </Style>
   </UserControl.Styles>
 
@@ -55,7 +55,7 @@
               <Button Classes="accent" Content="{Binding SaveText}" Command="{Binding SaveCommand}" Padding="18,8" />
               <Button Content="Undo changes" Command="{Binding RevertCommand}" IsEnabled="{Binding HasChanges}" />
               <TextBlock Classes="muted" VerticalAlignment="Center" Text="Unsaved changes" IsVisible="{Binding HasChanges}"
-                         Foreground="{StaticResource Info}" />
+                         Foreground="{DynamicResource Info}" />
             </StackPanel>
           </StackPanel>
         </Border>

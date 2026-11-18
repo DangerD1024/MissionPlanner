@@ -7,7 +7,7 @@
 
   <UserControl.Styles>
     <Style Selector="TextBlock.section">
-      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
       <Setter Property="FontSize" Value="11" />
       <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="Margin" Value="0,10,0,2" />
@@ -46,13 +46,13 @@
     <!-- statistics over the map -->
     <Style Selector="Border.overlay">
       <Setter Property="Background" Value="#E0101317" />
-      <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="8" />
       <Setter Property="Padding" Value="12,9" />
     </Style>
     <Style Selector="TextBlock.statname">
-      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
       <Setter Property="FontSize" Value="12" />
     </Style>
     <Style Selector="TextBlock.stat">
@@ -72,7 +72,7 @@
               IsHitTestVisible="False">
         <StackPanel Spacing="6">
           <Grid ColumnDefinitions="*,Auto">
-            <TextBlock Text="SURVEY" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Accent}" />
+            <TextBlock Text="SURVEY" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Accent}" />
             <TextBlock Grid.Column="1" Text="updating…" FontSize="11" Classes="muted" IsVisible="{Binding IsBusy}" />
           </Grid>
           <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="3" ColumnSpacing="12">
@@ -102,13 +102,13 @@
 
       <Button HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="10" Padding="10,5"
               Click="OnZoomToSurvey" ToolTip.Tip="Zoom to the survey"
-              Background="#D9101317" BorderBrush="{StaticResource Line}" BorderThickness="1">
+              Background="#D9101317" BorderBrush="{DynamicResource Line}" BorderThickness="1">
         <TextBlock Text="Zoom to survey" FontSize="12" />
       </Button>
     </Panel>
 
     <!-- inputs -->
-    <Border Grid.Column="1" Background="{StaticResource Bg1}" BorderBrush="{StaticResource Line}" BorderThickness="1,0,0,0">
+    <Border Grid.Column="1" Background="{DynamicResource Bg1}" BorderBrush="{DynamicResource Line}" BorderThickness="1,0,0,0">
       <Grid RowDefinitions="*,Auto">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled">
           <StackPanel Margin="14,4,16,12" Spacing="6">
@@ -201,9 +201,9 @@
           </StackPanel>
         </ScrollViewer>
 
-        <Border Grid.Row="1" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="14,10">
+        <Border Grid.Row="1" BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0" Padding="14,10">
           <StackPanel Spacing="8">
-            <TextBlock Text="{Binding Error}" Foreground="{StaticResource Warn}" FontSize="12" TextWrapping="Wrap"
+            <TextBlock Text="{Binding Error}" Foreground="{DynamicResource Warn}" FontSize="12" TextWrapping="Wrap"
                        IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
             <Grid ColumnDefinitions="*,8,*">
               <Button Content="Cancel" Command="{Binding CancelCommand}" HorizontalAlignment="Stretch"

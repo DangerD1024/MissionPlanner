@@ -20,10 +20,10 @@
       <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
     <Style Selector="TextBlock.outcome.ok">
-      <Setter Property="Foreground" Value="{StaticResource Accent}" />
+      <Setter Property="Foreground" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="TextBlock.outcome.bad">
-      <Setter Property="Foreground" Value="{StaticResource Danger}" />
+      <Setter Property="Foreground" Value="{DynamicResource Danger}" />
     </Style>
   </UserControl.Styles>
 

@@ -10,9 +10,9 @@
     <StackPanel Margin="24,20" Spacing="16" MaxWidth="1200" HorizontalAlignment="Left">
       <hwv:PageHeader Description="Spin each motor briefly to check it is connected to the right output and turns the right way." />
 
-      <Border Background="#40e5534b" BorderBrush="{StaticResource Danger}" BorderThickness="2" CornerRadius="8" Padding="16,12">
+      <Border Background="#40e5534b" BorderBrush="{DynamicResource Danger}" BorderThickness="2" CornerRadius="8" Padding="16,12">
         <StackPanel Spacing="4">
-          <TextBlock Text="{Binding WarningText}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Danger}" />
+          <TextBlock Text="{Binding WarningText}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource Danger}" />
           <TextBlock Text="{Binding NoteText}" TextWrapping="Wrap" />
         </StackPanel>
       </Border>
@@ -57,14 +57,14 @@
               <hwc:MotorLayoutView Layout="{Binding Layout}" ShowLabels="True" Width="300" Height="300"
                                    IsVisible="{Binding HasLayout}" HorizontalAlignment="Center" />
               <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding HasLayout}">
-                <Ellipse Width="12" Height="12" Fill="{StaticResource Accent}" />
+                <Ellipse Width="12" Height="12" Fill="{DynamicResource Accent}" />
                 <TextBlock Text="Clockwise" Classes="muted" />
-                <Ellipse Width="12" Height="12" Fill="{StaticResource Info}" Margin="12,0,0,0" />
+                <Ellipse Width="12" Height="12" Fill="{DynamicResource Info}" Margin="12,0,0,0" />
                 <TextBlock Text="Counter-clockwise" Classes="muted" />
               </StackPanel>
               <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
                          Text="Numbers are motor outputs, letters the test order. Motor order diagrams:" />
-              <SelectableTextBlock Text="{Binding MotorOrderUrl}" Foreground="{StaticResource Info}" FontSize="12" TextWrapping="Wrap" />
+              <SelectableTextBlock Text="{Binding MotorOrderUrl}" Foreground="{DynamicResource Info}" FontSize="12" TextWrapping="Wrap" />
             </StackPanel>
           </Border>
 

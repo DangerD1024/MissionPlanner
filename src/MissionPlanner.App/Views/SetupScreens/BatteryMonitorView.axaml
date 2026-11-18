@@ -89,7 +89,7 @@
               <hwv:ParamRow DataContext="{Binding AmpOffset}" />
             </StackPanel>
 
-            <TextBlock Text="{Binding CalibrationNote}" Foreground="{StaticResource Info}" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding CalibrationNote}" Foreground="{DynamicResource Info}" TextWrapping="Wrap" />
           </StackPanel>
         </Border>
       </WrapPanel>

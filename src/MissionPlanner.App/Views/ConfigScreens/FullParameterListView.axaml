@@ -35,7 +35,7 @@
       <Setter Property="Background" Value="#6b2522" />
     </Style>
     <Style Selector="TextBlock.name.modified">
-      <Setter Property="Foreground" Value="{StaticResource Accent}" />
+      <Setter Property="Foreground" Value="{DynamicResource Accent}" />
     </Style>
 
     <Style Selector="Button.side">
@@ -59,12 +59,12 @@
 
   <Grid RowDefinitions="Auto,*">
     <ProgressBar Height="3" MinHeight="3" CornerRadius="0" IsIndeterminate="True" Background="Transparent"
-                 Foreground="{StaticResource Accent}" IsVisible="{Binding IsBusy}" />
+                 Foreground="{DynamicResource Accent}" IsVisible="{Binding IsBusy}" />
 
     <Grid Grid.Row="1" ColumnDefinitions="190,*,200">
 
       <!-- prefix tree -->
-      <Border Background="{StaticResource Bg1}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,1,0">
+      <Border Background="{DynamicResource Bg1}" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,1,0">
         <Grid RowDefinitions="Auto,*">
           <TextBlock Margin="12,10,12,4" FontSize="11" FontWeight="Bold" Classes="muted" Text="GROUPS" />
           <ListBox Grid.Row="1" Classes="groups" Background="Transparent"
@@ -165,7 +165,7 @@
       </Panel>
 
       <!-- actions and filters, on the right as in Mission Planner -->
-      <Border Grid.Column="2" Background="{StaticResource Bg1}" BorderBrush="{StaticResource Line}" BorderThickness="1,0,0,0">
+      <Border Grid.Column="2" Background="{DynamicResource Bg1}" BorderBrush="{DynamicResource Line}" BorderThickness="1,0,0,0">
         <ScrollViewer>
           <StackPanel Margin="12" Spacing="8">
             <Button Classes="side" Command="{Binding LoadFromFileCommand}" ToolTip.Tip="Load a .param file; differing values become edits">
@@ -199,7 +199,7 @@
               </StackPanel>
             </Button>
 
-            <Border Height="1" Background="{StaticResource Line}" Margin="0,6" />
+            <Border Height="1" Background="{DynamicResource Line}" Margin="0,6" />
 
             <TextBox x:Name="SearchBox" Text="{Binding SearchText}" PlaceholderText="Search name or description" />
             <CheckBox Content="Modified" IsChecked="{Binding ShowModifiedOnly}"
@@ -207,7 +207,7 @@
             <CheckBox Content="None Default" IsChecked="{Binding ShowNonDefaultOnly}" IsVisible="{Binding HasDefaults}"
                       ToolTip.Tip="Only parameters whose value differs from the firmware default" />
 
-            <Border Height="1" Background="{StaticResource Line}" Margin="0,6" />
+            <Border Height="1" Background="{DynamicResource Line}" Margin="0,6" />
 
             <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" FontWeight="SemiBold" />
             <TextBlock Text="{Binding SourceText}" TextWrapping="Wrap" Classes="muted" FontSize="12" />

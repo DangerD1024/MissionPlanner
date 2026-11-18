@@ -12,27 +12,27 @@
       <Setter Property="CornerRadius" Value="14" />
       <Setter Property="Padding" Value="11,4" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="BorderBrush" Value="{StaticResource Line}" />
-      <Setter Property="Background" Value="{StaticResource Bg2}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+      <Setter Property="Background" Value="{DynamicResource Bg2}" />
     </Style>
     <Style Selector="Border.step TextBlock">
-      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
       <Setter Property="FontSize" Value="12.5" />
     </Style>
     <Style Selector="Border.step.current">
-      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
       <Setter Property="Background" Value="#1c2a14" />
     </Style>
     <Style Selector="Border.step.current TextBlock">
-      <Setter Property="Foreground" Value="{StaticResource Accent}" />
+      <Setter Property="Foreground" Value="{DynamicResource Accent}" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <Style Selector="Border.step.done">
-      <Setter Property="Background" Value="{StaticResource Accent}" />
-      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+      <Setter Property="Background" Value="{DynamicResource Accent}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="Border.step.done TextBlock">
-      <Setter Property="Foreground" Value="{StaticResource AccentText}" />
+      <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
     </Style>
     <Style Selector="TextBlock.instruction">
       <Setter Property="FontSize" Value="28" />
@@ -40,7 +40,7 @@
       <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
     <Style Selector="TextBlock.instruction.ok">
-      <Setter Property="Foreground" Value="{StaticResource Accent}" />
+      <Setter Property="Foreground" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="Button.big">
       <Setter Property="MinWidth" Value="190" />
@@ -59,7 +59,7 @@
       <Border Classes="card" Padding="20">
         <Grid ColumnDefinitions="300,24,*">
           <StackPanel Spacing="6" VerticalAlignment="Center">
-            <Border Background="{StaticResource Bg0}" CornerRadius="8" Padding="8">
+            <Border Background="{DynamicResource Bg0}" CornerRadius="8" Padding="8">
               <cc:VehicleOrientationGlyph Position="{Binding Position}" Height="220" />
             </Border>
             <TextBlock Classes="muted" FontSize="12" HorizontalAlignment="Center" Text="Side view (nose marked blue) or from behind (L / R)" />

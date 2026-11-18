@@ -47,6 +47,7 @@
       <StreamGeometry x:Key="IconConnect">M9,3 L9,7 M15,3 L15,7 M7,7 L17,7 L17,11 A5,5 0 0 1 7,11 Z M12,16 L12,21</StreamGeometry>
       <StreamGeometry x:Key="IconDisconnect">M9,3 L9,7 M15,3 L15,7 M7,7 L17,7 L17,11 A5,5 0 0 1 7,11 Z M12,16 L12,21 M4,4 L20,20</StreamGeometry>
       <StreamGeometry x:Key="IconRefresh">M19,12 A7,7 0 1 1 16.5,6.6 M17,3 L17,7 L13,7</StreamGeometry>
+      <StreamGeometry x:Key="IconSettings">M12,8.6 A3.4,3.4 0 1 0 12.01,8.6 Z M12,2.5 L12,5 M12,19 L12,21.5 M2.5,12 L5,12 M19,12 L21.5,12 M5.3,5.3 L7.1,7.1 M16.9,16.9 L18.7,18.7 M5.3,18.7 L7.1,16.9 M16.9,7.1 L18.7,5.3</StreamGeometry>
       <StreamGeometry x:Key="IconChevron">M9,6 L15,12 L9,18</StreamGeometry>
       <StreamGeometry x:Key="IconUp">M6,15 L12,9 L18,15</StreamGeometry>
       <StreamGeometry x:Key="IconDown">M6,9 L12,15 L18,9</StreamGeometry>
@@ -68,7 +69,7 @@
   </Style>
 
   <Style Selector="TextBlock.muted">
-    <Setter Property="Foreground" Value="{StaticResource Muted}" />
+    <Setter Property="Foreground" Value="{DynamicResource Muted}" />
   </Style>
   <Style Selector="TextBlock.h1">
     <Setter Property="FontSize" Value="20" />
@@ -81,22 +82,22 @@
 
   <!-- primary action buttons in Mission Planner green -->
   <Style Selector="Button.accent">
-    <Setter Property="Background" Value="{StaticResource Accent}" />
-    <Setter Property="Foreground" Value="{StaticResource AccentText}" />
+    <Setter Property="Background" Value="{DynamicResource Accent}" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
     <Setter Property="FontWeight" Value="SemiBold" />
   </Style>
   <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="{StaticResource AccentHover}" />
-    <Setter Property="Foreground" Value="{StaticResource AccentText}" />
+    <Setter Property="Background" Value="{DynamicResource AccentHover}" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
   </Style>
   <Style Selector="Button.danger">
-    <Setter Property="Background" Value="{StaticResource Danger}" />
+    <Setter Property="Background" Value="{DynamicResource Danger}" />
     <Setter Property="Foreground" Value="White" />
   </Style>
 
   <!-- top navigation: icon over caption -->
   <Style Selector="RadioButton.nav">
-    <Setter Property="Foreground" Value="{StaticResource Muted}" />
+    <Setter Property="Foreground" Value="{DynamicResource Muted}" />
     <Setter Property="Padding" Value="10,6" />
     <Setter Property="MinWidth" Value="72" />
     <Setter Property="Cursor" Value="Hand" />
@@ -113,16 +114,16 @@
     </Setter>
   </Style>
   <Style Selector="RadioButton.nav:pointerover /template/ Border#bg">
-    <Setter Property="Background" Value="{StaticResource Bg3}" />
+    <Setter Property="Background" Value="{DynamicResource Bg3}" />
   </Style>
   <Style Selector="RadioButton.nav:pointerover">
-    <Setter Property="Foreground" Value="{StaticResource Text}" />
+    <Setter Property="Foreground" Value="{DynamicResource Text}" />
   </Style>
   <Style Selector="RadioButton.nav:checked">
-    <Setter Property="Foreground" Value="{StaticResource Accent}" />
+    <Setter Property="Foreground" Value="{DynamicResource Accent}" />
   </Style>
   <Style Selector="RadioButton.nav:checked /template/ Border#bar">
-    <Setter Property="Background" Value="{StaticResource Accent}" />
+    <Setter Property="Background" Value="{DynamicResource Accent}" />
   </Style>
 
   <!-- left sub-menus (Setup / Config) -->
@@ -137,24 +138,24 @@
     <Setter Property="CornerRadius" Value="6" />
   </Style>
   <Style Selector="ListBox.sidemenu ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="{StaticResource Accent}" />
+    <Setter Property="Background" Value="{DynamicResource Accent}" />
   </Style>
   <Style Selector="ListBox.sidemenu ListBoxItem:selected">
-    <Setter Property="Foreground" Value="{StaticResource AccentText}" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
   </Style>
 
   <!-- panels -->
   <Style Selector="Border.card">
-    <Setter Property="Background" Value="{StaticResource Bg1}" />
-    <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+    <Setter Property="Background" Value="{DynamicResource Bg1}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="CornerRadius" Value="8" />
     <Setter Property="Padding" Value="14" />
   </Style>
 
   <Style Selector="DataGrid">
-    <Setter Property="Background" Value="{StaticResource Bg1}" />
+    <Setter Property="Background" Value="{DynamicResource Bg1}" />
     <Setter Property="GridLinesVisibility" Value="Horizontal" />
-    <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource Line}" />
+    <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource Line}" />
   </Style>
 </Styles>
