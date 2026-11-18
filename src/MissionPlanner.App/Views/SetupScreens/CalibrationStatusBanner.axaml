@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cal="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Calibration"
+             x:Class="MissionPlanner.App.Views.SetupScreens.CalibrationStatusBanner"
+             x:DataType="cal:StatusLine"
+             IsVisible="{Binding IsVisible}">
+
+  <!-- an inline result line, tinted by kind -->
+  <UserControl.Styles>
+    <Style Selector="Border.banner">
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="10,7" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Background" Value="#1b2430" />
+      <Setter Property="BorderBrush" Value="{StaticResource Info}" />
+    </Style>
+    <Style Selector="Border.banner.success">
+      <Setter Property="Background" Value="#1c2a14" />
+      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+    </Style>
+    <Style Selector="Border.banner.warning">
+      <Setter Property="Background" Value="#2d2610" />
+      <Setter Property="BorderBrush" Value="{StaticResource Warn}" />
+    </Style>
+    <Style Selector="Border.banner.error">
+      <Setter Property="Background" Value="#311818" />
+      <Setter Property="BorderBrush" Value="{StaticResource Danger}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Border Classes="banner"
+          Classes.success="{Binding IsSuccess}"
+          Classes.warning="{Binding IsWarning}"
+          Classes.error="{Binding IsError}">
+    <SelectableTextBlock Text="{Binding Text}" TextWrapping="Wrap" />
+  </Border>
+</UserControl>

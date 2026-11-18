@@ -1,0 +1,138 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:views="using:MissionPlanner.App.Views.SetupScreens"
+             xmlns:cc="using:MissionPlanner.App.Controls.SetupScreens"
+             x:Class="MissionPlanner.App.Views.SetupScreens.AccelCalibrationView"
+             x:DataType="vm:AccelCalibrationViewModel">
+
+  <UserControl.Styles>
+    <!-- the six positions -->
+    <Style Selector="Border.step">
+      <Setter Property="CornerRadius" Value="14" />
+      <Setter Property="Padding" Value="11,4" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+      <Setter Property="Background" Value="{StaticResource Bg2}" />
+    </Style>
+    <Style Selector="Border.step TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+      <Setter Property="FontSize" Value="12.5" />
+    </Style>
+    <Style Selector="Border.step.current">
+      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+      <Setter Property="Background" Value="#1c2a14" />
+    </Style>
+    <Style Selector="Border.step.current TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource Accent}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Border.step.done">
+      <Setter Property="Background" Value="{StaticResource Accent}" />
+      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+    </Style>
+    <Style Selector="Border.step.done TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource AccentText}" />
+    </Style>
+    <Style Selector="TextBlock.instruction">
+      <Setter Property="FontSize" Value="28" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style Selector="TextBlock.instruction.ok">
+      <Setter Property="Foreground" Value="{StaticResource Accent}" />
+    </Style>
+    <Style Selector="Button.big">
+      <Setter Property="MinWidth" Value="190" />
+      <Setter Property="MinHeight" Value="44" />
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1180" HorizontalAlignment="Stretch">
+      <TextBlock Classes="h1" Text="Accelerometer Calibration" />
+
+      <!-- 6-position calibration -->
+      <Border Classes="card" Padding="20">
+        <Grid ColumnDefinitions="300,24,*">
+          <StackPanel Spacing="6" VerticalAlignment="Center">
+            <Border Background="{StaticResource Bg0}" CornerRadius="8" Padding="8">
+              <cc:VehicleOrientationGlyph Position="{Binding Position}" Height="220" />
+            </Border>
+            <TextBlock Classes="muted" FontSize="12" HorizontalAlignment="Center" Text="Side view (nose marked blue) or from behind (L / R)" />
+          </StackPanel>
+
+          <StackPanel Grid.Column="2" Spacing="14" VerticalAlignment="Center">
+            <TextBlock Classes="muted" FontSize="12" FontWeight="Bold" Text="CALIBRATE ACCEL  ·  3 AXIS MIN / MAX" />
+            <TextBlock Classes="instruction" Classes.ok="{Binding Succeeded}" Text="{Binding Instruction}" />
+            <TextBlock Classes="muted" Text="{Binding Detail}" TextWrapping="Wrap" />
+
+            <ItemsControl ItemsSource="{Binding Steps}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:AccelStepViewModel">
+                  <Border Classes="step" Classes.current="{Binding IsCurrent}" Classes.done="{Binding IsDone}" Margin="0,0,6,6">
+                    <TextBlock Text="{Binding Name}" />
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <Button Classes="accent big" Content="{Binding AccelButtonText}" Command="{Binding AccelCommand}" />
+              <Button Classes="big" MinWidth="110" Content="Cancel" Command="{Binding CancelCommand}" IsVisible="{Binding IsCalibrating}" />
+            </StackPanel>
+            <views:CalibrationStatusBanner DataContext="{Binding AccelStatus}" />
+            <TextBlock Classes="muted" FontSize="12.5" TextWrapping="Wrap"
+                       Text="Level your Autopilot to set default accelerometer Min/Max (3 axis). This will ask you to place your autopilot on each edge." />
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <Grid ColumnDefinitions="*,16,*">
+        <Border Classes="card" Padding="18">
+          <StackPanel Spacing="10">
+            <TextBlock Classes="h2" Text="Calibrate Level" />
+            <TextBlock Classes="muted" TextWrapping="Wrap"
+                       Text="Level your Autopilot to set default accelerometer offsets (1 axis/AHRS trims). This requires you to place your autopilot flat and level." />
+            <Button Classes="accent" MinWidth="160" Content="{Binding LevelButtonText}" Command="{Binding CalibrateLevelCommand}" />
+            <views:CalibrationStatusBanner DataContext="{Binding LevelStatus}" />
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="2" Classes="card" Padding="18">
+          <StackPanel Spacing="10">
+            <TextBlock Classes="h2" Text="Simple Accel Calibration" />
+            <TextBlock Classes="muted" TextWrapping="Wrap"
+                       Text="Level your Autopilot to set default accelerometer scale factors for level flight (1 axis). Use it when the vehicle is too large to turn over." />
+            <Button Classes="accent" MinWidth="160" Content="{Binding SimpleButtonText}" Command="{Binding SimpleAccelCommand}" />
+            <views:CalibrationStatusBanner DataContext="{Binding SimpleStatus}" />
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <!-- the autopilot's messages during the 6-position calibration -->
+      <Border Classes="card" Padding="18">
+        <StackPanel Spacing="8">
+          <TextBlock Classes="h2" Text="Messages" />
+          <TextBlock Classes="muted" Text="The autopilot's messages appear here during the calibration." IsVisible="{Binding !HasMessages}" />
+          <ScrollViewer MaxHeight="220" IsVisible="{Binding HasMessages}">
+            <ItemsControl ItemsSource="{Binding Messages}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                  <SelectableTextBlock Text="{Binding}" FontFamily="monospace" FontSize="12.5" Margin="0,1" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
