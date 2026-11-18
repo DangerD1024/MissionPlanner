@@ -1,0 +1,150 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.ConfigScreens"
+             x:Class="MissionPlanner.App.Views.ConfigScreens.InspectorView"
+             x:DataType="vm:InspectorViewModel">
+
+  <UserControl.Resources>
+    <StreamGeometry x:Key="InspIconGraph">M4,4 L4,20 L20,20 M7.5,15 L11,10.5 L14,13.5 L19,7.5</StreamGeometry>
+    <StreamGeometry x:Key="InspIconPause">M8.5,5.5 L8.5,18.5 M15.5,5.5 L15.5,18.5</StreamGeometry>
+    <StreamGeometry x:Key="InspIconCollapse">M7,10 L12,5 L17,10 M7,19 L12,14 L17,19</StreamGeometry>
+    <StreamGeometry x:Key="InspIconSearch">M4,10.5 A6.5,6.5 0 1 0 17,10.5 A6.5,6.5 0 1 0 4,10.5 Z M15.5,15.5 L20,20</StreamGeometry>
+    <FontFamily x:Key="InspMono">Cascadia Mono, Consolas, Menlo, DejaVu Sans Mono, monospace</FontFamily>
+  </UserControl.Resources>
+
+  <UserControl.Styles>
+    <Style Selector="Path.i18">
+      <Setter Property="Width" Value="18" />
+      <Setter Property="Height" Value="18" />
+      <Setter Property="RenderTransformOrigin" Value="0%,0%" />
+      <Setter Property="RenderTransform" Value="scale(0.75)" />
+      <Setter Property="StrokeThickness" Value="2.1" />
+    </Style>
+    <Style Selector="Path.i16">
+      <Setter Property="Width" Value="16" />
+      <Setter Property="Height" Value="16" />
+      <Setter Property="RenderTransformOrigin" Value="0%,0%" />
+      <Setter Property="RenderTransform" Value="scale(0.6667)" />
+      <Setter Property="StrokeThickness" Value="2.3" />
+    </Style>
+    <Style Selector="Button.tool, ToggleButton.tool">
+      <Setter Property="Padding" Value="8,5" />
+    </Style>
+    <Style Selector="Button.tool, ToggleButton.tool">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ToggleButton.tool:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource Warn}" />
+      <Setter Property="Foreground" Value="{StaticResource AccentText}" />
+    </Style>
+    <Style Selector="Button.tool:disabled Path.icon">
+      <Setter Property="Opacity" Value="0.4" />
+    </Style>
+    <Style Selector="TreeView.inspector TreeViewItem" x:DataType="vm:InspectorNode">
+      <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+      <Setter Property="MinHeight" Value="26" />
+    </Style>
+    <Style Selector="TextBlock.mono, SelectableTextBlock.mono">
+      <Setter Property="FontFamily" Value="{StaticResource InspMono}" />
+      <Setter Property="FontSize" Value="12.5" />
+    </Style>
+    <Style Selector="TextBlock.num">
+      <Setter Property="HorizontalAlignment" Value="Right" />
+      <Setter Property="FontFamily" Value="{StaticResource InspMono}" />
+      <Setter Property="FontSize" Value="12.5" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="16,14,16,10">
+
+    <!-- toolbar -->
+    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,10">
+      <StackPanel Orientation="Horizontal" Spacing="10">
+        <TextBlock Classes="h1" Text="MAVLink Inspector" VerticalAlignment="Center" Margin="0,0,8,0" />
+        <TextBox Width="260" Text="{Binding Filter}" PlaceholderText="Filter messages (name or #id)" VerticalContentAlignment="Center">
+          <TextBox.InnerLeftContent>
+            <Path Classes="icon i16" Data="{StaticResource InspIconSearch}" Stroke="{StaticResource Muted}" Margin="8,0,0,0" />
+          </TextBox.InnerLeftContent>
+        </TextBox>
+        <CheckBox Content="Show GCS traffic" IsChecked="{Binding ShowGcsTraffic}" VerticalAlignment="Center"
+                  ToolTip.Tip="Also list what Mission Planner sends (system 255)" />
+      </StackPanel>
+
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+        <ToggleButton Classes="tool" IsChecked="{Binding IsPaused}" ToolTip.Tip="Freeze the values on screen">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Classes="icon i18" Data="{StaticResource InspIconPause}" />
+            <TextBlock Text="Pause" VerticalAlignment="Center" />
+          </StackPanel>
+        </ToggleButton>
+        <Button Classes="tool" Command="{Binding CollapseAllCommand}" ToolTip.Tip="Collapse every message">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Classes="icon i18" Data="{StaticResource InspIconCollapse}" />
+            <TextBlock Text="Collapse" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+        <Button Classes="tool" Command="{Binding ClearCommand}" ToolTip.Tip="Forget everything seen so far">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Classes="icon i18" Data="{StaticResource IconDelete}" />
+            <TextBlock Text="Clear" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+        <Button Classes="accent" Command="{Binding GraphCommand}" Margin="8,0,0,0"
+                ToolTip.Tip="Plot the selected numeric field live">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Classes="icon i18" Data="{StaticResource InspIconGraph}" />
+            <TextBlock Text="Graph field" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
+    </Grid>
+
+    <!-- vehicle → message → field -->
+    <Border Grid.Row="1" Classes="card" Padding="0">
+      <Grid RowDefinitions="Auto,*">
+        <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="14,8">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Classes="muted" FontSize="12" Text="Each component on the link, its messages with rate, bandwidth and id; expand a message for its fields." TextTrimming="CharacterEllipsis" />
+            <TextBlock Grid.Column="1" Classes="muted" FontSize="12" Text="{Binding Summary}" />
+          </Grid>
+        </Border>
+
+        <TreeView Grid.Row="1" Classes="inspector" ItemsSource="{Binding Vehicles}"
+                  SelectedItem="{Binding SelectedNode, Mode=TwoWay}" Padding="4,4">
+          <TreeView.DataTemplates>
+            <TreeDataTemplate DataType="vm:InspectorVehicleNode" ItemsSource="{Binding Children}">
+              <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="{StaticResource Accent}" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding TrafficText}" Classes="muted" VerticalAlignment="Center" />
+              </StackPanel>
+            </TreeDataTemplate>
+            <TreeDataTemplate DataType="vm:InspectorMessageNode" ItemsSource="{Binding Children}">
+              <Grid ColumnDefinitions="280,80,90,64">
+                <TextBlock Classes="mono" Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="1" Classes="num" Text="{Binding RateText}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Classes="num muted" Text="{Binding BandwidthText}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="3" Classes="num muted" Text="{Binding IdText}" VerticalAlignment="Center" />
+              </Grid>
+            </TreeDataTemplate>
+            <DataTemplate DataType="vm:InspectorFieldNode">
+              <Grid ColumnDefinitions="220,300,Auto" ToolTip.Tip="{Binding Description}" Background="Transparent">
+                <TextBlock Classes="mono" Text="{Binding Name}" Foreground="{StaticResource Info}" VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="1" Classes="mono" Text="{Binding Value}" VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
+                <TextBlock Grid.Column="2" Classes="muted" FontSize="12" Text="{Binding TypeText}" VerticalAlignment="Center" />
+              </Grid>
+            </DataTemplate>
+          </TreeView.DataTemplates>
+        </TreeView>
+
+        <TextBlock Grid.Row="1" Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center"
+                   IsHitTestVisible="False" Text="{Binding Summary}"
+                   IsVisible="{Binding !Vehicles.Count}" />
+      </Grid>
+    </Border>
+
+    <!-- selection -->
+    <TextBlock Grid.Row="2" Classes="muted" Margin="2,10,2,0" Text="{Binding SelectionHint}" TextTrimming="CharacterEllipsis" />
+  </Grid>
+</UserControl>

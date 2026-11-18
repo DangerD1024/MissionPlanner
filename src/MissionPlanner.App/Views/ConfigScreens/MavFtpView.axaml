@@ -1,0 +1,240 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.ConfigScreens"
+             x:Class="MissionPlanner.App.Views.ConfigScreens.MavFtpView"
+             x:DataType="vm:MavFtpViewModel">
+
+  <UserControl.Resources>
+    <StreamGeometry x:Key="FtpIconDownload">M12,4 L12,15 M7.5,10.5 L12,15 L16.5,10.5 M5,19.5 L19,19.5</StreamGeometry>
+    <StreamGeometry x:Key="FtpIconUpload">M12,15 L12,4 M7.5,8.5 L12,4 L16.5,8.5 M5,19.5 L19,19.5</StreamGeometry>
+    <StreamGeometry x:Key="FtpIconNewFolder">M3,6 L9,6 L11,8 L21,8 L21,19 L3,19 Z M12,10.5 L12,16.5 M9,13.5 L15,13.5</StreamGeometry>
+    <StreamGeometry x:Key="FtpIconRename">M4,20 L8,19 L19,8 L16,5 L5,16 Z M14,7 L17,10</StreamGeometry>
+    <StreamGeometry x:Key="FtpIconCancel">M7,7 L17,17 M17,7 L7,17</StreamGeometry>
+    <StreamGeometry x:Key="FtpIconParent">M9,13 L4,8 L9,3 M4,8 L14,8 A6,6 0 0 1 20,14 L20,20</StreamGeometry>
+    <StreamGeometry x:Key="FtpIconSearch">M4,10.5 A6.5,6.5 0 1 0 17,10.5 A6.5,6.5 0 1 0 4,10.5 Z M15.5,15.5 L20,20</StreamGeometry>
+    <StreamGeometry x:Key="FtpIconHash">M10,4 L8,20 M16,4 L14,20 M5,9 L20,9 M4,15 L19,15</StreamGeometry>
+  </UserControl.Resources>
+
+  <UserControl.Styles>
+    <Style Selector="Button.tool">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="8,5" />
+      <Setter Property="Foreground" Value="{StaticResource Text}" />
+    </Style>
+    <Style Selector="Button.tool:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <!-- the 24 px theme icons, drawn smaller -->
+    <Style Selector="Path.i18">
+      <Setter Property="Width" Value="18" />
+      <Setter Property="Height" Value="18" />
+      <Setter Property="RenderTransformOrigin" Value="0%,0%" />
+      <Setter Property="RenderTransform" Value="scale(0.75)" />
+      <Setter Property="StrokeThickness" Value="2.1" />
+    </Style>
+    <Style Selector="Path.i16">
+      <Setter Property="Width" Value="16" />
+      <Setter Property="Height" Value="16" />
+      <Setter Property="RenderTransformOrigin" Value="0%,0%" />
+      <Setter Property="RenderTransform" Value="scale(0.6667)" />
+      <Setter Property="StrokeThickness" Value="2.3" />
+    </Style>
+    <Style Selector="Button.tool:disabled Path.icon">
+      <Setter Property="Opacity" Value="0.4" />
+    </Style>
+    <Style Selector="Rectangle.sep">
+      <Setter Property="Width" Value="1" />
+      <Setter Property="Margin" Value="6,6" />
+      <Setter Property="Fill" Value="{StaticResource Line}" />
+    </Style>
+    <Style Selector="TreeView.folders TreeViewItem" x:DataType="vm:FtpFolderNode">
+      <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+      <Setter Property="MinHeight" Value="28" />
+    </Style>
+    <Style Selector="DataGrid.files DataGridRow">
+      <Setter Property="Height" Value="30" />
+    </Style>
+  </UserControl.Styles>
+
+  <UserControl.KeyBindings>
+    <KeyBinding Gesture="F5" Command="{Binding RefreshCommand}" />
+    <KeyBinding Gesture="F2" Command="{Binding RenameCommand}" />
+    <KeyBinding Gesture="Delete" Command="{Binding DeleteCommand}" />
+    <KeyBinding Gesture="Alt+Up" Command="{Binding UpCommand}" />
+    <KeyBinding Gesture="Escape" Command="{Binding CancelCommand}" />
+  </UserControl.KeyBindings>
+
+  <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="16,14,16,10">
+
+    <!-- toolbar -->
+    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+      <StackPanel Orientation="Horizontal" Spacing="2">
+        <TextBlock Classes="h1" Text="MAVFtp" VerticalAlignment="Center" Margin="0,0,16,0" />
+        <Button Classes="tool" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh (F5)">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Classes="icon i18" Data="{StaticResource IconRefresh}" />
+            <TextBlock Text="Refresh" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+        <Button Classes="tool" Command="{Binding UpCommand}" ToolTip.Tip="Parent folder (Alt+Up)">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Classes="icon i18" Data="{StaticResource FtpIconParent}" />
+            <TextBlock Text="Up" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+        <Rectangle Classes="sep" />
+        <Button Classes="tool" Command="{Binding DownloadCommand}" ToolTip.Tip="Download the selected files">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Classes="icon i18" Data="{StaticResource FtpIconDownload}" />
+            <TextBlock Text="Download" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+        <Button Classes="tool" Command="{Binding UploadCommand}" ToolTip.Tip="Upload a file into this folder (or drop files on the list)">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Classes="icon i18" Data="{StaticResource FtpIconUpload}" />
+            <TextBlock Text="Upload" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+        <Button Classes="tool" Command="{Binding NewFolderCommand}" ToolTip.Tip="Create a folder here">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Classes="icon i18" Data="{StaticResource FtpIconNewFolder}" />
+            <TextBlock Text="New folder" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+        <Button Classes="tool" Command="{Binding RenameCommand}" ToolTip.Tip="Rename (F2)">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Classes="icon i18" Data="{StaticResource FtpIconRename}" />
+            <TextBlock Text="Rename" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+        <Button Classes="tool" Command="{Binding DeleteCommand}" ToolTip.Tip="Delete (Del); folders go with everything in them">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Classes="icon i18" Data="{StaticResource IconDelete}" />
+            <TextBlock Text="Delete" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+        <Rectangle Classes="sep" />
+        <Button Classes="tool" Command="{Binding CancelCommand}" ToolTip.Tip="Stop the running transfer (Esc)">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Classes="icon i18" Data="{StaticResource FtpIconCancel}" />
+            <TextBlock Text="Cancel" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
+
+      <TextBox Grid.Column="1" Width="240" Text="{Binding Filter}" PlaceholderText="Filter (e.g. *.bin)" VerticalAlignment="Center"
+               VerticalContentAlignment="Center">
+        <TextBox.InnerLeftContent>
+          <Path Classes="icon i16" Data="{StaticResource FtpIconSearch}" 
+                Stroke="{StaticResource Muted}" Margin="8,0,0,0" />
+        </TextBox.InnerLeftContent>
+      </TextBox>
+    </Grid>
+
+    <!-- inline error -->
+    <Border Grid.Row="1" IsVisible="{Binding HasError}" Background="#2ae5534b" BorderBrush="{StaticResource Danger}"
+            BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,10">
+      <Grid ColumnDefinitions="*,Auto">
+        <SelectableTextBlock Text="{Binding Error}" TextWrapping="Wrap" VerticalAlignment="Center" />
+        <Button Grid.Column="1" Classes="tool" Command="{Binding DismissErrorCommand}" Padding="4" Margin="8,0,0,0"
+                ToolTip.Tip="Dismiss">
+          <Path Classes="icon i18" Data="{StaticResource FtpIconCancel}" />
+        </Button>
+      </Grid>
+    </Border>
+
+    <!-- folders | files -->
+    <Grid Grid.Row="2" ColumnDefinitions="260,6,*">
+      <Border Classes="card" Padding="4">
+        <TreeView Classes="folders" ItemsSource="{Binding Roots}" SelectedItem="{Binding SelectedFolder, Mode=TwoWay}">
+          <TreeView.ItemTemplate>
+            <TreeDataTemplate x:DataType="vm:FtpFolderNode" ItemsSource="{Binding Children}">
+              <StackPanel Orientation="Horizontal" Spacing="7">
+                <Path Classes="icon i16" Data="{StaticResource IconFolder}" 
+                      Stroke="{StaticResource Warn}" IsVisible="{Binding !IsPlaceholder}" />
+                <TextBlock Text="{Binding Name}" VerticalAlignment="Center"
+                           Classes.muted="{Binding IsPlaceholder}" FontStyle="Normal" />
+              </StackPanel>
+            </TreeDataTemplate>
+          </TreeView.ItemTemplate>
+        </TreeView>
+      </Border>
+
+      <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="Transparent" />
+
+      <Border Grid.Column="2" Classes="card" Padding="0">
+        <Grid RowDefinitions="Auto,*">
+          <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="14,10">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Path Classes="icon i16" Data="{StaticResource IconFolder}" 
+                      Stroke="{StaticResource Warn}" />
+                <SelectableTextBlock Text="{Binding CurrentPath}" FontWeight="SemiBold" VerticalAlignment="Center" />
+              </StackPanel>
+              <TextBlock Grid.Column="1" Classes="muted" Text="{Binding Summary}" VerticalAlignment="Center" />
+            </Grid>
+          </Border>
+
+          <DataGrid x:Name="Files" Grid.Row="1" Classes="files" ItemsSource="{Binding Entries}"
+                    SelectionMode="Extended" IsReadOnly="True" CanUserSortColumns="True" CanUserResizeColumns="True"
+                    CanUserReorderColumns="False" HeadersVisibility="Column" Background="Transparent"
+                    DragDrop.AllowDrop="True">
+            <DataGrid.Columns>
+              <DataGridTemplateColumn x:DataType="vm:FtpEntry" Header="Name" Tag="Name" SortMemberPath="Name" Width="*">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate x:DataType="vm:FtpEntry">
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="10,0" VerticalAlignment="Center">
+                      <Panel Width="16" Height="16">
+                        <Path Classes="icon i16" Data="{StaticResource IconFolder}" 
+                              Stroke="{StaticResource Warn}" IsVisible="{Binding IsDirectory}" />
+                        <Path Classes="icon i16" Data="{StaticResource IconFile}" 
+                              Stroke="{StaticResource Info}" IsVisible="{Binding !IsDirectory}" />
+                      </Panel>
+                      <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                    </StackPanel>
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+              <DataGridTextColumn x:DataType="vm:FtpEntry" Header="Type" Tag="Kind" Binding="{Binding Kind}" Width="90"
+                                  Foreground="{StaticResource Muted}" />
+              <DataGridTextColumn x:DataType="vm:FtpEntry" Header="Size" Tag="Size" Binding="{Binding SizeText}" Width="100" />
+              <DataGridTextColumn x:DataType="vm:FtpEntry" Header="Modified" Tag="Modified" Binding="{Binding ModifiedText}"
+                                  Width="170" Foreground="{StaticResource Muted}" />
+            </DataGrid.Columns>
+            <DataGrid.ContextMenu>
+              <ContextMenu>
+                <MenuItem Header="Download…" Command="{Binding DownloadCommand}" />
+                <MenuItem Header="Rename…" Command="{Binding RenameCommand}" InputGesture="F2" />
+                <MenuItem Header="Delete" Command="{Binding DeleteCommand}" InputGesture="Delete" />
+                <MenuItem Header="Show CRC32" Command="{Binding CrcCommand}" />
+                <Separator />
+                <MenuItem Header="Upload file here…" Command="{Binding UploadCommand}" />
+                <MenuItem Header="New folder…" Command="{Binding NewFolderCommand}" />
+                <MenuItem Header="Refresh" Command="{Binding RefreshCommand}" InputGesture="F5" />
+              </ContextMenu>
+            </DataGrid.ContextMenu>
+          </DataGrid>
+
+          <TextBlock Grid.Row="1" Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center"
+                     Text="This folder is empty." IsHitTestVisible="False">
+            <TextBlock.IsVisible>
+              <MultiBinding Converter="{x:Static BoolConverters.And}">
+                <Binding Path="IsIdle" />
+                <Binding Path="!Entries.Count" />
+                <Binding Path="CurrentPath" Converter="{x:Static StringConverters.IsNotNullOrEmpty}" />
+              </MultiBinding>
+            </TextBlock.IsVisible>
+          </TextBlock>
+        </Grid>
+      </Border>
+    </Grid>
+
+    <!-- status -->
+    <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="2,10,2,0">
+      <TextBlock Text="{Binding Status}" Classes="muted" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+      <ProgressBar Grid.Column="1" Width="220" Height="6" MinHeight="6" Minimum="0" Maximum="100"
+                   Value="{Binding ProgressPercent}" IsIndeterminate="{Binding IsProgressIndeterminate}"
+                   IsVisible="{Binding IsBusy}" VerticalAlignment="Center" />
+    </Grid>
+  </Grid>
+</UserControl>
