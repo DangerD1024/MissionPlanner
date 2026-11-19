@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware;
+using MissionPlanner.App.Core.ViewModels.SetupScreens.MotorSetup;
 
 namespace MissionPlanner.App.Core.ViewModels.SetupScreens;
 
@@ -35,10 +36,15 @@ public sealed partial class ServoOutputViewModel : HardwarePageViewModel
     {
     }
 
-    internal ServoOutputViewModel(AppServices services, IParamSource? source)
+    internal ServoOutputViewModel(AppServices services, IParamSource? source, MotorLayoutCatalog? layouts = null)
         : base("Servo Output", services, source)
     {
+        MotorSetup = new MotorSetupViewModel(services, Source, (name, value) => WriteAsync(name, value), () => RebootRequired = true,
+            null, layouts, null);
     }
+
+    /// <summary>The motor layout, order and direction card (multirotors and QuadPlanes).</summary>
+    public MotorSetupViewModel MotorSetup { get; }
 
     [ObservableProperty]
     private IReadOnlyList<ServoRow> _rows = [];
@@ -62,6 +68,15 @@ public sealed partial class ServoOutputViewModel : HardwarePageViewModel
 
         Rows = rows;
         Status = rows.Count == 0 ? "This vehicle has no SERVOn_FUNCTION parameters." : null;
+        MotorSetup.Build();
+    }
+
+    protected override void OnValuesRefreshed() => MotorSetup.Refresh();
+
+    public override void OnHidden()
+    {
+        base.OnHidden();
+        _ = MotorSetup.OnHiddenAsync();
     }
 
     protected override void UpdateLive()
@@ -69,5 +84,6 @@ public sealed partial class ServoOutputViewModel : HardwarePageViewModel
         var cs = Services.Session.Cs;
         foreach (var r in Rows)
             r.Output.Set(Channels.Out(cs, r.Number));
+        MotorSetup.Tick();
     }
 }
