@@ -119,15 +119,18 @@ public static class ParamMetadata
     private static bool IsCurrent(Indexed indexed) =>
         indexed.Source == null || !File.Exists(indexed.Source) || File.GetLastWriteTimeUtc(indexed.Source) == indexed.SourceTime;
 
+    /// <summary>"4.7.2", or "" while the vehicle has not reported its version (Version(0,0) has no Build).</summary>
+    private static string VersionText(Version? version) => version is { Build: >= 0 } ? version.ToString(3) : "";
+
     private static string CacheKey(Firmwares firmware, Version? version) =>
-        VehicleKey(firmware) + "|" + (version?.ToString(3) ?? "");
+        VehicleKey(firmware) + "|" + VersionText(version);
 
     private static Indexed Build(Firmwares firmware, Version? version)
     {
         var dir = Settings.GetDataDirectory();
         var candidates = new List<string>();
-        if (version != null && VersionedPrefix(firmware) is { Length: > 0 } prefix)
-            candidates.Add(Path.Combine(dir, $"{prefix}{version.ToString(3)}.apm.pdef.xml"));
+        if (VersionText(version).Length > 0 && VersionedPrefix(firmware) is { Length: > 0 } prefix)
+            candidates.Add(Path.Combine(dir, $"{prefix}{VersionText(version)}.apm.pdef.xml"));
         candidates.Add(Path.Combine(dir, VehicleKey(firmware) + ".apm.pdef.xml"));
 
         foreach (var file in candidates.Where(File.Exists))
