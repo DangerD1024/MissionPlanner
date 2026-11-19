@@ -38,8 +38,22 @@ resumes on its own.
 
 ## Getting it
 
-There are no packaged releases yet; build it from source. You need the
-[.NET 10 SDK](https://dotnet.microsoft.com/download) and git.
+Download a build from [Releases](https://github.com/DangerD1024/MissionPlanner/releases):
+
+- **Windows:** `MissionPlanner-<version>-win-x64.msi` — installs to *Program Files\Mission Planner 2*
+  with Start menu and desktop shortcuts, next to (not over) the classic Mission Planner. Includes
+  the .NET runtime and SDL2 (joystick); video needs the GStreamer runtime (below).
+- **Linux:** `MissionPlanner-<version>-linux-x64.tar.gz` — unpack anywhere and run
+  `./MissionPlanner.App`; includes the .NET runtime. Needs the usual desktop X11 libraries
+  (`libice6 libsm6 libfontconfig1`, already present on desktop installs). Built with
+  `installer/linux/build-tarball.sh`.
+
+The Windows installer is built with `installer\windows\build-msi.ps1` (needs the .NET 10 SDK and
+`dotnet tool install --global wix --version 5.0.2`).
+
+### From source
+
+You need the [.NET 10 SDK](https://dotnet.microsoft.com/download) and git.
 
 ```sh
 git clone https://github.com/DangerD1024/MissionPlanner.git
@@ -68,8 +82,12 @@ The app runs without these; the features that need them say so when they are mis
 | Spoken alerts | `speech-dispatcher` or `espeak-ng` | built in | built in |
 | Serial ports | add yourself to the `dialout` group | — | — |
 
-Linux is where it is developed and tested. Windows is built and tested in CI but has seen little
-hands-on use; macOS has not been built or run yet.
+Linux is where it is developed and tested. Windows is built and tested in CI and has been run
+against the Windows SITL build (Simulation screen, connect, modes, arming, parameters); macOS has
+not been built or run yet.
+
+On Windows, ArduPilot's SITL build (cygwin) ends when its first TCP client disconnects and does
+not come back from a reboot; restart it from the Simulation screen instead.
 
 ## Development
 

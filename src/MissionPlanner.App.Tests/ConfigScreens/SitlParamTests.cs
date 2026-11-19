@@ -62,20 +62,47 @@ public class SitlParamTests
             var defaults = Path.Combine(Path.GetDirectoryName(exe)!, "copter.parm");
             var args = $"-M+ -O-35.363261,149.165230,584,353 -s1 --serial0 tcp:0 -I{instance.ToString(CultureInfo.InvariantCulture)}" +
                        (File.Exists(defaults) ? $" --defaults \"{defaults}\"" : "");
-            _process = Process.Start(new ProcessStartInfo(exe, args)
+            var psi = new ProcessStartInfo(exe, args)
             {
                 WorkingDirectory = _dir,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-            })!;
-            _process.OutputDataReceived += (_, _) => { };
-            _process.ErrorDataReceived += (_, _) => { };
+            };
+            // as the Simulation page does: SITL keeps its files relative to HOME
+            psi.Environment["HOME"] = _dir;
+            _process = Process.Start(psi)!;
+            _process.OutputDataReceived += (_, e) => Keep(e.Data);
+            _process.ErrorDataReceived += (_, e) => Keep(e.Data);
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
         }
 
         public int Port { get; }
+
+        /// <summary>The simulator's last output lines, for a failure message.</summary>
+        public string Output
+        {
+            get
+            {
+                lock (_output)
+                    return string.Join(Environment.NewLine, _output);
+            }
+        }
+
+        private readonly Queue<string> _output = new();
+
+        private void Keep(string? line)
+        {
+            if (line == null)
+                return;
+            lock (_output)
+            {
+                _output.Enqueue(line);
+                if (_output.Count > 40)
+                    _output.Dequeue();
+            }
+        }
 
         public bool HasExited => _process.HasExited;
 
@@ -110,10 +137,17 @@ public class SitlParamTests
     private async Task ConnectAsync(AppServices services, Sitl sitl)
     {
         var sw = Stopwatch.StartNew();
+        // connect only once SITL listens: a refused or failed attempt is harmless on Linux, but the
+        // Windows (cygwin) build exits when its first client disconnects
+        if (OperatingSystem.IsWindows())
+        {
+            while (!MissionPlanner.App.Tests.Sitl.SitlProcess.IsListening(sitl.Port) && !sitl.HasExited && sw.Elapsed < TimeSpan.FromSeconds(30))
+                await Task.Delay(250);
+        }
         for (var attempt = 1; ; attempt++)
         {
             if (sitl.HasExited)
-                Assert.Fail($"SITL exited with code {sitl.ExitCode}");
+                Assert.Fail($"SITL exited with code {sitl.ExitCode}:{Environment.NewLine}{sitl.Output}");
             try
             {
                 await services.Session.ConnectAsync(LinkSpec.Tcp("127.0.0.1", sitl.Port), getParams: false);
@@ -121,7 +155,7 @@ public class SitlParamTests
             }
             catch (ConnectException ex) when (sw.Elapsed < TimeSpan.FromSeconds(60))
             {
-                TestContext.WriteLine($"connect attempt {attempt}: {ex.Message}");
+                TestContext.WriteLine($"connect attempt {attempt}: {ex.Message}{Environment.NewLine}{sitl.Output}");
                 await Task.Delay(1000);
             }
         }
@@ -225,21 +259,26 @@ public class SitlParamTests
             foreach (var (name, value) in expected)
                 Assert.AreEqual(value, await ReadBackAsync(services, name), 1e-3, "read back " + name);
 
-            // reboot from the page: the link drops while SITL restarts; the values are kept
-            await page.RebootCommand.ExecuteAsync(null);
-            Assert.AreEqual("Reboot", dialogs.Confirms.Last().Title);
-            StringAssert.StartsWith(page.StatusText, "Reboot command sent");
-            var sw = Stopwatch.StartNew();
-            while (services.Session.State == LinkState.Connected && sw.Elapsed < TimeSpan.FromSeconds(20))
-                await Task.Delay(200);
-            TestContext.WriteLine($"after reboot: link {services.Session.State} after {sw.Elapsed.TotalSeconds:F1} s");
-            if (services.Session.State != LinkState.Disconnected)
-                await services.Session.DisconnectAsync();
+            // reboot from the page: the link drops while SITL restarts; the values are kept. Not on
+            // Windows: the cygwin SITL build does not come back from a reboot (the old connection
+            // stays open without data and a new connection gets no heartbeat).
+            if (!OperatingSystem.IsWindows())
+            {
+                await page.RebootCommand.ExecuteAsync(null);
+                Assert.AreEqual("Reboot", dialogs.Confirms.Last().Title);
+                StringAssert.StartsWith(page.StatusText, "Reboot command sent");
+                var sw = Stopwatch.StartNew();
+                while (services.Session.State == LinkState.Connected && sw.Elapsed < TimeSpan.FromSeconds(20))
+                    await Task.Delay(200);
+                TestContext.WriteLine($"after reboot: link {services.Session.State} after {sw.Elapsed.TotalSeconds:F1} s");
+                if (services.Session.State != LinkState.Disconnected)
+                    await services.Session.DisconnectAsync();
 
-            await ConnectAsync(services, sitl);
-            await page.RebuildAsync();
-            foreach (var (name, value) in expected)
-                Assert.AreEqual(value, Row(name).Value, 1e-3, "after reboot " + name);
+                await ConnectAsync(services, sitl);
+                await page.RebuildAsync();
+                foreach (var (name, value) in expected)
+                    Assert.AreEqual(value, Row(name).Value, 1e-3, "after reboot " + name);
+            }
 
             // restore through the page
             foreach (var (name, value) in original)
