@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using MissionPlanner.App.Core.Links;
 using MissionPlanner.App.Core.Mission;
@@ -264,6 +265,20 @@ internal sealed class SitlProcess : IDisposable
         {
             if (p.HasExited)
                 throw new InvalidOperationException("SITL exited with " + p.ExitCode);
+            if (OperatingSystem.IsWindows())
+            {
+                // look for the listening socket without connecting: the Windows (cygwin) build exits
+                // when its first client disconnects, so a probe connection would end the simulator
+                if (IsListening(port))
+                {
+                    await Task.Delay(500);
+                    return new SitlProcess(p, dir, port);
+                }
+
+                await Task.Delay(250);
+                continue;
+            }
+
             try
             {
                 using var probe = new TcpClient();
@@ -282,6 +297,10 @@ internal sealed class SitlProcess : IDisposable
         p.Kill(true);
         throw new TimeoutException("SITL did not open TCP " + port);
     }
+
+    /// <summary>Whether something listens on the TCP port, found without connecting to it (used on Windows).</summary>
+    public static bool IsListening(int port) =>
+        IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().Any(e => e.Port == port);
 
     public void Dispose()
     {

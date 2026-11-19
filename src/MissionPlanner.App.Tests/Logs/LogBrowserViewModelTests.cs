@@ -80,9 +80,12 @@ public class LogBrowserViewModelTests
 
         var roll = vm.FindField("ATT", null, "Roll")!;
         var alt1 = vm.FindField("GPS", "1", "Alt")!;
+        // one at a time: there is no UI thread here, so two reads finishing together would add to
+        // Series from two thread-pool threads at once (in the app both continuations run on the UI thread)
         roll.IsChecked = true;
+        await WaitFor(() => vm.Series.Count == 1 && !roll.IsBusy);
         alt1.IsChecked = true;
-        await WaitFor(() => vm.Series.Count == 2 && !roll.IsBusy && !alt1.IsBusy);
+        await WaitFor(() => vm.Series.Count == 2 && !alt1.IsBusy);
 
         var s = vm.Series.Single(x => x.Key == "ATT.Roll");
         Assert.AreEqual(21, s.SourceCount);
