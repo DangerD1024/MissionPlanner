@@ -51,6 +51,9 @@ public static class AppStartup
         // terrain tiles download next to the other shared data
         srtm.datadirectory = Path.Combine(Settings.GetDataDirectory(), "srtm");
 
+        // identifies the app to tile and download servers (OpenStreetMap's usage policy asks for it)
+        Settings.Instance.UserAgent = $"MissionPlanner/{AppVersion.Display} (+https://ardupilot.org/planner/)";
+
         MapTiles.Initialize();
     }
 

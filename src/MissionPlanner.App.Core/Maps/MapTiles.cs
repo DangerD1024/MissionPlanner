@@ -33,13 +33,48 @@ public static class MapTiles
             GMapProvider.TileImageProxy = TileBytesProxy.Instance;
             GMapProvider.UserAgent = Settings.Instance.UserAgent;
 
+            // OpenStreetMap's servers answer "Access blocked" (HTTP 418) to applications that send
+            // openstreetmap.org as the Referer, which GMap.NET's provider does: send none.
+            GMapProviders.OpenStreetMap.RefererUrl = string.Empty;
+
             var cache = new MyImageCache();
             if (cacheDirectory != null)
                 cache.CacheLocation = cacheDirectory;
 
             GMaps.Instance.PrimaryCache = cache;
+            PurgeBlockedOsmTilesOnce(cache.CacheLocation);
             GMaps.Instance.Mode = AccessMode.ServerAndCache;
             _initialized = true;
+        }
+    }
+
+    /// <summary>
+    /// Tiles fetched with the blocked Referer were cached as the "Access blocked" picture. Clear the
+    /// OpenStreetMap folder of the shared tile cache once so they are downloaded again.
+    /// </summary>
+    private static void PurgeBlockedOsmTilesOnce(string cacheLocation)
+    {
+        const string key = "next_osm_cache_purged";
+        try
+        {
+            if (Settings.Instance[key] == "1")
+                return;
+            var name = GMapProviders.OpenStreetMap.Name;
+            foreach (var dir in new[]
+                     {
+                         Path.Combine(cacheLocation, "TileDBv3", GMapProvider.LanguageStr, name),
+                         Path.Combine(cacheLocation, name),
+                     })
+            {
+                if (Directory.Exists(dir))
+                    Directory.Delete(dir, recursive: true);
+            }
+            Settings.Instance[key] = "1";
+            Settings.Instance.Save();
+        }
+        catch (Exception)
+        {
+            // a cache that can't be cleared only means some tiles stay stale
         }
     }
 
@@ -52,7 +87,8 @@ public static class MapTiles
         GMapProviders.BingSatelliteMap,
         GMapProviders.BingHybridMap,
         GMapProviders.OpenStreetMap,
-        GMapProviders.ArcGIS_Imagery_World_2D_Map,
+        EsriWorldImageryProvider.Instance,
+        GMapProviders.ArcGIS_World_Topo_Map,
     ];
 
     /// <summary>Raised on a worker thread when a provider request fails (HTTP error, throttling, non-image reply).</summary>
