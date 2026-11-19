@@ -12,7 +12,13 @@
     <ProjectReference Include="..\..\ExtLibs\Utilities\MissionPlanner.Utilities.csproj" />
     <ProjectReference Include="..\..\ExtLibs\GMap.NET.Core\GMap.NET.Core.csproj" />
     <ProjectReference Include="..\..\ExtLibs\Maps\MissionPlanner.Maps.csproj" />
+    <ProjectReference Include="..\..\ExtLibs\DroneCAN\DroneCAN.csproj" />
   </ItemGroup>
+
+  <!-- the DroneCAN page's library adapter -->
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);DRONECAN</DefineConstants>
+  </PropertyGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="MissionPlanner.App.Tests" />
