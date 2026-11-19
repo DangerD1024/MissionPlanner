@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using MissionPlanner.App.Core.Localization;
 using MissionPlanner.App.Core.ViewModels.Video;
 
 namespace MissionPlanner.App.Controls.Video;
@@ -10,7 +11,11 @@ namespace MissionPlanner.App.Controls.Video;
 /// </summary>
 public static class HudVideoMenu
 {
-    public static ContextMenu Create(Func<HudVideoViewModel?> video)
+    /// <summary>
+    /// The menu; <paramref name="extra"/> appends the host's own entries (detach / attach, fullscreen)
+    /// after the Video submenu each time it opens.
+    /// </summary>
+    public static ContextMenu Create(Func<HudVideoViewModel?> video, Action<ItemCollection>? extra = null)
     {
         var menu = new ContextMenu();
         menu.Opening += (_, e) =>
@@ -24,13 +29,14 @@ public static class HudVideoMenu
 
             menu.Items.Clear();
             menu.Items.Add(BuildVideoMenu(vm));
+            extra?.Invoke(menu.Items);
         };
         return menu;
     }
 
     private static MenuItem BuildVideoMenu(HudVideoViewModel vm)
     {
-        var root = new MenuItem { Header = "Video" };
+        var root = new MenuItem { Header = L.Tr("Video") };
         var selected = vm.Selected;
 
         var start = Item(selected == null ? "Start video" : $"Start video ({selected.DisplayName})", () => vm.Start());
@@ -79,9 +85,10 @@ public static class HudVideoMenu
         return root;
     }
 
-    private static MenuItem Item(string header, Action action)
+    /// <summary>A menu entry with its English text translated (the menu is rebuilt each time it opens).</summary>
+    internal static MenuItem Item(string header, Action action)
     {
-        var item = new MenuItem { Header = header };
+        var item = new MenuItem { Header = L.Tr(header) };
         item.Click += (_, _) => action();
         return item;
     }

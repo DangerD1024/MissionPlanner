@@ -83,6 +83,7 @@ public sealed partial class FlightDataViewModel : PageViewModel
         services.Params.MetadataChanged += (_, _) => RefreshModes(services.Session.Cs, force: true);
 
         InitExtras();
+        InitHudWindow();
     }
 
     public AppServices Services { get; }

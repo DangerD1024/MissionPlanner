@@ -50,8 +50,14 @@ public sealed partial class FlightDataView : UserControl
         Map.MapContextRequested += OnMapContext;
         Map.MapClick += OnMapClick;
 
-        // video behind the HUD, and the HUD's right-click Video menu
-        HudVideoPresenter.Install(HudHost, HudControl);
+        // video behind the HUD, and the HUD's right-click menu (Video, Detach HUD)
+        HudVideoPresenter.Install(HudHost, HudControl, items =>
+        {
+            if (_vm == null)
+                return;
+            items.Add(new Separator());
+            items.Add(HudVideoMenu.Item("Detach HUD (own window)", () => _vm.IsHudDetached = true));
+        });
 
         // keep the HUD at 4:3 of the column width, leaving room for the tabs
         LeftColumn.SizeChanged += (_, e) => SizeHud(e.NewSize);
@@ -62,7 +68,11 @@ public sealed partial class FlightDataView : UserControl
     private void Attach(FlightDataViewModel? vm)
     {
         if (_vm != null)
+        {
             _vm.TelemetryUpdated -= OnTelemetry;
+            _vm.PropertyChanged -= OnVmChanged;
+        }
+
         _vm = vm;
         Map.Layers.Clear();
         _mapVersion = -1;
@@ -70,14 +80,33 @@ public sealed partial class FlightDataView : UserControl
             return;
 
         vm.TelemetryUpdated += OnTelemetry;
+        vm.PropertyChanged += OnVmChanged;
+        // opens the HUD window now if it was detached when the app last closed
+        HudWindowHost.Track(vm);
+        SizeHud(LeftColumn.Bounds.Size);
         Map.Layers.Add(new MissionLayer(vm.MapModel));
         Map.Layers.Add(new TrackLayer(vm.MapModel));
         Map.Layers.Add(new AdsbLayer(vm.MapModel));
         Map.Layers.Add(new VehicleLayer(vm.MapModel));
     }
 
+    private void OnVmChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(FlightDataViewModel.IsHudDetached))
+            SizeHud(LeftColumn.Bounds.Size);
+    }
+
     private void SizeHud(Size column)
     {
+        if (column.Width <= 0)
+            return;
+        // detached: just a bar with Attach, the tabs get the room
+        if (_vm?.IsHudDetached == true)
+        {
+            HudHost.Height = 56;
+            return;
+        }
+
         var height = Math.Round(column.Width * 0.75);
         height = Math.Min(height, Math.Max(160, column.Height - MinTabsHeight));
         if (Math.Abs(HudHost.Height - height) > 0.5)
@@ -86,7 +115,8 @@ public sealed partial class FlightDataView : UserControl
 
     private void OnTelemetry(object? sender, EventArgs e)
     {
-        HudControl.Refresh();
+        if (HudControl.IsVisible)
+            HudControl.Refresh();
 
         // the view-model moves the version at most 10 times a second
         var version = _vm?.MapModel.Version ?? -1;

@@ -57,7 +57,15 @@
     <!-- left: HUD over the telemetry tabs -->
     <Grid x:Name="LeftColumn" RowDefinitions="Auto,*" Background="{DynamicResource Bg1}">
       <Border x:Name="HudHost" Height="360" Background="#0b0d10">
-        <controls:Hud x:Name="HudControl" Model="{Binding Hud}" />
+        <Panel>
+          <controls:Hud x:Name="HudControl" Model="{Binding Hud}" IsVisible="{Binding !IsHudDetached}" />
+          <!-- the HUD is in its own window -->
+          <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      IsVisible="{Binding IsHudDetached}">
+            <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'The HUD is in its own window.'}" />
+            <Button Content="{l:Tr 'Attach HUD'}" Command="{Binding AttachHudCommand}" />
+          </StackPanel>
+        </Panel>
       </Border>
 
       <TabControl Grid.Row="1" Classes="fd" SelectedIndex="{Binding SelectedTabIndex}">

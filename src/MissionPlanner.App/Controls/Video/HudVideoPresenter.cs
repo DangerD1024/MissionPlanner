@@ -34,14 +34,14 @@ public sealed class HudVideoPresenter
     private int _pending;
     private long _pendingSince;
 
-    private HudVideoPresenter(Control host, Hud hud)
+    private HudVideoPresenter(Control host, Hud hud, Action<ItemCollection>? extraMenu)
     {
         _host = host;
         _hud = hud;
         _reader = CopyFrame;
         _onAnimationFrame = OnAnimationFrame;
         _requestFrame = RequestFrame;
-        host.ContextMenu = HudVideoMenu.Create(() => _video);
+        host.ContextMenu = HudVideoMenu.Create(() => _video, extraMenu);
 
         host.DataContextChanged += (_, _) => Bind();
         hud.AttachedToVisualTree += (_, _) =>
@@ -60,7 +60,9 @@ public sealed class HudVideoPresenter
     /// Adds video to the HUD in <paramref name="host"/>; the host's DataContext is the
     /// <see cref="FlightDataViewModel"/> (it supplies the app's services).
     /// </summary>
-    public static HudVideoPresenter Install(Control host, Hud hud) => new(host, hud);
+    /// <param name="extraMenu">appends the host's own entries to the right-click menu</param>
+    public static HudVideoPresenter Install(Control host, Hud hud, Action<ItemCollection>? extraMenu = null) =>
+        new(host, hud, extraMenu);
 
     private void Bind()
     {
