@@ -164,6 +164,9 @@
                      Text="{Binding UnitsExample}" />
         </Grid>
       </Border>
+
+      <!-- about (was the HELP screen): version, data and log folders, Linux menu entry -->
+      <ContentControl Content="{Binding About}" />
     </StackPanel>
   </ScrollViewer>
 </UserControl>

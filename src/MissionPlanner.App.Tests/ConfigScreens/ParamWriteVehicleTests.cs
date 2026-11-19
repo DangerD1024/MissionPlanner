@@ -76,6 +76,8 @@ public class ParamWriteVehicleTests
             Assert.IsTrue(confirm.Contains("BATT_CAPACITY: 3300 -> 5200"), confirm);
 
             dialogs.ConfirmAnswer = true;
+            var toasts = new List<Notification>();
+            services.Notified += (_, n) => toasts.Add(n);
             await page.WriteCommand.ExecuteAsync(null);
 
             // *_ENABLE first: enabling a feature can create the others
@@ -86,7 +88,9 @@ public class ParamWriteVehicleTests
             Assert.IsFalse(row.IsModified);
             Assert.AreEqual(5200, row.Value);
             Assert.AreEqual(5200, services.Params.Get("BATT_CAPACITY"));
-            Assert.IsTrue(dialogs.Messages.Any(m => m.Title == "Saved" && m.Message.Contains("2 parameters")),
+            // success is a toast, not a dialog
+            Assert.IsTrue(toasts.Any(t => t.Kind == MessageKind.Info && t.Text.Contains("2 parameters")), string.Join(" | ", toasts));
+            Assert.IsFalse(dialogs.Messages.Any(m => m.Title == "Saved"),
                 string.Join(" | ", dialogs.Messages.Select(m => m.Title + ": " + m.Message)));
         }
         finally

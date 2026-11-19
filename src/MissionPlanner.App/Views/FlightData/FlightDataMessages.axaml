@@ -5,28 +5,83 @@
              x:Class="MissionPlanner.App.Views.FlightData.FlightDataMessages"
              x:DataType="vm:FlightDataViewModel">
 
+  <UserControl.Styles>
+    <!-- one row per message: time, severity badge, text; warnings amber, critical red -->
+    <Style Selector="ListBox.messages ListBoxItem">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0,0,0,1" />
+      <Setter Property="MinHeight" Value="0" />
+    </Style>
+    <Style Selector="ListBox.messages ListBoxItem:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBox.messages ListBoxItem:selected /template/ ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Border.msgrow">
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Border.msgrow.warn">
+      <Setter Property="Background" Value="{DynamicResource WarnSoft}" />
+    </Style>
+    <Style Selector="Border.msgrow.crit">
+      <Setter Property="Background" Value="{DynamicResource DangerSoft}" />
+    </Style>
+
+    <Style Selector="Border.badge">
+      <Setter Property="Width" Value="52" />
+      <Setter Property="Height" Value="18" />
+      <Setter Property="CornerRadius" Value="3" />
+      <Setter Property="VerticalAlignment" Value="Top" />
+      <Setter Property="Margin" Value="0,0,10,0" />
+      <Setter Property="Background" Value="{DynamicResource Line}" />
+    </Style>
+    <Style Selector="Border.badge.warn">
+      <Setter Property="Background" Value="{DynamicResource Warn}" />
+    </Style>
+    <Style Selector="Border.badge.crit">
+      <Setter Property="Background" Value="{DynamicResource Danger}" />
+    </Style>
+    <Style Selector="Border.badge TextBlock">
+      <Setter Property="FontSize" Value="10" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="{DynamicResource Text}" />
+    </Style>
+    <Style Selector="Border.badge.warn TextBlock">
+      <Setter Property="Foreground" Value="#1a1a1a" />
+    </Style>
+    <Style Selector="Border.badge.crit TextBlock">
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+
+    <Style Selector="SelectableTextBlock.msgtext.warn">
+      <Setter Property="Foreground" Value="{DynamicResource Warn}" />
+    </Style>
+    <Style Selector="SelectableTextBlock.msgtext.crit">
+      <Setter Property="Foreground" Value="{DynamicResource Danger}" />
+    </Style>
+  </UserControl.Styles>
+
   <Panel>
     <!-- newest first -->
-    <ListBox ItemsSource="{Binding Messages}" Background="Transparent" Margin="2">
-      <ListBox.Styles>
-        <Style Selector="ListBoxItem">
-          <Setter Property="Padding" Value="8,3" />
-          <Setter Property="MinHeight" Value="0" />
-        </Style>
-      </ListBox.Styles>
+    <ListBox Classes="messages" ItemsSource="{Binding Messages}" Background="Transparent" Margin="2">
       <ListBox.ItemTemplate>
         <DataTemplate x:DataType="vm:MessageLine">
-          <Grid ColumnDefinitions="64,*">
-            <TextBlock Text="{Binding TimeText}" Classes="muted" FontSize="12" FontFamily="monospace" VerticalAlignment="Top" />
-            <SelectableTextBlock Grid.Column="1" Text="{Binding Text}" FontSize="12.5" TextWrapping="Wrap"
-                                 Classes.warn="{Binding IsWarning}">
-              <SelectableTextBlock.Styles>
-                <Style Selector="SelectableTextBlock.warn">
-                  <Setter Property="Foreground" Value="{DynamicResource Warn}" />
-                </Style>
-              </SelectableTextBlock.Styles>
-            </SelectableTextBlock>
-          </Grid>
+          <Border Classes="msgrow" Classes.warn="{Binding IsWarning}" Classes.crit="{Binding IsCritical}">
+            <Grid ColumnDefinitions="64,Auto,*">
+              <TextBlock Text="{Binding TimeText}" Classes="muted" FontSize="12" FontFamily="monospace"
+                         VerticalAlignment="Top" Margin="0,1,0,0" />
+              <Border Grid.Column="1" Classes="badge" Classes.warn="{Binding IsWarning}" Classes.crit="{Binding IsCritical}">
+                <TextBlock Text="{Binding LevelText}" />
+              </Border>
+              <SelectableTextBlock Grid.Column="2" Classes="msgtext" Text="{Binding Text}" FontSize="13" TextWrapping="Wrap"
+                                   Classes.warn="{Binding IsWarning}" Classes.crit="{Binding IsCritical}" />
+            </Grid>
+          </Border>
         </DataTemplate>
       </ListBox.ItemTemplate>
     </ListBox>

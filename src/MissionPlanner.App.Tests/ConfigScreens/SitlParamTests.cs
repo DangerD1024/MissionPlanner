@@ -251,34 +251,55 @@ public class SitlParamTests
                 Assert.AreEqual(value, page.Edits.Pending[name], 1e-3, name);
 
             dialogs.ConfirmAnswer = true;
+            var toasts = new List<Notification>();
+            services.Notified += (_, n) => toasts.Add(n);
             await page.WriteCommand.ExecuteAsync(null);
             Assert.AreEqual(0, page.PendingCount, string.Join(" | ", dialogs.Messages.Select(m => m.Title + ": " + m.Message)));
-            Assert.IsTrue(dialogs.Messages.Any(m => m.Title == "Saved"));
+            Assert.IsTrue(toasts.Any(t => t.Text.Contains("saved")), string.Join(" | ", toasts));
 
             // read back from the vehicle, one by one
             foreach (var (name, value) in expected)
                 Assert.AreEqual(value, await ReadBackAsync(services, name), 1e-3, "read back " + name);
 
-            // reboot from the page: the link drops while SITL restarts; the values are kept. Not on
-            // Windows: the cygwin SITL build does not come back from a reboot (the old connection
-            // stays open without data and a new connection gets no heartbeat).
-            if (!OperatingSystem.IsWindows())
+            // reboot from the page; the values are kept. Either the link drops while SITL restarts, or
+            // (the Windows cygwin build, which also exits when its client disconnects, so the link must
+            // not be closed here) it goes quiet and the new boot carries on over the same connection.
+            await page.RebootCommand.ExecuteAsync(null);
+            Assert.AreEqual("Reboot", dialogs.Confirms.Last().Title);
+            StringAssert.StartsWith(page.StatusText, "Reboot command sent");
+            var sw = Stopwatch.StartNew();
+            var quiet = false;
+            var resumed = false;
+            while (services.Session.State == LinkState.Connected && sw.Elapsed < TimeSpan.FromSeconds(30))
             {
-                await page.RebootCommand.ExecuteAsync(null);
-                Assert.AreEqual("Reboot", dialogs.Confirms.Last().Title);
-                StringAssert.StartsWith(page.StatusText, "Reboot command sent");
-                var sw = Stopwatch.StartNew();
-                while (services.Session.State == LinkState.Connected && sw.Elapsed < TimeSpan.FromSeconds(20))
-                    await Task.Delay(200);
-                TestContext.WriteLine($"after reboot: link {services.Session.State} after {sw.Elapsed.TotalSeconds:F1} s");
+                if (services.Session.SinceLastPacket > TimeSpan.FromSeconds(1))
+                    quiet = true;
+                else if (quiet)
+                {
+                    resumed = true;
+                    break;
+                }
+
+                await Task.Delay(100);
+            }
+
+            TestContext.WriteLine($"after reboot: link {services.Session.State}, resumed {resumed}, after {sw.Elapsed.TotalSeconds:F1} s");
+            if (resumed && services.Session.State == LinkState.Connected)
+            {
+                // same connection: let the new boot settle (sensors, EKF), then read the list again
+                await Task.Delay(5000);
+                await services.Params.RefreshAsync();
+            }
+            else
+            {
                 if (services.Session.State != LinkState.Disconnected)
                     await services.Session.DisconnectAsync();
-
                 await ConnectAsync(services, sitl);
-                await page.RebuildAsync();
-                foreach (var (name, value) in expected)
-                    Assert.AreEqual(value, Row(name).Value, 1e-3, "after reboot " + name);
             }
+
+            await page.RebuildAsync();
+            foreach (var (name, value) in expected)
+                Assert.AreEqual(value, Row(name).Value, 1e-3, "after reboot " + name);
 
             // restore through the page
             foreach (var (name, value) in original)

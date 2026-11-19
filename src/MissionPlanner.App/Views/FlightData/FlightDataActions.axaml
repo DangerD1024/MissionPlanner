@@ -73,7 +73,9 @@
                   IsEnabled="{Binding CanCommand}" />
         </Grid>
 
-        <UniformGrid Columns="2" ColumnSpacing="6">
+        <UniformGrid Columns="3" ColumnSpacing="6">
+          <Button Content="{l:Tr 'Reboot'}" Command="{Binding RebootCommand}" IsEnabled="{Binding CanCommand}"
+                  ToolTip.Tip="{l:Tr 'Restart the autopilot'}" />
           <Button Content="{l:Tr 'Restart Mission'}" Command="{Binding RestartMissionCommand}" IsEnabled="{Binding CanCommand}"
                   ToolTip.Tip="{l:Tr 'Start the mission again from the first item'}" />
           <ToggleButton Content="{l:Tr 'Set Home Alt'}" IsChecked="{Binding HomeAltOffsetActive, Mode=OneWay}"

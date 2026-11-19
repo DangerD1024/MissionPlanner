@@ -8,7 +8,7 @@ interface for [Mission Planner](https://ardupilot.org/planner/), built on .NET 1
 that runs natively on **Linux, Windows and macOS** while reusing Mission Planner's proven MAVLink
 and vehicle libraries.
 
-> **Status: preview (2.0.1b).** The main screens of the classic Mission Planner are in place and
+> **Status: preview (2.0.2b).** The main screens of the classic Mission Planner are in place and
 > tested against ArduPilot SITL, and the setup screens were checked read-only on a real flight
 > controller. It has not yet been flown with real aircraft — try it on the simulator or a bench
 > vehicle with the propellers removed.
@@ -69,7 +69,7 @@ dotnet publish src/MissionPlanner.App -c Release -r linux-x64 --self-contained f
 ./bin/next-linux-x64/MissionPlanner.App
 ```
 
-On Linux, Help → *Add to applications menu* adds it to your desktop's launcher.
+On Linux, Settings → *Add to applications menu* (at the bottom) adds it to your desktop's launcher.
 
 ### Optional system packages
 
@@ -86,8 +86,8 @@ Linux is where it is developed and tested. Windows is built and tested in CI and
 against the Windows SITL build (Simulation screen, connect, modes, arming, parameters); macOS has
 not been built or run yet.
 
-On Windows, ArduPilot's SITL build (cygwin) ends when its first TCP client disconnects and does
-not come back from a reboot; restart it from the Simulation screen instead.
+On Windows, ArduPilot's SITL build (cygwin) ends when its TCP client disconnects: after
+Disconnect, start it again from the Simulation screen (the app drops the link when it exits).
 
 ## Development
 

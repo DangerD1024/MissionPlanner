@@ -569,6 +569,25 @@ public sealed partial class SimulationViewModel : PageViewModel
         AddConsole($"Simulator exited with code {code}.");
         if (!IsBusy)
             SetStatus($"The simulator exited (code {code}).", -1);
+
+        // nothing will answer on its port again: drop the link rather than "Reconnecting" for ever,
+        // so Start simulation is available straight away
+        if (_sitlLink != null && Services.Session.Link == _sitlLink && Services.Session.State != LinkState.Disconnected)
+            DisconnectAfterExit();
+    }
+
+    private async void DisconnectAfterExit()
+    {
+        try
+        {
+            await Services.Session.DisconnectAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("disconnect after sitl exit", ex);
+        }
+
+        OnPropertyChanged(nameof(ConnectionText));
     }
 
     [RelayCommand]

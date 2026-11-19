@@ -470,4 +470,27 @@ public sealed class LocalizationDataTests
 
         Assert.AreEqual(0, missing.Count, "re-run src/tools/LocalizationHarvest; not in the string list:\n" + string.Join("\n", missing.Take(30)));
     }
+
+    /// <summary>
+    /// l:Tr / l:TrBind are one-way: on a value the user edits (TextBox.Text and the like) the typed
+    /// value never reaches the view-model, so the field snaps back (the parameter editors once did).
+    /// </summary>
+    [TestMethod]
+    public void EditableValuesAreNotTranslatedBindings()
+    {
+        var editable = new System.Text.RegularExpressions.Regex(
+            "<(TextBox|AutoCompleteBox|NumericUpDown|ComboBox|CheckBox|ToggleSwitch|Slider)\\b[^>]*?\\s(Text|Value|SelectedItem|SelectedValue|IsChecked)=\"\\{l:Tr",
+            System.Text.RegularExpressions.RegexOptions.Singleline);
+        var bad = new List<string>();
+        var app = Path.Combine(Repo(), "src", "MissionPlanner.App");
+        foreach (var file in Directory.GetFiles(app, "*.axaml", SearchOption.AllDirectories))
+        {
+            if (file.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") || file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+                continue;
+            foreach (System.Text.RegularExpressions.Match m in editable.Matches(File.ReadAllText(file)))
+                bad.Add($"{Path.GetFileName(file)}: {m.Value[..Math.Min(m.Value.Length, 120)]}");
+        }
+
+        Assert.AreEqual(0, bad.Count, "editable value bound through l:Tr/l:TrBind (one-way):\n" + string.Join("\n", bad));
+    }
 }

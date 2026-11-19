@@ -67,9 +67,9 @@
           <Border Classes="opt">
             <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="6">
               <CheckBox Classes="head" Content="{l:Tr 'Arm / disarm'}" IsChecked="{Binding ArmDisarm}" />
-              <TextBox Grid.Column="1" Text="{l:TrBind {Binding ArmText}}" IsEnabled="{Binding ArmDisarm}" />
+              <TextBox Grid.Column="1" Text="{Binding ArmText}" IsEnabled="{Binding ArmDisarm}" />
               <TextBlock Grid.Row="1" Classes="caption" Text="{l:Tr 'Disarmed'}" Margin="28,0,0,0" />
-              <TextBox Grid.Row="1" Grid.Column="1" Text="{l:TrBind {Binding DisarmText}}" IsEnabled="{Binding ArmDisarm}" />
+              <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding DisarmText}" IsEnabled="{Binding ArmDisarm}" />
             </Grid>
           </Border>
 

@@ -177,6 +177,9 @@ public static class PlannerSettings
 /// </summary>
 public sealed partial class PlannerSettingsViewModel : PageViewModel
 {
+    /// <summary>Version, data folders and the Linux menu entry, shown at the bottom (there is no HELP screen).</summary>
+    public HelpViewModel About { get; } = new();
+
     private static readonly ILog Log = LogManager.GetLogger(typeof(PlannerSettingsViewModel));
 
     /// <summary>Name of the map provider the map screens start with.</summary>

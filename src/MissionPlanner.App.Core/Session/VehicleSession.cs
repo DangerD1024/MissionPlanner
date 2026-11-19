@@ -36,8 +36,19 @@ public sealed class VehicleSession : IAsyncDisposable
 
     public VehicleSession()
     {
-        Mav.OnPacketReceived += (_, _) => Interlocked.Exchange(ref _lastPacketTicks, Environment.TickCount64);
+        Mav.OnPacketReceived += (_, message) =>
+        {
+            Interlocked.Exchange(ref _lastPacketTicks, Environment.TickCount64);
+            // before the library adds the text to cs.messages, so the Messages tab finds it
+            Severities.Record(message);
+        };
     }
+
+    /// <summary>STATUSTEXT severities by text, for the Messages tab.</summary>
+    public StatusTextSeverities Severities { get; } = new();
+
+    /// <summary>A TCP peer-closed check counts only after this long without a packet (see the link monitor).</summary>
+    internal static readonly TimeSpan PeerClosedQuiet = TimeSpan.FromSeconds(1);
 
     /// <summary>No packet for this long and the link counts as lost (shown to the user, kept open).</summary>
     public static readonly TimeSpan StaleAfter = TimeSpan.FromSeconds(3);
@@ -239,7 +250,12 @@ public sealed class VehicleSession : IAsyncDisposable
 
                 if (link.Kind == LinkKind.Tcp)
                 {
-                    if (stream == null || !stream.IsOpen || LinkHealth.Check(link, stream) != null)
+                    // "peer closed" (readable with nothing to read) races with the reader thread, which can
+                    // drain the bytes between the two checks; believe it only once packets have stopped.
+                    // Reopening closes the old socket, and the Windows SITL build exits when its client
+                    // disconnects, so a false alarm there ends the simulator.
+                    if (stream == null || !stream.IsOpen ||
+                        (SinceLastPacket > PeerClosedQuiet && LinkHealth.Check(link, stream) != null))
                         _transportDown = true;
 
                     if (_transportDown && Environment.TickCount64 >= nextReopen)

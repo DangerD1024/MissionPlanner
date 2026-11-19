@@ -92,6 +92,10 @@ public sealed partial class FlightModesViewModel : HardwarePageViewModel
 
     private string? _switchParam;
 
+    /// <summary>The mode switch channel (FLTMODE_CH / MODE_CH), saved with Save Modes; null when the vehicle has none.</summary>
+    [ObservableProperty]
+    private ParamField? _channel;
+
     protected override void Build()
     {
         Slots = [];
@@ -126,6 +130,15 @@ public sealed partial class FlightModesViewModel : HardwarePageViewModel
 
         Slots = slots;
         _switchParam = FlightModeLogic.SwitchChannelParam(Source.Has);
+        Channel = _switchParam == null ? null : Field(_switchParam, new ParamFieldSpec
+        {
+            Label = "Mode channel",
+            Kind = ParamEditorKind.Options,
+            Options = FlightModeLogic.ChannelOptions(Source.Meta(_switchParam)?.Values),
+            Mode = ParamWriteMode.Queued,
+        });
+        if (Channel != null)
+            Channel.Edited += (_, _) => UpdateChanges();
         SaveText = "Save Modes";
         UpdateChanges();
     }
@@ -136,11 +149,12 @@ public sealed partial class FlightModesViewModel : HardwarePageViewModel
         CurrentMode = cs.mode ?? "";
 
         double pwm = 0;
-        if (_switchParam != null && Source.Get(_switchParam) is { } ch)
+        // the channel chosen (even before Save Modes), so the highlight follows the dropdown
+        if (_switchParam != null && (Channel?.PendingValue ?? Source.Get(_switchParam)) is { } ch)
         {
             var channel = (int)ch;
             pwm = channel is >= 1 and <= 16 ? Channels.In(cs, channel) : 0;
-            SwitchText = $"{_switchParam} {channel}: {pwm:0}";
+            SwitchText = channel is >= 1 and <= 16 ? $"Channel {channel}: {pwm:0}" : "No mode switch channel";
         }
         else
         {
@@ -166,7 +180,7 @@ public sealed partial class FlightModesViewModel : HardwarePageViewModel
 
     private void UpdateChanges()
     {
-        var changed = Slots.Any(s => s.Mode.IsDirty);
+        var changed = Slots.Any(s => s.Mode.IsDirty) || Channel?.IsDirty == true;
         if (ShowSimple)
         {
             changed |= SimpleMask(s => s.Simple) != (Source.Get("SIMPLE") ?? 0);
@@ -189,6 +203,8 @@ public sealed partial class FlightModesViewModel : HardwarePageViewModel
         var ok = true;
         try
         {
+            if (Channel != null)
+                ok &= await Channel.CommitAsync();
             foreach (var s in Slots)
                 ok &= await s.Mode.CommitAsync();
 
@@ -219,6 +235,7 @@ public sealed partial class FlightModesViewModel : HardwarePageViewModel
     [RelayCommand]
     private void Revert()
     {
+        Channel?.Revert();
         foreach (var s in Slots)
             s.Mode.Revert();
         var simple = Source.Get("SIMPLE") ?? 0;

@@ -65,6 +65,17 @@ public static class FlightModeLogic
     public static string? SwitchChannelParam(Func<string, bool> has) =>
         has("FLTMODE_CH") ? "FLTMODE_CH" : has("MODE_CH") ? "MODE_CH" : null;
 
+    /// <summary>
+    /// The choices for the mode switch channel: the parameter's documented values when it has them
+    /// (Copter: 0 None, 5..16), else channels 1..16 (Plane and Rover document only a range).
+    /// </summary>
+    public static IReadOnlyList<ParamOption> ChannelOptions(IReadOnlyList<KeyValuePair<double, string>>? documented)
+    {
+        if (documented is { Count: > 0 })
+            return documented.Select(v => new ParamOption(v.Key, v.Value)).ToList();
+        return Enumerable.Range(1, 16).Select(c => new ParamOption(c, "Channel " + c)).ToList();
+    }
+
     /// <summary>SIMPLE / SUPER_SIMPLE: bit i is slot i+1.</summary>
     public static double SlotMask(IReadOnlyList<bool> slots) =>
         BitmaskCodec.FromBits(Enumerable.Range(0, slots.Count).Where(i => slots[i]));
