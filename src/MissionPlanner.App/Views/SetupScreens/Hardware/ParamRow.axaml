@@ -2,13 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
              xmlns:local="using:MissionPlanner.App.Views.SetupScreens.Hardware"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.Hardware.ParamRow"
              x:DataType="hw:ParamField">
 
   <!-- label (with the parameter name under it), editor, units -->
   <Grid ColumnDefinitions="200,*,56" Margin="0,3">
-    <StackPanel VerticalAlignment="Center" Margin="0,0,10,0" ToolTip.Tip="{Binding ToolTip}">
-      <TextBlock Text="{Binding Label}" TextWrapping="Wrap" />
+    <StackPanel VerticalAlignment="Center" Margin="0,0,10,0" ToolTip.Tip="{l:TrBind {Binding ToolTip}}">
+      <TextBlock Text="{l:TrBind {Binding Label}}" TextWrapping="Wrap" />
       <TextBlock Text="{Binding Name}" Classes="muted" FontSize="11" />
     </StackPanel>
     <local:ParamEditor Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" MaxWidth="320" />

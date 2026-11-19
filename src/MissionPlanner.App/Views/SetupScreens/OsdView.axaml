@@ -5,6 +5,7 @@
              xmlns:oh="using:MissionPlanner.App.Core.ViewModels.SetupScreens.OptionalHardware"
              xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
              xmlns:ohc="using:MissionPlanner.App.Controls.SetupScreens.OptionalHardware"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.OsdView"
              x:DataType="vm:OsdViewModel">
 
@@ -27,7 +28,7 @@
       <WrapPanel>
         <Border Classes="card" Width="560" Margin="0,0,16,0" VerticalAlignment="Top">
           <StackPanel Spacing="6">
-            <TextBlock Classes="h2" Text="OSD" Margin="0,0,0,4" />
+            <TextBlock Classes="h2" Text="{l:Tr 'OSD'}" Margin="0,0,0,4" />
             <hwv:ParamRow DataContext="{Binding OsdType}" />
             <Expander Header="{Binding General.Count, StringFormat='General settings ({0})'}" HorizontalAlignment="Stretch">
               <ItemsControl ItemsSource="{Binding General}">
@@ -42,10 +43,10 @@
         </Border>
         <Border Classes="card" Width="420" VerticalAlignment="Top" IsVisible="{Binding HasTelemetryRates}">
           <StackPanel Spacing="6">
-            <TextBlock Classes="h2" Text="MAVLink OSD (MinimOSD)" />
+            <TextBlock Classes="h2" Text="{l:Tr 'MAVLink OSD (MinimOSD)'}" />
             <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                       Text="You only need this if an external MAVLink OSD is not updating: sets the telemetry stream rates on serial 0, 1 and 3 to 2 Hz." />
-            <Button Content="Enable Telemetry" Command="{Binding EnableTelemetryCommand}" />
+                       Text="{l:Tr 'You only need this if an external MAVLink OSD is not updating: sets the telemetry stream rates on serial 0, 1 and 3 to 2 Hz.'}" />
+            <Button Content="{l:Tr 'Enable Telemetry'}" Command="{Binding EnableTelemetryCommand}" />
           </StackPanel>
         </Border>
       </WrapPanel>
@@ -62,27 +63,27 @@
               </ListBox.ItemsPanel>
               <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="vm:OsdScreenViewModel">
-                  <TextBlock Text="{Binding Title}" Margin="4,0" />
+                  <TextBlock Text="{l:TrBind {Binding Title}}" Margin="4,0" />
                 </DataTemplate>
               </ListBox.ItemTemplate>
             </ListBox>
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-              <CheckBox Content="Auto write on leaving" IsChecked="{Binding AutoWriteOnLeave}" />
-              <Button Classes="tool" Content="Refresh" Command="{Binding RefreshParamsCommand}" />
-              <Button Classes="tool" Content="Discard" Command="{Binding DiscardCommand}" IsEnabled="{Binding HasChanges}" />
-              <Button Classes="tool accent" Content="{Binding WriteText}" Command="{Binding WriteCommand}" />
+              <CheckBox Content="{l:Tr 'Auto write on leaving'}" IsChecked="{Binding AutoWriteOnLeave}" />
+              <Button Classes="tool" Content="{l:Tr 'Refresh'}" Command="{Binding RefreshParamsCommand}" />
+              <Button Classes="tool" Content="{l:Tr 'Discard'}" Command="{Binding DiscardCommand}" IsEnabled="{Binding HasChanges}" />
+              <Button Classes="tool accent" Content="{l:TrBind {Binding WriteText}}" Command="{Binding WriteCommand}" />
             </StackPanel>
           </Grid>
 
           <WrapPanel Grid.Row="1" ItemSpacing="8" LineSpacing="6">
             <ComboBox ItemsSource="{Binding Grids}" SelectedItem="{Binding SelectedGrid}" MinWidth="220"
-                      ToolTip.Tip="Character grid of the display (the screen's text resolution for MSP DisplayPort HD)" />
-            <CheckBox Content="Show names" IsChecked="{Binding ShowNames}" />
-            <Button Classes="tool" Content="Clear all" Command="{Binding ClearAllCommand}"
-                    ToolTip.Tip="Switch every element of this screen off" />
-            <Button Classes="tool" Content="Copy layout" Command="{Binding CopyLayoutCommand}" />
-            <Button Classes="tool" Content="Paste layout" Command="{Binding PasteLayoutCommand}" IsEnabled="{Binding CanPaste}"
-                    ToolTip.Tip="Copy positions and visibility from the copied screen" />
+                      ToolTip.Tip="{l:Tr 'Character grid of the display (the screen\'s text resolution for MSP DisplayPort HD)'}" />
+            <CheckBox Content="{l:Tr 'Show names'}" IsChecked="{Binding ShowNames}" />
+            <Button Classes="tool" Content="{l:Tr 'Clear all'}" Command="{Binding ClearAllCommand}"
+                    ToolTip.Tip="{l:Tr 'Switch every element of this screen off'}" />
+            <Button Classes="tool" Content="{l:Tr 'Copy layout'}" Command="{Binding CopyLayoutCommand}" />
+            <Button Classes="tool" Content="{l:Tr 'Paste layout'}" Command="{Binding PasteLayoutCommand}" IsEnabled="{Binding CanPaste}"
+                    ToolTip.Tip="{l:Tr 'Copy positions and visibility from the copied screen'}" />
           </WrapPanel>
 
           <Grid Grid.Row="2" ColumnDefinitions="*,16,300">
@@ -100,13 +101,13 @@
               <!-- the selected element -->
               <Border Background="{DynamicResource Bg2}" CornerRadius="6" Padding="10">
                 <StackPanel Spacing="6">
-                  <TextBlock Classes="muted" FontSize="11" FontWeight="Bold" Text="SELECTED ELEMENT" />
+                  <TextBlock Classes="muted" FontSize="11" FontWeight="Bold" Text="{l:Tr 'SELECTED ELEMENT'}" />
                   <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding SelectedItem, Converter={x:Static ObjectConverters.IsNull}}"
-                             Text="Click an element on the screen or in the list. Drag it, or move it with the arrow keys." />
+                             Text="{l:Tr 'Click an element on the screen or in the list. Drag it, or move it with the arrow keys.'}" />
                   <StackPanel Spacing="6" IsVisible="{Binding SelectedItem, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <TextBlock Text="{Binding SelectedItem.Name, FallbackValue=''}" FontWeight="SemiBold" FontSize="15" />
                     <TextBlock Classes="muted" FontSize="11" Text="{Binding SelectedItem.Prefix, FallbackValue=''}" />
-                    <CheckBox Content="Shown" IsChecked="{Binding SelectedItem.Enabled, FallbackValue=False}" />
+                    <CheckBox Content="{l:Tr 'Shown'}" IsChecked="{Binding SelectedItem.Enabled, FallbackValue=False}" />
                     <Grid ColumnDefinitions="Auto,*,Auto,*" ColumnSpacing="6">
                       <TextBlock Text="X" VerticalAlignment="Center" />
                       <NumericUpDown Grid.Column="1" Value="{Binding SelectedItem.XValue, FallbackValue={x:Null}}" Minimum="0" Maximum="59"

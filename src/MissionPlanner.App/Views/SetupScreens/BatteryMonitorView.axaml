@@ -3,6 +3,7 @@
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
              xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
              xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.BatteryMonitorView"
              x:DataType="vm:BatteryMonitorViewModel">
 
@@ -14,26 +15,26 @@
         <!-- monitor, capacity, presets -->
         <Border Classes="card" Width="560" Margin="0,0,16,16" VerticalAlignment="Top">
           <StackPanel Spacing="6">
-            <TextBlock Classes="h2" Text="Battery monitor" Margin="0,0,0,4" />
+            <TextBlock Classes="h2" Text="{l:Tr 'Battery monitor'}" Margin="0,0,0,4" />
             <hwv:ParamRow DataContext="{Binding Monitor}" />
             <hwv:ParamRow DataContext="{Binding Capacity}" />
 
             <StackPanel Spacing="6" IsVisible="{Binding IsAnalog}">
               <Grid ColumnDefinitions="200,*,56" Margin="0,3">
                 <StackPanel VerticalAlignment="Center">
-                  <TextBlock Text="Sensor" />
-                  <TextBlock Text="sets voltage multiplier and amps per volt" Classes="muted" FontSize="11" TextWrapping="Wrap" />
+                  <TextBlock Text="{l:Tr 'Sensor'}" />
+                  <TextBlock Text="{l:Tr 'sets voltage multiplier and amps per volt'}" Classes="muted" FontSize="11" TextWrapping="Wrap" />
                 </StackPanel>
                 <ComboBox Grid.Column="1" ItemsSource="{Binding Sensors}" SelectedItem="{Binding SelectedSensor}"
                           HorizontalAlignment="Stretch" MaxWidth="320" />
               </Grid>
               <Grid ColumnDefinitions="200,*,56" Margin="0,3">
                 <StackPanel VerticalAlignment="Center">
-                  <TextBlock Text="HW Ver" />
-                  <TextBlock Text="sets the voltage and current pins" Classes="muted" FontSize="11" TextWrapping="Wrap" />
+                  <TextBlock Text="{l:Tr 'HW Ver'}" />
+                  <TextBlock Text="{l:Tr 'sets the voltage and current pins'}" Classes="muted" FontSize="11" TextWrapping="Wrap" />
                 </StackPanel>
                 <ComboBox Grid.Column="1" ItemsSource="{Binding Boards}" SelectedItem="{Binding SelectedBoard}"
-                          HorizontalAlignment="Stretch" MaxWidth="320" PlaceholderText="Other / custom pins" />
+                          HorizontalAlignment="Stretch" MaxWidth="320" PlaceholderText="{l:Tr 'Other / custom pins'}" />
               </Grid>
               <hwv:ParamRow DataContext="{Binding VoltPin}" />
               <hwv:ParamRow DataContext="{Binding CurrPin}" />
@@ -41,16 +42,16 @@
 
             <TextBlock Classes="muted" TextWrapping="Wrap" FontSize="12" Margin="0,6,0,0"
                        IsVisible="{Binding !IsEnabled}"
-                       Text="Choose a monitor type to enable battery monitoring. New battery settings appear after the parameters reload (or after a reboot)." />
+                       Text="{l:Tr 'Choose a monitor type to enable battery monitoring. New battery settings appear after the parameters reload (or after a reboot).'}" />
           </StackPanel>
         </Border>
 
         <!-- live reading -->
         <Border Classes="card" Width="260" Margin="0,0,16,16" VerticalAlignment="Top">
           <StackPanel Spacing="4">
-            <TextBlock Classes="muted" Text="BATTERY VOLTAGE" FontSize="11" FontWeight="Bold" />
+            <TextBlock Classes="muted" Text="{l:Tr 'BATTERY VOLTAGE'}" FontSize="11" FontWeight="Bold" />
             <TextBlock Classes="h1" Text="{Binding VoltageText}" FontSize="28" />
-            <TextBlock Classes="muted" Text="CURRENT" FontSize="11" FontWeight="Bold" Margin="0,10,0,0" />
+            <TextBlock Classes="muted" Text="{l:Tr 'CURRENT'}" FontSize="11" FontWeight="Bold" Margin="0,10,0,0" />
             <TextBlock Classes="h1" Text="{Binding CurrentText}" FontSize="28" />
           </StackPanel>
         </Border>
@@ -58,38 +59,38 @@
         <!-- calibration -->
         <Border Classes="card" Width="560" Margin="0,0,16,16" VerticalAlignment="Top" IsVisible="{Binding IsAnalog}">
           <StackPanel Spacing="8">
-            <TextBlock Classes="h2" Text="Calibration" />
+            <TextBlock Classes="h2" Text="{l:Tr 'Calibration'}" />
             <TextBlock Classes="muted" TextWrapping="Wrap" FontSize="12"
-                       Text="Measure the battery with a voltmeter (and the current with a clamp meter), enter the readings and press Calibrate: the multiplier is scaled by measured ÷ reported." />
+                       Text="{l:Tr 'Measure the battery with a voltmeter (and the current with a clamp meter), enter the readings and press Calibrate: the multiplier is scaled by measured ÷ reported.'}" />
 
             <Grid ColumnDefinitions="200,*,Auto" Margin="0,3">
-              <TextBlock Text="1. Measured battery voltage" VerticalAlignment="Center" />
+              <TextBlock Text="{l:Tr '1. Measured battery voltage'}" VerticalAlignment="Center" />
               <NumericUpDown Grid.Column="1" Value="{Binding MeasuredVoltage}" Minimum="0" Maximum="1000" Increment="0.01"
-                             FormatString="0.00" PlaceholderText="volts" MaxWidth="320" HorizontalAlignment="Stretch" />
-              <Button Grid.Column="2" Classes="accent" Content="Calibrate" Margin="8,0,0,0" Command="{Binding CalibrateVoltageCommand}" />
+                             FormatString="0.00" PlaceholderText="{l:Tr 'volts'}" MaxWidth="320" HorizontalAlignment="Stretch" />
+              <Button Grid.Column="2" Classes="accent" Content="{l:Tr 'Calibrate'}" Margin="8,0,0,0" Command="{Binding CalibrateVoltageCommand}" />
             </Grid>
             <Grid ColumnDefinitions="200,*" Margin="0,3">
-              <TextBlock Text="2. Battery voltage (reported)" VerticalAlignment="Center" />
+              <TextBlock Text="{l:Tr '2. Battery voltage (reported)'}" VerticalAlignment="Center" />
               <TextBlock Grid.Column="1" Text="{Binding VoltageText}" FontWeight="SemiBold" VerticalAlignment="Center" />
             </Grid>
             <hwv:ParamRow DataContext="{Binding VoltMult}" />
 
             <StackPanel Spacing="8" IsVisible="{Binding HasCurrent}">
               <Grid ColumnDefinitions="200,*,Auto" Margin="0,3">
-                <TextBlock Text="4. Measured current" VerticalAlignment="Center" />
+                <TextBlock Text="{l:Tr '4. Measured current'}" VerticalAlignment="Center" />
                 <NumericUpDown Grid.Column="1" Value="{Binding MeasuredCurrent}" Minimum="0" Maximum="10000" Increment="0.1"
-                               FormatString="0.00" PlaceholderText="amps" MaxWidth="320" HorizontalAlignment="Stretch" />
-                <Button Grid.Column="2" Classes="accent" Content="Calibrate" Margin="8,0,0,0" Command="{Binding CalibrateCurrentCommand}" />
+                               FormatString="0.00" PlaceholderText="{l:Tr 'amps'}" MaxWidth="320" HorizontalAlignment="Stretch" />
+                <Button Grid.Column="2" Classes="accent" Content="{l:Tr 'Calibrate'}" Margin="8,0,0,0" Command="{Binding CalibrateCurrentCommand}" />
               </Grid>
               <Grid ColumnDefinitions="200,*" Margin="0,3">
-                <TextBlock Text="5. Current (reported)" VerticalAlignment="Center" />
+                <TextBlock Text="{l:Tr '5. Current (reported)'}" VerticalAlignment="Center" />
                 <TextBlock Grid.Column="1" Text="{Binding CurrentText}" FontWeight="SemiBold" VerticalAlignment="Center" />
               </Grid>
               <hwv:ParamRow DataContext="{Binding AmpPerVolt}" />
               <hwv:ParamRow DataContext="{Binding AmpOffset}" />
             </StackPanel>
 
-            <TextBlock Text="{Binding CalibrationNote}" Foreground="{DynamicResource Info}" TextWrapping="Wrap" />
+            <TextBlock Text="{l:TrBind {Binding CalibrationNote}}" Foreground="{DynamicResource Info}" TextWrapping="Wrap" />
           </StackPanel>
         </Border>
       </WrapPanel>

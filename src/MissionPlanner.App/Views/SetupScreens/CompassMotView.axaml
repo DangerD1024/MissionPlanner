@@ -4,6 +4,7 @@
              xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
              xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
              xmlns:ohc="using:MissionPlanner.App.Controls.SetupScreens.OptionalHardware"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.CompassMotView"
              x:DataType="vm:CompassMotViewModel">
 
@@ -12,7 +13,7 @@
       <hwv:PageHeader Description="Compass/motor interference calibration: measures how much the motor current disturbs the compass and saves a compensation. Propellers on and the vehicle tied down; raise the throttle slowly to 50-75 %, then lower it and press Finish." />
       <Grid ColumnDefinitions="Auto,*">
         <Button Name="Toggle" Classes="accent" MinWidth="120" Height="36" FontSize="15" HorizontalContentAlignment="Center"
-                Content="{Binding ButtonText}" Command="{Binding ToggleCommand}" />
+                Content="{l:TrBind {Binding ButtonText}}" Command="{Binding ToggleCommand}" />
         <TextBlock Grid.Column="1" Text="{Binding RatingText}" TextWrapping="Wrap" VerticalAlignment="Center" Margin="16,0,0,0"
                    Name="Rating" />
       </Grid>
@@ -28,20 +29,20 @@
       <Grid Grid.Column="2" RowDefinitions="Auto,Auto,*" RowSpacing="16">
         <Border Classes="card">
           <StackPanel Spacing="4">
-            <TextBlock Classes="muted" Text="STATUS" FontSize="11" FontWeight="Bold" />
-            <TextBlock Text="{Binding StatusText}" FontFamily="Cascadia Mono,Consolas,DejaVu Sans Mono,monospace" FontSize="13"
+            <TextBlock Classes="muted" Text="{l:Tr 'STATUS'}" FontSize="11" FontWeight="Bold" />
+            <TextBlock Text="{l:TrBind {Binding StatusText}}" FontFamily="Cascadia Mono,Consolas,DejaVu Sans Mono,monospace" FontSize="13"
                        TextWrapping="Wrap" />
           </StackPanel>
         </Border>
         <Border Grid.Row="1" Classes="card">
           <StackPanel Spacing="4">
-            <TextBlock Classes="muted" Text="SAVED COMPENSATION" FontSize="11" FontWeight="Bold" />
-            <TextBlock Text="Compensation type (COMPASS_MOTCT)" FontSize="12.5" Margin="0,4,0,0" />
+            <TextBlock Classes="muted" Text="{l:Tr 'SAVED COMPENSATION'}" FontSize="11" FontWeight="Bold" />
+            <TextBlock Text="{l:Tr 'Compensation type (COMPASS_MOTCT)'}" FontSize="12.5" Margin="0,4,0,0" />
             <hwv:ParamEditor DataContext="{Binding CompensationType}" HorizontalAlignment="Stretch" Margin="0,0,0,6" />
             <ItemsControl ItemsSource="{Binding Compensation}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="hw:ParamField">
-                  <Grid ColumnDefinitions="*,Auto" Margin="0,2" ToolTip.Tip="{Binding ToolTip}">
+                  <Grid ColumnDefinitions="*,Auto" Margin="0,2" ToolTip.Tip="{l:TrBind {Binding ToolTip}}">
                     <TextBlock Text="{Binding Name}" Classes="muted" />
                     <TextBlock Grid.Column="1" Text="{Binding ValueText}" FontWeight="SemiBold" />
                   </Grid>
@@ -52,7 +53,7 @@
         </Border>
         <Border Grid.Row="2" Classes="card">
           <Grid RowDefinitions="Auto,*">
-            <TextBlock Classes="muted" Text="MESSAGES" FontSize="11" FontWeight="Bold" />
+            <TextBlock Classes="muted" Text="{l:Tr 'MESSAGES'}" FontSize="11" FontWeight="Bold" />
             <ScrollViewer Grid.Row="1" Name="MessagesScroll" Margin="0,6,0,0">
               <SelectableTextBlock Text="{Binding MessagesText}" TextWrapping="Wrap" FontSize="12" />
             </ScrollViewer>

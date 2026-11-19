@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightPlan"
              xmlns:controls="using:MissionPlanner.App.Controls"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.FlightPlan.SurveyGridView"
              x:DataType="vm:SurveyGridViewModel">
 
@@ -72,38 +73,38 @@
               IsHitTestVisible="False">
         <StackPanel Spacing="6">
           <Grid ColumnDefinitions="*,Auto">
-            <TextBlock Text="SURVEY" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Accent}" />
-            <TextBlock Grid.Column="1" Text="updating…" FontSize="11" Classes="muted" IsVisible="{Binding IsBusy}" />
+            <TextBlock Text="{l:Tr 'SURVEY'}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Accent}" />
+            <TextBlock Grid.Column="1" Text="{l:Tr 'updating…'}" FontSize="11" Classes="muted" IsVisible="{Binding IsBusy}" />
           </Grid>
           <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="3" ColumnSpacing="12">
-            <TextBlock Classes="statname" Text="Area" />
+            <TextBlock Classes="statname" Text="{l:Tr 'Area'}" />
             <TextBlock Grid.Column="1" Classes="stat" Text="{Binding AreaText}" />
-            <TextBlock Grid.Row="1" Classes="statname" Text="Distance" />
+            <TextBlock Grid.Row="1" Classes="statname" Text="{l:Tr 'Distance'}" />
             <TextBlock Grid.Row="1" Grid.Column="1" Classes="stat" Text="{Binding DistanceText}" />
-            <TextBlock Grid.Row="2" Classes="statname" Text="Lanes" />
+            <TextBlock Grid.Row="2" Classes="statname" Text="{l:Tr 'Lanes'}" />
             <TextBlock Grid.Row="2" Grid.Column="1" Classes="stat" Text="{Binding LanesText}" />
-            <TextBlock Grid.Row="3" Classes="statname" Text="Photos" />
+            <TextBlock Grid.Row="3" Classes="statname" Text="{l:Tr 'Photos'}" />
             <TextBlock Grid.Row="3" Grid.Column="1" Classes="stat" Text="{Binding ImagesText}" />
-            <TextBlock Grid.Row="4" Classes="statname" Text="Photo every" />
+            <TextBlock Grid.Row="4" Classes="statname" Text="{l:Tr 'Photo every'}" />
             <TextBlock Grid.Row="4" Grid.Column="1" Classes="stat" Text="{Binding PhotoEveryText}" />
-            <TextBlock Grid.Row="5" Classes="statname" Text="Flight time" />
+            <TextBlock Grid.Row="5" Classes="statname" Text="{l:Tr 'Flight time'}" />
             <TextBlock Grid.Row="5" Grid.Column="1" Classes="stat" Text="{Binding FlightTimeText}" />
-            <TextBlock Grid.Row="6" Classes="statname" Text="Ground" />
+            <TextBlock Grid.Row="6" Classes="statname" Text="{l:Tr 'Ground'}" />
             <TextBlock Grid.Row="6" Grid.Column="1" Classes="stat" Text="{Binding GroundText}" />
-            <TextBlock Grid.Row="7" Classes="statname" Text="Mission items" />
+            <TextBlock Grid.Row="7" Classes="statname" Text="{l:Tr 'Mission items'}" />
             <TextBlock Grid.Row="7" Grid.Column="1" Classes="stat" Text="{Binding ItemsText}" />
-            <TextBlock Grid.Row="8" Classes="statname" Text="Home" />
+            <TextBlock Grid.Row="8" Classes="statname" Text="{l:Tr 'Home'}" />
             <TextBlock Grid.Row="8" Grid.Column="1" Classes="stat" Text="{Binding HomeText}" FontWeight="Normal" />
           </Grid>
-          <TextBlock Text="Flight time assumes 80 % of the speed on average, for the turns." FontSize="10.5"
+          <TextBlock Text="{l:Tr 'Flight time assumes 80 % of the speed on average, for the turns.'}" FontSize="10.5"
                      Classes="muted" TextWrapping="Wrap" />
         </StackPanel>
       </Border>
 
       <Button HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="10" Padding="10,5"
-              Click="OnZoomToSurvey" ToolTip.Tip="Zoom to the survey"
+              Click="OnZoomToSurvey" ToolTip.Tip="{l:Tr 'Zoom to the survey'}"
               Background="{DynamicResource Overlay}" BorderBrush="{DynamicResource Line}" BorderThickness="1">
-        <TextBlock Text="Zoom to survey" FontSize="12" />
+        <TextBlock Text="{l:Tr 'Zoom to survey'}" FontSize="12" />
       </Button>
     </Panel>
 
@@ -113,88 +114,88 @@
         <ScrollViewer HorizontalScrollBarVisibility="Disabled">
           <StackPanel Margin="14,4,16,12" Spacing="6">
 
-            <TextBlock Classes="section" Text="GRID" />
+            <TextBlock Classes="section" Text="{l:Tr 'GRID'}" />
             <Grid Classes="row" ColumnDefinitions="112,*">
-              <TextBlock Classes="field" Text="Altitude (m)" />
+              <TextBlock Classes="field" Text="{l:Tr 'Altitude (m)'}" />
               <NumericUpDown Grid.Column="1" Value="{Binding Altitude}" Minimum="-1000" Maximum="10000" Increment="5"
-                             FormatString="0.#" ToolTip.Tip="Survey altitude" />
+                             FormatString="0.#" ToolTip.Tip="{l:Tr 'Survey altitude'}" />
             </Grid>
             <Grid Classes="row" ColumnDefinitions="112,*">
-              <TextBlock Classes="field" Text="Altitude frame" />
+              <TextBlock Classes="field" Text="{l:Tr 'Altitude frame'}" />
               <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:SurveyGridViewModel.FrameOptions}"
-                        SelectedItem="{Binding Frame}" ToolTip.Tip="Altitude frame of the survey waypoints" />
+                        SelectedItem="{Binding Frame}" ToolTip.Tip="{l:Tr 'Altitude frame of the survey waypoints'}" />
             </Grid>
             <Grid Classes="row" ColumnDefinitions="112,*">
-              <TextBlock Classes="field" Text="Lane spacing (m)" />
+              <TextBlock Classes="field" Text="{l:Tr 'Lane spacing (m)'}" />
               <NumericUpDown Grid.Column="1" Value="{Binding LaneSpacing}" Minimum="1" Maximum="10000" Increment="5"
-                             FormatString="0.#" ToolTip.Tip="Distance between neighbouring lanes" />
+                             FormatString="0.#" ToolTip.Tip="{l:Tr 'Distance between neighbouring lanes'}" />
             </Grid>
             <Grid Classes="row" ColumnDefinitions="112,*,Auto">
-              <TextBlock Classes="field" Text="Angle (°)" />
+              <TextBlock Classes="field" Text="{l:Tr 'Angle (°)'}" />
               <NumericUpDown Grid.Column="1" Value="{Binding Angle}" Minimum="-360" Maximum="360" Increment="5"
                              FormatString="0.#" IsEnabled="{Binding IsAngleEditable}"
-                             ToolTip.Tip="Bearing the lanes run along" />
-              <CheckBox Grid.Column="2" Content="Auto" IsChecked="{Binding AutoAngle}"
-                        ToolTip.Tip="Lanes along the polygon's longest edge" />
+                             ToolTip.Tip="{l:Tr 'Bearing the lanes run along'}" />
+              <CheckBox Grid.Column="2" Content="{l:Tr 'Auto'}" IsChecked="{Binding AutoAngle}"
+                        ToolTip.Tip="{l:Tr 'Lanes along the polygon\'s longest edge'}" />
             </Grid>
             <Grid Classes="row" ColumnDefinitions="112,*">
-              <TextBlock Classes="field" Text="Start from" />
+              <TextBlock Classes="field" Text="{l:Tr 'Start from'}" />
               <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:SurveyGridViewModel.StartPositions}"
                         SelectedItem="{Binding SelectedStartFrom}"
-                        ToolTip.Tip="The survey starts at the polygon corner closest to this" />
+                        ToolTip.Tip="{l:Tr 'The survey starts at the polygon corner closest to this'}" />
             </Grid>
             <Grid Classes="row" ColumnDefinitions="112,*">
-              <TextBlock Classes="field" Text="Min lane sep." />
+              <TextBlock Classes="field" Text="{l:Tr 'Min lane sep.'}" />
               <NumericUpDown Grid.Column="1" Value="{Binding MinLaneSeparation}" Minimum="0" Maximum="50" Increment="1"
                              FormatString="0"
-                             ToolTip.Tip="Lanes to leave out between consecutive lanes, for wide turns (0 = the next lane)" />
+                             ToolTip.Tip="{l:Tr 'Lanes to leave out between consecutive lanes, for wide turns (0 = the next lane)'}" />
             </Grid>
-            <CheckBox Content="Crossgrid (second pass at 90°)" IsChecked="{Binding Crossgrid}" />
+            <CheckBox Content="{l:Tr 'Crossgrid (second pass at 90°)'}" IsChecked="{Binding Crossgrid}" />
 
-            <TextBlock Classes="section" Text="CAMERA" />
+            <TextBlock Classes="section" Text="{l:Tr 'CAMERA'}" />
             <Grid Classes="row" ColumnDefinitions="112,*">
-              <TextBlock Classes="field" Text="Camera trigger" />
+              <TextBlock Classes="field" Text="{l:Tr 'Camera trigger'}" />
               <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:SurveyGridViewModel.TriggerOptions}"
                         SelectedItem="{Binding SelectedTrigger}" />
             </Grid>
             <Grid Classes="row" ColumnDefinitions="112,*" IsEnabled="{Binding UsesTriggerDistance}">
-              <TextBlock Classes="field" Text="Trigger dist. (m)" />
+              <TextBlock Classes="field" Text="{l:Tr 'Trigger dist. (m)'}" />
               <NumericUpDown Grid.Column="1" Value="{Binding TriggerDistance}" Minimum="0" Maximum="10000" Increment="1"
-                             FormatString="0.#" ToolTip.Tip="Distance between photos (DO_SET_CAM_TRIGG_DIST); 0 = none" />
+                             FormatString="0.#" ToolTip.Tip="{l:Tr 'Distance between photos (DO_SET_CAM_TRIGG_DIST); 0 = none'}" />
             </Grid>
 
-            <TextBlock Classes="section" Text="LANE ENDS (1 = ONE WAY, 2 = BACK)" />
+            <TextBlock Classes="section" Text="{l:Tr 'LANE ENDS (1 = ONE WAY, 2 = BACK)'}" />
             <Grid Classes="row" ColumnDefinitions="112,*,*">
-              <TextBlock Classes="field" Text="Overshoot (m)" />
+              <TextBlock Classes="field" Text="{l:Tr 'Overshoot (m)'}" />
               <NumericUpDown Grid.Column="1" Classes="pair" Value="{Binding Overshoot1}" Minimum="-1000" Maximum="1000" Increment="5"
-                             FormatString="0.#" ToolTip.Tip="Distance flown past the lane end, lanes flown one way" />
+                             FormatString="0.#" ToolTip.Tip="{l:Tr 'Distance flown past the lane end, lanes flown one way'}" />
               <NumericUpDown Grid.Column="2" Classes="pair" Value="{Binding Overshoot2}" Minimum="-1000" Maximum="1000" Increment="5"
-                             FormatString="0.#" ToolTip.Tip="Distance flown past the lane end, lanes flown back" />
+                             FormatString="0.#" ToolTip.Tip="{l:Tr 'Distance flown past the lane end, lanes flown back'}" />
             </Grid>
             <Grid Classes="row" ColumnDefinitions="112,*,*">
-              <TextBlock Classes="field" Text="Lead-in (m)" />
+              <TextBlock Classes="field" Text="{l:Tr 'Lead-in (m)'}" />
               <NumericUpDown Grid.Column="1" Classes="pair" Value="{Binding LeadIn1}" Minimum="-1000" Maximum="1000" Increment="5"
-                             FormatString="0.#" ToolTip.Tip="Run-up before the lane start, lanes flown one way" />
+                             FormatString="0.#" ToolTip.Tip="{l:Tr 'Run-up before the lane start, lanes flown one way'}" />
               <NumericUpDown Grid.Column="2" Classes="pair" Value="{Binding LeadIn2}" Minimum="-1000" Maximum="1000" Increment="5"
-                             FormatString="0.#" ToolTip.Tip="Run-up before the lane start, lanes flown back" />
+                             FormatString="0.#" ToolTip.Tip="{l:Tr 'Run-up before the lane start, lanes flown back'}" />
             </Grid>
 
-            <TextBlock Classes="section" Text="MISSION" />
+            <TextBlock Classes="section" Text="{l:Tr 'MISSION'}" />
             <Grid Classes="row" ColumnDefinitions="112,*">
-              <TextBlock Classes="field" Text="Speed (m/s)" />
+              <TextBlock Classes="field" Text="{l:Tr 'Speed (m/s)'}" />
               <NumericUpDown Grid.Column="1" Value="{Binding Speed}" Minimum="0" Maximum="200" Increment="1"
-                             FormatString="0.#" ToolTip.Tip="Survey speed; also used for the flight time" />
+                             FormatString="0.#" ToolTip.Tip="{l:Tr 'Survey speed; also used for the flight time'}" />
             </Grid>
-            <CheckBox Content="Set this speed in the mission" IsChecked="{Binding ChangeSpeed}"
-                      ToolTip.Tip="DO_CHANGE_SPEED before the survey, and back to the cruise speed after it" />
+            <CheckBox Content="{l:Tr 'Set this speed in the mission'}" IsChecked="{Binding ChangeSpeed}"
+                      ToolTip.Tip="{l:Tr 'DO_CHANGE_SPEED before the survey, and back to the cruise speed after it'}" />
             <Grid Classes="row" ColumnDefinitions="112,*">
-              <CheckBox Content="Takeoff (m)" IsChecked="{Binding AddTakeoff}" ToolTip.Tip="Start with a TAKEOFF" />
+              <CheckBox Content="{l:Tr 'Takeoff (m)'}" IsChecked="{Binding AddTakeoff}" ToolTip.Tip="{l:Tr 'Start with a TAKEOFF'}" />
               <NumericUpDown Grid.Column="1" Value="{Binding TakeoffAltitude}" Minimum="0" Maximum="10000" Increment="5"
-                             FormatString="0.#" IsEnabled="{Binding AddTakeoff}" ToolTip.Tip="Takeoff altitude" />
+                             FormatString="0.#" IsEnabled="{Binding AddTakeoff}" ToolTip.Tip="{l:Tr 'Takeoff altitude'}" />
             </Grid>
-            <CheckBox Content="Spline waypoints at lane starts" IsChecked="{Binding UseSpline}" />
+            <CheckBox Content="{l:Tr 'Spline waypoints at lane starts'}" IsChecked="{Binding UseSpline}" />
             <Grid Classes="row" ColumnDefinitions="112,*">
-              <TextBlock Classes="field" Text="End with" />
+              <TextBlock Classes="field" Text="{l:Tr 'End with'}" />
               <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:SurveyGridViewModel.FinishOptions}"
                         SelectedItem="{Binding SelectedFinish}" />
             </Grid>
@@ -203,14 +204,14 @@
 
         <Border Grid.Row="1" BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0" Padding="14,10">
           <StackPanel Spacing="8">
-            <TextBlock Text="{Binding Error}" Foreground="{DynamicResource Warn}" FontSize="12" TextWrapping="Wrap"
+            <TextBlock Text="{l:TrBind {Binding Error}}" Foreground="{DynamicResource Warn}" FontSize="12" TextWrapping="Wrap"
                        IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
             <Grid ColumnDefinitions="*,8,*">
-              <Button Content="Cancel" Command="{Binding CancelCommand}" HorizontalAlignment="Stretch"
+              <Button Content="{l:Tr 'Cancel'}" Command="{Binding CancelCommand}" HorizontalAlignment="Stretch"
                       HorizontalContentAlignment="Center" Height="34" IsCancel="True" />
-              <Button Grid.Column="2" Classes="accent" Content="Accept" Command="{Binding AcceptCommand}"
+              <Button Grid.Column="2" Classes="accent" Content="{l:Tr 'Accept'}" Command="{Binding AcceptCommand}"
                       HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Height="34"
-                      ToolTip.Tip="Add the survey to the end of the mission" />
+                      ToolTip.Tip="{l:Tr 'Add the survey to the end of the mission'}" />
             </Grid>
           </StackPanel>
         </Border>

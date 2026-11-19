@@ -25,6 +25,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- translation tables harvested from Mission Planner's .resx files (src/tools/LocalizationHarvest) -->
+    <EmbeddedResource Include="Localization\*.json" LogicalName="MissionPlanner.App.Localization.%(Filename).json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MissionPlanner.App.Core\MissionPlanner.App.Core.csproj" />
   </ItemGroup>
 

@@ -43,6 +43,11 @@ public static class AppStartup
         // saved telemetry rates and display units, as the WinForms app applies them at start
         ViewModels.ConfigScreens.PlannerSettings.ApplyStored();
 
+        // UI language: a user's corrections in <data>/Localization/<culture>.json override the built-in tables
+        Localization.Localizer.Current.AddSource(new Localization.DirectoryTranslationSource(
+            Path.Combine(Settings.GetUserDataDirectory(), "Localization")));
+        Localization.Localizer.Current.ApplySaved();
+
         // the libraries call this from any thread and wait for the answer
         CustomMessageBox.ShowEvent += ShowMessageBox;
 

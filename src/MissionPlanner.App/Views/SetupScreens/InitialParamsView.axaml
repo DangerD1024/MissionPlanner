@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
              xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.InitialParamsView"
              x:DataType="vm:InitialParamsViewModel">
 
@@ -13,43 +14,43 @@
         <!-- inputs -->
         <Border Classes="card" Width="480" Margin="0,0,16,16" VerticalAlignment="Top">
           <StackPanel Spacing="8">
-            <TextBlock Classes="h2" Text="Your vehicle" />
+            <TextBlock Classes="h2" Text="{l:Tr 'Your vehicle'}" />
             <Border Background="#33f0b429" BorderBrush="{DynamicResource Warn}" BorderThickness="1" CornerRadius="6" Padding="10,8">
               <StackPanel Spacing="4">
-                <TextBlock TextWrapping="Wrap" FontWeight="SemiBold" Text="Before calculating, make sure that:" />
-                <TextBlock TextWrapping="Wrap" FontSize="12.5" Text="• all initial setup is done (calibrations, frame settings, motor tests);" />
-                <TextBlock TextWrapping="Wrap" FontSize="12.5" Text="• battery voltage monitoring is set and working." />
+                <TextBlock TextWrapping="Wrap" FontWeight="SemiBold" Text="{l:Tr 'Before calculating, make sure that:'}" />
+                <TextBlock TextWrapping="Wrap" FontSize="12.5" Text="{l:Tr '• all initial setup is done (calibrations, frame settings, motor tests);'}" />
+                <TextBlock TextWrapping="Wrap" FontSize="12.5" Text="{l:Tr '• battery voltage monitoring is set and working.'}" />
                 <TextBlock TextWrapping="Wrap" FontSize="12.5" Classes="muted"
-                           Text="INS_GYRO_FILTER other than 20 is optional and mostly for small frames / props; at first you can keep it at 20." />
+                           Text="{l:Tr 'INS_GYRO_FILTER other than 20 is optional and mostly for small frames / props; at first you can keep it at 20.'}" />
               </StackPanel>
             </Border>
 
             <Grid ColumnDefinitions="220,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="8" Margin="0,4,0,0">
-              <TextBlock Text="Airscrew (prop) size" VerticalAlignment="Center" />
+              <TextBlock Text="{l:Tr 'Airscrew (prop) size'}" VerticalAlignment="Center" />
               <NumericUpDown Grid.Column="1" Value="{Binding PropInches}" Minimum="1" Maximum="60" Increment="0.5" FormatString="0.#"
-                             PlaceholderText="inches" ToolTip.Tip="Propeller diameter in inches" />
-              <TextBlock Grid.Row="1" Text="Battery cell count" VerticalAlignment="Center" />
+                             PlaceholderText="{l:Tr 'inches'}" ToolTip.Tip="{l:Tr 'Propeller diameter in inches'}" />
+              <TextBlock Grid.Row="1" Text="{l:Tr 'Battery cell count'}" VerticalAlignment="Center" />
               <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding Cells}" Minimum="1" Maximum="24" Increment="1" FormatString="0" />
-              <TextBlock Grid.Row="2" Text="Battery chemistry" VerticalAlignment="Center" />
+              <TextBlock Grid.Row="2" Text="{l:Tr 'Battery chemistry'}" VerticalAlignment="Center" />
               <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Chemistries}" SelectedItem="{Binding Chemistry}"
                         HorizontalAlignment="Stretch" />
-              <TextBlock Grid.Row="3" Text="Cell fully charged voltage" VerticalAlignment="Center" />
+              <TextBlock Grid.Row="3" Text="{l:Tr 'Cell fully charged voltage'}" VerticalAlignment="Center" />
               <NumericUpDown Grid.Row="3" Grid.Column="1" Value="{Binding CellMax}" Minimum="1" Maximum="5" Increment="0.05" FormatString="0.00" />
-              <TextBlock Grid.Row="4" Text="Cell fully discharged voltage" VerticalAlignment="Center" />
+              <TextBlock Grid.Row="4" Text="{l:Tr 'Cell fully discharged voltage'}" VerticalAlignment="Center" />
               <NumericUpDown Grid.Row="4" Grid.Column="1" Value="{Binding CellMin}" Minimum="1" Maximum="5" Increment="0.05" FormatString="0.00" />
             </Grid>
 
-            <CheckBox Content="Using T-Motor Flame ESC?" IsChecked="{Binding TMotorFlame}" />
-            <CheckBox Content="Add suggested settings for 4.0 and up (battery failsafe and fence)" IsChecked="{Binding AddSuggested}"
+            <CheckBox Content="{l:Tr 'Using T-Motor Flame ESC?'}" IsChecked="{Binding TMotorFlame}" />
+            <CheckBox Content="{l:Tr 'Add suggested settings for 4.0 and up (battery failsafe and fence)'}" IsChecked="{Binding AddSuggested}"
                       IsEnabled="{Binding SuggestedAvailable}" />
             <TextBlock Classes="muted" FontSize="12" Text="{Binding VehicleText}" />
 
-            <Button Classes="accent" Content="Calculate Initial Parameters" Command="{Binding CalculateCommand}" Margin="0,6,0,0" />
-            <TextBlock Text="{Binding InputError}" Foreground="{DynamicResource Danger}" TextWrapping="Wrap"
+            <Button Classes="accent" Content="{l:Tr 'Calculate Initial Parameters'}" Command="{Binding CalculateCommand}" Margin="0,6,0,0" />
+            <TextBlock Text="{l:TrBind {Binding InputError}}" Foreground="{DynamicResource Danger}" TextWrapping="Wrap"
                        IsVisible="{Binding InputError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
             <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"
-                       Text="A detailed description of the initial parameters and the tuning process (please read it):" />
+                       Text="{l:Tr 'A detailed description of the initial parameters and the tuning process (please read it):'}" />
             <SelectableTextBlock Text="{Binding TuningGuideUrl}" Foreground="{DynamicResource Info}" FontSize="12" TextWrapping="Wrap" />
           </StackPanel>
         </Border>
@@ -57,16 +58,16 @@
         <!-- preview -->
         <Border Classes="card" Width="620" Margin="0,0,16,16" VerticalAlignment="Top">
           <StackPanel Spacing="8">
-            <TextBlock Classes="h2" Text="Preview" />
+            <TextBlock Classes="h2" Text="{l:Tr 'Preview'}" />
             <TextBlock Classes="muted" TextWrapping="Wrap" Text="{Binding Summary}" />
             <TextBlock Classes="muted" TextWrapping="Wrap" IsVisible="{Binding !HasPreview}"
-                       Text="Enter the propeller and battery, then Calculate: the new values are listed here next to the vehicle's." />
+                       Text="{l:Tr 'Enter the propeller and battery, then Calculate: the new values are listed here next to the vehicle\'s.'}" />
 
             <StackPanel IsVisible="{Binding HasPreview}" Spacing="2">
               <Grid ColumnDefinitions="30,200,110,110,*" Margin="0,0,0,4">
-                <TextBlock Grid.Column="1" Classes="muted" FontSize="11" FontWeight="Bold" Text="PARAMETER" />
-                <TextBlock Grid.Column="2" Classes="muted" FontSize="11" FontWeight="Bold" Text="CURRENT" />
-                <TextBlock Grid.Column="3" Classes="muted" FontSize="11" FontWeight="Bold" Text="NEW" />
+                <TextBlock Grid.Column="1" Classes="muted" FontSize="11" FontWeight="Bold" Text="{l:Tr 'PARAMETER'}" />
+                <TextBlock Grid.Column="2" Classes="muted" FontSize="11" FontWeight="Bold" Text="{l:Tr 'CURRENT'}" />
+                <TextBlock Grid.Column="3" Classes="muted" FontSize="11" FontWeight="Bold" Text="{l:Tr 'NEW'}" />
               </Grid>
               <ItemsControl ItemsSource="{Binding Rows}">
                 <ItemsControl.ItemTemplate>
@@ -77,12 +78,12 @@
                       <TextBlock Grid.Column="2" Text="{Binding CurrentText}" VerticalAlignment="Center" Classes="muted" />
                       <TextBlock Grid.Column="3" Text="{Binding ValueText}" VerticalAlignment="Center"
                                  Foreground="{DynamicResource Accent}" FontWeight="SemiBold" />
-                      <TextBlock Grid.Column="4" Text="{Binding Note}" VerticalAlignment="Center" Classes="muted" FontSize="11.5" />
+                      <TextBlock Grid.Column="4" Text="{l:TrBind {Binding Note}}" VerticalAlignment="Center" Classes="muted" FontSize="11.5" />
                     </Grid>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>
-              <Button Classes="accent" Content="Write to FC" Command="{Binding WriteCommand}" HorizontalAlignment="Right"
+              <Button Classes="accent" Content="{l:Tr 'Write to FC'}" Command="{Binding WriteCommand}" HorizontalAlignment="Right"
                       Margin="0,10,0,0" />
             </StackPanel>
           </StackPanel>

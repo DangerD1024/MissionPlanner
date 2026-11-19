@@ -4,6 +4,7 @@
              xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
              xmlns:hwc="using:MissionPlanner.App.Controls.SetupScreens.Hardware"
              xmlns:msv="using:MissionPlanner.App.Views.SetupScreens.MotorSetup"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.ServoOutputView"
              x:DataType="vm:ServoOutputViewModel">
 
@@ -21,17 +22,17 @@
     <hwv:PageHeader Description="Live output of each servo channel and its function, direction and PWM range. Changes are written to the autopilot as you make them." />
 
     <TabControl Grid.Row="1" Classes="servo" Margin="0,4,0,0" Padding="0">
-      <TabItem Header="Outputs">
+      <TabItem Header="{l:Tr 'Outputs'}">
         <Grid RowDefinitions="Auto,*">
           <!-- column headings -->
           <Grid Margin="0,14,14,6" ColumnDefinitions="44,1.4*,70,2*,90,90,90">
             <TextBlock Classes="muted" Text="#" FontWeight="SemiBold" />
-            <TextBlock Grid.Column="1" Classes="muted" Text="Position" FontWeight="SemiBold" />
-            <TextBlock Grid.Column="2" Classes="muted" Text="Reverse" FontWeight="SemiBold" HorizontalAlignment="Center" />
-            <TextBlock Grid.Column="3" Classes="muted" Text="Function" FontWeight="SemiBold" Margin="8,0,0,0" />
-            <TextBlock Grid.Column="4" Classes="muted" Text="Min" FontWeight="SemiBold" Margin="6,0,0,0" />
-            <TextBlock Grid.Column="5" Classes="muted" Text="Trim" FontWeight="SemiBold" Margin="6,0,0,0" />
-            <TextBlock Grid.Column="6" Classes="muted" Text="Max" FontWeight="SemiBold" Margin="6,0,0,0" />
+            <TextBlock Grid.Column="1" Classes="muted" Text="{l:Tr 'Position'}" FontWeight="SemiBold" />
+            <TextBlock Grid.Column="2" Classes="muted" Text="{l:Tr 'Reverse'}" FontWeight="SemiBold" HorizontalAlignment="Center" />
+            <TextBlock Grid.Column="3" Classes="muted" Text="{l:Tr 'Function'}" FontWeight="SemiBold" Margin="8,0,0,0" />
+            <TextBlock Grid.Column="4" Classes="muted" Text="{l:Tr 'Min'}" FontWeight="SemiBold" Margin="6,0,0,0" />
+            <TextBlock Grid.Column="5" Classes="muted" Text="{l:Tr 'Trim'}" FontWeight="SemiBold" Margin="6,0,0,0" />
+            <TextBlock Grid.Column="6" Classes="muted" Text="{l:Tr 'Max'}" FontWeight="SemiBold" Margin="6,0,0,0" />
           </Grid>
 
           <Border Grid.Row="1" Classes="card" Padding="0">
@@ -59,7 +60,7 @@
       </TabItem>
 
       <!-- multirotors and QuadPlanes: Betaflight-style motor layout, order and direction -->
-      <TabItem Header="Motor layout" IsVisible="{Binding MotorSetup.IsAvailable}">
+      <TabItem Header="{l:Tr 'Motor layout'}" IsVisible="{Binding MotorSetup.IsAvailable}">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" Padding="0,12,0,0">
           <msv:MotorSetupView DataContext="{Binding MotorSetup}" />
         </ScrollViewer>

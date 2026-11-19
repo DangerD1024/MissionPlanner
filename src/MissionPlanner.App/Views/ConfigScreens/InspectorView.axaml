@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.ConfigScreens"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.ConfigScreens.InspectorView"
              x:DataType="vm:InspectorViewModel">
 
@@ -60,40 +61,40 @@
     <!-- toolbar -->
     <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,10">
       <StackPanel Orientation="Horizontal" Spacing="10">
-        <TextBlock Classes="h1" Text="MAVLink Inspector" VerticalAlignment="Center" Margin="0,0,8,0" />
-        <TextBox Width="260" Text="{Binding Filter}" PlaceholderText="Filter messages (name or #id)" VerticalContentAlignment="Center">
+        <TextBlock Classes="h1" Text="{l:Tr 'MAVLink Inspector'}" VerticalAlignment="Center" Margin="0,0,8,0" />
+        <TextBox Width="260" Text="{Binding Filter}" PlaceholderText="{l:Tr 'Filter messages (name or #id)'}" VerticalContentAlignment="Center">
           <TextBox.InnerLeftContent>
             <Path Classes="icon i16" Data="{StaticResource InspIconSearch}" Stroke="{DynamicResource Muted}" Margin="8,0,0,0" />
           </TextBox.InnerLeftContent>
         </TextBox>
-        <CheckBox Content="Show GCS traffic" IsChecked="{Binding ShowGcsTraffic}" VerticalAlignment="Center"
-                  ToolTip.Tip="Also list what Mission Planner sends (system 255)" />
+        <CheckBox Content="{l:Tr 'Show GCS traffic'}" IsChecked="{Binding ShowGcsTraffic}" VerticalAlignment="Center"
+                  ToolTip.Tip="{l:Tr 'Also list what Mission Planner sends (system 255)'}" />
       </StackPanel>
 
       <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
-        <ToggleButton Classes="tool" IsChecked="{Binding IsPaused}" ToolTip.Tip="Freeze the values on screen">
+        <ToggleButton Classes="tool" IsChecked="{Binding IsPaused}" ToolTip.Tip="{l:Tr 'Freeze the values on screen'}">
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Path Classes="icon i18" Data="{StaticResource InspIconPause}" />
-            <TextBlock Text="Pause" VerticalAlignment="Center" />
+            <TextBlock Text="{l:Tr 'Pause'}" VerticalAlignment="Center" />
           </StackPanel>
         </ToggleButton>
-        <Button Classes="tool" Command="{Binding CollapseAllCommand}" ToolTip.Tip="Collapse every message">
+        <Button Classes="tool" Command="{Binding CollapseAllCommand}" ToolTip.Tip="{l:Tr 'Collapse every message'}">
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Path Classes="icon i18" Data="{StaticResource InspIconCollapse}" />
-            <TextBlock Text="Collapse" VerticalAlignment="Center" />
+            <TextBlock Text="{l:Tr 'Collapse'}" VerticalAlignment="Center" />
           </StackPanel>
         </Button>
-        <Button Classes="tool" Command="{Binding ClearCommand}" ToolTip.Tip="Forget everything seen so far">
+        <Button Classes="tool" Command="{Binding ClearCommand}" ToolTip.Tip="{l:Tr 'Forget everything seen so far'}">
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Path Classes="icon i18" Data="{StaticResource IconDelete}" />
-            <TextBlock Text="Clear" VerticalAlignment="Center" />
+            <TextBlock Text="{l:Tr 'Clear'}" VerticalAlignment="Center" />
           </StackPanel>
         </Button>
         <Button Classes="accent" Command="{Binding GraphCommand}" Margin="8,0,0,0"
-                ToolTip.Tip="Plot the selected numeric field live">
+                ToolTip.Tip="{l:Tr 'Plot the selected numeric field live'}">
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Path Classes="icon i18" Data="{StaticResource InspIconGraph}" />
-            <TextBlock Text="Graph field" VerticalAlignment="Center" />
+            <TextBlock Text="{l:Tr 'Graph field'}" VerticalAlignment="Center" />
           </StackPanel>
         </Button>
       </StackPanel>
@@ -104,7 +105,7 @@
       <Grid RowDefinitions="Auto,*">
         <Border BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1" Padding="14,8">
           <Grid ColumnDefinitions="*,Auto">
-            <TextBlock Classes="muted" FontSize="12" Text="Each component on the link, its messages with rate, bandwidth and id; expand a message for its fields." TextTrimming="CharacterEllipsis" />
+            <TextBlock Classes="muted" FontSize="12" Text="{l:Tr 'Each component on the link, its messages with rate, bandwidth and id; expand a message for its fields.'}" TextTrimming="CharacterEllipsis" />
             <TextBlock Grid.Column="1" Classes="muted" FontSize="12" Text="{Binding Summary}" />
           </Grid>
         </Border>
@@ -114,7 +115,7 @@
           <TreeView.DataTemplates>
             <TreeDataTemplate DataType="vm:InspectorVehicleNode" ItemsSource="{Binding Children}">
               <StackPanel Orientation="Horizontal" Spacing="12">
-                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="{DynamicResource Accent}" VerticalAlignment="Center" />
+                <TextBlock Text="{l:TrBind {Binding Title}}" FontWeight="SemiBold" Foreground="{DynamicResource Accent}" VerticalAlignment="Center" />
                 <TextBlock Text="{Binding TrafficText}" Classes="muted" VerticalAlignment="Center" />
               </StackPanel>
             </TreeDataTemplate>
@@ -145,6 +146,6 @@
     </Border>
 
     <!-- selection -->
-    <TextBlock Grid.Row="2" Classes="muted" Margin="2,10,2,0" Text="{Binding SelectionHint}" TextTrimming="CharacterEllipsis" />
+    <TextBlock Grid.Row="2" Classes="muted" Margin="2,10,2,0" Text="{l:TrBind {Binding SelectionHint}}" TextTrimming="CharacterEllipsis" />
   </Grid>
 </UserControl>

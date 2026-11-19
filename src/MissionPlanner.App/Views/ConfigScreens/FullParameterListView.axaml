@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.ConfigScreens"
              xmlns:cs="using:MissionPlanner.App.Controls.ConfigScreens"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.ConfigScreens.FullParameterListView"
              x:DataType="vm:FullParameterListViewModel">
 
@@ -30,7 +31,7 @@
       <!-- prefix groups -->
       <Border Background="{DynamicResource Bg1}" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,1,0">
         <Grid RowDefinitions="Auto,*">
-          <TextBlock Margin="12,10,12,4" FontSize="11" FontWeight="Bold" Classes="muted" Text="GROUPS" />
+          <TextBlock Margin="12,10,12,4" FontSize="11" FontWeight="Bold" Classes="muted" Text="{l:Tr 'GROUPS'}" />
           <ListBox Grid.Row="1" Classes="groups" Background="Transparent"
                    ItemsSource="{Binding Groups}" SelectedItem="{Binding SelectedGroup}">
             <ListBox.ItemTemplate>
@@ -53,7 +54,7 @@
                   CanUserResizeColumns="True" CanUserSortColumns="True" CanUserReorderColumns="False"
                   GridLinesVisibility="Horizontal" BorderThickness="0">
           <DataGrid.Columns>
-            <DataGridTemplateColumn Header="Name" Width="200" MinWidth="140" SortMemberPath="Name" IsReadOnly="True">
+            <DataGridTemplateColumn Header="{l:Tr 'Name'}" Width="200" MinWidth="140" SortMemberPath="Name" IsReadOnly="True">
               <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate x:DataType="vm:ParamRow">
                   <StackPanel Margin="10,0,4,0" VerticalAlignment="Center" ToolTip.Tip="{Binding NameTip}">
@@ -66,7 +67,7 @@
               </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>
 
-            <DataGridTemplateColumn Header="Value" Width="210" MinWidth="170" SortMemberPath="DisplayValue">
+            <DataGridTemplateColumn Header="{l:Tr 'Value'}" Width="210" MinWidth="170" SortMemberPath="DisplayValue">
               <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate x:DataType="vm:ParamRow">
                   <cs:ParamValueCell />
@@ -74,17 +75,17 @@
               </DataGridTemplateColumn.CellTemplate>
               <DataGridTemplateColumn.CellEditingTemplate>
                 <DataTemplate x:DataType="vm:ParamRow">
-                  <TextBox Text="{Binding EditText}" VerticalAlignment="Center" Margin="2,0" MinHeight="30"
+                  <TextBox Text="{l:TrBind {Binding EditText}}" VerticalAlignment="Center" Margin="2,0" MinHeight="30"
                            Padding="6,4" FontSize="12.5" />
                 </DataTemplate>
               </DataGridTemplateColumn.CellEditingTemplate>
             </DataGridTemplateColumn>
 
-            <DataGridTextColumn Header="Default" Width="76" MinWidth="50" Binding="{Binding DefaultText}" IsReadOnly="True" />
+            <DataGridTextColumn Header="{l:Tr 'Default'}" Width="76" MinWidth="50" Binding="{Binding DefaultText}" IsReadOnly="True" />
 
-            <DataGridTextColumn Header="Units" Width="70" MinWidth="44" Binding="{Binding Units}" IsReadOnly="True" />
+            <DataGridTextColumn Header="{l:Tr 'Units'}" Width="70" MinWidth="44" Binding="{Binding Units}" IsReadOnly="True" />
 
-            <DataGridTemplateColumn Header="Options" Width="160" MinWidth="100" IsReadOnly="True">
+            <DataGridTemplateColumn Header="{l:Tr 'Options'}" Width="160" MinWidth="100" IsReadOnly="True">
               <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate x:DataType="vm:ParamRow">
                   <TextBlock Margin="8,0" VerticalAlignment="Center" Text="{Binding OptionsText}" FontSize="11.5"
@@ -94,7 +95,7 @@
               </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>
 
-            <DataGridTemplateColumn Header="Desc" Width="*" MinWidth="120" IsReadOnly="True">
+            <DataGridTemplateColumn Header="{l:Tr 'Desc'}" Width="*" MinWidth="120" IsReadOnly="True">
               <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate x:DataType="vm:ParamRow">
                   <TextBlock Margin="8,0" VerticalAlignment="Center" Text="{Binding Description}" FontSize="11.5"
@@ -104,11 +105,11 @@
               </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>
 
-            <DataGridTemplateColumn Header="Fav" Width="44" MinWidth="44" IsReadOnly="True">
+            <DataGridTemplateColumn Header="{l:Tr 'Fav'}" Width="44" MinWidth="44" IsReadOnly="True">
               <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate x:DataType="vm:ParamRow">
                   <CheckBox IsChecked="{Binding IsFavourite}" HorizontalAlignment="Center" MinWidth="0"
-                            ToolTip.Tip="Favourite: listed first" />
+                            ToolTip.Tip="{l:Tr 'Favourite: listed first'}" />
                 </DataTemplate>
               </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>
@@ -117,72 +118,72 @@
 
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6" MaxWidth="420"
                     IsVisible="{Binding IsEmpty}">
-          <TextBlock Classes="h2" HorizontalAlignment="Center" Text="Full Parameter List" />
-          <TextBlock Classes="muted" TextWrapping="Wrap" TextAlignment="Center" Text="{Binding EmptyText}" />
+          <TextBlock Classes="h2" HorizontalAlignment="Center" Text="{l:Tr 'Full Parameter List'}" />
+          <TextBlock Classes="muted" TextWrapping="Wrap" TextAlignment="Center" Text="{l:TrBind {Binding EmptyText}}" />
         </StackPanel>
         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Classes="muted" MaxWidth="420"
-                   TextWrapping="Wrap" TextAlignment="Center" Text="{Binding NoMatchesText}" IsVisible="{Binding NoMatches}" />
+                   TextWrapping="Wrap" TextAlignment="Center" Text="{l:TrBind {Binding NoMatchesText}}" IsVisible="{Binding NoMatches}" />
         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Classes="muted"
-                   Text="Loading parameters..." IsVisible="{Binding IsLoading}" />
+                   Text="{l:Tr 'Loading parameters...'}" IsVisible="{Binding IsLoading}" />
       </Panel>
 
       <!-- actions and filters, on the right as in Mission Planner -->
       <Border Grid.Column="2" Background="{DynamicResource Bg1}" BorderBrush="{DynamicResource Line}" BorderThickness="1,0,0,0">
         <ScrollViewer>
           <StackPanel Margin="12" Spacing="8">
-            <Button Classes="side" Command="{Binding LoadFromFileCommand}" ToolTip.Tip="Load a .param file; differing values become edits">
+            <Button Classes="side" Command="{Binding LoadFromFileCommand}" ToolTip.Tip="{l:Tr 'Load a .param file; differing values become edits'}">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <Path Classes="icon" Data="{StaticResource IconFolder}" />
-                <TextBlock Text="Load from file" VerticalAlignment="Center" />
+                <TextBlock Text="{l:Tr 'Load from file'}" VerticalAlignment="Center" />
               </StackPanel>
             </Button>
-            <Button Classes="side" Command="{Binding SaveToFileCommand}" ToolTip.Tip="Save all values (with unsaved edits) as a .param file">
+            <Button Classes="side" Command="{Binding SaveToFileCommand}" ToolTip.Tip="{l:Tr 'Save all values (with unsaved edits) as a .param file'}">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <Path Classes="icon" Data="{StaticResource IconFile}" />
-                <TextBlock Text="Save to file" VerticalAlignment="Center" />
+                <TextBlock Text="{l:Tr 'Save to file'}" VerticalAlignment="Center" />
               </StackPanel>
             </Button>
-            <Button Classes="side accent" Command="{Binding WriteCommand}" ToolTip.Tip="Write the edited values to the vehicle (Ctrl+S)">
+            <Button Classes="side accent" Command="{Binding WriteCommand}" ToolTip.Tip="{l:Tr 'Write the edited values to the vehicle (Ctrl+S)'}">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <Path Classes="icon" Data="{StaticResource IconUp}" />
-                <TextBlock Text="Write Params" VerticalAlignment="Center" />
+                <TextBlock Text="{l:Tr 'Write Params'}" VerticalAlignment="Center" />
               </StackPanel>
             </Button>
-            <Button Classes="side" Command="{Binding RefreshCommand}" ToolTip.Tip="Read every parameter from the vehicle again">
+            <Button Classes="side" Command="{Binding RefreshCommand}" ToolTip.Tip="{l:Tr 'Read every parameter from the vehicle again'}">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <Path Classes="icon" Data="{StaticResource IconRefresh}" />
-                <TextBlock Text="Refresh Params" VerticalAlignment="Center" />
+                <TextBlock Text="{l:Tr 'Refresh Params'}" VerticalAlignment="Center" />
               </StackPanel>
             </Button>
-            <Button Classes="side" Command="{Binding CompareCommand}" ToolTip.Tip="Compare with a .param file and pick values to take over">
+            <Button Classes="side" Command="{Binding CompareCommand}" ToolTip.Tip="{l:Tr 'Compare with a .param file and pick values to take over'}">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <Path Classes="icon" Data="{StaticResource IconChevron}" />
-                <TextBlock Text="Compare Params" VerticalAlignment="Center" />
+                <TextBlock Text="{l:Tr 'Compare Params'}" VerticalAlignment="Center" />
               </StackPanel>
             </Button>
             <Button Classes="side" Command="{Binding RebootCommand}"
-                    ToolTip.Tip="Restart the autopilot (needed after some changes); the link drops while it restarts">
+                    ToolTip.Tip="{l:Tr 'Restart the autopilot (needed after some changes); the link drops while it restarts'}">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <Path Classes="icon" Data="M12,3 L12,11 M7.05,6.05 A7.5,7.5 0 1 0 16.95,6.05" />
-                <TextBlock Text="Reboot" VerticalAlignment="Center" />
+                <TextBlock Text="{l:Tr 'Reboot'}" VerticalAlignment="Center" />
               </StackPanel>
             </Button>
 
             <Border Height="1" Background="{DynamicResource Line}" Margin="0,6" />
 
-            <TextBox x:Name="SearchBox" Text="{Binding SearchText}" PlaceholderText="Search name or description" />
-            <CheckBox Content="Modified" IsChecked="{Binding ShowModifiedOnly}"
-                      ToolTip.Tip="Only parameters with unsaved edits" />
-            <CheckBox Content="None Default" IsChecked="{Binding ShowNonDefaultOnly}" IsVisible="{Binding HasDefaults}"
-                      ToolTip.Tip="Only parameters whose value differs from the firmware default" />
+            <TextBox x:Name="SearchBox" Text="{Binding SearchText}" PlaceholderText="{l:Tr 'Search name or description'}" />
+            <CheckBox Content="{l:Tr 'Modified'}" IsChecked="{Binding ShowModifiedOnly}"
+                      ToolTip.Tip="{l:Tr 'Only parameters with unsaved edits'}" />
+            <CheckBox Content="{l:Tr 'None Default'}" IsChecked="{Binding ShowNonDefaultOnly}" IsVisible="{Binding HasDefaults}"
+                      ToolTip.Tip="{l:Tr 'Only parameters whose value differs from the firmware default'}" />
 
             <Border Height="1" Background="{DynamicResource Line}" Margin="0,6" />
 
             <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" FontWeight="SemiBold" />
             <TextBlock Text="{Binding SourceText}" TextWrapping="Wrap" Classes="muted" FontSize="12" />
-            <Button Content="Discard edits" Command="{Binding DiscardEditsCommand}" IsVisible="{Binding HasPending}"
+            <Button Content="{l:Tr 'Discard edits'}" Command="{Binding DiscardEditsCommand}" IsVisible="{Binding HasPending}"
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
-            <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" Classes="muted" FontSize="12" />
+            <TextBlock Text="{l:TrBind {Binding StatusText}}" TextWrapping="Wrap" Classes="muted" FontSize="12" />
           </StackPanel>
         </ScrollViewer>
       </Border>

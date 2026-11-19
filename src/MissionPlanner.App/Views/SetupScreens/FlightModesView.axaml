@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
              xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.FlightModesView"
              x:DataType="vm:FlightModesViewModel">
 
@@ -35,12 +36,12 @@
                 <DataTemplate x:DataType="vm:FlightModeSlot">
                   <Border Classes="slot" Classes.active="{Binding IsActive}">
                     <Grid ColumnDefinitions="120,220,Auto,Auto,*">
-                      <TextBlock Classes="slottitle" Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                      <TextBlock Classes="slottitle" Text="{l:TrBind {Binding Title}}" FontWeight="SemiBold" VerticalAlignment="Center" />
                       <hwv:ParamEditor Grid.Column="1" DataContext="{Binding Mode}" VerticalAlignment="Center" />
-                      <CheckBox Grid.Column="2" Margin="16,0,0,0" Content="Simple" IsChecked="{Binding Simple}"
+                      <CheckBox Grid.Column="2" Margin="16,0,0,0" Content="{l:Tr 'Simple'}" IsChecked="{Binding Simple}"
                                 IsEnabled="{Binding SimpleAllowed}"
                                 IsVisible="{Binding $parent[ItemsControl].((vm:FlightModesViewModel)DataContext).ShowSimple}" />
-                      <CheckBox Grid.Column="3" Margin="12,0,0,0" Content="Super Simple" IsChecked="{Binding SuperSimple}"
+                      <CheckBox Grid.Column="3" Margin="12,0,0,0" Content="{l:Tr 'Super Simple'}" IsChecked="{Binding SuperSimple}"
                                 IsEnabled="{Binding SimpleAllowed}"
                                 IsVisible="{Binding $parent[ItemsControl].((vm:FlightModesViewModel)DataContext).ShowSimple}" />
                       <TextBlock Grid.Column="4" Classes="muted" Text="{Binding Band}" VerticalAlignment="Center"
@@ -52,9 +53,9 @@
             </ItemsControl>
 
             <StackPanel Orientation="Horizontal" Spacing="10" Margin="12,14,0,4">
-              <Button Classes="accent" Content="{Binding SaveText}" Command="{Binding SaveCommand}" Padding="18,8" />
-              <Button Content="Undo changes" Command="{Binding RevertCommand}" IsEnabled="{Binding HasChanges}" />
-              <TextBlock Classes="muted" VerticalAlignment="Center" Text="Unsaved changes" IsVisible="{Binding HasChanges}"
+              <Button Classes="accent" Content="{l:TrBind {Binding SaveText}}" Command="{Binding SaveCommand}" Padding="18,8" />
+              <Button Content="{l:Tr 'Undo changes'}" Command="{Binding RevertCommand}" IsEnabled="{Binding HasChanges}" />
+              <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Unsaved changes'}" IsVisible="{Binding HasChanges}"
                          Foreground="{DynamicResource Info}" />
             </StackPanel>
           </StackPanel>
@@ -62,13 +63,13 @@
 
         <Border Grid.Column="1" Classes="card" Width="260" Margin="16,0,0,0" VerticalAlignment="Top">
           <StackPanel Spacing="6">
-            <TextBlock Classes="muted" Text="CURRENT MODE" FontSize="11" FontWeight="Bold" />
+            <TextBlock Classes="muted" Text="{l:Tr 'CURRENT MODE'}" FontSize="11" FontWeight="Bold" />
             <TextBlock Classes="h1" Text="{Binding CurrentMode}" FontSize="24" />
-            <TextBlock Classes="muted" Text="CURRENT PWM" FontSize="11" FontWeight="Bold" Margin="0,10,0,0" />
+            <TextBlock Classes="muted" Text="{l:Tr 'CURRENT PWM'}" FontSize="11" FontWeight="Bold" Margin="0,10,0,0" />
             <TextBlock Text="{Binding SwitchText}" FontSize="15" FontWeight="SemiBold" />
             <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Margin="0,10,0,0"
                        IsVisible="{Binding ShowSimple}"
-                       Text="Simple and Super Simple make the sticks act relative to the take-off heading or home position; only some modes support them." />
+                       Text="{l:Tr 'Simple and Super Simple make the sticks act relative to the take-off heading or home position; only some modes support them.'}" />
           </StackPanel>
         </Border>
       </Grid>

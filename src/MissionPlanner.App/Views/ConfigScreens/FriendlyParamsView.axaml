@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.ConfigScreens"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.ConfigScreens.FriendlyParamsView"
              x:DataType="vm:FriendlyParamsViewModel">
 
@@ -53,28 +54,28 @@
             Padding="18,12">
       <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
         <StackPanel Spacing="2">
-          <TextBlock Classes="h1" Text="{Binding Title}" />
-          <TextBlock Classes="muted" FontSize="12.5" Text="{Binding Intro}" TextWrapping="Wrap" />
+          <TextBlock Classes="h1" Text="{l:TrBind {Binding Title}}" />
+          <TextBlock Classes="muted" FontSize="12.5" Text="{l:TrBind {Binding Intro}}" TextWrapping="Wrap" />
         </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-          <TextBox x:Name="SearchBox" Width="280" PlaceholderText="Search name or description" Text="{Binding SearchText}" />
-          <Button Content="Discard edits" Command="{Binding DiscardEditsCommand}" IsVisible="{Binding HasPending}" />
-          <Button Command="{Binding RefreshCommand}" ToolTip.Tip="Read every parameter from the vehicle again">
+          <TextBox x:Name="SearchBox" Width="280" PlaceholderText="{l:Tr 'Search name or description'}" Text="{Binding SearchText}" />
+          <Button Content="{l:Tr 'Discard edits'}" Command="{Binding DiscardEditsCommand}" IsVisible="{Binding HasPending}" />
+          <Button Command="{Binding RefreshCommand}" ToolTip.Tip="{l:Tr 'Read every parameter from the vehicle again'}">
             <StackPanel Orientation="Horizontal" Spacing="6">
               <Path Classes="icon" Data="{StaticResource IconRefresh}" />
-              <TextBlock Text="Refresh Params" VerticalAlignment="Center" />
+              <TextBlock Text="{l:Tr 'Refresh Params'}" VerticalAlignment="Center" />
             </StackPanel>
           </Button>
-          <Button Classes="accent" Command="{Binding WriteCommand}" ToolTip.Tip="Write the edited values to the vehicle (Ctrl+S)">
+          <Button Classes="accent" Command="{Binding WriteCommand}" ToolTip.Tip="{l:Tr 'Write the edited values to the vehicle (Ctrl+S)'}">
             <StackPanel Orientation="Horizontal" Spacing="6">
               <Path Classes="icon" Data="{StaticResource IconUp}" />
-              <TextBlock Text="Write Params" VerticalAlignment="Center" />
+              <TextBlock Text="{l:Tr 'Write Params'}" VerticalAlignment="Center" />
             </StackPanel>
           </Button>
         </StackPanel>
         <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="14" Margin="0,8,0,0">
           <TextBlock Text="{Binding Summary}" FontSize="12" FontWeight="SemiBold" />
-          <TextBlock Text="{Binding StatusText}" FontSize="12" Classes="muted" TextTrimming="CharacterEllipsis" />
+          <TextBlock Text="{l:TrBind {Binding StatusText}}" FontSize="12" Classes="muted" TextTrimming="CharacterEllipsis" />
         </StackPanel>
       </Grid>
     </Border>
@@ -93,16 +94,16 @@
                 <Grid ColumnDefinitions="*,20,360">
                   <StackPanel Spacing="4" VerticalAlignment="Top">
                     <WrapPanel Orientation="Horizontal">
-                      <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="14" Margin="0,0,8,0" />
+                      <TextBlock Text="{l:TrBind {Binding Title}}" FontWeight="SemiBold" FontSize="14" Margin="0,0,8,0" />
                       <TextBlock Text="{Binding Name}" Classes="muted" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />
                       <Border Classes="badge warn" IsVisible="{Binding RebootRequired}" Margin="0,0,6,0">
-                        <TextBlock Text="reboot required" />
+                        <TextBlock Text="{l:Tr 'reboot required'}" />
                       </Border>
                       <Border Classes="badge" IsVisible="{Binding IsReadOnly}" Margin="0,0,6,0">
-                        <TextBlock Text="read only" />
+                        <TextBlock Text="{l:Tr 'read only'}" />
                       </Border>
                       <Border Classes="badge warn" IsVisible="{Binding IsOutOfRange}">
-                        <TextBlock Text="outside documented range" />
+                        <TextBlock Text="{l:Tr 'outside documented range'}" />
                       </Border>
                     </WrapPanel>
                     <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Classes="muted" FontSize="12.5" />
@@ -125,7 +126,7 @@
                       <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:BitOption">
                           <CheckBox Classes="bit" IsChecked="{Binding IsChecked}" ToolTip.Tip="{Binding Bit, StringFormat='bit {0}'}">
-                            <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{l:TrBind {Binding Label}}" TextTrimming="CharacterEllipsis" />
                           </CheckBox>
                         </DataTemplate>
                       </ItemsControl.ItemTemplate>
@@ -145,7 +146,7 @@
       </ScrollViewer>
 
       <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Classes="muted"
-                 Text="{Binding EmptyText}" IsVisible="{Binding IsEmpty}" />
+                 Text="{l:TrBind {Binding EmptyText}}" IsVisible="{Binding IsEmpty}" />
     </Panel>
   </Grid>
 </UserControl>

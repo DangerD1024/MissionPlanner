@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.JoystickView"
              x:DataType="vm:JoystickViewModel">
 
@@ -72,9 +73,9 @@
   <ScrollViewer HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="24,20" Spacing="16" MaxWidth="1280" HorizontalAlignment="Left">
       <StackPanel Spacing="4">
-        <TextBlock Classes="h1" Text="Joystick" />
+        <TextBlock Classes="h1" Text="{l:Tr 'Joystick'}" />
         <TextBlock Classes="muted" TextWrapping="Wrap"
-                   Text="Fly with a joystick or gamepad: map its axes to RC channels and its buttons to actions, then enable to send RC overrides to the vehicle at 25 Hz. Mappings are saved per device." />
+                   Text="{l:Tr 'Fly with a joystick or gamepad: map its axes to RC channels and its buttons to actions, then enable to send RC overrides to the vehicle at 25 Hz. Mappings are saved per device.'}" />
       </StackPanel>
 
       <Border Classes="banner" IsVisible="{Binding BackendMissing}" Background="#30f0b429">
@@ -86,45 +87,45 @@
         <Border Classes="card" Padding="18" VerticalAlignment="Top">
           <StackPanel Spacing="12">
             <Grid ColumnDefinitions="*,Auto">
-              <TextBlock Classes="h2" Text="Device" />
+              <TextBlock Classes="h2" Text="{l:Tr 'Device'}" />
               <TextBlock Grid.Column="1" Classes="muted" FontSize="11.5" Text="{Binding BackendText}" IsVisible="{Binding !BackendMissing}"
                          VerticalAlignment="Center" />
             </Grid>
             <Grid ColumnDefinitions="*,8,Auto">
               <ComboBox ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice}" HorizontalAlignment="Stretch"
-                        PlaceholderText="No joystick" IsEnabled="{Binding IsIdle}" />
-              <Button Grid.Column="2" ToolTip.Tip="Look for joysticks again" Command="{Binding RefreshDevicesCommand}" Padding="6">
+                        PlaceholderText="{l:Tr 'No joystick'}" IsEnabled="{Binding IsIdle}" />
+              <Button Grid.Column="2" ToolTip.Tip="{l:Tr 'Look for joysticks again'}" Command="{Binding RefreshDevicesCommand}" Padding="6">
                 <Path Classes="icon" Data="{StaticResource IconRefresh}" Width="18" Height="18" />
               </Button>
             </Grid>
             <TextBlock Classes="muted" FontSize="12" Text="{Binding DeviceText}" TextWrapping="Wrap" />
             <StackPanel Spacing="6" IsEnabled="{Binding IsIdle}">
-              <CheckBox Content="Send MANUAL__CONTROL instead of RC overrides" IsChecked="{Binding ManualControl}"
-                        ToolTip.Tip="x = pitch, y = roll, z = throttle, r = yaw and the first 16 buttons, per the MAVLink definition" />
-              <CheckBox Content="Elevons (mix roll and pitch on channels 1 and 2)" IsChecked="{Binding Elevons}" />
+              <CheckBox Content="{l:Tr 'Send MANUAL__CONTROL instead of RC overrides'}" IsChecked="{Binding ManualControl}"
+                        ToolTip.Tip="{l:Tr 'x = pitch, y = roll, z = throttle, r = yaw and the first 16 buttons, per the MAVLink definition'}" />
+              <CheckBox Content="{l:Tr 'Elevons (mix roll and pitch on channels 1 and 2)'}" IsChecked="{Binding Elevons}" />
             </StackPanel>
             <Grid ColumnDefinitions="Auto,12,*">
-              <Button Classes="accent" MinWidth="110" Padding="16,8" HorizontalContentAlignment="Center" Content="{Binding EnableText}"
+              <Button Classes="accent" MinWidth="110" Padding="16,8" HorizontalContentAlignment="Center" Content="{l:TrBind {Binding EnableText}}"
                       Command="{Binding ToggleSendingCommand}" IsVisible="{Binding IsIdle}" IsEnabled="{Binding HasDevice}" />
-              <Button Classes="danger" MinWidth="110" Padding="16,8" HorizontalContentAlignment="Center" Content="{Binding EnableText}"
+              <Button Classes="danger" MinWidth="110" Padding="16,8" HorizontalContentAlignment="Center" Content="{l:TrBind {Binding EnableText}}"
                       Command="{Binding ToggleSendingCommand}" IsVisible="{Binding IsSending}" />
-              <TextBlock Grid.Column="2" Text="{Binding SendText}" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="12.5" />
+              <TextBlock Grid.Column="2" Text="{l:TrBind {Binding SendText}}" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="12.5" />
             </Grid>
-            <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" Foreground="{DynamicResource Info}" />
-            <TextBlock Classes="muted" FontSize="12" Text="{Binding LastActionText}" TextWrapping="Wrap" />
+            <TextBlock Text="{l:TrBind {Binding StatusText}}" TextWrapping="Wrap" Foreground="{DynamicResource Info}" />
+            <TextBlock Classes="muted" FontSize="12" Text="{l:TrBind {Binding LastActionText}}" TextWrapping="Wrap" />
           </StackPanel>
         </Border>
 
         <!-- live input -->
         <Border Grid.Column="2" Classes="card" Padding="18" VerticalAlignment="Top">
           <StackPanel Spacing="10">
-            <TextBlock Classes="h2" Text="Live input" />
-            <TextBlock Classes="muted" FontSize="12" IsVisible="{Binding !HasDevice}" Text="Select a joystick to see its axes and buttons." />
+            <TextBlock Classes="h2" Text="{l:Tr 'Live input'}" />
+            <TextBlock Classes="muted" FontSize="12" IsVisible="{Binding !HasDevice}" Text="{l:Tr 'Select a joystick to see its axes and buttons.'}" />
             <ItemsControl ItemsSource="{Binding Axes}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:AxisReading">
                   <Grid ColumnDefinitions="64,*,64" Margin="0,2">
-                    <TextBlock Classes="label" Text="{Binding Label}" FontSize="12" />
+                    <TextBlock Classes="label" Text="{l:TrBind {Binding Label}}" FontSize="12" />
                     <ProgressBar Grid.Column="1" Classes="axis" Value="{Binding Value}" />
                     <TextBlock Grid.Column="2" Text="{Binding Text}" FontFamily="monospace" FontSize="12" HorizontalAlignment="Right"
                                VerticalAlignment="Center" />
@@ -141,7 +142,7 @@
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:ButtonReading">
                   <Border Classes="button" Classes.on="{Binding IsPressed}">
-                    <TextBlock Text="{Binding Label}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <TextBlock Text="{l:TrBind {Binding Label}}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
                   </Border>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
@@ -155,7 +156,7 @@
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:HatReading">
                   <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,16,0">
-                    <TextBlock Classes="label" Text="{Binding Label}" FontSize="12" />
+                    <TextBlock Classes="label" Text="{l:TrBind {Binding Label}}" FontSize="12" />
                     <TextBlock Text="{Binding Text}" FontWeight="SemiBold" />
                   </StackPanel>
                 </DataTemplate>
@@ -169,27 +170,27 @@
       <Border Classes="card" Padding="18" IsVisible="{Binding HasDevice}">
         <StackPanel Spacing="6">
           <Grid ColumnDefinitions="*,Auto">
-            <TextBlock Classes="h2" Text="RC channels" />
-            <CheckBox Grid.Column="1" Content="Show channels 9–16" IsChecked="{Binding ShowAllChannels}" />
+            <TextBlock Classes="h2" Text="{l:Tr 'RC channels'}" />
+            <CheckBox Grid.Column="1" Content="{l:Tr 'Show channels 9–16'}" IsChecked="{Binding ShowAllChannels}" />
           </Grid>
           <Grid ColumnDefinitions="110,180,72,80,128,128,*,56,60" Margin="0,4,0,2">
-            <TextBlock Classes="caption" Text="CHANNEL" />
-            <TextBlock Grid.Column="1" Classes="caption" Text="INPUT" />
-            <TextBlock Grid.Column="3" Classes="caption" Text="REVERSE" />
-            <TextBlock Grid.Column="4" Classes="caption" Text="EXPO %" />
-            <TextBlock Grid.Column="5" Classes="caption" Text="TRIM µs" />
-            <TextBlock Grid.Column="6" Classes="caption" Text="OUTPUT" Margin="8,0,0,0" />
+            <TextBlock Classes="caption" Text="{l:Tr 'CHANNEL'}" />
+            <TextBlock Grid.Column="1" Classes="caption" Text="{l:Tr 'INPUT'}" />
+            <TextBlock Grid.Column="3" Classes="caption" Text="{l:Tr 'REVERSE'}" />
+            <TextBlock Grid.Column="4" Classes="caption" Text="{l:Tr 'EXPO %'}" />
+            <TextBlock Grid.Column="5" Classes="caption" Text="{l:Tr 'TRIM µs'}" />
+            <TextBlock Grid.Column="6" Classes="caption" Text="{l:Tr 'OUTPUT'}" Margin="8,0,0,0" />
             <TextBlock Grid.Column="7" Classes="caption" Text="PWM" HorizontalAlignment="Right" />
-            <TextBlock Grid.Column="8" Classes="caption" Text="VEHICLE" HorizontalAlignment="Right" ToolTip.Tip="What the vehicle reports for the channel (RC_CHANNELS)" />
+            <TextBlock Grid.Column="8" Classes="caption" Text="{l:Tr 'VEHICLE'}" HorizontalAlignment="Right" ToolTip.Tip="{l:Tr 'What the vehicle reports for the channel (RC_CHANNELS)'}" />
           </Grid>
           <ItemsControl ItemsSource="{Binding Channels}">
             <ItemsControl.ItemTemplate>
               <DataTemplate x:DataType="vm:ChannelRowViewModel">
                 <Grid ColumnDefinitions="110,180,72,80,128,128,*,56,60" Margin="0,2" IsVisible="{Binding IsVisible}">
-                  <TextBlock Text="{Binding Label}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                  <TextBlock Text="{l:TrBind {Binding Label}}" FontWeight="SemiBold" VerticalAlignment="Center" />
                   <ComboBox Grid.Column="1" ItemsSource="{Binding Options}" SelectedItem="{Binding SelectedInput}" HorizontalAlignment="Stretch"
                             IsEnabled="{Binding $parent[UserControl].((vm:JoystickViewModel)DataContext).IsIdle}" />
-                  <Button Grid.Column="2" Classes="small" Content="Detect" Margin="6,0,0,0" Command="{Binding DetectCommand}"
+                  <Button Grid.Column="2" Classes="small" Content="{l:Tr 'Detect'}" Margin="6,0,0,0" Command="{Binding DetectCommand}"
                           IsEnabled="{Binding !IsDetecting}" />
                   <CheckBox Grid.Column="3" IsChecked="{Binding Reverse}" Margin="14,0,0,0" />
                   <NumericUpDown Grid.Column="4" Value="{Binding Expo}" Minimum="-100" Maximum="100" Increment="5" FormatString="0" Margin="0,0,6,0" />
@@ -208,21 +209,21 @@
       <!-- buttons -->
       <Border Classes="card" Padding="18" IsVisible="{Binding HasDevice}">
         <StackPanel Spacing="6">
-          <TextBlock Classes="h2" Text="Buttons" />
+          <TextBlock Classes="h2" Text="{l:Tr 'Buttons'}" />
           <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                     Text="Actions run on a button press while sending is enabled (the relay action also on release). Button axes drive channels set to 'Button axis'." />
+                     Text="{l:Tr 'Actions run on a button press while sending is enabled (the relay action also on release). Button axes drive channels set to \'Button axis\'.'}" />
           <ItemsControl ItemsSource="{Binding ButtonRows}">
             <ItemsControl.ItemTemplate>
               <DataTemplate x:DataType="vm:ButtonRowViewModel">
                 <Grid ColumnDefinitions="36,120,72,24,200,*" Margin="0,3">
-                  <TextBlock Text="{Binding Title}" Classes="label" />
+                  <TextBlock Text="{l:TrBind {Binding Title}}" Classes="label" />
                   <ComboBox Grid.Column="1" ItemsSource="{Binding ButtonOptions}" SelectedItem="{Binding SelectedButton}" HorizontalAlignment="Stretch" />
-                  <Button Grid.Column="2" Classes="small" Content="Detect" Margin="6,0,0,0" Command="{Binding DetectCommand}" IsEnabled="{Binding !IsDetecting}" />
+                  <Button Grid.Column="2" Classes="small" Content="{l:Tr 'Detect'}" Margin="6,0,0,0" Command="{Binding DetectCommand}" IsEnabled="{Binding !IsDetecting}" />
                   <Ellipse Grid.Column="3" Classes="dot" Classes.on="{Binding IsPressed}" HorizontalAlignment="Center" />
                   <ComboBox Grid.Column="4" ItemsSource="{Binding Functions}" SelectedItem="{Binding SelectedFunction}" HorizontalAlignment="Stretch" />
                   <WrapPanel Grid.Column="5" Margin="10,0,0,0" VerticalAlignment="Center">
                     <ComboBox ItemsSource="{Binding Modes}" SelectedItem="{Binding Mode}" MinWidth="140" IsVisible="{Binding UsesMode}"
-                              PlaceholderText="mode" />
+                              PlaceholderText="{l:Tr 'mode'}" />
                     <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,10,0" IsVisible="{Binding HasP1}">
                       <TextBlock Classes="label" Text="{Binding P1Label}" FontSize="12" />
                       <NumericUpDown Value="{Binding P1}" Width="132" Increment="1" Minimum="-100000" Maximum="100000" FormatString="0.##" />
@@ -248,8 +249,8 @@
       </Border>
 
       <Grid ColumnDefinitions="Auto,10,Auto,12,*" IsVisible="{Binding HasDevice}">
-        <Button Classes="accent" Content="Save profile" Command="{Binding SaveCommand}" Padding="14,6" />
-        <Button Grid.Column="2" Content="Clear mappings…" Command="{Binding ResetProfileCommand}" Padding="14,6" IsEnabled="{Binding IsIdle}" />
+        <Button Classes="accent" Content="{l:Tr 'Save profile'}" Command="{Binding SaveCommand}" Padding="14,6" />
+        <Button Grid.Column="2" Content="{l:Tr 'Clear mappings…'}" Command="{Binding ResetProfileCommand}" Padding="14,6" IsEnabled="{Binding IsIdle}" />
         <TextBlock Grid.Column="4" Classes="muted" FontSize="12" Text="{Binding ProfileText}" VerticalAlignment="Center" TextWrapping="Wrap"
                    ToolTip.Tip="{Binding ProfilePath}" />
       </Grid>

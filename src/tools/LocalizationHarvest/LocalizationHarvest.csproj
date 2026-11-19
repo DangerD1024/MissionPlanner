@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Builds src/MissionPlanner.App/Localization/<culture>.json from Mission Planner's .resx translations
+    and lists the app's strings that have none. Not part of MissionPlanner.Next.sln; run it from the
+    repository root with "dotnet run" and the project option pointing at src/tools/LocalizationHarvest
+    (XML comments cannot hold a double hyphen, so the exact command is in src/README.md).
+    It compiles the app's own normalisation code, so harvest and lookup always agree.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>MissionPlanner.Tools.LocalizationHarvest</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\MissionPlanner.App.Core\Localization\LocalizationText.cs" Link="Shared\LocalizationText.cs" />
+    <Compile Include="..\..\MissionPlanner.App.Core\Localization\TranslationTable.cs" Link="Shared\TranslationTable.cs" />
+    <Compile Include="..\..\MissionPlanner.App.Core\Localization\LanguageCatalog.cs" Link="Shared\LanguageCatalog.cs" />
+    <Compile Include="..\..\MissionPlanner.App.Core\Localization\ResxHarvest.cs" Link="Shared\ResxHarvest.cs" />
+    <Compile Include="..\..\MissionPlanner.App.Core\Localization\UiStringScanner.cs" Link="Shared\UiStringScanner.cs" />
+  </ItemGroup>
+
+</Project>

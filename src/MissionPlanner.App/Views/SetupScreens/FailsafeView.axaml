@@ -4,13 +4,14 @@
              xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
              xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
              xmlns:hwc="using:MissionPlanner.App.Controls.SetupScreens.Hardware"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.FailsafeView"
              x:DataType="vm:FailsafeViewModel">
 
   <UserControl.Resources>
     <DataTemplate x:Key="BarTemplate" x:DataType="hw:PwmChannel">
       <Grid ColumnDefinitions="70,*" Margin="0,3">
-        <TextBlock Text="{Binding Label}" Classes="muted" VerticalAlignment="Center" />
+        <TextBlock Text="{l:TrBind {Binding Label}}" Classes="muted" VerticalAlignment="Center" />
         <hwc:PwmBar Grid.Column="1" Value="{Binding Pwm}" Height="20" />
       </Grid>
     </DataTemplate>
@@ -33,7 +34,7 @@
       <hwv:PageHeader Description="What the vehicle does when it loses the radio, the ground station or battery. Changes are written as you make them." />
 
       <Border Background="#33f0b429" BorderBrush="{DynamicResource Warn}" BorderThickness="1" CornerRadius="6" Padding="12,8">
-        <TextBlock Text="Ensure your props are not on the Plane/Quad while testing failsafes." FontWeight="SemiBold" />
+        <TextBlock Text="{l:Tr 'Ensure your props are not on the Plane/Quad while testing failsafes.'}" FontWeight="SemiBold" />
       </Border>
 
       <Grid ColumnDefinitions="Auto,*">
@@ -43,12 +44,12 @@
             <StackPanel Spacing="4">
               <Grid ColumnDefinitions="*,*,*">
                 <StackPanel>
-                  <TextBlock Classes="muted" Text="MODE" FontSize="11" FontWeight="Bold" />
+                  <TextBlock Classes="muted" Text="{l:Tr 'MODE'}" FontSize="11" FontWeight="Bold" />
                   <TextBlock Classes="fsmode" Classes.tripped="{Binding ThrottleFailsafe}" Text="{Binding CurrentMode}"
                              FontSize="17" FontWeight="SemiBold" />
                 </StackPanel>
                 <StackPanel Grid.Column="1">
-                  <TextBlock Classes="muted" Text="STATE" FontSize="11" FontWeight="Bold" />
+                  <TextBlock Classes="muted" Text="{l:Tr 'STATE'}" FontSize="11" FontWeight="Bold" />
                   <TextBlock Classes="armstate" Classes.armed="{Binding Armed}" Text="{Binding ArmedText}" FontSize="17" FontWeight="SemiBold" />
                 </StackPanel>
                 <StackPanel Grid.Column="2">
@@ -57,17 +58,17 @@
                 </StackPanel>
               </Grid>
               <TextBlock Classes="muted" FontSize="12" Margin="0,4,0,0" IsVisible="{Binding ThrottleFailsafe}"
-                         Foreground="{DynamicResource Danger}" Text="Throttle input is below the failsafe PWM." />
+                         Foreground="{DynamicResource Danger}" Text="{l:Tr 'Throttle input is below the failsafe PWM.'}" />
             </StackPanel>
           </Border>
           <Border Classes="card">
             <Grid ColumnDefinitions="*,16,*">
               <StackPanel>
-                <TextBlock Classes="h2" Text="Radio IN" Margin="0,0,0,6" />
+                <TextBlock Classes="h2" Text="{l:Tr 'Radio IN'}" Margin="0,0,0,6" />
                 <ItemsControl ItemsSource="{Binding RcIn}" ItemTemplate="{StaticResource BarTemplate}" />
               </StackPanel>
               <StackPanel Grid.Column="2">
-                <TextBlock Classes="h2" Text="Servo/Motor OUT" Margin="0,0,0,6" />
+                <TextBlock Classes="h2" Text="{l:Tr 'Servo/Motor OUT'}" Margin="0,0,0,6" />
                 <ItemsControl ItemsSource="{Binding ServoOut}" ItemTemplate="{StaticResource BarTemplate}" />
               </StackPanel>
             </Grid>
@@ -80,7 +81,7 @@
             <DataTemplate x:DataType="hw:ParamGroup">
               <Border Classes="card" Margin="0,0,0,16">
                 <StackPanel Spacing="4">
-                  <TextBlock Classes="h2" Text="{Binding Title}" Margin="0,0,0,4" />
+                  <TextBlock Classes="h2" Text="{l:TrBind {Binding Title}}" Margin="0,0,0,4" />
                   <ItemsControl ItemsSource="{Binding Fields}">
                     <ItemsControl.ItemTemplate>
                       <DataTemplate x:DataType="hw:ParamField">

@@ -301,7 +301,7 @@ public sealed partial class FullParameterListViewModel : ParamPageViewModel
         catch (Exception ex)
         {
             Log.Warn("load " + path, ex);
-            await Services.Dialogs.ShowMessageAsync("Load failed", $"Could not read {name}:\n{ex.Message}", MessageKind.Error);
+            await Services.Dialogs.ShowMessageAsync("Load failed", L.Format("Could not read {0}:\n{1}", name, ex.Message), MessageKind.Error);
             return;
         }
 
@@ -392,7 +392,7 @@ public sealed partial class FullParameterListViewModel : ParamPageViewModel
         catch (Exception ex)
         {
             Log.Warn("save " + path, ex);
-            await Services.Dialogs.ShowMessageAsync("Save failed", $"Could not save {path}:\n{ex.Message}", MessageKind.Error);
+            await Services.Dialogs.ShowMessageAsync("Save failed", L.Format("Could not save {0}:\n{1}", path, ex.Message), MessageKind.Error);
         }
     }
 
@@ -421,7 +421,7 @@ public sealed partial class FullParameterListViewModel : ParamPageViewModel
         }
         catch (Exception ex)
         {
-            await Services.Dialogs.ShowMessageAsync("Load failed", $"Could not read {name}:\n{ex.Message}", MessageKind.Error);
+            await Services.Dialogs.ShowMessageAsync("Load failed", L.Format("Could not read {0}:\n{1}", name, ex.Message), MessageKind.Error);
             return;
         }
 

@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
              xmlns:comms="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Comms"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.SikRadioView"
              x:DataType="vm:SikRadioViewModel">
 
@@ -12,7 +13,7 @@
     <DataTemplate x:Key="SikEditor" x:DataType="comms:SikValue">
       <Border Classes="value" Classes.changed="{Binding IsChanged}" Padding="2" CornerRadius="5" BorderThickness="1">
         <Panel>
-          <CheckBox IsVisible="{Binding IsFlag}" IsChecked="{Binding IsChecked}" Content="enabled" MinWidth="0" />
+          <CheckBox IsVisible="{Binding IsFlag}" IsChecked="{Binding IsChecked}" Content="{l:Tr 'enabled'}" MinWidth="0" />
           <ComboBox IsVisible="{Binding IsChoice}" ItemsSource="{Binding Choices}" SelectedItem="{Binding SelectedChoice}"
                     HorizontalAlignment="Stretch" />
           <NumericUpDown IsVisible="{Binding IsNumber}" Value="{Binding Number}" Minimum="{Binding Minimum}"
@@ -39,9 +40,9 @@
   <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="24,20">
     <Grid ColumnDefinitions="*,Auto">
       <StackPanel Spacing="4">
-        <TextBlock Classes="h1" Text="SiK Radio" />
+        <TextBlock Classes="h1" Text="{l:Tr 'SiK Radio'}" />
         <TextBlock Classes="muted" TextWrapping="Wrap"
-                   Text="Settings of a 3DR / RFD / HopeRF SiK telemetry radio pair, read and written with AT commands through the radio plugged into this computer. The remote column is the radio on the vehicle, reached over the air." />
+                   Text="{l:Tr 'Settings of a 3DR / RFD / HopeRF SiK telemetry radio pair, read and written with AT commands through the radio plugged into this computer. The remote column is the radio on the vehicle, reached over the air.'}" />
       </StackPanel>
       <ProgressBar Grid.Column="1" IsIndeterminate="True" Width="120" VerticalAlignment="Center" Margin="16,0,0,0"
                    IsVisible="{Binding IsBusy}" />
@@ -51,22 +52,22 @@
     <Border Grid.Row="1" Classes="card" Margin="0,14,0,10" Padding="12,10">
       <WrapPanel Orientation="Horizontal" ItemSpacing="10" LineSpacing="8">
         <StackPanel Orientation="Horizontal" Spacing="8" IsEnabled="{Binding IsIdle}">
-          <TextBlock Text="Port" VerticalAlignment="Center" Classes="muted" />
+          <TextBlock Text="{l:Tr 'Port'}" VerticalAlignment="Center" Classes="muted" />
           <ComboBox ItemsSource="{Binding Ports}" IsEditable="True" Text="{Binding SelectedPort, Mode=TwoWay}" MinWidth="200" MaxWidth="340"
                     ToolTip.Tip="{Binding SelectedPort}" />
-          <Button Command="{Binding RefreshPortsCommand}" ToolTip.Tip="Look for serial ports again" Padding="6">
+          <Button Command="{Binding RefreshPortsCommand}" ToolTip.Tip="{l:Tr 'Look for serial ports again'}" Padding="6">
             <Path Classes="icon" Data="{StaticResource IconRefresh}" Width="18" Height="18" />
           </Button>
           <ComboBox ItemsSource="{Binding Bauds}" SelectedItem="{Binding SelectedBaud}" MinWidth="100"
-                    ToolTip.Tip="The radio's serial speed (SiK default 57600)" />
+                    ToolTip.Tip="{l:Tr 'The radio\'s serial speed (SiK default 57600)'}" />
         </StackPanel>
-        <Button Classes="accent" Content="Load settings" Command="{Binding LoadCommand}" />
-        <Button Classes="accent" Content="Save settings" Command="{Binding SaveCommand}"
-                ToolTip.Tip="Write the changed settings (ATS / RTS), store them (AT&amp;W) and restart the radios (ATZ)" />
-        <Button Content="Copy required to remote" Command="{Binding CopyLocalToRemoteCommand}"
-                ToolTip.Tip="Copy the settings both radios must share (air speed, net ID, frequencies, channels, ECC, MAVLink, window, encryption)" />
-        <Button Content="Reset to defaults" Command="{Binding ResetDefaultsCommand}"
-                ToolTip.Tip="Factory defaults (AT&amp;F) on both radios, stored and restarted" />
+        <Button Classes="accent" Content="{l:Tr 'Load settings'}" Command="{Binding LoadCommand}" />
+        <Button Classes="accent" Content="{l:Tr 'Save settings'}" Command="{Binding SaveCommand}"
+                ToolTip.Tip="{l:Tr 'Write the changed settings (ATS / RTS), store them (AT&amp;W) and restart the radios (ATZ)'}" />
+        <Button Content="{l:Tr 'Copy required to remote'}" Command="{Binding CopyLocalToRemoteCommand}"
+                ToolTip.Tip="{l:Tr 'Copy the settings both radios must share (air speed, net ID, frequencies, channels, ECC, MAVLink, window, encryption)'}" />
+        <Button Content="{l:Tr 'Reset to defaults'}" Command="{Binding ResetDefaultsCommand}"
+                ToolTip.Tip="{l:Tr 'Factory defaults (AT&amp;F) on both radios, stored and restarted'}" />
       </WrapPanel>
     </Border>
 
@@ -74,7 +75,7 @@
     <Grid Grid.Row="2" ColumnDefinitions="*,12,*" Margin="0,0,0,10" IsVisible="{Binding HasSettings}">
       <Border Classes="card" Padding="12,10">
         <StackPanel Spacing="3">
-          <TextBlock Classes="h2" Text="Local radio" />
+          <TextBlock Classes="h2" Text="{l:Tr 'Local radio'}" />
           <TextBlock Text="{Binding LocalVersion}" TextWrapping="Wrap" />
           <TextBlock Text="{Binding LocalHardware}" Classes="muted" />
           <TextBlock Text="{Binding Rssi}" Classes="muted" FontFamily="{StaticResource SikMono}" FontSize="12" TextWrapping="Wrap"
@@ -83,7 +84,7 @@
       </Border>
       <Border Grid.Column="2" Classes="card" Padding="12,10">
         <StackPanel Spacing="3">
-          <TextBlock Classes="h2" Text="Remote radio" />
+          <TextBlock Classes="h2" Text="{l:Tr 'Remote radio'}" />
           <TextBlock Text="{Binding RemoteVersion}" TextWrapping="Wrap" />
           <TextBlock Text="{Binding RemoteHardware}" Classes="muted" />
         </StackPanel>
@@ -95,13 +96,13 @@
       <Border Classes="card" Padding="0">
         <Grid RowDefinitions="Auto,*">
           <Grid ColumnDefinitions="220,340,340,*" Margin="14,10,14,6">
-            <TextBlock Classes="muted" FontWeight="SemiBold" Text="Setting" />
-            <TextBlock Grid.Column="1" Classes="muted" FontWeight="SemiBold" Text="Local" Margin="6,0" />
-            <TextBlock Grid.Column="2" Classes="muted" FontWeight="SemiBold" Text="Remote" Margin="6,0" />
+            <TextBlock Classes="muted" FontWeight="SemiBold" Text="{l:Tr 'Setting'}" />
+            <TextBlock Grid.Column="1" Classes="muted" FontWeight="SemiBold" Text="{l:Tr 'Local'}" Margin="6,0" />
+            <TextBlock Grid.Column="2" Classes="muted" FontWeight="SemiBold" Text="{l:Tr 'Remote'}" Margin="6,0" />
           </Grid>
           <ScrollViewer Grid.Row="1">
             <StackPanel>
-              <TextBlock Margin="14,20" Classes="muted" Text="No settings loaded yet." IsVisible="{Binding !HasSettings}" />
+              <TextBlock Margin="14,20" Classes="muted" Text="{l:Tr 'No settings loaded yet.'}" IsVisible="{Binding !HasSettings}" />
               <ItemsControl ItemsSource="{Binding Rows}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate x:DataType="comms:SikSettingRow">
@@ -109,7 +110,7 @@
                             BorderThickness="0,1,0,0" Padding="14,5">
                       <Grid ColumnDefinitions="220,340,340,*">
                         <StackPanel VerticalAlignment="Center" ToolTip.Tip="{Binding Description}">
-                          <TextBlock Text="{Binding Label}" FontWeight="SemiBold" />
+                          <TextBlock Text="{l:TrBind {Binding Label}}" FontWeight="SemiBold" />
                           <TextBlock Text="{Binding Name}" Classes="muted" FontSize="11" />
                         </StackPanel>
                         <ContentControl Grid.Column="1" Margin="6,0" Content="{Binding Local}" ContentTemplate="{StaticResource SikEditor}"
@@ -128,9 +129,9 @@
               <Border BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0" Padding="14,8"
                       IsVisible="{Binding HasLocalKey}">
                 <Grid ColumnDefinitions="220,340,340,*">
-                  <StackPanel VerticalAlignment="Center" ToolTip.Tip="AES key in hex; both radios need the same key">
-                    <TextBlock Text="Encryption key" FontWeight="SemiBold" />
-                    <TextBlock Text="AT&amp;E" Classes="muted" FontSize="11" />
+                  <StackPanel VerticalAlignment="Center" ToolTip.Tip="{l:Tr 'AES key in hex; both radios need the same key'}">
+                    <TextBlock Text="{l:Tr 'Encryption key'}" FontWeight="SemiBold" />
+                    <TextBlock Text="{l:Tr 'AT&amp;E'}" Classes="muted" FontSize="11" />
                   </StackPanel>
                   <TextBox Grid.Column="1" Margin="8,0" Text="{Binding LocalAesKey}" FontFamily="{StaticResource SikMono}" />
                   <TextBox Grid.Column="2" Margin="8,0" Text="{Binding RemoteAesKey}" FontFamily="{StaticResource SikMono}"
@@ -142,19 +143,19 @@
         </Grid>
       </Border>
 
-      <Expander Grid.Row="1" Header="AT command log" Margin="0,10,0,0" HorizontalAlignment="Stretch">
+      <Expander Grid.Row="1" Header="{l:Tr 'AT command log'}" Margin="0,10,0,0" HorizontalAlignment="Stretch">
         <Grid RowDefinitions="Auto,Auto">
           <TextBox Text="{Binding CommsLog}" IsReadOnly="True" AcceptsReturn="True" Height="160" FontFamily="{StaticResource SikMono}"
                    FontSize="12" />
-          <Button Grid.Row="1" Content="Clear log" Command="{Binding ClearLogCommand}" Margin="0,6,0,0" />
+          <Button Grid.Row="1" Content="{l:Tr 'Clear log'}" Command="{Binding ClearLogCommand}" Margin="0,6,0,0" />
         </Grid>
       </Expander>
     </Grid>
 
     <Grid Grid.Row="4" ColumnDefinitions="*,Auto" Margin="0,10,0,0">
-      <TextBlock Text="{Binding Status}" Foreground="{DynamicResource Info}" TextWrapping="Wrap" VerticalAlignment="Center" />
+      <TextBlock Text="{l:TrBind {Binding Status}}" Foreground="{DynamicResource Info}" TextWrapping="Wrap" VerticalAlignment="Center" />
       <TextBlock Grid.Column="1" Classes="muted" FontSize="12" Margin="16,0,0,0" VerticalAlignment="Center"
-                 Text="Green LED solid: radios linked · blinking: searching · red flashing: sending" />
+                 Text="{l:Tr 'Green LED solid: radios linked · blinking: searching · red flashing: sending'}" />
     </Grid>
   </Grid>
 </UserControl>

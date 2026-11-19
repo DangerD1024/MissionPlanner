@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:MissionPlanner.App.Core.ViewModels"
+        xmlns:l="using:MissionPlanner.App.Localization"
         x:Class="MissionPlanner.App.Views.MainWindow"
         x:DataType="vm:ShellViewModel"
         Title="{Binding Title}"
@@ -23,7 +24,8 @@
                 <Path Classes="icon navicon" Data="{StaticResource IconData}" VerticalAlignment="Center" IsVisible="{DynamicResource ShowVectorIcons}" />
                 <Image Source="/Assets/MissionPlannerIcons/light_flightdata_icon.png" Width="33" Height="30" IsVisible="{DynamicResource ShowOriginalIcons}" />
               </Panel>
-              <TextBlock Text="DATA" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+              <TextBlock Text="{l:Tr 'DATA'}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center"
+                         MaxWidth="112" TextWrapping="Wrap" TextAlignment="Center" />
             </StackPanel>
           </RadioButton>
           <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsPlan, Mode=OneWay}"
@@ -33,7 +35,8 @@
                 <Path Classes="icon navicon" Data="{StaticResource IconPlan}" VerticalAlignment="Center" IsVisible="{DynamicResource ShowVectorIcons}" />
                 <Image Source="/Assets/MissionPlannerIcons/light_flightplan_icon.png" Width="33" Height="30" IsVisible="{DynamicResource ShowOriginalIcons}" />
               </Panel>
-              <TextBlock Text="PLAN" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+              <TextBlock Text="{l:Tr 'PLAN'}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center"
+                         MaxWidth="112" TextWrapping="Wrap" TextAlignment="Center" />
             </StackPanel>
           </RadioButton>
           <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsSetup, Mode=OneWay}"
@@ -43,7 +46,8 @@
                 <Path Classes="icon navicon" Data="{StaticResource IconSetup}" VerticalAlignment="Center" IsVisible="{DynamicResource ShowVectorIcons}" />
                 <Image Source="/Assets/MissionPlannerIcons/light_initialsetup_icon.png" Width="33" Height="30" IsVisible="{DynamicResource ShowOriginalIcons}" />
               </Panel>
-              <TextBlock Text="SETUP" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+              <TextBlock Text="{l:Tr 'SETUP'}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center"
+                         MaxWidth="112" TextWrapping="Wrap" TextAlignment="Center" />
             </StackPanel>
           </RadioButton>
           <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsConfig, Mode=OneWay}"
@@ -53,7 +57,8 @@
                 <Path Classes="icon navicon" Data="{StaticResource IconConfig}" VerticalAlignment="Center" IsVisible="{DynamicResource ShowVectorIcons}" />
                 <Image Source="/Assets/MissionPlannerIcons/light_tuningconfig_icon.png" Width="33" Height="30" IsVisible="{DynamicResource ShowOriginalIcons}" />
               </Panel>
-              <TextBlock Text="CONFIG" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+              <TextBlock Text="{l:Tr 'CONFIG'}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center"
+                         MaxWidth="112" TextWrapping="Wrap" TextAlignment="Center" />
             </StackPanel>
           </RadioButton>
           <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsSimulation, Mode=OneWay}"
@@ -63,7 +68,8 @@
                 <Path Classes="icon navicon" Data="{StaticResource IconSim}" VerticalAlignment="Center" IsVisible="{DynamicResource ShowVectorIcons}" />
                 <Image Source="/Assets/MissionPlannerIcons/light_simulation_icon.png" Width="33" Height="30" IsVisible="{DynamicResource ShowOriginalIcons}" />
               </Panel>
-              <TextBlock Text="SIMULATION" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+              <TextBlock Text="{l:Tr 'SIMULATION'}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center"
+                         MaxWidth="112" TextWrapping="Wrap" TextAlignment="Center" />
             </StackPanel>
           </RadioButton>
           <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsHelp, Mode=OneWay}"
@@ -73,7 +79,8 @@
                 <Path Classes="icon navicon" Data="{StaticResource IconHelp}" VerticalAlignment="Center" IsVisible="{DynamicResource ShowVectorIcons}" />
                 <Image Source="/Assets/MissionPlannerIcons/light_help_icon.png" Width="33" Height="30" IsVisible="{DynamicResource ShowOriginalIcons}" />
               </Panel>
-              <TextBlock Text="HELP" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+              <TextBlock Text="{l:Tr 'HELP'}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center"
+                         MaxWidth="112" TextWrapping="Wrap" TextAlignment="Center" />
             </StackPanel>
           </RadioButton>
           <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsSettings, Mode=OneWay}"
@@ -82,14 +89,15 @@
               <Panel HorizontalAlignment="Center" Height="30">
                 <Path Classes="icon navicon" Data="{StaticResource IconSettings}" VerticalAlignment="Center" />
               </Panel>
-              <TextBlock Text="SETTINGS" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+              <TextBlock Text="{l:Tr 'SETTINGS'}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center"
+                         MaxWidth="112" TextWrapping="Wrap" TextAlignment="Center" />
             </StackPanel>
           </RadioButton>
         </StackPanel>
 
         <!-- wordmark -->
         <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center"
-                    Margin="0,0,24,0" Spacing="6">
+                    Margin="0,0,24,0" Spacing="6" ClipToBounds="True" FlowDirection="LeftToRight">
           <TextBlock Text="MISSION" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource Text}" />
           <TextBlock Text="PLANNER" FontSize="17" FontWeight="Light" Foreground="{DynamicResource Accent}" />
         </StackPanel>
@@ -100,28 +108,28 @@
               Margin="0,0,10,0">
           <ComboBox Width="250" Height="28" MinHeight="28" Padding="8,2" FontSize="12"
                     ItemsSource="{Binding Ports}" SelectedItem="{Binding SelectedPort}"
-                    IsEnabled="{Binding CanEditLink}" ToolTip.Tip="Port" />
+                    IsEnabled="{Binding CanEditLink}" ToolTip.Tip="{l:Tr 'Port'}" />
           <ComboBox Grid.Column="1" Width="104" Height="28" MinHeight="28" Padding="8,2" FontSize="12" Margin="6,0,0,0"
                     ItemsSource="{Binding Bauds}" SelectedItem="{Binding SelectedBaud}"
-                    IsEnabled="{Binding CanEditLink}" IsVisible="{Binding IsSerial}" ToolTip.Tip="Baud rate" />
+                    IsEnabled="{Binding CanEditLink}" IsVisible="{Binding IsSerial}" ToolTip.Tip="{l:Tr 'Baud rate'}" />
           <Button Grid.Column="2" Width="28" Height="28" MinHeight="28" Padding="1" Margin="6,0,0,0" Background="Transparent"
-                  Command="{Binding RefreshPortsCommand}" IsEnabled="{Binding CanEditLink}" ToolTip.Tip="Refresh ports">
+                  Command="{Binding RefreshPortsCommand}" IsEnabled="{Binding CanEditLink}" ToolTip.Tip="{l:Tr 'Refresh ports'}">
             <Path Classes="icon" Data="{StaticResource IconRefresh}" />
           </Button>
           <ComboBox Grid.Row="1" Grid.ColumnSpan="3" Height="28" MinHeight="28" Padding="8,2" FontSize="12" Margin="0,6,0,0"
-                    HorizontalAlignment="Stretch" PlaceholderText="vehicle"
+                    HorizontalAlignment="Stretch" PlaceholderText="{l:Tr 'vehicle'}"
                     ItemsSource="{Binding Vehicles}" SelectedItem="{Binding SelectedVehicle}"
                     IsVisible="{Binding ShowVehicles}" />
           <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Margin="2,10,0,0" FontSize="12" FontWeight="SemiBold"
                      Foreground="{DynamicResource Danger}" Text="{Binding StaleText}" IsVisible="{Binding IsStale}"
-                     ToolTip.Tip="Nothing is arriving from the vehicle. The link is kept and resumes by itself when data returns (TCP is reopened automatically); press Disconnect to stop trying." />
+                     ToolTip.Tip="{l:Tr 'Nothing is arriving from the vehicle. The link is kept and resumes by itself when data returns (TCP is reopened automatically); press Disconnect to stop trying.'}" />
           <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Margin="2,8,0,0" FontSize="11" Classes="muted"
                      Text="{Binding ProgressText}" IsVisible="{Binding IsBusy}" TextTrimming="CharacterEllipsis" MaxWidth="390" />
           <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="10" Margin="0,6,0,0"
                       IsVisible="{Binding CanEditLink}">
-            <CheckBox IsChecked="{Binding AutoConnect}" MinHeight="24" FontSize="12" Content="Auto-connect"
-                      ToolTip.Tip="Connect automatically to any autopilot plugged in by USB or sending MAVLink on UDP 14550" />
-            <TextBlock Text="{Binding AutoConnectStatus}" FontSize="11" Classes="muted" VerticalAlignment="Center"
+            <CheckBox IsChecked="{Binding AutoConnect}" MinHeight="24" FontSize="12" Content="{l:Tr 'Auto-connect'}"
+                      ToolTip.Tip="{l:Tr 'Connect automatically to any autopilot plugged in by USB or sending MAVLink on UDP 14550'}" />
+            <TextBlock Text="{l:TrBind {Binding AutoConnectStatus}}" FontSize="11" Classes="muted" VerticalAlignment="Center"
                        TextTrimming="CharacterEllipsis" MaxWidth="260" />
           </StackPanel>
         </Grid>
@@ -145,7 +153,7 @@
                        IsVisible="{Binding IsConnected}" />
               </Panel>
             </Panel>
-            <TextBlock Text="{Binding ConnectText}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+            <TextBlock Text="{l:TrBind {Binding ConnectText}}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
           </StackPanel>
         </Button>
       </Grid>

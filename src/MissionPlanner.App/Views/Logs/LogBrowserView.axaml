@@ -4,6 +4,7 @@
              xmlns:local="using:MissionPlanner.App.Views.Logs"
              xmlns:controls="using:MissionPlanner.App.Controls"
              xmlns:scottplot="using:ScottPlot.Avalonia"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.Logs.LogBrowserView"
              x:DataType="vm:LogBrowserViewModel">
 
@@ -51,10 +52,10 @@
     <Border DockPanel.Dock="Top" Background="{DynamicResource Bg1}" BorderBrush="{DynamicResource Line}"
             BorderThickness="0,0,0,1" Padding="12,8">
       <Grid ColumnDefinitions="Auto,*,Auto">
-        <Button Classes="accent tool" Command="{Binding OpenCommand}" ToolTip.Tip="Open a .bin, .log or .tlog file">
+        <Button Classes="accent tool" Command="{Binding OpenCommand}" ToolTip.Tip="{l:Tr 'Open a .bin, .log or .tlog file'}">
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Path Classes="icon" Data="{StaticResource IconFile}" />
-            <TextBlock Text="Open log…" VerticalAlignment="Center" />
+            <TextBlock Text="{l:Tr 'Open log…'}" VerticalAlignment="Center" />
           </StackPanel>
         </Button>
         <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center" Spacing="1">
@@ -63,16 +64,16 @@
           <TextBlock Classes="muted" FontSize="12" Text="{Binding Summary}" TextTrimming="CharacterEllipsis" />
         </StackPanel>
         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" IsVisible="{Binding HasLog}">
-          <TextBlock Classes="muted" Text="Markers" VerticalAlignment="Center" Margin="0,0,10,0" />
-          <CheckBox Classes="toggle" Content="Modes" IsChecked="{Binding ShowModes}" />
-          <CheckBox Classes="toggle" Content="Errors" IsChecked="{Binding ShowErrors}" />
-          <CheckBox Classes="toggle" Content="Messages" IsChecked="{Binding ShowMessages}" />
-          <CheckBox Classes="toggle" Content="Events" IsChecked="{Binding ShowEvents}" />
-          <CheckBox Classes="toggle" Content="Map" IsChecked="{Binding ShowMap}" IsEnabled="{Binding HasTrack}" />
-          <Button Classes="tool" Command="{Binding ClearGraphCommand}" IsEnabled="{Binding HasGraph}" ToolTip.Tip="Remove every line">
+          <TextBlock Classes="muted" Text="{l:Tr 'Markers'}" VerticalAlignment="Center" Margin="0,0,10,0" />
+          <CheckBox Classes="toggle" Content="{l:Tr 'Modes'}" IsChecked="{Binding ShowModes}" />
+          <CheckBox Classes="toggle" Content="{l:Tr 'Errors'}" IsChecked="{Binding ShowErrors}" />
+          <CheckBox Classes="toggle" Content="{l:Tr 'Messages'}" IsChecked="{Binding ShowMessages}" />
+          <CheckBox Classes="toggle" Content="{l:Tr 'Events'}" IsChecked="{Binding ShowEvents}" />
+          <CheckBox Classes="toggle" Content="{l:Tr 'Map'}" IsChecked="{Binding ShowMap}" IsEnabled="{Binding HasTrack}" />
+          <Button Classes="tool" Command="{Binding ClearGraphCommand}" IsEnabled="{Binding HasGraph}" ToolTip.Tip="{l:Tr 'Remove every line'}">
             <StackPanel Orientation="Horizontal" Spacing="6">
               <Path Classes="icon" Data="{StaticResource IconDelete}" />
-              <TextBlock Text="Clear graph" VerticalAlignment="Center" />
+              <TextBlock Text="{l:Tr 'Clear graph'}" VerticalAlignment="Center" />
             </StackPanel>
           </Button>
         </StackPanel>
@@ -81,7 +82,7 @@
 
     <!-- status line -->
     <Border DockPanel.Dock="Bottom" Padding="12,4" Background="{DynamicResource Bg1}" IsVisible="{Binding Status, Converter={x:Static ObjectConverters.IsNotNull}}">
-      <TextBlock Text="{Binding Status}" Foreground="{DynamicResource Warn}" TextTrimming="CharacterEllipsis" />
+      <TextBlock Text="{l:TrBind {Binding Status}}" Foreground="{DynamicResource Warn}" TextTrimming="CharacterEllipsis" />
     </Border>
 
     <Panel>
@@ -90,7 +91,7 @@
         <!-- message types and fields -->
         <Grid RowDefinitions="Auto,*" Background="{DynamicResource Bg1}">
           <Grid Margin="8,8,8,6" ColumnDefinitions="*,Auto">
-            <TextBox Text="{Binding Filter}" PlaceholderText="Filter: ATT, Roll, GPS.Alt…" />
+            <TextBox Text="{Binding Filter}" PlaceholderText="{l:Tr 'Filter: ATT, Roll, GPS.Alt…'}" />
             <Button Grid.Column="1" Margin="4,0,0,0" Padding="8,4" Content="✕" Command="{Binding ClearFilterCommand}"
                     IsVisible="{Binding Filter, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
           </Grid>
@@ -122,9 +123,9 @@
           <scottplot:AvaPlot x:Name="Graph" />
           <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4" IsHitTestVisible="False"
                       IsVisible="{Binding !HasGraph}">
-            <TextBlock Classes="h2" HorizontalAlignment="Center" Text="Tick fields on the left to graph them" />
+            <TextBlock Classes="h2" HorizontalAlignment="Center" Text="{l:Tr 'Tick fields on the left to graph them'}" />
             <TextBlock Classes="muted" HorizontalAlignment="Center"
-                       Text="Scroll to zoom, drag to pan, right-drag to zoom an axis, double-click to fit." />
+                       Text="{l:Tr 'Scroll to zoom, drag to pan, right-drag to zoom an axis, double-click to fit.'}" />
           </StackPanel>
           <ItemsControl Grid.Row="1" ItemsSource="{Binding Series}" Margin="10,6,10,2">
             <ItemsControl.ItemsPanel>
@@ -143,8 +144,8 @@
                       <TextBlock Text="{Binding Detail}" Classes="muted" FontSize="11" />
                     </StackPanel>
                     <ToggleButton Padding="6,2" FontSize="11" Content="R" VerticalAlignment="Center"
-                                  IsChecked="{Binding RightAxis}" ToolTip.Tip="Use the right-hand Y axis" />
-                    <Button Padding="6,2" Content="✕" VerticalAlignment="Center" ToolTip.Tip="Remove"
+                                  IsChecked="{Binding RightAxis}" ToolTip.Tip="{l:Tr 'Use the right-hand Y axis'}" />
+                    <Button Padding="6,2" Content="✕" VerticalAlignment="Center" ToolTip.Tip="{l:Tr 'Remove'}"
                             Command="{Binding $parent[UserControl].((vm:LogBrowserViewModel)DataContext).RemoveSeriesCommand}"
                             CommandParameter="{Binding}" />
                   </StackPanel>
@@ -162,13 +163,13 @@
             <controls:MapView x:Name="Map" />
             <Border Background="{DynamicResource Overlay}" CornerRadius="4" Padding="6,2" Margin="8,6" VerticalAlignment="Top"
                     HorizontalAlignment="Left" IsHitTestVisible="False">
-              <TextBlock Classes="muted" FontSize="11" Text="GPS track · hover the graph to follow it" />
+              <TextBlock Classes="muted" FontSize="11" Text="{l:Tr 'GPS track · hover the graph to follow it'}" />
             </Border>
           </Panel>
           <GridSplitter Grid.Row="1" ResizeDirection="Rows" Background="{DynamicResource Line}"
                         IsVisible="{Binding MapVisible}" />
           <Grid Grid.Row="2" x:Name="EventsPanel" RowDefinitions="Auto,*">
-            <TextBlock Classes="h2" Margin="10,8,10,4" Text="Events" />
+            <TextBlock Classes="h2" Margin="10,8,10,4" Text="{l:Tr 'Events'}" />
             <ListBox Grid.Row="1" Classes="events" ItemsSource="{Binding VisibleEvents}" Background="Transparent"
                      x:Name="EventList">
               <ListBox.ItemTemplate>
@@ -192,21 +193,21 @@
       <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" IsVisible="{Binding ShowWelcome}">
         <Path Classes="icon" Data="{StaticResource IconFile}" Stroke="{DynamicResource Muted}" HorizontalAlignment="Center"
               Width="48" Height="48" Stretch="Uniform" />
-        <TextBlock Classes="h1" HorizontalAlignment="Center" Text="Open a log to explore it" />
+        <TextBlock Classes="h1" HorizontalAlignment="Center" Text="{l:Tr 'Open a log to explore it'}" />
         <TextBlock Classes="muted" HorizontalAlignment="Center" TextAlignment="Center"
-                   Text="DataFlash logs (.bin, .log) from the vehicle, or telemetry logs (.tlog) recorded by the ground station." />
+                   Text="{l:Tr 'DataFlash logs (.bin, .log) from the vehicle, or telemetry logs (.tlog) recorded by the ground station.'}" />
         <Button Classes="accent tool" HorizontalAlignment="Center" Margin="0,6,0,0" Command="{Binding OpenCommand}"
-                Content="Open log…" />
+                Content="{l:Tr 'Open log…'}" />
       </StackPanel>
 
       <!-- loading -->
       <Border Classes="card" HorizontalAlignment="Center" VerticalAlignment="Center" MinWidth="380" Padding="20"
               IsVisible="{Binding IsLoading}">
         <StackPanel Spacing="10">
-          <TextBlock Classes="h2" Text="{Binding LoadingText}" TextTrimming="CharacterEllipsis" />
+          <TextBlock Classes="h2" Text="{l:TrBind {Binding LoadingText}}" TextTrimming="CharacterEllipsis" />
           <ProgressBar Minimum="0" Maximum="100" Value="{Binding LoadingPercent}"
                        IsIndeterminate="{Binding LoadingIndeterminate}" />
-          <TextBlock Classes="muted" FontSize="12" Text="Large logs take a few seconds; the window stays usable." />
+          <TextBlock Classes="muted" FontSize="12" Text="{l:Tr 'Large logs take a few seconds; the window stays usable.'}" />
         </StackPanel>
       </Border>
     </Panel>

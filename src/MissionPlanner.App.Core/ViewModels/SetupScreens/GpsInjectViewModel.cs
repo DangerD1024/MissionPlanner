@@ -653,7 +653,7 @@ public sealed partial class GpsInjectViewModel : PageViewModel
     [RelayCommand]
     private async Task DeleteSavedBaseAsync(SavedBasePosition? item)
     {
-        if (item == null || !await Services.Dialogs.ConfirmAsync(Title, $"Delete the saved base position \"{item.Name}\"?", "Delete"))
+        if (item == null || !await Services.Dialogs.ConfirmAsync(Title, L.Format("Delete the saved base position \"{0}\"?", item.Name), "Delete"))
             return;
         SavedBases.Remove(item);
         SavedBasePositions.Save(SavedBases);

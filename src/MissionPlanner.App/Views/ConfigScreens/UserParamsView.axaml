@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.ConfigScreens"
              xmlns:cs="using:MissionPlanner.App.Controls.ConfigScreens"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.ConfigScreens.UserParamsView"
              x:DataType="vm:UserParamsViewModel">
 
@@ -39,28 +40,28 @@
             Padding="18,12">
       <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
         <StackPanel Spacing="2">
-          <TextBlock Classes="h1" Text="User Params" />
+          <TextBlock Classes="h1" Text="{l:Tr 'User Params'}" />
           <TextBlock Classes="muted" FontSize="12.5" TextWrapping="Wrap"
-                     Text="Your own short list of parameters. Add them from the list on the right; changes are written when you press Write Params." />
+                     Text="{l:Tr 'Your own short list of parameters. Add them from the list on the right; changes are written when you press Write Params.'}" />
         </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-          <Button Content="Discard edits" Command="{Binding DiscardEditsCommand}" IsVisible="{Binding HasPending}" />
-          <Button Command="{Binding RefreshCommand}" ToolTip.Tip="Read every parameter from the vehicle again">
+          <Button Content="{l:Tr 'Discard edits'}" Command="{Binding DiscardEditsCommand}" IsVisible="{Binding HasPending}" />
+          <Button Command="{Binding RefreshCommand}" ToolTip.Tip="{l:Tr 'Read every parameter from the vehicle again'}">
             <StackPanel Orientation="Horizontal" Spacing="6">
               <Path Classes="icon" Data="{StaticResource IconRefresh}" />
-              <TextBlock Text="Refresh Params" VerticalAlignment="Center" />
+              <TextBlock Text="{l:Tr 'Refresh Params'}" VerticalAlignment="Center" />
             </StackPanel>
           </Button>
-          <Button Classes="accent" Command="{Binding WriteCommand}" ToolTip.Tip="Write the edited values to the vehicle (Ctrl+S)">
+          <Button Classes="accent" Command="{Binding WriteCommand}" ToolTip.Tip="{l:Tr 'Write the edited values to the vehicle (Ctrl+S)'}">
             <StackPanel Orientation="Horizontal" Spacing="6">
               <Path Classes="icon" Data="{StaticResource IconUp}" />
-              <TextBlock Text="Write Params" VerticalAlignment="Center" />
+              <TextBlock Text="{l:Tr 'Write Params'}" VerticalAlignment="Center" />
             </StackPanel>
           </Button>
         </StackPanel>
         <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="14" Margin="0,8,0,0">
           <TextBlock Text="{Binding Summary}" FontSize="12" FontWeight="SemiBold" />
-          <TextBlock Text="{Binding StatusText}" FontSize="12" Classes="muted" TextTrimming="CharacterEllipsis" />
+          <TextBlock Text="{l:TrBind {Binding StatusText}}" FontSize="12" Classes="muted" TextTrimming="CharacterEllipsis" />
         </StackPanel>
       </Grid>
     </Border>
@@ -73,7 +74,7 @@
                     CanUserResizeColumns="True" CanUserSortColumns="False" CanUserReorderColumns="False"
                     GridLinesVisibility="Horizontal" BorderThickness="0">
             <DataGrid.Columns>
-              <DataGridTemplateColumn Header="Name" Width="190" MinWidth="140" IsReadOnly="True">
+              <DataGridTemplateColumn Header="{l:Tr 'Name'}" Width="190" MinWidth="140" IsReadOnly="True">
                 <DataGridTemplateColumn.CellTemplate>
                   <DataTemplate x:DataType="vm:ParamRow">
                     <StackPanel Margin="10,0,4,0" VerticalAlignment="Center" ToolTip.Tip="{Binding NameTip}">
@@ -86,7 +87,7 @@
                 </DataGridTemplateColumn.CellTemplate>
               </DataGridTemplateColumn>
 
-              <DataGridTemplateColumn Header="Value" Width="210" MinWidth="170">
+              <DataGridTemplateColumn Header="{l:Tr 'Value'}" Width="210" MinWidth="170">
                 <DataGridTemplateColumn.CellTemplate>
                   <DataTemplate x:DataType="vm:ParamRow">
                     <cs:ParamValueCell />
@@ -94,15 +95,15 @@
                 </DataGridTemplateColumn.CellTemplate>
                 <DataGridTemplateColumn.CellEditingTemplate>
                   <DataTemplate x:DataType="vm:ParamRow">
-                    <TextBox Text="{Binding EditText}" VerticalAlignment="Center" Margin="2,0" MinHeight="30"
+                    <TextBox Text="{l:TrBind {Binding EditText}}" VerticalAlignment="Center" Margin="2,0" MinHeight="30"
                              Padding="6,4" FontSize="12.5" />
                   </DataTemplate>
                 </DataGridTemplateColumn.CellEditingTemplate>
               </DataGridTemplateColumn>
 
-              <DataGridTextColumn Header="Units" Width="70" MinWidth="44" Binding="{Binding Units}" IsReadOnly="True" />
+              <DataGridTextColumn Header="{l:Tr 'Units'}" Width="70" MinWidth="44" Binding="{Binding Units}" IsReadOnly="True" />
 
-              <DataGridTemplateColumn Header="Options" Width="160" MinWidth="100" IsReadOnly="True">
+              <DataGridTemplateColumn Header="{l:Tr 'Options'}" Width="160" MinWidth="100" IsReadOnly="True">
                 <DataGridTemplateColumn.CellTemplate>
                   <DataTemplate x:DataType="vm:ParamRow">
                     <TextBlock Margin="8,0" VerticalAlignment="Center" Text="{Binding OptionsText}" FontSize="11.5"
@@ -112,7 +113,7 @@
                 </DataGridTemplateColumn.CellTemplate>
               </DataGridTemplateColumn>
 
-              <DataGridTemplateColumn Header="Desc" Width="*" MinWidth="120" IsReadOnly="True">
+              <DataGridTemplateColumn Header="{l:Tr 'Desc'}" Width="*" MinWidth="120" IsReadOnly="True">
                 <DataGridTemplateColumn.CellTemplate>
                   <DataTemplate x:DataType="vm:ParamRow">
                     <TextBlock Margin="8,0" VerticalAlignment="Center" Text="{Binding Description}" FontSize="11.5"
@@ -126,17 +127,17 @@
                 <DataGridTemplateColumn.CellTemplate>
                   <DataTemplate x:DataType="vm:ParamRow">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="2">
-                      <Button Classes="row" ToolTip.Tip="Move up"
+                      <Button Classes="row" ToolTip.Tip="{l:Tr 'Move up'}"
                               Command="{Binding $parent[UserControl].((vm:UserParamsViewModel)DataContext).MoveUpCommand}"
                               CommandParameter="{Binding}">
                         <Path Classes="icon" Data="{StaticResource IconUp}" />
                       </Button>
-                      <Button Classes="row" ToolTip.Tip="Move down"
+                      <Button Classes="row" ToolTip.Tip="{l:Tr 'Move down'}"
                               Command="{Binding $parent[UserControl].((vm:UserParamsViewModel)DataContext).MoveDownCommand}"
                               CommandParameter="{Binding}">
                         <Path Classes="icon" Data="{StaticResource IconDown}" />
                       </Button>
-                      <Button Classes="row" ToolTip.Tip="Remove from the list"
+                      <Button Classes="row" ToolTip.Tip="{l:Tr 'Remove from the list'}"
                               Command="{Binding $parent[UserControl].((vm:UserParamsViewModel)DataContext).RemoveCommand}"
                               CommandParameter="{Binding}">
                         <Path Classes="icon" Data="{StaticResource IconDelete}" />
@@ -149,9 +150,9 @@
           </DataGrid>
 
           <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Classes="muted" MaxWidth="420"
-                     TextWrapping="Wrap" TextAlignment="Center" Text="{Binding EmptyText}" IsVisible="{Binding IsEmpty}" />
+                     TextWrapping="Wrap" TextAlignment="Center" Text="{l:TrBind {Binding EmptyText}}" IsVisible="{Binding IsEmpty}" />
           <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Classes="muted"
-                     Text="Loading parameters..." IsVisible="{Binding IsLoading}" />
+                     Text="{l:Tr 'Loading parameters...'}" IsVisible="{Binding IsLoading}" />
         </Panel>
         <TextBlock Grid.Row="1" Margin="14,6" Classes="muted" FontSize="12" TextWrapping="Wrap"
                    Text="{Binding MissingText}" IsVisible="{Binding MissingText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
@@ -160,13 +161,13 @@
       <!-- the picker -->
       <Border Grid.Column="1" Background="{DynamicResource Bg1}" BorderBrush="{DynamicResource Line}" BorderThickness="1,0,0,0">
         <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="12">
-          <TextBlock FontSize="11" FontWeight="Bold" Classes="muted" Text="ADD PARAMETERS" />
+          <TextBlock FontSize="11" FontWeight="Bold" Classes="muted" Text="{l:Tr 'ADD PARAMETERS'}" />
           <TextBox x:Name="PickerBox" Grid.Row="1" Margin="0,8,0,4" Text="{Binding PickerSearch}"
-                   PlaceholderText="Search name or description" />
+                   PlaceholderText="{l:Tr 'Search name or description'}" />
           <TextBlock Grid.Row="2" Classes="muted" FontSize="11.5" Text="{Binding PickerSummary}" Margin="0,0,0,6" />
           <ListBox x:Name="PickerList" Grid.Row="3" Classes="picker" Background="Transparent"
                    ItemsSource="{Binding PickerResults}" SelectedItem="{Binding SelectedPick}"
-                   ToolTip.Tip="Double-click, or select and press Add">
+                   ToolTip.Tip="{l:Tr 'Double-click, or select and press Add'}">
             <ListBox.ItemTemplate>
               <DataTemplate x:DataType="vm:ParamPickItem">
                 <StackPanel>
@@ -179,10 +180,10 @@
           </ListBox>
           <StackPanel Grid.Row="4" Spacing="8" Margin="0,8,0,0">
             <Button Classes="accent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                    Content="Add to my list" Command="{Binding AddCommand}" CommandParameter="{Binding SelectedPick}" />
-            <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Content="Restore default list"
+                    Content="{l:Tr 'Add to my list'}" Command="{Binding AddCommand}" CommandParameter="{Binding SelectedPick}" />
+            <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Content="{l:Tr 'Restore default list'}"
                     Command="{Binding RestoreDefaultsCommand}"
-                    ToolTip.Tip="Mission Planner's list: the RC switch options (CHn_OPT / RCn_OPTION)" />
+                    ToolTip.Tip="{l:Tr 'Mission Planner\'s list: the RC switch options (CHn_OPT / RCn_OPTION)'}" />
           </StackPanel>
         </Grid>
       </Border>

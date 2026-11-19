@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
              xmlns:scottplot="using:ScottPlot.Avalonia"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.FlightData.TuningGraphView"
              x:DataType="vm:TuningGraphViewModel">
 
@@ -25,15 +26,15 @@
     <Grid RowDefinitions="Auto,*">
       <!-- title and tools -->
       <Grid ColumnDefinitions="Auto,*,Auto" Margin="10,5,6,3">
-        <TextBlock Text="Tuning" FontWeight="SemiBold" VerticalAlignment="Center" />
+        <TextBlock Text="{l:Tr 'Tuning'}" FontWeight="SemiBold" VerticalAlignment="Center" />
         <TextBlock Grid.Column="1" Classes="muted" FontSize="11.5" VerticalAlignment="Center" Margin="10,0,0,0"
-                   Text="last 30 s" />
+                   Text="{l:Tr 'last 30 s'}" />
         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
-          <Button Classes="tool" Content="Select fields" Command="{Binding OpenPickerCommand}"
-                  ToolTip.Tip="Choose which values are graphed" />
-          <Button Classes="tool" Content="{Binding PauseText}" Command="{Binding TogglePauseCommand}"
-                  ToolTip.Tip="Freeze the graph to look at it (drag to pan, wheel to zoom)" />
-          <Button Classes="tool" Content="Clear" Command="{Binding ClearCommand}" ToolTip.Tip="Start a fresh trace" />
+          <Button Classes="tool" Content="{l:Tr 'Select fields'}" Command="{Binding OpenPickerCommand}"
+                  ToolTip.Tip="{l:Tr 'Choose which values are graphed'}" />
+          <Button Classes="tool" Content="{l:TrBind {Binding PauseText}}" Command="{Binding TogglePauseCommand}"
+                  ToolTip.Tip="{l:Tr 'Freeze the graph to look at it (drag to pan, wheel to zoom)'}" />
+          <Button Classes="tool" Content="{l:Tr 'Clear'}" Command="{Binding ClearCommand}" ToolTip.Tip="{l:Tr 'Start a fresh trace'}" />
         </StackPanel>
       </Grid>
 
@@ -45,16 +46,16 @@
         <Grid RowDefinitions="Auto,*" RowSpacing="6">
           <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
             <TextBox x:Name="FieldSearch" Text="{Binding FieldFilter}" Height="28" MinHeight="28" FontSize="12.5"
-                     VerticalContentAlignment="Center" PlaceholderText="Search values (roll, nav_pitch, alt, ch3out…)" />
+                     VerticalContentAlignment="Center" PlaceholderText="{l:Tr 'Search values (roll, nav_pitch, alt, ch3out…)'}" />
             <StackPanel Grid.Column="1" VerticalAlignment="Center">
               <TextBlock Text="{Binding SelectionSummary}" Classes="muted" FontSize="11.5" />
-              <TextBlock Text="{Binding PickerMessage}" Foreground="{DynamicResource Warn}" FontSize="11.5"
+              <TextBlock Text="{l:TrBind {Binding PickerMessage}}" Foreground="{DynamicResource Warn}" FontSize="11.5"
                          IsVisible="{Binding PickerMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
             </StackPanel>
-            <Button Grid.Column="2" Classes="tool" Content="Default" Command="{Binding ResetFieldsCommand}"
-                    ToolTip.Tip="Roll, pitch, nav roll and nav pitch" />
-            <Button Grid.Column="3" Classes="tool" Content="None" Command="{Binding ClearFieldsCommand}" />
-            <Button Grid.Column="4" Classes="tool accent" Content="Done" Command="{Binding ClosePickerCommand}" />
+            <Button Grid.Column="2" Classes="tool" Content="{l:Tr 'Default'}" Command="{Binding ResetFieldsCommand}"
+                    ToolTip.Tip="{l:Tr 'Roll, pitch, nav roll and nav pitch'}" />
+            <Button Grid.Column="3" Classes="tool" Content="{l:Tr 'None'}" Command="{Binding ClearFieldsCommand}" />
+            <Button Grid.Column="4" Classes="tool accent" Content="{l:Tr 'Done'}" Command="{Binding ClosePickerCommand}" />
           </Grid>
           <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
             <ItemsControl ItemsSource="{Binding FieldOptions}">

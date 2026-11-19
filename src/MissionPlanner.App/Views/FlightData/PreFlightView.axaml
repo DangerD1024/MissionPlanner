@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
              xmlns:fd="using:MissionPlanner.App.Controls.FlightData"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.FlightData.PreFlightView"
              x:DataType="vm:PreFlightViewModel">
 
@@ -38,10 +39,10 @@
           <TextBlock Text="{Binding Summary}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentText}" />
         </Border>
       </StackPanel>
-      <Button Grid.Column="1" Content="Clear ticks" Command="{Binding ClearTicksCommand}"
-              ToolTip.Tip="Untick the lines you ticked by hand" />
-      <Button Grid.Column="2" Content="Edit..." Classes="accent" Command="{Binding EditCommand}"
-              ToolTip.Tip="Add, remove or change checklist lines" />
+      <Button Grid.Column="1" Content="{l:Tr 'Clear ticks'}" Command="{Binding ClearTicksCommand}"
+              ToolTip.Tip="{l:Tr 'Untick the lines you ticked by hand'}" />
+      <Button Grid.Column="2" Content="{l:Tr 'Edit...'}" Classes="accent" Command="{Binding EditCommand}"
+              ToolTip.Tip="{l:Tr 'Add, remove or change checklist lines'}" />
     </Grid>
 
     <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">

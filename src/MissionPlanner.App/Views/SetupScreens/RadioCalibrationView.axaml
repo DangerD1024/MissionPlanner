@@ -5,6 +5,7 @@
              xmlns:views="using:MissionPlanner.App.Views.SetupScreens"
              xmlns:cc="using:MissionPlanner.App.Controls.SetupScreens"
              xmlns:rm="using:MissionPlanner.App.Views.SetupScreens.RadioMapping"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.RadioCalibrationView"
              x:DataType="vm:RadioCalibrationViewModel">
 
@@ -30,7 +31,7 @@
 
   <ScrollViewer HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="24,20" Spacing="16" MaxWidth="1240">
-      <TextBlock Classes="h1" Text="Radio Calibration" />
+      <TextBlock Classes="h1" Text="{l:Tr 'Radio Calibration'}" />
 
       <!-- optional QGroundControl-style channel mapping (RCMAP / reversal) -->
       <rm:RadioMappingView DataContext="{Binding Mapping}" />
@@ -41,8 +42,8 @@
           <StackPanel Spacing="14">
             <StackPanel Spacing="4">
               <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Classes="barlabel" Text="{Binding Roll.Label}" />
-                <CheckBox Grid.Column="1" Content="Reverse" IsVisible="{Binding ShowReverse}"
+                <TextBlock Classes="barlabel" Text="{l:TrBind {Binding Roll.Label}}" />
+                <CheckBox Grid.Column="1" Content="{l:Tr 'Reverse'}" IsVisible="{Binding ShowReverse}"
                           IsChecked="{Binding ReverseRoll.IsChecked}" IsEnabled="{Binding ReverseRoll.CanEdit}" />
               </Grid>
               <cc:RcBar Height="34" Value="{Binding Roll.Value}" MinLine="{Binding Roll.MinLine}" MaxLine="{Binding Roll.MaxLine}"
@@ -51,43 +52,43 @@
 
             <Grid ColumnDefinitions="92,*,92">
               <StackPanel Spacing="4" HorizontalAlignment="Center">
-                <TextBlock Classes="barlabel" HorizontalAlignment="Center" Text="{Binding Pitch.Label}" />
+                <TextBlock Classes="barlabel" HorizontalAlignment="Center" Text="{l:TrBind {Binding Pitch.Label}}" />
                 <cc:RcBar Orientation="Vertical" Width="64" Height="260" Value="{Binding Pitch.Value}"
                           MinLine="{Binding Pitch.MinLine}" MaxLine="{Binding Pitch.MaxLine}"
                           ShowRange="{Binding Pitch.ShowRange}" Reversed="{Binding Pitch.Reversed}" />
-                <CheckBox Content="Reverse" HorizontalAlignment="Center" IsVisible="{Binding ShowReverse}"
+                <CheckBox Content="{l:Tr 'Reverse'}" HorizontalAlignment="Center" IsVisible="{Binding ShowReverse}"
                           IsChecked="{Binding ReversePitch.IsChecked}" IsEnabled="{Binding ReversePitch.CanEdit}" />
               </StackPanel>
 
               <StackPanel Grid.Column="1" Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="12,0">
-                <Button Classes="accent big" HorizontalAlignment="Center" Content="{Binding CalibrateButtonText}" Command="{Binding CalibrateCommand}"
+                <Button Classes="accent big" HorizontalAlignment="Center" Content="{l:TrBind {Binding CalibrateButtonText}}" Command="{Binding CalibrateCommand}"
                         IsVisible="{Binding !Mapping.IsActive}" />
                 <Panel IsVisible="{Binding !Mapping.IsActive}" HorizontalAlignment="Center">
-                  <Button Content="Map channels…" Command="{Binding Mapping.StartCommand}" IsVisible="{Binding IsIdle}"
-                          ToolTip.Tip="Optional: find which channel is roll, pitch, throttle and yaw (RCMAP) and which way each moves, then calibrate" />
+                  <Button Content="{l:Tr 'Map channels…'}" Command="{Binding Mapping.StartCommand}" IsVisible="{Binding IsIdle}"
+                          ToolTip.Tip="{l:Tr 'Optional: find which channel is roll, pitch, throttle and yaw (RCMAP) and which way each moves, then calibrate'}" />
                 </Panel>
-                <Button HorizontalAlignment="Center" Content="Cancel" Command="{Binding CancelCalibrationCommand}" IsVisible="{Binding IsCapturing}" />
-                <TextBlock TextWrapping="Wrap" TextAlignment="Center" MaxWidth="300" FontSize="14" Text="{Binding Instruction}"
+                <Button HorizontalAlignment="Center" Content="{l:Tr 'Cancel'}" Command="{Binding CancelCalibrationCommand}" IsVisible="{Binding IsCapturing}" />
+                <TextBlock TextWrapping="Wrap" TextAlignment="Center" MaxWidth="300" FontSize="14" Text="{l:TrBind {Binding Instruction}}"
                            IsVisible="{Binding IsCapturing}" />
                 <TextBlock Classes="muted" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="300" FontSize="12.5"
                            IsVisible="{Binding IsIdle}"
-                           Text="Switch the transmitter on, then move every stick and switch to its extremes during the calibration. Remove the propellers first." />
+                           Text="{l:Tr 'Switch the transmitter on, then move every stick and switch to its extremes during the calibration. Remove the propellers first.'}" />
               </StackPanel>
 
               <StackPanel Grid.Column="2" Spacing="4" HorizontalAlignment="Center">
-                <TextBlock Classes="barlabel" HorizontalAlignment="Center" Text="{Binding Throttle.Label}" />
+                <TextBlock Classes="barlabel" HorizontalAlignment="Center" Text="{l:TrBind {Binding Throttle.Label}}" />
                 <cc:RcBar Orientation="Vertical" Width="64" Height="260" Value="{Binding Throttle.Value}"
                           MinLine="{Binding Throttle.MinLine}" MaxLine="{Binding Throttle.MaxLine}"
                           ShowRange="{Binding Throttle.ShowRange}" Reversed="{Binding Throttle.Reversed}" />
-                <CheckBox Content="Reverse" HorizontalAlignment="Center" IsVisible="{Binding ShowReverse}"
+                <CheckBox Content="{l:Tr 'Reverse'}" HorizontalAlignment="Center" IsVisible="{Binding ShowReverse}"
                           IsChecked="{Binding ReverseThrottle.IsChecked}" IsEnabled="{Binding ReverseThrottle.CanEdit}" />
               </StackPanel>
             </Grid>
 
             <StackPanel Spacing="4">
               <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Classes="barlabel" Text="{Binding Yaw.Label}" />
-                <CheckBox Grid.Column="1" Content="Reverse" IsVisible="{Binding ShowReverse}"
+                <TextBlock Classes="barlabel" Text="{l:TrBind {Binding Yaw.Label}}" />
+                <CheckBox Grid.Column="1" Content="{l:Tr 'Reverse'}" IsVisible="{Binding ShowReverse}"
                           IsChecked="{Binding ReverseYaw.IsChecked}" IsEnabled="{Binding ReverseYaw.CanEdit}" />
               </Grid>
               <cc:RcBar Height="34" Value="{Binding Yaw.Value}" MinLine="{Binding Yaw.MinLine}" MaxLine="{Binding Yaw.MaxLine}"
@@ -102,8 +103,8 @@
         <Border Grid.Column="2" Classes="card" Padding="18">
           <StackPanel Spacing="10">
             <Grid ColumnDefinitions="*,Auto">
-              <TextBlock Classes="h2" Text="Radio Inputs" />
-              <TextBlock Grid.Column="1" Classes="muted" FontSize="12" VerticalAlignment="Center" Text="PWM µs, 800 – 2200" />
+              <TextBlock Classes="h2" Text="{l:Tr 'Radio Inputs'}" />
+              <TextBlock Grid.Column="1" Classes="muted" FontSize="12" VerticalAlignment="Center" Text="{l:Tr 'PWM µs, 800 – 2200'}" />
             </Grid>
             <ItemsControl ItemsSource="{Binding Channels}">
               <ItemsControl.ItemsPanel>
@@ -125,15 +126,15 @@
       <!-- what the calibration found -->
       <Border Classes="card" Padding="18" IsVisible="{Binding HasResults}">
         <StackPanel Spacing="8">
-          <TextBlock Classes="h2" Text="Detected radio options" />
+          <TextBlock Classes="h2" Text="{l:Tr 'Detected radio options'}" />
           <TextBlock Classes="muted" FontSize="12.5" TextWrapping="Wrap"
-                     Text="Channels not connected are displayed as 1500 +-2. Normal values are around 1100 | 1900." />
+                     Text="{l:Tr 'Channels not connected are displayed as 1500 +-2. Normal values are around 1100 | 1900.'}" />
           <Grid ColumnDefinitions="80,90,90,90,*" Margin="0,4,0,0">
-            <TextBlock Classes="muted" FontWeight="Bold" Text="Channel" />
-            <TextBlock Grid.Column="1" Classes="muted" FontWeight="Bold" Text="Min" />
-            <TextBlock Grid.Column="2" Classes="muted" FontWeight="Bold" Text="Max" />
-            <TextBlock Grid.Column="3" Classes="muted" FontWeight="Bold" Text="Trim" />
-            <TextBlock Grid.Column="4" Classes="muted" FontWeight="Bold" Text="Result" />
+            <TextBlock Classes="muted" FontWeight="Bold" Text="{l:Tr 'Channel'}" />
+            <TextBlock Grid.Column="1" Classes="muted" FontWeight="Bold" Text="{l:Tr 'Min'}" />
+            <TextBlock Grid.Column="2" Classes="muted" FontWeight="Bold" Text="{l:Tr 'Max'}" />
+            <TextBlock Grid.Column="3" Classes="muted" FontWeight="Bold" Text="{l:Tr 'Trim'}" />
+            <TextBlock Grid.Column="4" Classes="muted" FontWeight="Bold" Text="{l:Tr 'Result'}" />
           </Grid>
           <ItemsControl ItemsSource="{Binding Results}">
             <ItemsControl.ItemTemplate>
@@ -143,7 +144,7 @@
                   <TextBlock Grid.Column="1" FontFamily="monospace" Text="{Binding Min}" />
                   <TextBlock Grid.Column="2" FontFamily="monospace" Text="{Binding Max}" />
                   <TextBlock Grid.Column="3" FontFamily="monospace" Text="{Binding Trim}" />
-                  <TextBlock Grid.Column="4" Classes="outcome" Classes.ok="{Binding Written}" Classes.bad="{Binding Failed}" Text="{Binding Outcome}" />
+                  <TextBlock Grid.Column="4" Classes="outcome" Classes.ok="{Binding Written}" Classes.bad="{Binding Failed}" Text="{l:TrBind {Binding Outcome}}" />
                 </Grid>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
@@ -154,11 +155,11 @@
       <Grid ColumnDefinitions="*,16,*">
         <Border Classes="card" Padding="18">
           <StackPanel Spacing="10">
-            <TextBlock Classes="h2" Text="Spektrum Bind" />
+            <TextBlock Classes="h2" Text="{l:Tr 'Spektrum Bind'}" />
             <StackPanel Orientation="Horizontal" Spacing="8">
-              <Button Content="Bind DSM2" Command="{Binding BindDsm2Command}" />
-              <Button Content="Bind DSMX" Command="{Binding BindDsmxCommand}" />
-              <Button Content="Bind DSM8" Command="{Binding BindDsm8Command}" />
+              <Button Content="{l:Tr 'Bind DSM2'}" Command="{Binding BindDsm2Command}" />
+              <Button Content="{l:Tr 'Bind DSMX'}" Command="{Binding BindDsmxCommand}" />
+              <Button Content="{l:Tr 'Bind DSM8'}" Command="{Binding BindDsm8Command}" />
             </StackPanel>
             <views:CalibrationStatusBanner DataContext="{Binding BindStatus}" />
           </StackPanel>
@@ -166,11 +167,11 @@
 
         <Border Grid.Column="2" Classes="card" Padding="18" IsVisible="{Binding ShowElevons}">
           <StackPanel Spacing="8">
-            <TextBlock Classes="h2" Text="Elevon Config" />
+            <TextBlock Classes="h2" Text="{l:Tr 'Elevon Config'}" />
             <ItemsControl ItemsSource="{Binding Elevons}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="cal:ParamToggleViewModel">
-                  <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}" IsEnabled="{Binding CanEdit}" IsVisible="{Binding IsAvailable}" />
+                  <CheckBox Content="{l:TrBind {Binding Label}}" IsChecked="{Binding IsChecked}" IsEnabled="{Binding CanEdit}" IsVisible="{Binding IsAvailable}" />
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>

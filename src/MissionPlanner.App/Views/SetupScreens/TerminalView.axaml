@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.TerminalView"
              x:DataType="vm:TerminalViewModel">
 
@@ -10,44 +11,44 @@
 
   <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" Margin="24,20">
     <StackPanel Spacing="4">
-      <TextBlock Classes="h1" Text="Terminal" />
+      <TextBlock Classes="h1" Text="{l:Tr 'Terminal'}" />
       <TextBlock Classes="muted" TextWrapping="Wrap"
-                 Text="A text console on the vehicle's system shell (or one of its serial ports) through MAVLink SERIAL_CONTROL, or on a serial port of this computer." />
+                 Text="{l:Tr 'A text console on the vehicle\'s system shell (or one of its serial ports) through MAVLink SERIAL_CONTROL, or on a serial port of this computer.'}" />
     </StackPanel>
 
     <!-- where to connect -->
     <Border Grid.Row="1" Classes="card" Margin="0,14,0,10" Padding="12,10">
       <WrapPanel Orientation="Horizontal" ItemSpacing="10" LineSpacing="8">
         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" IsEnabled="{Binding IsClosed}">
-          <RadioButton GroupName="termmode" Content="MAVLink shell" IsChecked="{Binding IsMavlinkMode}"
-                       ToolTip.Tip="The vehicle's system shell or one of its serial ports, through the vehicle link (SERIAL_CONTROL)" />
-          <RadioButton GroupName="termmode" Content="Serial port" IsChecked="{Binding IsSerialMode}"
-                       ToolTip.Tip="A serial port on this computer (not the one the vehicle link uses)" />
+          <RadioButton GroupName="termmode" Content="{l:Tr 'MAVLink shell'}" IsChecked="{Binding IsMavlinkMode}"
+                       ToolTip.Tip="{l:Tr 'The vehicle\'s system shell or one of its serial ports, through the vehicle link (SERIAL_CONTROL)'}" />
+          <RadioButton GroupName="termmode" Content="{l:Tr 'Serial port'}" IsChecked="{Binding IsSerialMode}"
+                       ToolTip.Tip="{l:Tr 'A serial port on this computer (not the one the vehicle link uses)'}" />
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsMavlinkMode}" IsEnabled="{Binding IsClosed}">
-          <TextBlock Text="Device" VerticalAlignment="Center" Classes="muted" />
+          <TextBlock Text="{l:Tr 'Device'}" VerticalAlignment="Center" Classes="muted" />
           <ComboBox ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice}" MinWidth="170" />
           <ComboBox ItemsSource="{Binding DeviceBauds}" SelectedItem="{Binding SelectedDeviceBaud}" MinWidth="110"
-                    IsVisible="{Binding ShowDeviceBaud}" ToolTip.Tip="Baud rate to set on the vehicle's port" />
+                    IsVisible="{Binding ShowDeviceBaud}" ToolTip.Tip="{l:Tr 'Baud rate to set on the vehicle\'s port'}" />
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsSerialMode}" IsEnabled="{Binding IsClosed}">
-          <TextBlock Text="Port" VerticalAlignment="Center" Classes="muted" />
+          <TextBlock Text="{l:Tr 'Port'}" VerticalAlignment="Center" Classes="muted" />
           <ComboBox ItemsSource="{Binding Ports}" IsEditable="True" Text="{Binding SelectedPort, Mode=TwoWay}" MinWidth="200" MaxWidth="340"
                     ToolTip.Tip="{Binding SelectedPort}" />
-          <Button Command="{Binding RefreshPortsCommand}" ToolTip.Tip="Look for serial ports again" Padding="6">
+          <Button Command="{Binding RefreshPortsCommand}" ToolTip.Tip="{l:Tr 'Look for serial ports again'}" Padding="6">
             <Path Classes="icon" Data="{StaticResource IconRefresh}" Width="18" Height="18" />
           </Button>
           <ComboBox ItemsSource="{Binding Bauds}" SelectedItem="{Binding SelectedBaud}" MinWidth="110" />
         </StackPanel>
 
-        <Button Classes="accent" Content="{Binding OpenText}" Command="{Binding OpenCommand}" MinWidth="110" />
+        <Button Classes="accent" Content="{l:TrBind {Binding OpenText}}" Command="{Binding OpenCommand}" MinWidth="110" />
 
         <StackPanel Orientation="Horizontal" Spacing="8">
-          <TextBlock Text="Line end" VerticalAlignment="Center" Classes="muted" />
+          <TextBlock Text="{l:Tr 'Line end'}" VerticalAlignment="Center" Classes="muted" />
           <ComboBox ItemsSource="{Binding LineEndings}" SelectedItem="{Binding SelectedLineEnding}" MinWidth="80" />
-          <CheckBox Content="Local echo" IsChecked="{Binding LocalEcho}" ToolTip.Tip="Show sent commands (for devices that do not echo)" />
+          <CheckBox Content="{l:Tr 'Local echo'}" IsChecked="{Binding LocalEcho}" ToolTip.Tip="{l:Tr 'Show sent commands (for devices that do not echo)'}" />
         </StackPanel>
       </WrapPanel>
     </Border>
@@ -66,19 +67,19 @@
       <TextBlock Text="›" FontFamily="{StaticResource TermMono}" FontSize="18" VerticalAlignment="Center"
                  Foreground="{DynamicResource Accent}" Margin="2,0,8,2" />
       <TextBox Grid.Column="1" x:Name="CommandBox" Text="{Binding CommandText}" FontFamily="{StaticResource TermMono}"
-               PlaceholderText="Type a command; Enter sends, Up/Down recall history" IsEnabled="{Binding IsOpen}" />
-      <Button Grid.Column="2" Classes="accent" Content="Send" Command="{Binding SendCommand}" Margin="8,0,0,0" MinWidth="70" />
-      <Button Grid.Column="3" Content="Ctrl-C" Command="{Binding SendCtrlCCommand}" Margin="8,0,0,0"
-              ToolTip.Tip="Interrupt the running shell command" />
-      <Button Grid.Column="4" Content="Clear" Command="{Binding ClearCommand}" Margin="8,0,0,0" />
-      <Button Grid.Column="5" Command="{Binding SaveLogCommand}" Margin="8,0,0,0" ToolTip.Tip="Save everything received to a text file">
+               PlaceholderText="{l:Tr 'Type a command; Enter sends, Up/Down recall history'}" IsEnabled="{Binding IsOpen}" />
+      <Button Grid.Column="2" Classes="accent" Content="{l:Tr 'Send'}" Command="{Binding SendCommand}" Margin="8,0,0,0" MinWidth="70" />
+      <Button Grid.Column="3" Content="{l:Tr 'Ctrl-C'}" Command="{Binding SendCtrlCCommand}" Margin="8,0,0,0"
+              ToolTip.Tip="{l:Tr 'Interrupt the running shell command'}" />
+      <Button Grid.Column="4" Content="{l:Tr 'Clear'}" Command="{Binding ClearCommand}" Margin="8,0,0,0" />
+      <Button Grid.Column="5" Command="{Binding SaveLogCommand}" Margin="8,0,0,0" ToolTip.Tip="{l:Tr 'Save everything received to a text file'}">
         <StackPanel Orientation="Horizontal" Spacing="6">
           <Path Classes="icon" Data="{StaticResource IconFile}" Width="16" Height="16" Stretch="Uniform" />
-          <TextBlock Text="Save log" VerticalAlignment="Center" />
+          <TextBlock Text="{l:Tr 'Save log'}" VerticalAlignment="Center" />
         </StackPanel>
       </Button>
     </Grid>
 
-    <TextBlock Grid.Row="4" Margin="0,8,0,0" Classes="muted" Text="{Binding Status}" TextWrapping="Wrap" />
+    <TextBlock Grid.Row="4" Margin="0,8,0,0" Classes="muted" Text="{l:TrBind {Binding Status}}" TextWrapping="Wrap" />
   </Grid>
 </UserControl>

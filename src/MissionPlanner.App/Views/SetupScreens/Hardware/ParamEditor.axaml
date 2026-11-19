@@ -1,9 +1,10 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.Hardware.ParamEditor"
              x:DataType="hw:ParamField"
-             ToolTip.Tip="{Binding ToolTip}">
+             ToolTip.Tip="{l:TrBind {Binding ToolTip}}">
 
   <!-- the editor for one parameter: number, drop-down, check box or bitmask, picked by Kind -->
   <UserControl.Styles>
@@ -45,7 +46,7 @@
                 MaxDropDownHeight="420">
         <ComboBox.ItemTemplate>
           <DataTemplate x:DataType="hw:ParamOption">
-            <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+            <TextBlock Text="{l:TrBind {Binding Label}}" TextTrimming="CharacterEllipsis" />
           </DataTemplate>
         </ComboBox.ItemTemplate>
       </ComboBox>
@@ -61,13 +62,13 @@
         <Button.Flyout>
           <Flyout Placement="BottomEdgeAlignedLeft">
             <StackPanel Spacing="6" MinWidth="240">
-              <TextBlock Classes="h2" Text="{Binding Label}" />
+              <TextBlock Classes="h2" Text="{l:TrBind {Binding Label}}" />
               <TextBlock Classes="muted" Text="{Binding Name}" FontSize="11" />
               <ScrollViewer MaxHeight="420">
                 <ItemsControl ItemsSource="{Binding Bits}">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="hw:BitOption">
-                      <CheckBox IsChecked="{Binding IsChecked}" Content="{Binding Label}" />
+                      <CheckBox IsChecked="{Binding IsChecked}" Content="{l:TrBind {Binding Label}}" />
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>

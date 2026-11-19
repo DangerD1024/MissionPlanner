@@ -4,6 +4,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using MissionPlanner.App.Core.Localization;
 using MissionPlanner.App.Core.Services;
 
 namespace MissionPlanner.App.Services;
@@ -49,7 +50,7 @@ public sealed class DialogService : IDialogService
             return null;
         var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = title,
+            Title = L.Tr(title),
             AllowMultiple = false,
             FileTypeFilter = ToFilters(filters),
         });
@@ -63,7 +64,7 @@ public sealed class DialogService : IDialogService
             return null;
         var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = title,
+            Title = L.Tr(title),
             SuggestedFileName = suggestedName,
             FileTypeChoices = ToFilters(filters),
             DefaultExtension = filters.FirstOrDefault()?.Extensions.FirstOrDefault(),
@@ -76,14 +77,14 @@ public sealed class DialogService : IDialogService
         var storage = Owner?.StorageProvider;
         if (storage == null)
             return null;
-        var folders = await storage.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = title });
+        var folders = await storage.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = L.Tr(title) });
         return folders.FirstOrDefault()?.TryGetLocalPath();
     }
 
     private static List<FilePickerFileType>? ToFilters(FileFilter[] filters) =>
         filters.Length == 0
             ? null
-            : filters.Select(f => new FilePickerFileType(f.Name) { Patterns = f.Extensions.Select(e => "*." + e).ToList() }).ToList();
+            : filters.Select(f => new FilePickerFileType(L.Tr(f.Name)) { Patterns = f.Extensions.Select(e => "*." + e).ToList() }).ToList();
 
     private static async Task<(bool Ok, string? Text)> ShowAsync(string title, string message, MessageKind kind, string? input,
         string ok, string? cancel)
@@ -94,6 +95,9 @@ public sealed class DialogService : IDialogService
             MessageKind.Warning => (IBrush)Avalonia.Application.Current!.FindResource("Warn")!,
             _ => (IBrush)Avalonia.Application.Current!.FindResource("Accent")!,
         };
+
+        // view-models pass English; the dialog shows it in the current language
+        (title, message, ok, cancel) = (L.Tr(title), L.Tr(message), L.Tr(ok), cancel == null ? null : L.Tr(cancel));
 
         TextBox? box = input == null ? null : new TextBox { Text = input, MinWidth = 320 };
         var okButton = new Button { Content = ok, IsDefault = true, MinWidth = 90, HorizontalContentAlignment = HorizontalAlignment.Center };

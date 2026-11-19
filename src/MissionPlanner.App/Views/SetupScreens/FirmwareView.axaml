@@ -3,6 +3,7 @@
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
              xmlns:fw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Firmware"
              xmlns:fwc="using:MissionPlanner.App.Controls.SetupScreens.Firmware"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.FirmwareView"
              x:DataType="vm:FirmwareViewModel">
 
@@ -77,23 +78,23 @@
     <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Disabled">
       <StackPanel Spacing="16" Margin="0,0,8,0">
         <StackPanel Spacing="4">
-          <TextBlock Classes="h1" Text="Install Firmware" />
+          <TextBlock Classes="h1" Text="{l:Tr 'Install Firmware'}" />
           <TextBlock Classes="muted" TextWrapping="Wrap"
-                     Text="Plug the autopilot in with USB (do not connect), then click the vehicle type to download and install the latest firmware for your board." />
+                     Text="{l:Tr 'Plug the autopilot in with USB (do not connect), then click the vehicle type to download and install the latest firmware for your board.'}" />
         </StackPanel>
 
         <!-- manifest problems -->
         <Border Classes="card" BorderBrush="{DynamicResource Danger}" IsVisible="{Binding HasError}">
           <Grid ColumnDefinitions="*,Auto">
-            <TextBlock Text="{Binding ErrorText}" TextWrapping="Wrap" VerticalAlignment="Center" />
-            <Button Grid.Column="1" Content="Retry" Margin="12,0,0,0" Command="{Binding ReloadManifestCommand}" />
+            <TextBlock Text="{l:TrBind {Binding ErrorText}}" TextWrapping="Wrap" VerticalAlignment="Center" />
+            <Button Grid.Column="1" Content="{l:Tr 'Retry'}" Margin="12,0,0,0" Command="{Binding ReloadManifestCommand}" />
           </Grid>
         </Border>
 
         <!-- release type -->
         <StackPanel Spacing="8">
           <StackPanel Orientation="Horizontal" Spacing="10">
-            <TextBlock Text="Release" VerticalAlignment="Center" FontWeight="SemiBold" />
+            <TextBlock Text="{l:Tr 'Release'}" VerticalAlignment="Center" FontWeight="SemiBold" />
             <ComboBox ItemsSource="{Binding Releases}" SelectedItem="{Binding SelectedRelease}" MinWidth="150"
                       IsEnabled="{Binding IsIdle}">
               <ComboBox.ItemTemplate>
@@ -106,7 +107,7 @@
                          IsVisible="{Binding IsLoading}" />
             <TextBlock Classes="muted" FontSize="12" Text="{Binding ManifestText}" VerticalAlignment="Center" />
           </StackPanel>
-          <TextBlock Text="{Binding ReleaseWarning}" IsVisible="{Binding HasReleaseWarning}" Foreground="{DynamicResource Warn}"
+          <TextBlock Text="{l:TrBind {Binding ReleaseWarning}}" IsVisible="{Binding HasReleaseWarning}" Foreground="{DynamicResource Warn}"
                      TextWrapping="Wrap" FontSize="12" />
         </StackPanel>
 
@@ -126,7 +127,7 @@
                 <Grid RowDefinitions="*,Auto,Auto">
                   <Path Classes="vehicleicon" Data="{Binding Icon, Converter={StaticResource VehicleIcon}}"
                         HorizontalAlignment="Center" VerticalAlignment="Center" />
-                  <TextBlock Grid.Row="1" Classes="h2" Text="{Binding Title}" HorizontalAlignment="Center" Margin="0,6,0,0" />
+                  <TextBlock Grid.Row="1" Classes="h2" Text="{l:TrBind {Binding Title}}" HorizontalAlignment="Center" Margin="0,6,0,0" />
                   <TextBlock Grid.Row="2" Classes="muted" FontSize="12" Text="{Binding VersionText}" HorizontalAlignment="Center"
                              TextTrimming="CharacterEllipsis" />
                 </Grid>
@@ -140,13 +141,13 @@
           <ToggleButton IsChecked="{Binding ShowAllOptions}" Margin="0,0,8,8" IsEnabled="{Binding IsReady}">
             <StackPanel Orientation="Horizontal" Spacing="6">
               <Path Classes="icon" Data="{StaticResource IconConfig}" Width="16" Height="16" Stretch="Uniform" />
-              <TextBlock Text="All options" />
+              <TextBlock Text="{l:Tr 'All options'}" />
             </StackPanel>
           </ToggleButton>
           <Button Command="{Binding LoadCustomFirmwareCommand}" Margin="0,0,8,8">
             <StackPanel Orientation="Horizontal" Spacing="6">
               <Path Classes="icon" Data="{StaticResource IconFile}" Width="16" Height="16" Stretch="Uniform" />
-              <TextBlock Text="Load custom firmware…" />
+              <TextBlock Text="{l:Tr 'Load custom firmware…'}" />
             </StackPanel>
           </Button>
         </WrapPanel>
@@ -154,21 +155,21 @@
         <!-- every option -->
         <Border Classes="card" IsVisible="{Binding ShowAllOptions}">
           <StackPanel Spacing="10" DataContext="{Binding Options}" x:DataType="fw:FirmwareOptionsViewModel">
-            <TextBlock Classes="caption" Text="ALL FIRMWARE FILES" />
+            <TextBlock Classes="caption" Text="{l:Tr 'ALL FIRMWARE FILES'}" />
             <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto,Auto,Auto">
-              <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted" FontSize="12" Text="Search boards" />
-              <TextBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Search}" PlaceholderText="e.g. matek, cube, pixhawk"
+              <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted" FontSize="12" Text="{l:Tr 'Search boards'}" />
+              <TextBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Search}" PlaceholderText="{l:Tr 'e.g. matek, cube, pixhawk'}"
                        Margin="0,2,8,8" />
-              <TextBlock Grid.Row="0" Grid.Column="2" Classes="muted" FontSize="12" Text="Board" />
+              <TextBlock Grid.Row="0" Grid.Column="2" Classes="muted" FontSize="12" Text="{l:Tr 'Board'}" />
               <ComboBox Grid.Row="1" Grid.Column="2" ItemsSource="{Binding PlatformOptions}" SelectedItem="{Binding Platform}"
                         HorizontalAlignment="Stretch" Margin="0,2,0,8" MaxDropDownHeight="400" />
-              <TextBlock Grid.Row="2" Grid.Column="0" Classes="muted" FontSize="12" Text="Vehicle" />
+              <TextBlock Grid.Row="2" Grid.Column="0" Classes="muted" FontSize="12" Text="{l:Tr 'Vehicle'}" />
               <ComboBox Grid.Row="3" Grid.Column="0" ItemsSource="{Binding VehicleOptions}" SelectedItem="{Binding Vehicle}"
                         HorizontalAlignment="Stretch" Margin="0,2,8,0" />
-              <TextBlock Grid.Row="2" Grid.Column="1" Classes="muted" FontSize="12" Text="Release" />
+              <TextBlock Grid.Row="2" Grid.Column="1" Classes="muted" FontSize="12" Text="{l:Tr 'Release'}" />
               <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding ReleaseOptions}" SelectedItem="{Binding Release}"
                         HorizontalAlignment="Stretch" Margin="0,2,8,0" MaxDropDownHeight="400" />
-              <TextBlock Grid.Row="2" Grid.Column="2" Classes="muted" FontSize="12" Text="Version" />
+              <TextBlock Grid.Row="2" Grid.Column="2" Classes="muted" FontSize="12" Text="{l:Tr 'Version'}" />
               <ComboBox Grid.Row="3" Grid.Column="2" ItemsSource="{Binding VersionOptions}" SelectedItem="{Binding Version}"
                         HorizontalAlignment="Stretch" Margin="0,2,0,0" MaxDropDownHeight="400" />
             </Grid>
@@ -178,21 +179,21 @@
                         HeadersVisibility="Column" RowHeight="30" CanUserSortColumns="True" CanUserResizeColumns="True"
                         IsReadOnly="True" SelectionMode="Single" BorderThickness="0">
                 <DataGrid.Columns>
-                  <DataGridTextColumn Header="Board" Width="1.6*" Binding="{Binding Platform}" />
-                  <DataGridTextColumn Header="Vehicle" Width="1.3*" Binding="{Binding Vehicle}" />
-                  <DataGridTextColumn Header="Version" Width="1.3*" Binding="{Binding Version}" />
-                  <DataGridTextColumn Header="Release" Width="1.1*" Binding="{Binding Release}" />
-                  <DataGridTextColumn Header="Id" Width="60" Binding="{Binding BoardId}" />
-                  <DataGridTextColumn Header="File" Width="1.6*" Binding="{Binding File}" />
+                  <DataGridTextColumn Header="{l:Tr 'Board'}" Width="1.6*" Binding="{Binding Platform}" />
+                  <DataGridTextColumn Header="{l:Tr 'Vehicle'}" Width="1.3*" Binding="{Binding Vehicle}" />
+                  <DataGridTextColumn Header="{l:Tr 'Version'}" Width="1.3*" Binding="{Binding Version}" />
+                  <DataGridTextColumn Header="{l:Tr 'Release'}" Width="1.1*" Binding="{Binding Release}" />
+                  <DataGridTextColumn Header="{l:Tr 'Id'}" Width="60" Binding="{Binding BoardId}" />
+                  <DataGridTextColumn Header="{l:Tr 'File'}" Width="1.6*" Binding="{Binding File}" />
                 </DataGrid.Columns>
               </DataGrid>
             </Border>
 
             <Grid ColumnDefinitions="*,Auto,Auto">
-              <TextBlock Classes="muted" FontSize="12" Text="{Binding ResultText}" VerticalAlignment="Center" TextWrapping="Wrap" />
-              <Button Grid.Column="1" Content="Clear filters" Margin="8,0,0,0"
+              <TextBlock Classes="muted" FontSize="12" Text="{l:TrBind {Binding ResultText}}" VerticalAlignment="Center" TextWrapping="Wrap" />
+              <Button Grid.Column="1" Content="{l:Tr 'Clear filters'}" Margin="8,0,0,0"
                       Command="{Binding $parent[UserControl].((vm:FirmwareViewModel)DataContext).ClearOptionFiltersCommand}" />
-              <Button Grid.Column="2" Classes="accent" Content="Install selected" Margin="8,0,0,0"
+              <Button Grid.Column="2" Classes="accent" Content="{l:Tr 'Install selected'}" Margin="8,0,0,0"
                       Command="{Binding $parent[UserControl].((vm:FirmwareViewModel)DataContext).InstallSelectedOptionCommand}" />
             </Grid>
           </StackPanel>
@@ -205,8 +206,8 @@
       <Border Classes="card">
         <StackPanel Spacing="8">
           <Grid ColumnDefinitions="*,Auto">
-            <TextBlock Classes="caption" Text="BOARDS ON USB" VerticalAlignment="Center" />
-            <Button Grid.Column="1" Padding="6,4" ToolTip.Tip="Refresh the port list" Command="{Binding RefreshPortsCommand}">
+            <TextBlock Classes="caption" Text="{l:Tr 'BOARDS ON USB'}" VerticalAlignment="Center" />
+            <Button Grid.Column="1" Padding="6,4" ToolTip.Tip="{l:Tr 'Refresh the port list'}" Command="{Binding RefreshPortsCommand}">
               <Path Classes="icon" Data="{StaticResource IconRefresh}" Width="16" Height="16" Stretch="Uniform" />
             </Button>
           </Grid>
@@ -226,14 +227,14 @@
           </ListBox>
           <TextBlock Classes="muted" FontSize="12" Text="{Binding PortsText}" TextWrapping="Wrap"
                      IsVisible="{Binding PortsText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-          <Button Content="Detect bootloader" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+          <Button Content="{l:Tr 'Detect bootloader'}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                   Command="{Binding DetectBootloaderCommand}"
-                  ToolTip.Tip="Probes every serial port for a board in its bootloader for 20 s: plug the board in (or replug it) after clicking." />
+                  ToolTip.Tip="{l:Tr 'Probes every serial port for a board in its bootloader for 20 s: plug the board in (or replug it) after clicking.'}" />
           <Border IsVisible="{Binding HasDetected}" Background="{DynamicResource AccentSoft}" CornerRadius="6" Padding="10,8">
             <Grid ColumnDefinitions="*,Auto">
               <TextBlock Text="{Binding DetectedText}" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource Accent}" />
               <Button Grid.Column="1" Padding="4" Margin="6,0,0,0" VerticalAlignment="Top" Command="{Binding ClearDetectedCommand}"
-                      ToolTip.Tip="Forget the detected board">
+                      ToolTip.Tip="{l:Tr 'Forget the detected board'}">
                 <Path Classes="icon" Data="{StaticResource IconDelete}" Width="14" Height="14" Stretch="Uniform" />
               </Button>
             </Grid>
@@ -243,11 +244,11 @@
 
       <Border Grid.Row="2" Classes="card">
         <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" >
-          <TextBlock Classes="caption" Text="PROGRESS" />
-          <TextBlock Grid.Row="1" Text="{Binding StatusText}" TextWrapping="Wrap" Margin="0,8,0,8" />
+          <TextBlock Classes="caption" Text="{l:Tr 'PROGRESS'}" />
+          <TextBlock Grid.Row="1" Text="{l:TrBind {Binding StatusText}}" TextWrapping="Wrap" Margin="0,8,0,8" />
           <ProgressBar Grid.Row="2" Minimum="0" Maximum="100" Value="{Binding ProgressValue}" Height="8" MinHeight="8"
                        IsIndeterminate="{Binding IsProgressIndeterminate}" />
-          <Button Grid.Row="3" Classes="danger" Content="Cancel" HorizontalAlignment="Right" Margin="0,10,0,0"
+          <Button Grid.Row="3" Classes="danger" Content="{l:Tr 'Cancel'}" HorizontalAlignment="Right" Margin="0,10,0,0"
                   Command="{Binding CancelCommand}" IsVisible="{Binding IsBusy}" />
           <ListBox x:Name="LogList" Grid.Row="4" Classes="log" Margin="0,10,0,0" ItemsSource="{Binding LogLines}" />
         </Grid>

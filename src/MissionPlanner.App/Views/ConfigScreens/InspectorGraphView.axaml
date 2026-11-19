@@ -2,21 +2,22 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.ConfigScreens"
              xmlns:scottplot="using:ScottPlot.Avalonia"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.ConfigScreens.InspectorGraphView"
              x:DataType="vm:InspectorGraphViewModel">
 
   <Grid RowDefinitions="Auto,*" Margin="12">
     <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,8">
       <StackPanel Spacing="2">
-        <TextBlock Classes="h2" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+        <TextBlock Classes="h2" Text="{l:TrBind {Binding Title}}" TextTrimming="CharacterEllipsis" />
         <TextBlock Classes="muted" Text="{Binding Latest}" FontFamily="Cascadia Mono, Consolas, Menlo, DejaVu Sans Mono, monospace"
                    TextTrimming="CharacterEllipsis" />
       </StackPanel>
       <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-        <TextBlock Classes="muted" Text="Points" VerticalAlignment="Center" />
+        <TextBlock Classes="muted" Text="{l:Tr 'Points'}" VerticalAlignment="Center" />
         <ComboBox ItemsSource="{Binding HistoryChoices}" SelectedItem="{Binding History}" MinWidth="90" />
-        <ToggleButton Content="Pause" IsChecked="{Binding IsPaused}" />
-        <Button Content="Clear" Command="{Binding ClearCommand}" />
+        <ToggleButton Content="{l:Tr 'Pause'}" IsChecked="{Binding IsPaused}" />
+        <Button Content="{l:Tr 'Clear'}" Command="{Binding ClearCommand}" />
       </StackPanel>
     </Grid>
 

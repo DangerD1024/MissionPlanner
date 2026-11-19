@@ -61,13 +61,13 @@ public sealed class WindowService : IWindowService
     {
         var window = new Window
         {
-            Title = page.Title,
             Width = width,
             Height = height,
             Content = page,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             Background = (IBrush)Avalonia.Application.Current!.FindResource("Bg2")!,
         };
+        Localization.TrBinding.Bind(window, Window.TitleProperty, page.Title);
         window.Opened += (_, _) =>
         {
             _open.Add(page);

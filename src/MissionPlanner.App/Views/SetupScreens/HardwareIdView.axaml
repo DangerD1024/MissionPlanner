@@ -3,6 +3,7 @@
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
              xmlns:oh="using:MissionPlanner.App.Core.ViewModels.SetupScreens.OptionalHardware"
              xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.HardwareIdView"
              x:DataType="vm:HardwareIdViewModel">
 
@@ -10,8 +11,8 @@
     <hwv:PageHeader Description="The sensors the autopilot detected, from its device-id parameters: bus type, bus number, address on the bus and driver type. Use it to check which IMU, compass, barometer or airspeed sensor is which." />
 
     <Grid Grid.Row="1" ColumnDefinitions="300,Auto,*">
-      <TextBox Text="{Binding Filter}" PlaceholderText="Filter (name, bus, device type…)" />
-      <CheckBox Grid.Column="1" Content="Show unset (0)" IsChecked="{Binding ShowUnset}" Margin="16,0,0,0" />
+      <TextBox Text="{Binding Filter}" PlaceholderText="{l:Tr 'Filter (name, bus, device type…)'}" />
+      <CheckBox Grid.Column="1" Content="{l:Tr 'Show unset (0)'}" IsChecked="{Binding ShowUnset}" Margin="16,0,0,0" />
       <TextBlock Grid.Column="2" Classes="muted" Text="{Binding Summary}" VerticalAlignment="Center" HorizontalAlignment="Right" />
     </Grid>
 
@@ -20,14 +21,14 @@
                 CanUserSortColumns="True" CanUserReorderColumns="False" CanUserResizeColumns="True"
                 HeadersVisibility="Column" SelectionMode="Single" BorderThickness="0">
         <DataGrid.Columns>
-          <DataGridTextColumn x:DataType="oh:HardwareIdRow" Header="Parameter" Binding="{Binding ParamName}" Width="200" />
-          <DataGridTextColumn x:DataType="oh:HardwareIdRow" Header="Sensor" Binding="{Binding Sensor}" Width="90" />
-          <DataGridTextColumn x:DataType="oh:HardwareIdRow" Header="DevID" Binding="{Binding DevId}" Width="100" />
-          <DataGridTextColumn x:DataType="oh:HardwareIdRow" Header="Hex" Binding="{Binding Hex}" Width="100" />
-          <DataGridTextColumn x:DataType="oh:HardwareIdRow" Header="BusType" Binding="{Binding BusType}" Width="90" />
-          <DataGridTextColumn x:DataType="oh:HardwareIdRow" Header="Bus" Binding="{Binding Bus}" Width="70" />
-          <DataGridTextColumn x:DataType="oh:HardwareIdRow" Header="Address" Binding="{Binding Address}" Width="110" />
-          <DataGridTextColumn x:DataType="oh:HardwareIdRow" Header="DevType" Binding="{Binding DevType}" Width="*" />
+          <DataGridTextColumn x:DataType="oh:HardwareIdRow" Header="{l:Tr 'Parameter'}" Binding="{Binding ParamName}" Width="200" />
+          <DataGridTextColumn x:DataType="oh:HardwareIdRow" Header="{l:Tr 'Sensor'}" Binding="{Binding Sensor}" Width="90" />
+          <DataGridTextColumn x:DataType="oh:HardwareIdRow" Header="{l:Tr 'DevID'}" Binding="{Binding DevId}" Width="100" />
+          <DataGridTextColumn x:DataType="oh:HardwareIdRow" Header="{l:Tr 'Hex'}" Binding="{Binding Hex}" Width="100" />
+          <DataGridTextColumn x:DataType="oh:HardwareIdRow" Header="{l:Tr 'BusType'}" Binding="{Binding BusType}" Width="90" />
+          <DataGridTextColumn x:DataType="oh:HardwareIdRow" Header="{l:Tr 'Bus'}" Binding="{Binding Bus}" Width="70" />
+          <DataGridTextColumn x:DataType="oh:HardwareIdRow" Header="{l:Tr 'Address'}" Binding="{Binding Address}" Width="110" />
+          <DataGridTextColumn x:DataType="oh:HardwareIdRow" Header="{l:Tr 'DevType'}" Binding="{Binding DevType}" Width="*" />
         </DataGrid.Columns>
       </DataGrid>
     </Border>

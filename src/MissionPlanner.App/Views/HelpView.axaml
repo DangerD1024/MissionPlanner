@@ -1,27 +1,28 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.HelpView"
              x:DataType="vm:HelpViewModel">
   <Border Classes="card" Margin="24" HorizontalAlignment="Left" VerticalAlignment="Top" MinWidth="520">
     <StackPanel Spacing="10">
-      <TextBlock Classes="h1" Text="Mission Planner (cross-platform preview)" />
-      <TextBlock Classes="muted" Text="A new interface for the ArduPilot ground station on .NET and Avalonia." TextWrapping="Wrap" />
+      <TextBlock Classes="h1" Text="{l:Tr 'Mission Planner (cross-platform preview)'}" />
+      <TextBlock Classes="muted" Text="{l:Tr 'A new interface for the ArduPilot ground station on .NET and Avalonia.'}" TextWrapping="Wrap" />
       <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto" Margin="0,6,0,0">
-        <TextBlock Classes="muted" Text="Version" />
+        <TextBlock Classes="muted" Text="{l:Tr 'Version'}" />
         <SelectableTextBlock Grid.Column="1" Text="{Binding Version}" />
-        <TextBlock Grid.Row="1" Classes="muted" Text="Data folder" Margin="0,6,0,0" />
+        <TextBlock Grid.Row="1" Classes="muted" Text="{l:Tr 'Data folder'}" Margin="0,6,0,0" />
         <SelectableTextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DataDirectory}" Margin="0,6,0,0" />
-        <TextBlock Grid.Row="2" Classes="muted" Text="Logs" Margin="0,6,0,0" />
+        <TextBlock Grid.Row="2" Classes="muted" Text="{l:Tr 'Logs'}" Margin="0,6,0,0" />
         <SelectableTextBlock Grid.Row="2" Grid.Column="1" Text="{Binding LogDirectory}" Margin="0,6,0,0" />
       </Grid>
       <TextBlock Classes="muted" Margin="0,6,0,0" TextWrapping="Wrap"
-                 Text="Documentation: ardupilot.org/planner · Forum: discuss.ardupilot.org" />
+                 Text="{l:Tr 'Documentation: ardupilot.org/planner · Forum: discuss.ardupilot.org'}" />
       <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0" IsVisible="{Binding IsLinux}">
-        <Button Content="Add to applications menu" Command="{Binding AddToApplicationsMenuCommand}"
-                ToolTip.Tip="Adds Mission Planner, with its icon, to your desktop's applications menu" />
+        <Button Content="{l:Tr 'Add to applications menu'}" Command="{Binding AddToApplicationsMenuCommand}"
+                ToolTip.Tip="{l:Tr 'Adds Mission Planner, with its icon, to your desktop applications menu'}" />
         <TextBlock Classes="muted" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="380"
-                   Text="{Binding DesktopEntryStatus}" />
+                   Text="{l:TrBind {Binding DesktopEntryStatus}}" />
       </StackPanel>
     </StackPanel>
   </Border>

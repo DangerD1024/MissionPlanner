@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
              xmlns:comms="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Comms"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.DroneCanView"
              x:DataType="vm:DroneCanViewModel">
 
@@ -31,9 +32,9 @@
   <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="24,20">
     <Grid ColumnDefinitions="*,Auto">
       <StackPanel Spacing="4">
-        <TextBlock Classes="h1" Text="DroneCAN / UAVCAN" />
+        <TextBlock Classes="h1" Text="{l:Tr 'DroneCAN / UAVCAN'}" />
         <TextBlock Classes="muted" TextWrapping="Wrap"
-                   Text="Nodes on a CAN bus — reached through the autopilot (MAVLink CAN forwarding) or an SLCAN adapter — with their health, versions and parameters. Select a node to read or change its parameters, restart it or update its firmware." />
+                   Text="{l:Tr 'Nodes on a CAN bus — reached through the autopilot (MAVLink CAN forwarding) or an SLCAN adapter — with their health, versions and parameters. Select a node to read or change its parameters, restart it or update its firmware.'}" />
       </StackPanel>
       <ProgressBar Grid.Column="1" IsIndeterminate="True" Width="120" VerticalAlignment="Center" Margin="16,0,0,0"
                    IsVisible="{Binding IsBusy}" />
@@ -42,7 +43,7 @@
     <Border Grid.Row="1" Margin="0,12,0,0" Background="#33f0b429" BorderBrush="{DynamicResource Warn}" BorderThickness="1"
             CornerRadius="6" Padding="12,8" IsVisible="{Binding LibraryMissing}">
       <TextBlock TextWrapping="Wrap"
-                 Text="This build does not include the DroneCAN library (ExtLibs/DroneCAN), so the bus cannot be opened. The page lists nodes once the app is built with it." />
+                 Text="{l:Tr 'This build does not include the DroneCAN library (ExtLibs/DroneCAN), so the bus cannot be opened. The page lists nodes once the app is built with it.'}" />
     </Border>
 
     <!-- interface -->
@@ -50,18 +51,18 @@
       <Grid ColumnDefinitions="*,Auto">
         <WrapPanel Orientation="Horizontal" ItemSpacing="10" LineSpacing="8">
           <StackPanel Orientation="Horizontal" Spacing="8" IsEnabled="{Binding IsDisconnected}">
-            <TextBlock Text="Bus" VerticalAlignment="Center" Classes="muted" />
+            <TextBlock Text="{l:Tr 'Bus'}" VerticalAlignment="Center" Classes="muted" />
             <ComboBox ItemsSource="{Binding Interfaces}" SelectedItem="{Binding SelectedInterface}" MinWidth="260" />
           </StackPanel>
           <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsSlcan}" IsEnabled="{Binding IsDisconnected}">
             <ComboBox ItemsSource="{Binding Ports}" IsEditable="True" Text="{Binding SelectedPort, Mode=TwoWay}" MinWidth="200" MaxWidth="340"
                     ToolTip.Tip="{Binding SelectedPort}" />
-            <Button Command="{Binding RefreshPortsCommand}" ToolTip.Tip="Look for serial ports again" Padding="6">
+            <Button Command="{Binding RefreshPortsCommand}" ToolTip.Tip="{l:Tr 'Look for serial ports again'}" Padding="6">
               <Path Classes="icon" Data="{StaticResource IconRefresh}" Width="18" Height="18" />
             </Button>
             <ComboBox ItemsSource="{Binding Bauds}" SelectedItem="{Binding SelectedBaud}" MinWidth="100" />
           </StackPanel>
-          <Button Classes="accent" Content="{Binding ConnectText}" Command="{Binding ToggleConnectCommand}" MinWidth="110" />
+          <Button Classes="accent" Content="{l:TrBind {Binding ConnectText}}" Command="{Binding ToggleConnectCommand}" MinWidth="110" />
         </WrapPanel>
         <TextBlock Grid.Column="1" Text="{Binding Traffic}" Classes="muted" FontSize="12" VerticalAlignment="Center" Margin="12,0,0,0" />
       </Grid>
@@ -72,14 +73,14 @@
       <Grid RowDefinitions="*,12,Auto">
         <Border Classes="card" Padding="0">
           <Grid RowDefinitions="Auto,*">
-            <TextBlock Classes="h2" Text="Nodes" Margin="14,10,14,8" />
+            <TextBlock Classes="h2" Text="{l:Tr 'Nodes'}" Margin="14,10,14,8" />
             <DataGrid Grid.Row="1" ItemsSource="{Binding Nodes}" SelectedItem="{Binding SelectedNode}" AutoGenerateColumns="False"
                       HeadersVisibility="Column" RowHeight="32" IsReadOnly="True" SelectionMode="Single"
                       CanUserResizeColumns="True" CanUserSortColumns="True" BorderThickness="0" Background="Transparent">
               <DataGrid.Columns>
                 <DataGridTextColumn x:DataType="comms:CanNodeRow" Header="ID" Width="58" Binding="{Binding Id}" />
-                <DataGridTextColumn x:DataType="comms:CanNodeRow" Header="Name" Width="2*" MinWidth="140" Binding="{Binding Name}" />
-                <DataGridTemplateColumn x:DataType="comms:CanNodeRow" Header="Health" Width="90" SortMemberPath="Health">
+                <DataGridTextColumn x:DataType="comms:CanNodeRow" Header="{l:Tr 'Name'}" Width="2*" MinWidth="140" Binding="{Binding Name}" />
+                <DataGridTemplateColumn x:DataType="comms:CanNodeRow" Header="{l:Tr 'Health'}" Width="90" SortMemberPath="Health">
                   <DataGridTemplateColumn.CellTemplate>
                     <DataTemplate x:DataType="comms:CanNodeRow">
                       <TextBlock Classes="health" Classes.warning="{Binding IsWarning}" Classes.bad="{Binding IsBad}"
@@ -87,16 +88,16 @@
                     </DataTemplate>
                   </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn x:DataType="comms:CanNodeRow" Header="Mode" Width="150" Binding="{Binding ModeText}" />
-                <DataGridTextColumn x:DataType="comms:CanNodeRow" Header="Uptime" Width="90" Binding="{Binding UptimeText}" />
-                <DataGridTextColumn x:DataType="comms:CanNodeRow" Header="Software" Width="1.2*" Binding="{Binding SoftwareVersion}" />
-                <DataGridTextColumn x:DataType="comms:CanNodeRow" Header="HW" Width="64" Binding="{Binding HardwareVersion}" />
+                <DataGridTextColumn x:DataType="comms:CanNodeRow" Header="{l:Tr 'Mode'}" Width="150" Binding="{Binding ModeText}" />
+                <DataGridTextColumn x:DataType="comms:CanNodeRow" Header="{l:Tr 'Uptime'}" Width="90" Binding="{Binding UptimeText}" />
+                <DataGridTextColumn x:DataType="comms:CanNodeRow" Header="{l:Tr 'Software'}" Width="1.2*" Binding="{Binding SoftwareVersion}" />
+                <DataGridTextColumn x:DataType="comms:CanNodeRow" Header="{l:Tr 'HW'}" Width="64" Binding="{Binding HardwareVersion}" />
               </DataGrid.Columns>
             </DataGrid>
           </Grid>
         </Border>
 
-        <Expander Grid.Row="2" Header="Node log messages" HorizontalAlignment="Stretch">
+        <Expander Grid.Row="2" Header="{l:Tr 'Node log messages'}" HorizontalAlignment="Stretch">
           <Grid RowDefinitions="Auto,Auto">
             <ListBox ItemsSource="{Binding LogMessages}" Height="150" Background="Transparent">
               <ListBox.ItemTemplate>
@@ -111,7 +112,7 @@
                 </DataTemplate>
               </ListBox.ItemTemplate>
             </ListBox>
-            <Button Grid.Row="1" Content="Clear" Command="{Binding ClearLogCommand}" Margin="0,6,0,0" />
+            <Button Grid.Row="1" Content="{l:Tr 'Clear'}" Command="{Binding ClearLogCommand}" Margin="0,6,0,0" />
           </Grid>
         </Expander>
       </Grid>
@@ -120,34 +121,34 @@
       <Border Grid.Column="2" Classes="card" Padding="0">
         <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto">
           <StackPanel Margin="14,10,14,6" Spacing="2">
-            <TextBlock Classes="h2" Text="{Binding SelectedNodeTitle}" TextTrimming="CharacterEllipsis" />
+            <TextBlock Classes="h2" Text="{l:TrBind {Binding SelectedNodeTitle}}" TextTrimming="CharacterEllipsis" />
             <TextBlock Classes="muted" FontSize="12" FontFamily="{StaticResource CanMono}" TextTrimming="CharacterEllipsis"
                        Text="{Binding SelectedNode.UniqueId, StringFormat='UID {0}', FallbackValue=''}"
                        IsVisible="{Binding HasSelectedNode}" />
           </StackPanel>
 
           <WrapPanel Grid.Row="1" Margin="14,0,14,8" ItemSpacing="8" LineSpacing="6">
-            <Button Classes="accent" Content="Read parameters" Command="{Binding ReadParametersCommand}" />
-            <Button Content="Restart" Command="{Binding RestartNodeCommand}" />
-            <Button Content="Update firmware…" Command="{Binding UpdateFirmwareCommand}"
-                    ToolTip.Tip="Send a .bin (or .apj) to the node: it fetches the file from Mission Planner over the bus" />
-            <Button Content="Node info" Command="{Binding RequestInfoCommand}" ToolTip.Tip="Ask the node again for its name and versions" />
+            <Button Classes="accent" Content="{l:Tr 'Read parameters'}" Command="{Binding ReadParametersCommand}" />
+            <Button Content="{l:Tr 'Restart'}" Command="{Binding RestartNodeCommand}" />
+            <Button Content="{l:Tr 'Update firmware…'}" Command="{Binding UpdateFirmwareCommand}"
+                    ToolTip.Tip="{l:Tr 'Send a .bin (or .apj) to the node: it fetches the file from Mission Planner over the bus'}" />
+            <Button Content="{l:Tr 'Node info'}" Command="{Binding RequestInfoCommand}" ToolTip.Tip="{l:Tr 'Ask the node again for its name and versions'}" />
           </WrapPanel>
 
           <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="14,0,14,8" IsVisible="{Binding IsUpdating}">
             <ProgressBar Value="{Binding FirmwareProgress}" Minimum="0" Maximum="100" Height="8" VerticalAlignment="Center"
                          ShowProgressText="False" />
-            <Button Grid.Column="1" Content="Cancel" Command="{Binding CancelUpdateCommand}" Margin="8,0,0,0" />
+            <Button Grid.Column="1" Content="{l:Tr 'Cancel'}" Command="{Binding CancelUpdateCommand}" Margin="8,0,0,0" />
           </Grid>
 
           <Border Grid.Row="3" BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0" Padding="14,8,14,4">
-            <TextBlock Classes="h2" Text="{Binding ParametersTitle}" />
+            <TextBlock Classes="h2" Text="{l:TrBind {Binding ParametersTitle}}" />
           </Border>
 
           <ScrollViewer Grid.Row="4">
             <StackPanel>
               <TextBlock Margin="14,10" Classes="muted" TextWrapping="Wrap" IsVisible="{Binding !HasParameters}"
-                         Text="Select a node and press Read parameters." />
+                         Text="{l:Tr 'Select a node and press Read parameters.'}" />
               <ItemsControl ItemsSource="{Binding Parameters}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate x:DataType="comms:CanParamRow">
@@ -173,17 +174,17 @@
           </ScrollViewer>
 
           <WrapPanel Grid.Row="5" Margin="14,8,14,10" ItemSpacing="8" LineSpacing="6">
-            <Button Classes="accent" Content="Write" Command="{Binding WriteParametersCommand}"
-                    ToolTip.Tip="Send the changed values to the node" />
-            <Button Content="Save to flash" Command="{Binding SaveParametersCommand}"
-                    ToolTip.Tip="Make the node store its parameters (ExecuteOpcode SAVE)" />
-            <Button Content="Reset to defaults" Command="{Binding EraseParametersCommand}"
-                    ToolTip.Tip="Erase the stored parameters (ExecuteOpcode ERASE); defaults load after a restart" />
+            <Button Classes="accent" Content="{l:Tr 'Write'}" Command="{Binding WriteParametersCommand}"
+                    ToolTip.Tip="{l:Tr 'Send the changed values to the node'}" />
+            <Button Content="{l:Tr 'Save to flash'}" Command="{Binding SaveParametersCommand}"
+                    ToolTip.Tip="{l:Tr 'Make the node store its parameters (ExecuteOpcode SAVE)'}" />
+            <Button Content="{l:Tr 'Reset to defaults'}" Command="{Binding EraseParametersCommand}"
+                    ToolTip.Tip="{l:Tr 'Erase the stored parameters (ExecuteOpcode ERASE); defaults load after a restart'}" />
           </WrapPanel>
         </Grid>
       </Border>
     </Grid>
 
-    <TextBlock Grid.Row="4" Margin="0,10,0,0" Text="{Binding Status}" Foreground="{DynamicResource Info}" TextWrapping="Wrap" />
+    <TextBlock Grid.Row="4" Margin="0,10,0,0" Text="{l:TrBind {Binding Status}}" Foreground="{DynamicResource Info}" TextWrapping="Wrap" />
   </Grid>
 </UserControl>

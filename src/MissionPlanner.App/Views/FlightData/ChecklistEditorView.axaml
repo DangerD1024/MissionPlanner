@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.FlightData.ChecklistEditorView"
              x:DataType="vm:ChecklistEditorViewModel"
              Background="{DynamicResource Bg1}">
@@ -20,19 +21,19 @@
 
   <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="14">
     <StackPanel Spacing="4" Margin="0,0,0,10">
-      <TextBlock Classes="h2" Text="Pre-flight checklist" />
+      <TextBlock Classes="h2" Text="{l:Tr 'Pre-flight checklist'}" />
       <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                 Text="Each line watches a vehicle value (or PARAM with the parameter name in braces in the description, e.g. 'Fence {FENCE_ENABLE}'). Condition NONE makes a tick box for the pilot. In the text, {value}, {trigger} and {name} are filled in." />
+                 Text="{l:Tr 'Each line watches a vehicle value (or PARAM with the parameter name in braces in the description, e.g. \'Fence {FENCE_ENABLE}\'). Condition NONE makes a tick box for the pilot. In the text, {value}, {trigger} and {name} are filled in.'}" />
     </StackPanel>
 
     <Grid Grid.Row="1" ColumnDefinitions="2*,1.4*,90,90,1.4*,100,100,104" ColumnSpacing="6" Margin="4,0,4,4">
-      <TextBlock Classes="head" Text="Description" />
-      <TextBlock Grid.Column="1" Classes="head" Text="Value" />
-      <TextBlock Grid.Column="2" Classes="head" Text="Condition" />
-      <TextBlock Grid.Column="3" Classes="head" Text="Trigger" />
-      <TextBlock Grid.Column="4" Classes="head" Text="Text" />
-      <TextBlock Grid.Column="5" Classes="head" Text="When true" />
-      <TextBlock Grid.Column="6" Classes="head" Text="When false" />
+      <TextBlock Classes="head" Text="{l:Tr 'Description'}" />
+      <TextBlock Grid.Column="1" Classes="head" Text="{l:Tr 'Value'}" />
+      <TextBlock Grid.Column="2" Classes="head" Text="{l:Tr 'Condition'}" />
+      <TextBlock Grid.Column="3" Classes="head" Text="{l:Tr 'Trigger'}" />
+      <TextBlock Grid.Column="4" Classes="head" Text="{l:Tr 'Text'}" />
+      <TextBlock Grid.Column="5" Classes="head" Text="{l:Tr 'When true'}" />
+      <TextBlock Grid.Column="6" Classes="head" Text="{l:Tr 'When false'}" />
     </Grid>
 
     <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
@@ -57,13 +58,13 @@
                           ItemsSource="{Binding $parent[ItemsControl].((vm:ChecklistEditorViewModel)DataContext).Colors}"
                           SelectedItem="{Binding FalseColor}" />
                 <StackPanel Grid.Column="7" Orientation="Horizontal" Spacing="2">
-                  <Button Classes="icon" Content="↑" ToolTip.Tip="Move up"
+                  <Button Classes="icon" Content="↑" ToolTip.Tip="{l:Tr 'Move up'}"
                           Command="{Binding $parent[ItemsControl].((vm:ChecklistEditorViewModel)DataContext).MoveUpCommand}"
                           CommandParameter="{Binding}" />
-                  <Button Classes="icon" Content="↓" ToolTip.Tip="Move down"
+                  <Button Classes="icon" Content="↓" ToolTip.Tip="{l:Tr 'Move down'}"
                           Command="{Binding $parent[ItemsControl].((vm:ChecklistEditorViewModel)DataContext).MoveDownCommand}"
                           CommandParameter="{Binding}" />
-                  <Button Classes="icon" Content="✕" ToolTip.Tip="Remove"
+                  <Button Classes="icon" Content="✕" ToolTip.Tip="{l:Tr 'Remove'}"
                           Command="{Binding $parent[ItemsControl].((vm:ChecklistEditorViewModel)DataContext).RemoveCommand}"
                           CommandParameter="{Binding}" />
                 </StackPanel>
@@ -75,15 +76,15 @@
     </ScrollViewer>
 
     <Grid Grid.Row="3" ColumnDefinitions="Auto,Auto,*,Auto,Auto" ColumnSpacing="8" Margin="0,10,0,0">
-      <Button Content="Add line" Command="{Binding AddCommand}" />
-      <Button Grid.Column="1" Content="Reset to default" Command="{Binding ResetToDefaultCommand}" />
+      <Button Content="{l:Tr 'Add line'}" Command="{Binding AddCommand}" />
+      <Button Grid.Column="1" Content="{l:Tr 'Reset to default'}" Command="{Binding ResetToDefaultCommand}" />
       <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="6,0">
         <TextBlock Classes="muted" FontSize="11" TextTrimming="CharacterEllipsis"
                    Text="{Binding FilePath, StringFormat='Saved to {0}'}" />
-        <TextBlock FontSize="11" Foreground="{DynamicResource Danger}" Text="{Binding Error}" TextWrapping="Wrap" />
+        <TextBlock FontSize="11" Foreground="{DynamicResource Danger}" Text="{l:TrBind {Binding Error}}" TextWrapping="Wrap" />
       </StackPanel>
-      <Button Grid.Column="3" Content="Cancel" Command="{Binding CancelCommand}" IsCancel="True" />
-      <Button Grid.Column="4" Content="Save" Classes="accent" Command="{Binding SaveCommand}" />
+      <Button Grid.Column="3" Content="{l:Tr 'Cancel'}" Command="{Binding CancelCommand}" IsCancel="True" />
+      <Button Grid.Column="4" Content="{l:Tr 'Save'}" Classes="accent" Command="{Binding SaveCommand}" />
     </Grid>
   </Grid>
 </UserControl>

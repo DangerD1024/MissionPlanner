@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
              xmlns:fd="using:MissionPlanner.App.Controls.FlightData"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.FlightData.GaugesView"
              x:DataType="vm:GaugesViewModel">
 
@@ -19,20 +20,20 @@
   </UserControl.Styles>
 
   <UniformGrid Columns="2" Rows="2" Margin="4">
-    <fd:DialGauge Kind="Arc" Title="Speed" Unit="{Binding SpeedUnit}"
+    <fd:DialGauge Kind="Arc" Title="{l:Tr 'Speed'}" Unit="{Binding SpeedUnit}"
                   Value="{Binding Groundspeed}" Maximum="{Binding SpeedMax}"
                   SecondValue="{Binding Airspeed}" ShowSecond="{Binding HasAirspeed}"
                   FirstLabel="GS" SecondLabel="AS"
-                  ToolTip.Tip="Ground speed (needle) and airspeed (blue needle)" />
-    <fd:DialGauge Kind="Arc" Title="Altitude" Unit="{Binding AltitudeUnit}"
+                  ToolTip.Tip="{l:Tr 'Ground speed (needle) and airspeed (blue needle)'}" />
+    <fd:DialGauge Kind="Arc" Title="{l:Tr 'Altitude'}" Unit="{Binding AltitudeUnit}"
                   Value="{Binding Altitude}" Maximum="{Binding AltitudeMax}"
-                  ToolTip.Tip="Altitude above home" />
-    <fd:DialGauge Kind="Centered" Title="Vertical speed" Unit="{Binding SpeedUnit}"
+                  ToolTip.Tip="{l:Tr 'Altitude above home'}" />
+    <fd:DialGauge Kind="Centered" Title="{l:Tr 'Vertical speed'}" Unit="{Binding SpeedUnit}"
                   Value="{Binding VerticalSpeed}" Maximum="{Binding VerticalSpeedMax}"
-                  ToolTip.Tip="Climb (green) or descent (amber) rate" />
-    <fd:DialGauge Kind="Compass" Title="Heading"
+                  ToolTip.Tip="{l:Tr 'Climb (green) or descent (amber) rate'}" />
+    <fd:DialGauge Kind="Compass" Title="{l:Tr 'Heading'}"
                   Value="{Binding Heading}" SecondValue="{Binding NavBearing}" ShowSecond="{Binding ShowNavBearing}"
                   Secondary="{DynamicResource Warn}"
-                  ToolTip.Tip="Heading; the amber mark is the navigation bearing" />
+                  ToolTip.Tip="{l:Tr 'Heading; the amber mark is the navigation bearing'}" />
   </UniformGrid>
 </UserControl>
