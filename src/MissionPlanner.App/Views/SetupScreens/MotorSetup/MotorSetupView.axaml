@@ -1,0 +1,281 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens.MotorSetup"
+             xmlns:views="using:MissionPlanner.App.Views.SetupScreens"
+             xmlns:cc="using:MissionPlanner.App.Controls.SetupScreens"
+             x:Class="MissionPlanner.App.Views.SetupScreens.MotorSetup.MotorSetupView"
+             x:DataType="vm:MotorSetupViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.label">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
+    </Style>
+    <Style Selector="Border.safety">
+      <Setter Property="Background" Value="{DynamicResource DangerSoft}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Danger}" />
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="16,12" />
+    </Style>
+    <Style Selector="Border.note">
+      <Setter Property="Background" Value="{DynamicResource WarnSoft}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Warn}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="10,7" />
+    </Style>
+    <Style Selector="Border.info">
+      <Setter Property="Background" Value="{DynamicResource InfoSoft}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Info}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="10,7" />
+    </Style>
+    <Style Selector="Button.stop">
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Padding" Value="18,10" />
+      <Setter Property="FontSize" Value="14" />
+    </Style>
+    <Style Selector="TextBlock.changed">
+      <Setter Property="Foreground" Value="{DynamicResource Warn}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="Auto,16,*">
+    <!-- the frame -->
+    <Border Classes="card" VerticalAlignment="Top" Width="440">
+      <StackPanel Spacing="10">
+        <StackPanel Spacing="2">
+          <TextBlock Classes="label" Text="MOTOR LAYOUT" />
+          <TextBlock Text="{Binding FrameText}" FontWeight="SemiBold" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <cc:MotorDiagram Name="Diagram" Width="408" Height="408" HorizontalAlignment="Center"
+                         State="{Binding Diagram}" ClickCommand="{Binding MotorClickedCommand}"
+                         Foreground="{DynamicResource Text}" Muted="{DynamicResource Muted}" Frame="{DynamicResource Line}"
+                         Body="{DynamicResource Bg3}" Clockwise="{DynamicResource Accent}" CounterClockwise="{DynamicResource Info}"
+                         Highlight="{DynamicResource Warn}" Danger="{DynamicResource Danger}" />
+
+        <WrapPanel>
+          <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,14,4">
+            <Ellipse Width="12" Height="12" Fill="{DynamicResource Accent}" VerticalAlignment="Center" />
+            <TextBlock Classes="muted" FontSize="12" Text="Clockwise" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,14,4">
+            <Ellipse Width="12" Height="12" Fill="{DynamicResource Info}" VerticalAlignment="Center" />
+            <TextBlock Classes="muted" FontSize="12" Text="Counter-clockwise" />
+          </StackPanel>
+          <TextBlock Classes="muted" FontSize="12" Margin="0,0,0,4" TextWrapping="Wrap"
+                     Text="Numbers: motor; letters: test order; OUT: servo output" />
+        </WrapPanel>
+
+        <!-- frame type, like Betaflight's mixer picker -->
+        <Border BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0" Padding="0,10,0,0" IsVisible="{Binding HasFrameTypes}">
+          <StackPanel Spacing="8">
+            <Grid ColumnDefinitions="Auto,*">
+              <TextBlock Text="Frame type" VerticalAlignment="Center" Margin="0,0,12,0" />
+              <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding FrameTypes}"
+                        SelectedItem="{Binding SelectedFrameType}" IsEnabled="{Binding CanEditFrame}">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:FrameTypeChoice">
+                    <TextBlock Text="{Binding Label}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+            </Grid>
+            <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsPreviewing}" HorizontalAlignment="Right">
+              <Button Content="Cancel" Command="{Binding CancelPreviewCommand}" />
+              <Button Classes="accent" Content="Set frame type…" Command="{Binding ApplyFrameTypeCommand}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <Border BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0" Padding="0,10,0,0">
+          <StackPanel Spacing="6">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Text="Motor direction is reversed" FontWeight="SemiBold" VerticalAlignment="Center" />
+              <ToggleSwitch Grid.Column="1" OnContent="" OffContent="" MinWidth="0" Margin="8,0,0,0"
+                            IsChecked="{Binding FrameReversed}" IsEnabled="{Binding CanSwitchReversed}" />
+            </Grid>
+            <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{Binding ReverseFrameNote}" />
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </Border>
+
+    <StackPanel Grid.Column="2" Spacing="12" MaxWidth="720" HorizontalAlignment="Left" Margin="0,0,14,0">
+      <!-- ================================================= overview -->
+      <StackPanel Spacing="12" IsVisible="{Binding IsOverview}">
+        <Border Classes="card">
+          <StackPanel Spacing="8">
+            <TextBlock Classes="h2" Text="Motor order" />
+            <TextBlock TextWrapping="Wrap" Classes="muted"
+                       Text="Spins the motor on each output in turn; you click where that motor is on the drawing. The outputs then get the motor functions (SERVOn_FUNCTION) that match where they are, like Betaflight's motor remapping. Takes effect after a reboot." />
+            <ItemsControl ItemsSource="{Binding OrderProblems}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                  <TextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="{DynamicResource Warn}" Margin="0,2" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Button Classes="accent" Content="Motor order…" Command="{Binding StartOrderCommand}" IsEnabled="{Binding CanRunWizard}" />
+          </StackPanel>
+        </Border>
+
+        <Border Classes="card">
+          <StackPanel Spacing="8">
+            <TextBlock Classes="h2" Text="Motor direction" />
+            <TextBlock TextWrapping="Wrap" Classes="muted"
+                       Text="Spin one motor at a time to check it turns the way the arrow shows; with DShot ESCs a motor can be reversed in software." />
+            <Border Classes="info">
+              <TextBlock Text="{Binding DirectionMessage}" TextWrapping="Wrap" FontSize="12.5" />
+            </Border>
+            <Button Classes="accent" Content="Motor direction…" Command="{Binding StartDirectionCommand}" />
+          </StackPanel>
+        </Border>
+
+        <SelectableTextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                             Text="{Binding OrderUrl, StringFormat='ArduPilot motor order diagrams: {0}'}" />
+      </StackPanel>
+
+      <!-- ================================================= order / direction: stop is always on screen -->
+      <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding !IsOverview}">
+        <StackPanel VerticalAlignment="Center">
+          <TextBlock Classes="h2" Text="Motor order" IsVisible="{Binding IsOrder}" />
+          <TextBlock Classes="h2" Text="Motor direction" IsVisible="{Binding IsDirection}" />
+          <TextBlock Classes="muted" Text="{Binding StepText}" IsVisible="{Binding IsOrder}" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+          <Button Classes="danger stop" Content="STOP MOTORS" Command="{Binding StopCommand}" VerticalAlignment="Center" />
+          <Button Content="Close" Command="{Binding CloseModeCommand}" VerticalAlignment="Center" Padding="14,10" />
+        </StackPanel>
+      </Grid>
+
+      <views:CalibrationStatusBanner DataContext="{Binding Status}" />
+
+      <!-- safety gate -->
+      <Border Classes="safety" IsVisible="{Binding ShowSafetyGate}">
+        <StackPanel Spacing="10">
+          <TextBlock Text="Remove all propellers before spinning motors!" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource Danger}" />
+          <TextBlock TextWrapping="Wrap" Text="The vehicle must be disarmed. Hold it down and keep clear of the motors; a motor spins until you click its position or press STOP." />
+          <TextBlock TextWrapping="Wrap" FontSize="12.5" Text="{Binding SafetyText}" />
+          <Grid ColumnDefinitions="Auto,110,*">
+            <TextBlock Text="Throttle %" VerticalAlignment="Center" Margin="0,0,10,0" />
+            <NumericUpDown Grid.Column="1" Value="{Binding Throttle}" Minimum="1" Maximum="20" Increment="1" FormatString="0" />
+            <TextBlock Grid.Column="2" Classes="muted" FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0" TextWrapping="Wrap"
+                       Text="Just enough to see the motor turn (DO_MOTOR_TEST, at most 20%)." />
+          </Grid>
+          <CheckBox Content="All propellers are removed" IsChecked="{Binding PropsRemoved}" FontWeight="SemiBold" />
+          <Button Classes="accent" Content="Start" Command="{Binding BeginCommand}" IsEnabled="{Binding PropsRemoved}" />
+        </StackPanel>
+      </Border>
+
+      <!-- ================================================= order wizard -->
+      <Border Classes="card" IsVisible="{Binding IsWizardRunning}">
+        <StackPanel Spacing="10">
+          <StackPanel Spacing="10" IsVisible="{Binding IsIdentifying}">
+            <TextBlock Text="{Binding OrderInstruction}" TextWrapping="Wrap" FontSize="15" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding SpinText}" Classes="muted" TextWrapping="Wrap" IsVisible="{Binding IsSpinning}" />
+            <TextBlock Text="{Binding OutputLiveText}" FontFamily="monospace" Foreground="{DynamicResource Warn}" />
+            <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding HasCoaxial}"
+                       Text="Coaxial frames draw each pair side by side: check the ArduPilot motor order diagram to tell the top motor from the bottom one." />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Content="Back" Command="{Binding BackCommand}" />
+              <Button Content="Spin again" Command="{Binding SpinAgainCommand}" />
+            </StackPanel>
+          </StackPanel>
+
+          <StackPanel Spacing="8" IsVisible="{Binding IsReviewing}">
+            <TextBlock Text="Result" FontSize="15" FontWeight="SemiBold" />
+            <Grid ColumnDefinitions="110,110,30,110,*">
+              <TextBlock Classes="label" Text="OUTPUT" />
+              <TextBlock Grid.Column="1" Classes="label" Text="WAS" />
+              <TextBlock Grid.Column="3" Classes="label" Text="BECOMES" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding ReviewRows}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:MappingRow">
+                  <Grid ColumnDefinitions="110,110,30,110,*" Margin="0,2">
+                    <TextBlock Text="{Binding OutputText}" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="1" Text="{Binding OldText}" />
+                    <TextBlock Grid.Column="2" Text="→" Classes="muted" />
+                    <TextBlock Grid.Column="3" Text="{Binding NewText}" Classes.changed="{Binding Changed}" />
+                    <TextBlock Grid.Column="4" Text="{Binding ChangeText}" Classes="muted" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Text="{Binding ReviewText}" TextWrapping="Wrap" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Content="Back" Command="{Binding BackCommand}" />
+              <Button Content="Start over" Command="{Binding RestartOrderCommand}" />
+              <Button Classes="accent" Content="Write motor order…" Command="{Binding WriteMappingCommand}" IsEnabled="{Binding CanWriteMapping}" />
+            </StackPanel>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <!-- ================================================= direction -->
+      <StackPanel Spacing="10" IsVisible="{Binding IsDirectionRunning}">
+        <Border Classes="info">
+          <TextBlock Text="{Binding DirectionMessage}" TextWrapping="Wrap" />
+        </Border>
+        <Border Classes="note" IsVisible="{Binding ThreeDWarning, Converter={x:Static ObjectConverters.IsNotNull}}">
+          <TextBlock Text="{Binding ThreeDWarning}" TextWrapping="Wrap" />
+        </Border>
+        <Border Classes="card" IsVisible="{Binding OfferEscType}">
+          <StackPanel Spacing="8">
+            <TextBlock Text="DShot ESC firmware (SERVO_DSHOT_ESC)" FontWeight="SemiBold" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <ComboBox Width="280" ItemsSource="{Binding EscTypeChoices}" SelectedItem="{Binding SelectedEscType}"
+                        PlaceholderText="Choose the ESC firmware">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:FrameTypeChoice">
+                    <TextBlock Text="{Binding Label}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+              <Button Classes="accent" Content="Set ESC type…" Command="{Binding SetEscTypeCommand}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <Border Classes="card">
+          <StackPanel Spacing="6">
+            <TextBlock Text="{Binding SpinText}" TextWrapping="Wrap" FontWeight="SemiBold" IsVisible="{Binding IsSpinning}" />
+            <TextBlock Text="{Binding OutputLiveText}" FontFamily="monospace" Foreground="{DynamicResource Warn}" IsVisible="{Binding IsSpinning}" />
+            <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="Click a motor on the drawing, or Spin below. Click it again to stop." />
+            <Grid ColumnDefinitions="140,120,150,80,110,*" Margin="0,6,0,0">
+              <TextBlock Classes="label" Text="MOTOR" />
+              <TextBlock Grid.Column="1" Classes="label" Text="OUTPUT" />
+              <TextBlock Grid.Column="2" Classes="label" Text="SHOULD TURN" />
+              <TextBlock Grid.Column="4" Classes="label" Text="REVERSE" />
+              <TextBlock Grid.Column="5" Classes="label" Text="RPM" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding DirectionRows}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:DirectionRow">
+                  <Border BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1" Padding="0,4">
+                    <Grid ColumnDefinitions="140,120,150,80,110,*">
+                      <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="1" Text="{Binding OutputsText}" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="2" Text="{Binding ExpectedText}" VerticalAlignment="Center" />
+                      <Button Grid.Column="3" Content="Spin" Command="{Binding SpinCommand}" Padding="10,3" />
+                      <ToggleSwitch Grid.Column="4" OnContent="" OffContent="" IsChecked="{Binding IsReversed}"
+                                    IsEnabled="{Binding CanReverse}" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="5" Text="{Binding RpmText}" Foreground="{DynamicResource Warn}" FontWeight="Bold" VerticalAlignment="Center" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{Binding RpmNote}" />
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </StackPanel>
+  </Grid>
+</UserControl>

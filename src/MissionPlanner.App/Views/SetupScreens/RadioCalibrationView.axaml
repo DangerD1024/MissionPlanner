@@ -4,6 +4,7 @@
              xmlns:cal="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Calibration"
              xmlns:views="using:MissionPlanner.App.Views.SetupScreens"
              xmlns:cc="using:MissionPlanner.App.Controls.SetupScreens"
+             xmlns:rm="using:MissionPlanner.App.Views.SetupScreens.RadioMapping"
              x:Class="MissionPlanner.App.Views.SetupScreens.RadioCalibrationView"
              x:DataType="vm:RadioCalibrationViewModel">
 
@@ -31,6 +32,9 @@
     <StackPanel Margin="24,20" Spacing="16" MaxWidth="1240">
       <TextBlock Classes="h1" Text="Radio Calibration" />
 
+      <!-- optional QGroundControl-style channel mapping (RCMAP / reversal) -->
+      <rm:RadioMappingView DataContext="{Binding Mapping}" />
+
       <Grid ColumnDefinitions="11*,16,9*">
         <!-- primary controls, laid out as in Mission Planner -->
         <Border Classes="card" Padding="18">
@@ -56,7 +60,12 @@
               </StackPanel>
 
               <StackPanel Grid.Column="1" Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="12,0">
-                <Button Classes="accent big" HorizontalAlignment="Center" Content="{Binding CalibrateButtonText}" Command="{Binding CalibrateCommand}" />
+                <Button Classes="accent big" HorizontalAlignment="Center" Content="{Binding CalibrateButtonText}" Command="{Binding CalibrateCommand}"
+                        IsVisible="{Binding !Mapping.IsActive}" />
+                <Panel IsVisible="{Binding !Mapping.IsActive}" HorizontalAlignment="Center">
+                  <Button Content="Map channels…" Command="{Binding Mapping.StartCommand}" IsVisible="{Binding IsIdle}"
+                          ToolTip.Tip="Optional: find which channel is roll, pitch, throttle and yaw (RCMAP) and which way each moves, then calibrate" />
+                </Panel>
                 <Button HorizontalAlignment="Center" Content="Cancel" Command="{Binding CancelCalibrationCommand}" IsVisible="{Binding IsCapturing}" />
                 <TextBlock TextWrapping="Wrap" TextAlignment="Center" MaxWidth="300" FontSize="14" Text="{Binding Instruction}"
                            IsVisible="{Binding IsCapturing}" />

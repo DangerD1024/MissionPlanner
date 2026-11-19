@@ -6,6 +6,7 @@ using log4net;
 using MissionPlanner.App.Core.Services;
 using MissionPlanner.App.Core.Session;
 using MissionPlanner.App.Core.ViewModels.SetupScreens.Calibration;
+using MissionPlanner.App.Core.ViewModels.SetupScreens.RadioMapping;
 using MissionPlanner.ArduPilot;
 
 namespace MissionPlanner.App.Core.ViewModels.SetupScreens;
@@ -95,6 +96,8 @@ public sealed partial class RadioCalibrationViewModel : PageViewModel
             new(services, Status, "Elevons CH2 Rev", 1, 0, "ELEVON_CH2_REV"),
         ];
 
+        Mapping = new RadioMappingViewModel(services, RaiseRatesForCalibration, OnMappingFinished);
+
         services.Params.ParamsChanged += (_, _) => Setup();
         services.Session.StateChanged += (_, state) => services.Dispatcher.Post(() => OnLinkState(state));
     }
@@ -122,6 +125,9 @@ public sealed partial class RadioCalibrationViewModel : PageViewModel
     public IReadOnlyList<ParamToggleViewModel> Elevons { get; }
 
     public StatusLine Status { get; } = new();
+
+    /// <summary>The optional QGroundControl-style "Map channels…" sequence (RCMAP_* and reversal).</summary>
+    public RadioMappingViewModel Mapping { get; }
 
     public StatusLine BindStatus { get; } = new();
 
@@ -213,6 +219,8 @@ public sealed partial class RadioCalibrationViewModel : PageViewModel
 
         if (Stage == RadioCalStage.Capturing)
             _cal.Capture(_live);
+        else if (Mapping.IsActive)
+            Mapping.Sample(_live);
 
         for (var i = 0; i < Channels.Count; i++)
         {
@@ -278,6 +286,21 @@ public sealed partial class RadioCalibrationViewModel : PageViewModel
                 "Ensure your motor does not have power/no props!!!", "Continue"))
             return;
 
+        BeginCapture();
+    }
+
+    /// <summary>The channel mapping ended: show the new RCMAP and go on with the normal capture.</summary>
+    private void OnMappingFinished(bool continueCalibration)
+    {
+        Setup();
+        if (continueCalibration && IsConnected && Stage is RadioCalStage.Idle or RadioCalStage.Completed)
+            BeginCapture();
+        else
+            RestoreCalibrationRates();
+    }
+
+    private void BeginCapture()
+    {
         RaiseRatesForCalibration();
         _cal.Reset();
         Results.Clear();
@@ -522,6 +545,7 @@ public sealed partial class RadioCalibrationViewModel : PageViewModel
         {
             if (Stage == RadioCalStage.Capturing)
                 AbandonCapture("The link was lost; nothing was written.");
+            Mapping.Abandon("The link was lost; the channel mapping was not written.");
             _rateRaised = false;
             _savedCalRates = null;
         }
@@ -557,6 +581,7 @@ public sealed partial class RadioCalibrationViewModel : PageViewModel
         // capturing needs the page's ticks
         if (Stage == RadioCalStage.Capturing)
             AbandonCapture("Calibration abandoned when the page was left; nothing was written.");
+        Mapping.Abandon("Channel mapping abandoned when the page was left; nothing was written.");
         RestoreCalibrationRates();
         RestorePageRate();
     }

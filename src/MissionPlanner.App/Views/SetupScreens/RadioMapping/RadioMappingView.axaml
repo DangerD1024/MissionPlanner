@@ -1,0 +1,116 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens.RadioMapping"
+             xmlns:views="using:MissionPlanner.App.Views.SetupScreens"
+             x:Class="MissionPlanner.App.Views.SetupScreens.RadioMapping.RadioMappingView"
+             x:DataType="vm:RadioMappingViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.label">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
+    </Style>
+    <Style Selector="Border.step">
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="10,6" />
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Border.step.current">
+      <Setter Property="Background" Value="{DynamicResource AccentSoft}" />
+    </Style>
+    <Style Selector="TextBlock.mark">
+      <Setter Property="Text" Value="○" />
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
+    </Style>
+    <Style Selector="TextBlock.mark.current">
+      <Setter Property="Text" Value="●" />
+      <Setter Property="Foreground" Value="{DynamicResource Accent}" />
+    </Style>
+    <Style Selector="TextBlock.mark.done">
+      <Setter Property="Text" Value="✓" />
+      <Setter Property="Foreground" Value="{DynamicResource Accent}" />
+    </Style>
+  </UserControl.Styles>
+
+  <StackPanel Spacing="10">
+    <views:CalibrationStatusBanner DataContext="{Binding Status}" />
+
+    <Border Background="{DynamicResource WarnSoft}" BorderBrush="{DynamicResource Warn}" BorderThickness="1" CornerRadius="6"
+            Padding="12,8" IsVisible="{Binding RebootRequired}">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock VerticalAlignment="Center" TextWrapping="Wrap"
+                   Text="Reboot required: the new channel mapping (RCMAP) takes effect after the autopilot restarts." />
+        <Button Grid.Column="1" Margin="12,0,0,0" Content="Reboot autopilot" Command="{Binding RebootCommand}" />
+      </Grid>
+    </Border>
+
+    <Border Classes="card" Padding="18" IsVisible="{Binding IsActive}">
+      <Grid ColumnDefinitions="240,20,*">
+        <!-- the sequence -->
+        <StackPanel Spacing="2">
+          <TextBlock Classes="label" Text="MAP CHANNELS" Margin="0,0,0,6" />
+          <ItemsControl ItemsSource="{Binding StepRows}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:RcStepRow">
+                <Border Classes="step" Classes.current="{Binding IsCurrent}">
+                  <Grid ColumnDefinitions="20,*,Auto">
+                    <TextBlock Classes="mark" Classes.current="{Binding IsCurrent}" Classes.done="{Binding IsDone}" FontWeight="Bold" />
+                    <TextBlock Grid.Column="1" Text="{Binding Title}" />
+                    <TextBlock Grid.Column="2" Text="{Binding Detail}" Classes="muted" FontSize="12" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+
+        <!-- the current step -->
+        <StackPanel Grid.Column="2" Spacing="12">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Classes="h2" Text="{Binding StepTitle}" />
+            <TextBlock Grid.Column="1" Classes="muted" Text="{Binding ProgressText}" VerticalAlignment="Center" />
+          </Grid>
+          <TextBlock Text="{Binding Instruction}" TextWrapping="Wrap" FontSize="16" FontWeight="SemiBold" />
+
+          <StackPanel Spacing="6" IsVisible="{Binding !IsReview}">
+            <TextBlock Text="{Binding DetectText}" Foreground="{DynamicResource Info}" />
+            <ProgressBar Minimum="0" Maximum="100" Value="{Binding HoldProgress}" Height="6" IsVisible="{Binding !IsCenterStep}" />
+            <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding !IsCenterStep}"
+                       Text="The channel that moves most is taken once the stick has been held still for a moment. ArduPilot expects high PWM for throttle up, yaw right and roll right, and low PWM for pitch forward; a channel moving the other way is set to reversed." />
+          </StackPanel>
+
+          <!-- result -->
+          <StackPanel Spacing="6" IsVisible="{Binding IsReview}">
+            <Grid ColumnDefinitions="100,110,100,*">
+              <TextBlock Classes="label" Text="CONTROL" />
+              <TextBlock Grid.Column="1" Classes="label" Text="CHANNEL" />
+              <TextBlock Grid.Column="2" Classes="label" Text="DIRECTION" />
+              <TextBlock Grid.Column="3" Classes="label" Text="CHANGE" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding Summary}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:RcMapSummaryRow">
+                  <Grid ColumnDefinitions="100,110,100,*" Margin="0,2">
+                    <TextBlock Text="{Binding Function}" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="1" Text="{Binding Channel}" />
+                    <TextBlock Grid.Column="2" Text="{Binding Direction}" />
+                    <TextBlock Grid.Column="3" Text="{Binding Change}" Classes="muted" TextWrapping="Wrap" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Text="{Binding SummaryText}" TextWrapping="Wrap" />
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Content="Back" Command="{Binding BackCommand}" IsEnabled="{Binding CanBack}" />
+            <Button Classes="accent" Content="Next" Command="{Binding NextCommand}" IsVisible="{Binding IsCenterStep}" />
+            <Button Classes="accent" Content="Write and continue…" Command="{Binding WriteCommand}" IsVisible="{Binding IsReview}" />
+            <Button Content="Cancel" Command="{Binding CancelCommand}" />
+          </StackPanel>
+        </StackPanel>
+      </Grid>
+    </Border>
+  </StackPanel>
+</UserControl>
