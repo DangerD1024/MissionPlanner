@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.ConfigScreens"
+             xmlns:cs="using:MissionPlanner.App.Controls.ConfigScreens"
              x:Class="MissionPlanner.App.Views.ConfigScreens.FullParameterListView"
              x:DataType="vm:FullParameterListViewModel">
 
@@ -8,42 +9,8 @@
     <KeyBinding Gesture="Ctrl+S" Command="{Binding WriteCommand}" />
   </UserControl.KeyBindings>
 
-  <!-- a quiet selection, so the green of edited values stands out -->
-  <UserControl.Resources>
-    <SolidColorBrush x:Key="DataGridRowSelectedBackgroundBrush" Color="#23303d" />
-    <SolidColorBrush x:Key="DataGridRowSelectedHoveredBackgroundBrush" Color="#2a3846" />
-    <SolidColorBrush x:Key="DataGridRowSelectedUnfocusedBackgroundBrush" Color="#23303d" />
-    <SolidColorBrush x:Key="DataGridRowSelectedHoveredUnfocusedBackgroundBrush" Color="#2a3846" />
-    <x:Double x:Key="DataGridRowSelectedBackgroundOpacity">1</x:Double>
-    <x:Double x:Key="DataGridRowSelectedHoveredBackgroundOpacity">1</x:Double>
-    <x:Double x:Key="DataGridRowSelectedUnfocusedBackgroundOpacity">1</x:Double>
-    <x:Double x:Key="DataGridRowSelectedHoveredUnfocusedBackgroundOpacity">1</x:Double>
-  </UserControl.Resources>
-
   <UserControl.Styles>
-    <!-- value cell: green while an edit waits for Write Params, red when the typed text was refused -->
-    <Style Selector="Border.value">
-      <Setter Property="Margin" Value="2,4" />
-      <Setter Property="Padding" Value="6,0" />
-      <Setter Property="CornerRadius" Value="4" />
-      <Setter Property="Background" Value="Transparent" />
-    </Style>
-    <Style Selector="Border.value.modified">
-      <Setter Property="Background" Value="#3a5a1f" />
-    </Style>
-    <Style Selector="Border.value.invalid">
-      <Setter Property="Background" Value="#6b2522" />
-    </Style>
-    <Style Selector="TextBlock.name.modified">
-      <Setter Property="Foreground" Value="{DynamicResource Accent}" />
-    </Style>
-
-    <Style Selector="Button.side">
-      <Setter Property="HorizontalAlignment" Value="Stretch" />
-      <Setter Property="HorizontalContentAlignment" Value="Left" />
-      <Setter Property="Height" Value="34" />
-      <Setter Property="Padding" Value="8,0" />
-    </Style>
+    <StyleInclude Source="avares://MissionPlanner.App/Controls/ConfigScreens/ParamGridStyles.axaml" />
 
     <Style Selector="ListBox.groups ListBoxItem">
       <Setter Property="Padding" Value="10,5" />
@@ -51,9 +18,6 @@
     </Style>
     <Style Selector="Grid.child">
       <Setter Property="Margin" Value="14,0,0,0" />
-    </Style>
-    <Style Selector="DataGridCell">
-      <Setter Property="FontSize" Value="12.5" />
     </Style>
   </UserControl.Styles>
 
@@ -63,7 +27,7 @@
 
     <Grid Grid.Row="1" ColumnDefinitions="190,*,200">
 
-      <!-- prefix tree -->
+      <!-- prefix groups -->
       <Border Background="{DynamicResource Bg1}" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,1,0">
         <Grid RowDefinitions="Auto,*">
           <TextBlock Margin="12,10,12,4" FontSize="11" FontWeight="Bold" Classes="muted" Text="GROUPS" />
@@ -84,12 +48,12 @@
 
       <!-- the list -->
       <Panel Grid.Column="1">
-        <DataGrid x:Name="ParamsGrid" ItemsSource="{Binding VisibleRows}" AutoGenerateColumns="False"
+        <DataGrid x:Name="ParamsGrid" Classes="params" ItemsSource="{Binding VisibleRows}" AutoGenerateColumns="False"
                   RowHeight="44" HeadersVisibility="Column" SelectionMode="Single"
                   CanUserResizeColumns="True" CanUserSortColumns="True" CanUserReorderColumns="False"
                   GridLinesVisibility="Horizontal" BorderThickness="0">
           <DataGrid.Columns>
-            <DataGridTemplateColumn Header="Name" Width="220" SortMemberPath="Name" IsReadOnly="True">
+            <DataGridTemplateColumn Header="Name" Width="200" MinWidth="140" SortMemberPath="Name" IsReadOnly="True">
               <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate x:DataType="vm:ParamRow">
                   <StackPanel Margin="10,0,4,0" VerticalAlignment="Center" ToolTip.Tip="{Binding NameTip}">
@@ -102,12 +66,10 @@
               </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>
 
-            <DataGridTemplateColumn Header="Value" Width="110" SortMemberPath="DisplayValue">
+            <DataGridTemplateColumn Header="Value" Width="210" MinWidth="170" SortMemberPath="DisplayValue">
               <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate x:DataType="vm:ParamRow">
-                  <Border Classes="value" Classes.modified="{Binding IsModified}" Classes.invalid="{Binding IsInvalid}">
-                    <TextBlock Text="{Binding ValueText}" VerticalAlignment="Center" FontWeight="SemiBold" />
-                  </Border>
+                  <cs:ParamValueCell />
                 </DataTemplate>
               </DataGridTemplateColumn.CellTemplate>
               <DataGridTemplateColumn.CellEditingTemplate>
@@ -118,11 +80,11 @@
               </DataGridTemplateColumn.CellEditingTemplate>
             </DataGridTemplateColumn>
 
-            <DataGridTextColumn Header="Default" Width="80" Binding="{Binding DefaultText}" IsReadOnly="True" />
+            <DataGridTextColumn Header="Default" Width="76" MinWidth="50" Binding="{Binding DefaultText}" IsReadOnly="True" />
 
-            <DataGridTextColumn Header="Units" Width="78" Binding="{Binding Units}" IsReadOnly="True" />
+            <DataGridTextColumn Header="Units" Width="70" MinWidth="44" Binding="{Binding Units}" IsReadOnly="True" />
 
-            <DataGridTemplateColumn Header="Options" Width="190" IsReadOnly="True">
+            <DataGridTemplateColumn Header="Options" Width="160" MinWidth="100" IsReadOnly="True">
               <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate x:DataType="vm:ParamRow">
                   <TextBlock Margin="8,0" VerticalAlignment="Center" Text="{Binding OptionsText}" FontSize="11.5"
@@ -132,7 +94,7 @@
               </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>
 
-            <DataGridTemplateColumn Header="Desc" Width="*" MinWidth="200" IsReadOnly="True">
+            <DataGridTemplateColumn Header="Desc" Width="*" MinWidth="120" IsReadOnly="True">
               <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate x:DataType="vm:ParamRow">
                   <TextBlock Margin="8,0" VerticalAlignment="Center" Text="{Binding Description}" FontSize="11.5"
@@ -142,7 +104,7 @@
               </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>
 
-            <DataGridTemplateColumn Header="Fav" Width="48" IsReadOnly="True">
+            <DataGridTemplateColumn Header="Fav" Width="44" MinWidth="44" IsReadOnly="True">
               <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate x:DataType="vm:ParamRow">
                   <CheckBox IsChecked="{Binding IsFavourite}" HorizontalAlignment="Center" MinWidth="0"
@@ -196,6 +158,13 @@
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <Path Classes="icon" Data="{StaticResource IconChevron}" />
                 <TextBlock Text="Compare Params" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+            <Button Classes="side" Command="{Binding RebootCommand}"
+                    ToolTip.Tip="Restart the autopilot (needed after some changes); the link drops while it restarts">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Path Classes="icon" Data="M12,3 L12,11 M7.05,6.05 A7.5,7.5 0 1 0 16.95,6.05" />
+                <TextBlock Text="Reboot" VerticalAlignment="Center" />
               </StackPanel>
             </Button>
 

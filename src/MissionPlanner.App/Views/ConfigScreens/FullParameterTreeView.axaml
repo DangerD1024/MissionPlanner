@@ -1,0 +1,184 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.ConfigScreens"
+             xmlns:cs="using:MissionPlanner.App.Controls.ConfigScreens"
+             x:Class="MissionPlanner.App.Views.ConfigScreens.FullParameterTreeView"
+             x:DataType="vm:FullParameterTreeViewModel">
+
+  <UserControl.KeyBindings>
+    <KeyBinding Gesture="Ctrl+S" Command="{Binding WriteCommand}" />
+  </UserControl.KeyBindings>
+
+  <UserControl.Styles>
+    <StyleInclude Source="avares://MissionPlanner.App/Controls/ConfigScreens/ParamGridStyles.axaml" />
+
+    <!-- a group's expander: chevron and prefix, the whole width of the name cell -->
+    <Style Selector="Button.group">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="2,0" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="VerticalAlignment" Value="Stretch" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.group:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Path.chevron">
+      <Setter Property="Width" Value="16" />
+      <Setter Property="Height" Value="16" />
+      <Setter Property="Stretch" Value="Uniform" />
+      <Setter Property="RenderTransform" Value="rotate(0deg)" />
+    </Style>
+    <Style Selector="Path.chevron.open">
+      <Setter Property="RenderTransform" Value="rotate(90deg)" />
+    </Style>
+    <Style Selector="Border.count">
+      <Setter Property="CornerRadius" Value="9" />
+      <Setter Property="Padding" Value="7,1" />
+      <Setter Property="Background" Value="{DynamicResource Bg3}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Margin" Value="8,0,0,0" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*">
+    <ProgressBar Height="3" MinHeight="3" CornerRadius="0" IsIndeterminate="True" Background="Transparent"
+                 Foreground="{DynamicResource Accent}" IsVisible="{Binding IsBusy}" />
+
+    <Grid Grid.Row="1" ColumnDefinitions="*,200">
+      <Panel>
+        <DataGrid x:Name="ParamsGrid" Classes="params" ItemsSource="{Binding Items}" AutoGenerateColumns="False"
+                  RowHeight="40" HeadersVisibility="Column" SelectionMode="Single"
+                  CanUserResizeColumns="True" CanUserSortColumns="False" CanUserReorderColumns="False"
+                  GridLinesVisibility="Horizontal" BorderThickness="0">
+          <DataGrid.Columns>
+            <DataGridTemplateColumn Header="Name" Width="270" MinWidth="180" IsReadOnly="True">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate x:DataType="vm:ParamTreeItem">
+                  <Grid ColumnDefinitions="Auto,*" Margin="6,0,4,0">
+                    <Border Width="{Binding Indent}" />
+
+                    <Button Grid.Column="1" Classes="group" IsVisible="{Binding IsGroup}" Command="{Binding ToggleCommand}"
+                            ToolTip.Tip="Open or close the group (Right / Left arrow)">
+                      <StackPanel Orientation="Horizontal">
+                        <Path Classes="icon chevron" Classes.open="{Binding IsExpanded}" Data="{StaticResource IconChevron}"
+                              Margin="0,0,6,0" />
+                        <TextBlock Text="{Binding Label}" FontWeight="Bold" VerticalAlignment="Center" />
+                        <Border Classes="count">
+                          <TextBlock Text="{Binding CountText}" FontSize="10.5" Classes="muted" />
+                        </Border>
+                      </StackPanel>
+                    </Button>
+
+                    <StackPanel Grid.Column="1" IsVisible="{Binding IsParam}" Margin="24,0,0,0" VerticalAlignment="Center"
+                                ToolTip.Tip="{Binding Row.NameTip}">
+                      <TextBlock Classes="name" Classes.modified="{Binding Row.IsModified}" Text="{Binding Label}"
+                                 FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Text="{Binding Row.DisplayName}" FontSize="11" Classes="muted"
+                                 TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                  </Grid>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+
+            <DataGridTemplateColumn Header="Value" Width="210" MinWidth="170">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate x:DataType="vm:ParamTreeItem">
+                  <Panel IsVisible="{Binding IsParam}">
+                    <cs:ParamValueCell DataContext="{Binding Row}" />
+                  </Panel>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+              <DataGridTemplateColumn.CellEditingTemplate>
+                <DataTemplate x:DataType="vm:ParamTreeItem">
+                  <TextBox Text="{Binding Row.EditText}" VerticalAlignment="Center" Margin="2,0" MinHeight="30"
+                           Padding="6,4" FontSize="12.5" />
+                </DataTemplate>
+              </DataGridTemplateColumn.CellEditingTemplate>
+            </DataGridTemplateColumn>
+
+            <DataGridTextColumn Header="Default" Width="76" MinWidth="50" Binding="{Binding Row.DefaultText}" IsReadOnly="True" />
+
+            <DataGridTextColumn Header="Units" Width="70" MinWidth="44" Binding="{Binding Row.Units}" IsReadOnly="True" />
+
+            <DataGridTemplateColumn Header="Options" Width="170" MinWidth="100" IsReadOnly="True">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate x:DataType="vm:ParamTreeItem">
+                  <TextBlock Margin="8,0" VerticalAlignment="Center" Text="{Binding Row.OptionsText}" FontSize="11.5"
+                             TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"
+                             ToolTip.Tip="{Binding Row.OptionsTipOrNull}" />
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+
+            <DataGridTemplateColumn Header="Desc" Width="*" MinWidth="140" IsReadOnly="True">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate x:DataType="vm:ParamTreeItem">
+                  <TextBlock Margin="8,0" VerticalAlignment="Center" Text="{Binding Row.Description}" FontSize="11.5"
+                             TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"
+                             ToolTip.Tip="{Binding Row.DescriptionTip}" />
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+          </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6" MaxWidth="420"
+                    IsVisible="{Binding IsEmpty}">
+          <TextBlock Classes="h2" HorizontalAlignment="Center" Text="Full Parameter Tree" />
+          <TextBlock Classes="muted" TextWrapping="Wrap" TextAlignment="Center" Text="{Binding EmptyText}" />
+        </StackPanel>
+        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Classes="muted"
+                   Text="No parameter matches the search." IsVisible="{Binding NoMatches}" />
+        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Classes="muted"
+                   Text="Loading parameters..." IsVisible="{Binding IsLoading}" />
+      </Panel>
+
+      <Border Grid.Column="1" Background="{DynamicResource Bg1}" BorderBrush="{DynamicResource Line}" BorderThickness="1,0,0,0">
+        <ScrollViewer>
+          <StackPanel Margin="12" Spacing="8">
+            <Button Classes="side accent" Command="{Binding WriteCommand}" ToolTip.Tip="Write the edited values to the vehicle (Ctrl+S)">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Path Classes="icon" Data="{StaticResource IconUp}" />
+                <TextBlock Text="Write Params" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+            <Button Classes="side" Command="{Binding RefreshCommand}" ToolTip.Tip="Read every parameter from the vehicle again">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Path Classes="icon" Data="{StaticResource IconRefresh}" />
+                <TextBlock Text="Refresh Params" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+            <Button Classes="side" Command="{Binding RebootCommand}"
+                    ToolTip.Tip="Restart the autopilot (needed after some changes); the link drops while it restarts">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Path Classes="icon" Data="M12,3 L12,11 M7.05,6.05 A7.5,7.5 0 1 0 16.95,6.05" />
+                <TextBlock Text="Reboot" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+
+            <Border Height="1" Background="{DynamicResource Line}" Margin="0,6" />
+
+            <TextBox x:Name="SearchBox" Text="{Binding SearchText}" PlaceholderText="Search name or description" />
+            <Grid ColumnDefinitions="*,6,*">
+              <Button Content="Expand" ToolTip.Tip="Open every group" Command="{Binding ExpandAllCommand}" HorizontalAlignment="Stretch"
+                      HorizontalContentAlignment="Center" />
+              <Button Grid.Column="2" Content="Collapse" ToolTip.Tip="Close every group" Command="{Binding CollapseAllCommand}" HorizontalAlignment="Stretch"
+                      HorizontalContentAlignment="Center" />
+            </Grid>
+
+            <Border Height="1" Background="{DynamicResource Line}" Margin="0,6" />
+
+            <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" FontWeight="SemiBold" />
+            <Button Content="Discard edits" Command="{Binding DiscardEditsCommand}" IsVisible="{Binding HasPending}"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+            <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" Classes="muted" FontSize="12" />
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>

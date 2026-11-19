@@ -8,10 +8,11 @@ namespace MissionPlanner.App.Core.ViewModels.ConfigScreens;
 
 /// <summary>
 /// Full Parameter List (Mission Planner's ConfigRawParams): every parameter in a grid with a
-/// prefix tree, live search, filters, queued edits written in one go, .param load/save and
-/// compare. Without a vehicle it shows a loaded file instead.
+/// prefix list, live search, filters, the editor each parameter calls for (number, documented
+/// values, bitmask), queued edits written in one go, .param load/save, compare and reboot.
+/// Without a vehicle it shows a loaded file instead.
 /// </summary>
-public sealed partial class FullParameterListViewModel : PageViewModel
+public sealed partial class FullParameterListViewModel : ParamPageViewModel
 {
     private static readonly ILog Log = LogManager.GetLogger(typeof(FullParameterListViewModel));
 
@@ -21,9 +22,7 @@ public sealed partial class FullParameterListViewModel : PageViewModel
         new("All files", "*"),
     ];
 
-    private readonly ParamEditBuffer _edits = new();
     private List<ParamRow> _all = [];
-    private Dictionary<string, ParamRow> _byName = new(StringComparer.Ordinal);
     private HashSet<string> _favourites = new(StringComparer.Ordinal);
 
     // offline: the rows come from this file instead of the vehicle
@@ -37,23 +36,11 @@ public sealed partial class FullParameterListViewModel : PageViewModel
     private CancellationTokenSource? _searchDelay;
 
     public FullParameterListViewModel(AppServices services)
-        : base("Full Parameter List")
+        : base("Full Parameter List", services)
     {
-        Services = services;
         services.Params.ParamsChanged += (_, _) => Invalidate();
         services.Params.MetadataChanged += (_, _) => Invalidate();
-        _edits.Changed += (_, _) =>
-        {
-            OnPropertyChanged(nameof(PendingCount));
-            OnPropertyChanged(nameof(HasPending));
-            OnPropertyChanged(nameof(Summary));
-        };
     }
-
-    public AppServices Services { get; }
-
-    /// <summary>Edits waiting for Write Params.</summary>
-    public ParamEditBuffer Edits => _edits;
 
     /// <summary>Every row, favourites first then in natural name order.</summary>
     public IReadOnlyList<ParamRow> AllRows => _all;
@@ -82,19 +69,7 @@ public sealed partial class FullParameterListViewModel : PageViewModel
     private bool _hasDefaults;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(WriteCommand), nameof(RefreshCommand))]
-    private bool _isConnected;
-
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(WriteCommand), nameof(RefreshCommand), nameof(LoadFromFileCommand),
-        nameof(SaveToFileCommand), nameof(CompareCommand))]
-    private bool _isBusy;
-
-    [ObservableProperty]
     private bool _isLoading;
-
-    [ObservableProperty]
-    private string _statusText = "";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsOffline))]
@@ -102,10 +77,6 @@ public sealed partial class FullParameterListViewModel : PageViewModel
     private string _sourceText = "";
 
     public bool IsOffline => _offlineFile != null;
-
-    public int PendingCount => _edits.Count;
-
-    public bool HasPending => _edits.Count > 0;
 
     public bool IsEmpty => _all.Count == 0;
 
@@ -124,8 +95,8 @@ public sealed partial class FullParameterListViewModel : PageViewModel
             var s = VisibleRows.Count == _all.Count
                 ? $"{_all.Count} parameters"
                 : $"{VisibleRows.Count} of {_all.Count} parameters";
-            if (_edits.Count > 0)
-                s += $" · {_edits.Count} unsaved";
+            if (Edits.Count > 0)
+                s += $" · {Edits.Count} unsaved";
             return s;
         }
     }
@@ -142,7 +113,23 @@ public sealed partial class FullParameterListViewModel : PageViewModel
 
     public override void OnHidden() => _shown = false;
 
-    public override void Tick() => IsConnected = Services.Session.IsConnected;
+    protected override void OnEditsChanged() => OnPropertyChanged(nameof(Summary));
+
+    protected override void OnBusyChanged()
+    {
+        LoadFromFileCommand.NotifyCanExecuteChanged();
+        SaveToFileCommand.NotifyCanExecuteChanged();
+        CompareCommand.NotifyCanExecuteChanged();
+    }
+
+    // the "Modified" filter follows edits made, written or discarded
+    protected override void OnRowsEdited()
+    {
+        if (ShowModifiedOnly)
+            ApplyFilter();
+    }
+
+    protected override bool CanWriteNow => base.CanWriteNow && _offlineFile == null;
 
     private void Invalidate()
     {
@@ -182,22 +169,14 @@ public sealed partial class FullParameterListViewModel : PageViewModel
             _offlineFile = null;
             _offlineFileName = null;
             _offlineMeta = null;
-            _edits.Clear();
+            Edits.Clear();
         }
 
-        var byName = new Dictionary<string, ParamRow>(built.Rows.Count, StringComparer.Ordinal);
         foreach (var row in built.Rows)
-        {
-            byName[row.Name] = row;
             row.FavouriteToggled = OnFavouriteToggled;
-            if (_edits.TryGet(row.Name, out var pending))
-                row.PendingValue = _edits.Set(row.Name, pending, row.Value) ? pending : null;
-        }
-
-        _edits.RemoveAll(_edits.Pending.Keys.Where(k => !byName.ContainsKey(k)).ToList());
+        AttachRows(built.Rows);
 
         _all = built.Rows;
-        _byName = byName;
         _favourites = favourites;
         HasDefaults = _all.Any(r => r.Default.HasValue);
         if (!HasDefaults)
@@ -241,27 +220,8 @@ public sealed partial class FullParameterListViewModel : PageViewModel
         if (_offlineFile != null)
             return;
         var snapshot = Services.Params.Snapshot();
-        if (snapshot.Count != _all.Count)
-        {
+        if (snapshot.Count != _all.Count || !SyncRowValues(snapshot))
             _ = RebuildAsync();
-            return;
-        }
-
-        foreach (var e in snapshot)
-        {
-            if (!_byName.TryGetValue(e.Name, out var row))
-            {
-                _ = RebuildAsync();
-                return;
-            }
-
-            if (!ParamValues.Same(row.Value, e.Value))
-            {
-                row.Value = e.Value;
-                if (row.PendingValue is { } p)
-                    row.PendingValue = _edits.Set(row.Name, p, row.Value) ? p : null;
-            }
-        }
     }
 
     partial void OnSelectedGroupChanged(ParamGroup? value) => ApplyFilter();
@@ -298,44 +258,6 @@ public sealed partial class FullParameterListViewModel : PageViewModel
         VisibleRows = ParamFilter.Apply(_all, new ParamFilterOptions(SelectedGroup, SearchText, ShowModifiedOnly, ShowNonDefaultOnly));
     }
 
-    /// <summary>
-    /// Checks a value typed in the grid and queues it: numbers only, read-only parameters are
-    /// refused, values outside the documented range need confirmation. Returns true if queued.
-    /// </summary>
-    public async Task<bool> CommitEditAsync(ParamRow row, string? text)
-    {
-        if (text == null || text.Trim() == row.ValueText)
-        {
-            row.IsInvalid = false;
-            return false;
-        }
-
-        var check = ParamEditBuffer.Validate(row.Name, text, row.Meta);
-        switch (check.Result)
-        {
-            case EditCheck.NotANumber:
-                row.IsInvalid = true;
-                StatusText = $"{row.Name}: {check.Message}";
-                return false;
-            case EditCheck.ReadOnly:
-                row.IsInvalid = false;
-                await Services.Dialogs.ShowMessageAsync("ReadOnly", check.Message, MessageKind.Warning);
-                return false;
-            case EditCheck.OutOfRange:
-                if (!await Services.Dialogs.ConfirmAsync("Out of range", check.Message, "Use value"))
-                    return false;
-                break;
-        }
-
-        row.IsInvalid = false;
-        QueueEdit(row, check.Value);
-        StatusText = row.IsModified ? $"{row.Name} = {row.ValueText} (not written yet)" : $"{row.Name} unchanged";
-        return row.IsModified;
-    }
-
-    private void QueueEdit(ParamRow row, double value) =>
-        row.PendingValue = _edits.Set(row.Name, value, row.Value) ? value : null;
-
     private void OnFavouriteToggled(ParamRow row)
     {
         ParamFavourites.Set(row.Name, row.IsFavourite);
@@ -355,65 +277,6 @@ public sealed partial class FullParameterListViewModel : PageViewModel
     }
 
     private bool NotBusy => !IsBusy;
-
-    private bool CanWrite => IsConnected && !IsBusy && _offlineFile == null;
-
-    private bool CanRefresh => IsConnected && !IsBusy;
-
-    [RelayCommand(CanExecute = nameof(CanWrite))]
-    private async Task WriteAsync()
-    {
-        IsBusy = true;
-        try
-        {
-            var written = await ParamWriteFlow.WriteAsync(Services, _edits, s => StatusText = s);
-            foreach (var name in written)
-            {
-                if (_byName.TryGetValue(name, out var row))
-                {
-                    row.Value = Services.Params.Get(name) ?? row.DisplayValue;
-                    row.PendingValue = null;
-                }
-            }
-
-            if (written.Count > 0)
-                StatusText = $"Wrote {written.Count} parameter{(written.Count == 1 ? "" : "s")}.";
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
-
-    [RelayCommand(CanExecute = nameof(CanRefresh))]
-    private async Task RefreshAsync()
-    {
-        IsBusy = true;
-        try
-        {
-            if (await ParamWriteFlow.RefreshAsync(Services, s => StatusText = s))
-                StatusText = "Parameters refreshed.";
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
-
-    [RelayCommand]
-    private void DiscardEdits()
-    {
-        foreach (var name in _edits.Pending.Keys.ToList())
-        {
-            if (_byName.TryGetValue(name, out var row))
-                row.PendingValue = null;
-        }
-
-        _edits.Clear();
-        StatusText = "Edits discarded.";
-        if (ShowModifiedOnly)
-            ApplyFilter();
-    }
 
     [RelayCommand(CanExecute = nameof(NotBusy))]
     private async Task LoadFromFileAsync()
@@ -446,7 +309,7 @@ public sealed partial class FullParameterListViewModel : PageViewModel
         {
             _offlineFile = file;
             _offlineFileName = name;
-            _edits.Clear();
+            Edits.Clear();
             try
             {
                 _offlineMeta = await ParamMetadata.LoadAsync(FirmwareGuess.FromParamNames(file.Keys), null, download: false);
@@ -463,17 +326,17 @@ public sealed partial class FullParameterListViewModel : PageViewModel
         }
 
         var result = ParamFileLoad.Compute(file,
-            n => _byName.TryGetValue(n, out var r) ? r.Value : null,
-            n => _byName.TryGetValue(n, out var r) ? r.Meta : null);
+            n => RowsByName.TryGetValue(n, out var r) ? r.Value : null,
+            n => RowsByName.TryGetValue(n, out var r) ? r.Meta : null);
 
         foreach (var same in result.Unchanged)
         {
-            if (_byName.TryGetValue(same, out var r) && r.IsModified)
+            if (RowsByName.TryGetValue(same, out var r) && r.IsModified)
                 QueueEdit(r, r.Value);
         }
 
         foreach (var (param, value) in result.Edits)
-            QueueEdit(_byName[param], value);
+            QueueEdit(RowsByName[param], value);
 
         var message = result.Edits.Count > 0
             ? $"{result.Edits.Count} value{(result.Edits.Count == 1 ? "" : "s")} from {name} differ from the vehicle and are now marked as edits. " +
@@ -571,14 +434,14 @@ public sealed partial class FullParameterListViewModel : PageViewModel
             return;
         }
 
-        var page = new ParamCompareViewModel(name, diffs, onlyInFile, n => _byName.GetValueOrDefault(n)?.Meta);
+        var page = new ParamCompareViewModel(name, diffs, onlyInFile, n => RowsByName.GetValueOrDefault(n)?.Meta);
         if (!await Services.Windows.ShowDialogAsync(page, 860, 640))
             return;
 
         var applied = 0;
         foreach (var (param, value) in page.Selected)
         {
-            if (_byName.TryGetValue(param, out var row) && !row.IsReadOnly)
+            if (RowsByName.TryGetValue(param, out var row) && !row.IsReadOnly)
             {
                 QueueEdit(row, value);
                 applied++;
