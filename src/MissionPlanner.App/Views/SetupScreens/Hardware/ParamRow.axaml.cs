@@ -9,6 +9,8 @@ public sealed partial class ParamRow : UserControl
     public ParamRow()
     {
         InitializeComponent();
+        // a binding that yields null from the start raises no DataContextChanged: start hidden
+        IsVisible = false;
     }
 
     protected override void OnDataContextChanged(EventArgs e)

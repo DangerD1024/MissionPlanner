@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
+             xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
+             x:Class="MissionPlanner.App.Views.SetupScreens.OpticalFlowView"
+             x:DataType="vm:OpticalFlowViewModel">
+
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1200" HorizontalAlignment="Left">
+      <hwv:PageHeader Description="Optical flow sensor for position hold without GPS (used with a downward rangefinder). Set the type, how the sensor is mounted and where it sits relative to the autopilot. Changes are written as you make them." />
+
+      <WrapPanel>
+        <Border Classes="card" Width="560" Margin="0,0,16,16" VerticalAlignment="Top">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="h2" Text="Optical flow" Margin="0,0,0,4" />
+            <hwv:ParamRow DataContext="{Binding Enable}" />
+            <hwv:ParamRow DataContext="{Binding Type}" />
+            <TextBlock Classes="muted" TextWrapping="Wrap" FontSize="12" IsVisible="{Binding !IsEnabled}"
+                       Text="Choose a type to use the sensor. A new type takes effect after a reboot." />
+
+            <StackPanel Spacing="6" IsVisible="{Binding !IsLegacy}">
+              <TextBlock Classes="h2" Text="Orientation" FontSize="14" Margin="0,10,0,0" />
+              <hwv:ScaledRow DataContext="{Binding Yaw}" />
+              <TextBlock Classes="muted" FontSize="11.5" Text="degrees, relative to the vehicle" Margin="200,0,0,0" />
+
+              <TextBlock Classes="h2" Text="Scaling factors" FontSize="14" Margin="0,10,0,0" />
+              <hwv:ParamRow DataContext="{Binding FxScaler}" />
+              <hwv:ParamRow DataContext="{Binding FyScaler}" />
+
+              <TextBlock Classes="h2" Text="Position of the sensor, relative to the IMU" FontSize="14" Margin="0,10,0,0" />
+              <hwv:ParamRow DataContext="{Binding PosX}" />
+              <hwv:ParamRow DataContext="{Binding PosY}" />
+              <hwv:ParamRow DataContext="{Binding PosZ}" />
+              <hwv:ParamRow DataContext="{Binding HeightOverride}" />
+
+              <ItemsControl ItemsSource="{Binding Other}" Margin="0,6,0,0">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="hw:ParamField">
+                    <hwv:ParamRow />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- live -->
+        <Border Classes="card" Width="300" Margin="0,0,16,16" VerticalAlignment="Top">
+          <StackPanel Spacing="4">
+            <TextBlock Classes="muted" Text="FLOW QUALITY" FontSize="11" FontWeight="Bold" />
+            <TextBlock Classes="h1" Text="{Binding QualityText}" FontSize="28" />
+            <ProgressBar Minimum="0" Maximum="255" Value="{Binding Quality}" Height="8" Margin="0,4,0,6" />
+            <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+              <TextBlock Classes="muted" Text="Flow x, y (raw)" />
+              <TextBlock Grid.Column="1" Text="{Binding FlowText}" FontWeight="SemiBold" />
+            </Grid>
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Classes="muted" Text="Compensated x, y (m/s)" />
+              <TextBlock Grid.Column="1" Text="{Binding BodyText}" FontWeight="SemiBold" />
+            </Grid>
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Classes="muted" Text="Rangefinder" />
+              <TextBlock Grid.Column="1" Text="{Binding RangeText}" FontWeight="SemiBold" />
+            </Grid>
+            <TextBlock Classes="muted" FontSize="11.5" TextWrapping="Wrap" Margin="0,8,0,0"
+                       Text="Quality should stay high over textured ground in good light. Values come from the OPTICAL_FLOW message." />
+          </StackPanel>
+        </Border>
+      </WrapPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
