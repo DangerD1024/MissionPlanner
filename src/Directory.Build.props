@@ -8,4 +8,17 @@
     <!-- the reused ExtLibs assemblies are not strong-name or nullable aware; keep their warnings out of ours -->
     <NoWarn>$(NoWarn);NU1701;NU1603</NoWarn>
   </PropertyGroup>
+
+  <!-- The app's version, shown in the window title and on Help. Change this one line for each release. -->
+  <PropertyGroup>
+    <MissionPlannerVersion>2.0.1b</MissionPlannerVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <InformationalVersion>$(MissionPlannerVersion)</InformationalVersion>
+    <!-- assembly versions must be numeric: 2.0.1b -> 2.0.1 -->
+    <Version>$([System.Text.RegularExpressions.Regex]::Match($(MissionPlannerVersion), '^\d+(\.\d+){0,3}').Value)</Version>
+    <!-- keep the git commit hash out of the displayed version -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
 </Project>

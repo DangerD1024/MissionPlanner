@@ -81,9 +81,9 @@ public sealed partial class ShellViewModel : ObservableObject
         {
             var s = _services.Session;
             if (!s.IsConnected)
-                return "Mission Planner";
+                return AppVersion.ProductName;
             var cs = s.Cs;
-            return $"Mission Planner — {cs.firmware} V{cs.version?.ToString(3)}";
+            return $"{AppVersion.ProductName} — {cs.firmware} V{cs.version?.ToString(3)}";
         }
     }
 
@@ -141,7 +141,7 @@ public sealed partial class ShellViewModel : ObservableObject
 
 public sealed class HelpViewModel() : PageViewModel("Help")
 {
-    public string Version { get; } = typeof(HelpViewModel).Assembly.GetName().Version?.ToString() ?? "";
+    public string Version { get; } = AppVersion.Display;
 
     public string DataDirectory { get; } = MissionPlanner.Utilities.Settings.GetUserDataDirectory();
 
