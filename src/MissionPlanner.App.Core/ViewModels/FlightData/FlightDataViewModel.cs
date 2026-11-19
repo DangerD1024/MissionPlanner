@@ -349,6 +349,10 @@ public sealed partial class FlightDataViewModel : PageViewModel
         var h = Hud;
         var c = false;
         c |= Set(ref h.Connected, s.IsConnected || s.Mav.logreadmode || s.Mav.logplaybackfile != null); // a paused log still shows its data
+        var linkLost = s.IsReconnecting || s.IsLinkStale;
+        c |= Set(ref h.LinkLost, linkLost);
+        c |= Set(ref h.LinkLostText, !linkLost ? ""
+            : $"{(s.IsReconnecting ? "RECONNECTING" : "NO DATA")} · {(int)s.SinceLastPacket.TotalSeconds} s");
         c |= Set(ref h.Roll, cs.roll);
         c |= Set(ref h.Pitch, cs.pitch);
         c |= Set(ref h.Heading, cs.yaw);

@@ -90,7 +90,10 @@
           <ComboBox Grid.Row="1" Grid.ColumnSpan="3" Height="28" MinHeight="28" Padding="8,2" FontSize="12" Margin="0,6,0,0"
                     HorizontalAlignment="Stretch" PlaceholderText="vehicle"
                     ItemsSource="{Binding Vehicles}" SelectedItem="{Binding SelectedVehicle}"
-                    IsVisible="{Binding IsConnected}" />
+                    IsVisible="{Binding ShowVehicles}" />
+          <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Margin="2,10,0,0" FontSize="12" FontWeight="SemiBold"
+                     Foreground="{DynamicResource Danger}" Text="{Binding StaleText}" IsVisible="{Binding IsStale}"
+                     ToolTip.Tip="Nothing is arriving from the vehicle. The link is kept and resumes by itself when data returns (TCP is reopened automatically); press Disconnect to stop trying." />
           <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Margin="2,8,0,0" FontSize="11" Classes="muted"
                      Text="{Binding ProgressText}" IsVisible="{Binding IsBusy}" TextTrimming="CharacterEllipsis" MaxWidth="390" />
           <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="10" Margin="0,6,0,0"

@@ -379,6 +379,11 @@ public sealed class Hud : Control
             var nl = Text("NO LINK", 14 * scale, Amber, FaceBold);
             Outlined(ctx, nl, new Point(cx - nl.Width / 2, cy - h * 0.2 + armed.Height / 2 + 2));
         }
+        else if (m.LinkLost)
+        {
+            var ll = Text(m.LinkLostText, 15 * scale, Red, FaceBold);
+            Outlined(ctx, ll, new Point(cx - ll.Width / 2, cy - h * 0.2 + armed.Height / 2 + 2));
+        }
         else if (!m.Armed && !m.ReadyToArm)
         {
             var nr = Text("Not Ready to Arm", 13 * scale, Red, FaceBold);

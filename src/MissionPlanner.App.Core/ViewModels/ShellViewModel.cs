@@ -130,6 +130,7 @@ public sealed partial class ShellViewModel : ObservableObject
     public void Tick()
     {
         CurrentPage.Tick();
+        Connection.Tick();
         if (++_tick % 20 == 0)
         {
             Connection.RefreshVehicles();

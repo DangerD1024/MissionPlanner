@@ -120,7 +120,7 @@ public sealed partial class ConnectionViewModel : ObservableObject
     private VehicleOption? _selectedVehicle;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsConnected), nameof(IsBusy), nameof(ConnectText), nameof(CanEditLink))]
+    [NotifyPropertyChangedFor(nameof(IsConnected), nameof(IsBusy), nameof(ConnectText), nameof(CanEditLink), nameof(ShowVehicles))]
     private LinkState _state;
 
     /// <summary>Progress text while connecting (heartbeat wait, parameter download).</summary>
@@ -133,6 +133,26 @@ public sealed partial class ConnectionViewModel : ObservableObject
     public bool IsSerial => SelectedPort is not (Tcp or Udp or UdpClient);
 
     public bool IsConnected => State == LinkState.Connected;
+
+    /// <summary>Connected but nothing heard from the vehicle for a while.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowVehicles))]
+    private bool _isStale;
+
+    [ObservableProperty]
+    private string _staleText = "";
+
+    public bool ShowVehicles => IsConnected && !IsStale;
+
+    /// <summary>Called by the shell's UI tick.</summary>
+    public void Tick()
+    {
+        var s = _services.Session;
+        IsStale = s.IsReconnecting || s.IsLinkStale;
+        var secs = (int)s.SinceLastPacket.TotalSeconds;
+        StaleText = s.IsReconnecting ? $"Reconnecting… no data for {secs} s"
+            : IsStale ? $"No data from the vehicle for {secs} s" : "";
+    }
 
     public bool IsBusy => State == LinkState.Connecting;
 

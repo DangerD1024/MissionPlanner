@@ -16,7 +16,7 @@ public static class LinkFactory
 
         return spec.Kind switch
         {
-            LinkKind.Serial => new SerialPort(spec.Address, spec.Value),
+            LinkKind.Serial => new SerialLink(spec.Address, spec.Value),
             LinkKind.Tcp => new FixedTcp(spec.Address, spec.Value),
             LinkKind.UdpListen => new FixedUdpListen(spec.Value),
             LinkKind.UdpConnect => new FixedUdpConnect(spec.Address, spec.Value),
@@ -42,6 +42,42 @@ public static class LinkFactory
         if (name.StartsWith("TCP_port", StringComparison.Ordinal) || name.StartsWith("UDP_port", StringComparison.Ordinal))
             return port;
         return null;
+    }
+
+    /// <summary>
+    /// Mission Planner's serial port, except that closing never hangs: once the USB device is
+    /// unplugged, closing the still-"open" port blocks indefinitely in the runtime, and the library
+    /// closes the old port whenever a new one is assigned. Close and Dispose give up waiting after a
+    /// second and let the stuck close finish (or not) on its own thread.
+    /// </summary>
+    internal sealed class SerialLink : SerialPort, ICommsSerial
+    {
+        private static readonly TimeSpan CloseWait = TimeSpan.FromSeconds(1);
+
+        public SerialLink(string port, int baud)
+            : base(port, baud)
+        {
+        }
+
+        void ICommsSerial.Close() => Bounded(Close);
+
+        void IDisposable.Dispose() => Bounded(Dispose);
+
+        private static void Bounded(Action close)
+        {
+            var task = Task.Run(() =>
+            {
+                try
+                {
+                    close();
+                }
+                catch (Exception)
+                {
+                    // a vanished device can throw anything on close; it is gone either way
+                }
+            });
+            task.Wait(CloseWait);
+        }
     }
 
     private sealed class FixedTcp : TcpSerial

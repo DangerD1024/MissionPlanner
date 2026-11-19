@@ -51,4 +51,8 @@ public sealed class HudModel
 
     /// <summary>High-severity status text, shown in the middle for a while.</summary>
     public string Message = "";
+
+    /// <summary>Connected, but no packets for a while: "RECONNECTING · 7 s" (TCP/UDP) or "NO DATA · 7 s".</summary>
+    public bool LinkLost;
+    public string LinkLostText = "";
 }

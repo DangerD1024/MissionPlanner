@@ -28,8 +28,43 @@ public sealed class VehicleSession : IAsyncDisposable
     private CancellationTokenSource? _stop;
     private Task _reader = Task.CompletedTask;
     private BufferedStream? _tlog;
+    private long _lastPacketTicks;
+    private int _ioErrors;
+    private Task _monitor = Task.CompletedTask;
+    private int _losing;
+    private volatile bool _transportDown;
+
+    public VehicleSession()
+    {
+        Mav.OnPacketReceived += (_, _) => Interlocked.Exchange(ref _lastPacketTicks, Environment.TickCount64);
+    }
+
+    /// <summary>No packet for this long and the link counts as lost (shown to the user, kept open).</summary>
+    public static readonly TimeSpan StaleAfter = TimeSpan.FromSeconds(3);
 
     public MAVLinkInterface Mav { get; } = new();
+
+    /// <summary>Time since the last packet from the link (zero while not connected).</summary>
+    public TimeSpan SinceLastPacket => IsConnected
+        ? TimeSpan.FromMilliseconds(Environment.TickCount64 - Interlocked.Read(ref _lastPacketTicks))
+        : TimeSpan.Zero;
+
+    /// <summary>
+    /// Connected, but nothing has arrived for <see cref="StaleAfter"/>. A link that is certainly gone
+    /// (USB unplugged, TCP closed) disconnects instead; this covers UDP and a vehicle that went quiet,
+    /// which recover by themselves when packets return.
+    /// </summary>
+    public bool IsLinkStale => IsConnected && SinceLastPacket > StaleAfter;
+
+    /// <summary>A TCP or UDP link: these never disconnect by themselves, they wait for the link to return.</summary>
+    public bool IsNetworkLink => Link is { Kind: LinkKind.Tcp or LinkKind.UdpListen or LinkKind.UdpConnect };
+
+    /// <summary>
+    /// A network link that dropped (TCP closed by the other end) or went silent: the session stays
+    /// connected and keeps trying — TCP reopens its socket every couple of seconds — and carries on
+    /// by itself when data returns. A USB serial device that disappears disconnects instead.
+    /// </summary>
+    public bool IsReconnecting => IsConnected && IsNetworkLink && (_transportDown || IsLinkStale);
 
     public LinkState State { get; private set; }
 
@@ -43,7 +78,7 @@ public sealed class VehicleSession : IAsyncDisposable
     /// <summary>Raised on a worker thread whenever <see cref="State"/> changes.</summary>
     public event EventHandler<LinkState>? StateChanged;
 
-    /// <summary>Raised when an open link drops by itself (cable pulled, vehicle off), not on Disconnect.</summary>
+    /// <summary>Raised when a serial link is gone for good (USB device unplugged), not on Disconnect.</summary>
     public event EventHandler<string>? LinkLost;
 
     /// <summary>The vehicle the screens show; switchable when several share the link.</summary>
@@ -110,22 +145,19 @@ public sealed class VehicleSession : IAsyncDisposable
 
         Link = spec;
         ConnectedAt = DateTime.Now;
+        Interlocked.Exchange(ref _lastPacketTicks, Environment.TickCount64);
+        _ioErrors = 0;
+        _losing = 0;
+        _transportDown = false;
         SetState(LinkState.Connected);
+        _monitor = Task.Run(() => MonitorLoop(stop.Token), CancellationToken.None);
     }
 
     private async Task FailConnectAsync(CancellationTokenSource stop)
     {
         _stop = null;
         await stop.CancelAsync().ConfigureAwait(false);
-        try
-        {
-            await _reader.ConfigureAwait(false);
-        }
-        catch (OperationCanceledException)
-        {
-        }
-
-        stop.Dispose();
+        await WaitBounded(_reader).ConfigureAwait(false);
         var tlog = TlogPath;
         CloseQuietly();
         // a failed attempt leaves no telemetry log behind
@@ -149,19 +181,121 @@ public sealed class VehicleSession : IAsyncDisposable
         if (stop != null)
         {
             await stop.CancelAsync().ConfigureAwait(false);
-            try
-            {
-                await _reader.ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-
-            stop.Dispose();
+            await WaitBounded(Task.WhenAll(_reader, _monitor)).ConfigureAwait(false);
         }
 
         CloseQuietly();
+        _transportDown = false;
         SetState(LinkState.Disconnected);
+    }
+
+    /// <summary>A task blocked in a dead device must not hold the app: wait a few seconds at most.</summary>
+    private static async Task WaitBounded(Task task)
+    {
+        try
+        {
+            await task.WaitAsync(TimeSpan.FromSeconds(3)).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // cancelled, failed or still stuck: the link is being torn down either way
+        }
+    }
+
+    /// <summary>
+    /// Watches the link while connected, independently of the reader (which can sit in a blocking
+    /// call): a vanished USB device disconnects; a dropped TCP socket is reopened until it works.
+    /// </summary>
+    private async Task MonitorLoop(CancellationToken stop)
+    {
+        long nextReopen = 0;
+        while (!stop.IsCancellationRequested)
+        {
+            try
+            {
+                await Task.Delay(500, stop).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            try
+            {
+                if (State != LinkState.Connected || Link is not { } link)
+                    continue;
+                var stream = Mav.BaseStream;
+
+                if (link.Kind == LinkKind.Serial)
+                {
+                    if (LinkHealth.Check(link, stream) is { } gone)
+                    {
+                        LoseLink(gone);
+                        return;
+                    }
+
+                    continue;
+                }
+
+                if (link.Kind == LinkKind.Tcp)
+                {
+                    if (stream == null || !stream.IsOpen || LinkHealth.Check(link, stream) != null)
+                        _transportDown = true;
+
+                    if (_transportDown && Environment.TickCount64 >= nextReopen)
+                    {
+                        nextReopen = Environment.TickCount64 + 2000;
+                        if (await TryReopenAsync(link, stop).ConfigureAwait(false))
+                            _transportDown = false;
+                    }
+                }
+
+                // UDP has nothing to reopen: it listens on, and IsReconnecting follows the packets
+            }
+            catch (OperationCanceledException) when (stop.IsCancellationRequested)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("link monitor", ex);
+            }
+        }
+    }
+
+    private async Task<bool> TryReopenAsync(LinkSpec link, CancellationToken stop)
+    {
+        var fresh = LinkFactory.Create(link);
+        var opened = await Task.Run(() =>
+        {
+            try
+            {
+                fresh.Open();
+                return fresh.IsOpen;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }, stop).ConfigureAwait(false);
+
+        if (!opened || stop.IsCancellationRequested || State != LinkState.Connected)
+        {
+            try
+            {
+                fresh.Dispose();
+            }
+            catch (Exception)
+            {
+            }
+
+            return false;
+        }
+
+        // the library closes the old socket; parameters and vehicle state carry on
+        Mav.BaseStream = fresh;
+        Log.Info($"link {link} reopened");
+        return true;
     }
 
     /// <summary>Selects which vehicle on the link the screens show.</summary>
@@ -192,11 +326,19 @@ public sealed class VehicleSession : IAsyncDisposable
                         continue;
                     }
 
-                    OnLinkLost("The link closed.");
+                    // a network link waits while the monitor reopens it
+                    if (IsNetworkLink)
+                    {
+                        await Task.Delay(50, stop).ConfigureAwait(false);
+                        continue;
+                    }
+
+                    LoseLink("The link closed.");
                     return;
                 }
 
                 var now = Environment.TickCount64;
+
                 if (now - lastHeartbeat >= 1000)
                 {
                     SendHeartbeats();
@@ -218,6 +360,9 @@ public sealed class VehicleSession : IAsyncDisposable
                     read++;
                 }
 
+                if (read > 0)
+                    _ioErrors = 0;
+
                 // keeps derived values current and re-requests telemetry streams when they lapse
                 if (now - lastStreams >= 200)
                 {
@@ -236,9 +381,15 @@ public sealed class VehicleSession : IAsyncDisposable
             catch (Exception ex)
             {
                 Log.Warn("read loop", ex);
-                if ((Mav.BaseStream == null || !Mav.BaseStream.IsOpen) && State != LinkState.Connecting)
+
+                // a serial port that keeps failing while nothing arrives is gone, whatever IsOpen says;
+                // network links are left to the monitor, which reopens them
+                if (State == LinkState.Connected && !IsNetworkLink &&
+                    ex is IOException or System.Net.Sockets.SocketException or ObjectDisposedException
+                        or InvalidOperationException or UnauthorizedAccessException &&
+                    ++_ioErrors >= 5 && SinceLastPacket > TimeSpan.FromSeconds(1))
                 {
-                    OnLinkLost(ex.Message);
+                    LoseLink(ex.Message);
                     return;
                 }
 
@@ -293,10 +444,16 @@ public sealed class VehicleSession : IAsyncDisposable
         }
     }
 
-    private void OnLinkLost(string reason)
+    /// <summary>The link is gone for good: disconnect once, from whichever task noticed first.</summary>
+    private void LoseLink(string reason)
     {
-        CloseQuietly();
+        if (Interlocked.Exchange(ref _losing, 1) == 1)
+            return;
+        var stop = _stop;
         _stop = null;
+        stop?.Cancel();
+        // closing a vanished serial device is bounded (LinkFactory.SerialLink), so this cannot hang
+        CloseQuietly();
         SetState(LinkState.Disconnected);
         LinkLost?.Invoke(this, reason);
     }

@@ -107,7 +107,7 @@ public class ConnectTests
     }
 
     /// <summary>Two linked pseudo-terminals from socat, exposed as stable symlinks.</summary>
-    private sealed class PtyPair : IDisposable
+    internal sealed class PtyPair : IDisposable
     {
         private readonly Process _socat;
         private readonly string _dir;
