@@ -1,140 +1,148 @@
-# MissionPlanner
+# Mission Planner 2.0
 
-![Dot Net](https://github.com/ardupilot/missionplanner/actions/workflows/main.yml/badge.svg) ![Android](https://github.com/ardupilot/missionplanner/actions/workflows/android.yml/badge.svg) ![OSX/IOS](https://github.com/ardupilot/missionplanner/actions/workflows/mac.yml/badge.svg)
+[![Mission Planner 2.0 build and tests](https://github.com/DangerD1024/MissionPlanner/actions/workflows/next.yml/badge.svg?branch=avalonia-port)](https://github.com/DangerD1024/MissionPlanner/actions/workflows/next.yml)
 
-Website : http://ardupilot.org/planner/
+A cross-platform ground control station for [ArduPilot](https://ardupilot.org) vehicles: plan
+missions, set up and tune the autopilot, and fly with live telemetry, map and video. It is a new
+interface for [Mission Planner](https://ardupilot.org/planner/), built on .NET 10 and Avalonia 12,
+that runs natively on **Linux, Windows and macOS** while reusing Mission Planner's proven MAVLink
+and vehicle libraries.
 
-Forum : http://discuss.ardupilot.org/c/ground-control-software/mission-planner
+> **Status: preview (2.0.1b).** The main screens of the classic Mission Planner are in place and
+> tested against ArduPilot SITL, and the setup screens were checked read-only on a real flight
+> controller. It has not yet been flown with real aircraft — try it on the simulator or a bench
+> vehicle with the propellers removed.
 
-Download latest stable version : http://firmware.ardupilot.org/Tools/MissionPlanner/MissionPlanner-latest.msi
+- Website: https://ardupilot.org/planner/
+- Forum: https://discuss.ardupilot.org/c/ground-control-software/mission-planner
+- License: [GPL v3](COPYING.txt)
 
-Changelog : https://github.com/ArduPilot/MissionPlanner/blob/master/ChangeLog.txt
+## What's in it
 
-License : https://github.com/ArduPilot/MissionPlanner/blob/master/COPYING.txt
+The layout follows Mission Planner: screens along the top, connection controls on the right,
+and a menu on the left of Setup and Config that shows only the pages your vehicle needs.
 
-
-## How to compile
-
-### On Windows (Recommended)
-
-#### 1. Install software
-
-##### Main requirements
-
-Currently, Mission Planner needs:
-
-Visual Studio 2022
-
-##### IDE
-
-### Visual Studio Community
-To compile Mission Planner, we recommend using Visual Studio. You can download Visual Studio Community from the [Visual Studio Download page](https://visualstudio.microsoft.com/downloads/ "Visual Studio Download page").
-
-Visual Studio is a comprehensive suite with built-in Git support, but it can be overwhelming due to its complexity. To streamline the installation process, you can customize your installation by selecting the relevant "Workloads" and "Individual components" based on your software development needs.
-
-To simplify this selection process, we have provided a configuration file that specifies the components required for MissionPlanner development. Here's how you can use it:
-
-1. Go to "More" in the Visual Studio installer.
-2. Select "Import configuration."
-3. Use the following file: [vs2022.vsconfig](https://raw.githubusercontent.com/ArduPilot/MissionPlanner/master/vs2022.vsconfig "vs2022.vsconfig").
-
-By following these steps, you'll have the necessary components installed and ready for Mission Planner development.
-
-###### VSCode
-Currently VSCode with C# plugin is able to parse the code but cannot build.
-
-#### 2. Get the code
-
-If you get Visual Studio Community, you should be able to use Git from the IDE. 
-Clone `https://github.com/ArduPilot/MissionPlanner.git` to get the full code.
-
-In case you didn't install an IDE, you will need to manually install Git. Please follow instruction in https://ardupilot.org/dev/docs/where-to-get-the-code.html#downloading-the-code-using-git
-
-Open a git bash terminal in the MissionPlanner directory and type, "git submodule update --init" to download all submodules
-
-#### 3. Build
-
-To build the code:
-- Open MissionPlanner.sln with Visual Studio
-- From the Build menu, select "Build MissionPlanner"
-
-### On Linux
-
-See [Linux build and download instructions](Linux/README.md). Build with
-`./Linux/build.sh` and launch with `./Linux/run.sh`.
-
-## Launching Mission Planner on other system
-
-Mission Planner is available for Android via the Play Store. https://play.google.com/store/apps/details?id=com.michaeloborne.MissionPlanner
-Mission Planner can be used with Mono on Linux systems. Be aware that not all functions are available on Linux.
-Native MacOS and iOS support is experimental and not recommended for inexperienced users. https://github.com/ArduPilot/MissionPlanner/releases/tag/osxlatest 
-For MacOS users it is recommended to use Mission Planner for Windows via Boot Camp or Parallels (or equivalent).
-
-### On Linux
-
-Download the precompiled Linux archive and install the runtime packages listed in
-[Linux/README.md](Linux/README.md), then extract it and run `./run.sh`.
-No SDK or compiler is needed for the download.
-
-You can debug startup with `MONO_LOG_LEVEL=debug ./run.sh`.
-
-### External Services Used
-
-| Source | Use | How to disable | Custodian |
-|---|---|---|---|
-| https://firmware.oborne.me  | used as a global cdn for checking for MP update check - checked once per day at startup | edit missionplanner.exe.config | Michael Oborne |
-| https://firmware.ardupilot.org  | used for updates to stable, firmware metadata, firmware, user alerts, gstreamer, SRTM, SITL | updates to stable (edit missionplanner.exe.config) - all others Not possible | Ardupilot Team |
-| https://github.com/ | used for updates to beta | edit missionplanner.exe.config | Michael Oborne |
-| https://raw.githubusercontent.com | old param metadata, sitl config files | Not possible | Ardupilot Team |
-| https://api.github.com/ | ardupilot preload param files | Not possible | Ardupilot Team |
-| https://raw.oborne.me/  | used as glocal cdn for parameter metadata generator, no longer primary source | only used at user request to regenerate, edit missionplanner.exe.config | Michael Oborne |
-| https://maps.google.com  | used for elevation api - removed due to abuse | N/A | N/A |
-| https://discuss.cubepilot.org/ | use for SB2 reporting - only on affected boards when user enters details | only used at user request | CubePilot |
-| https://altitudeangel.com  | utm data - removed | N/A | N/A |
-| https://autotest.ardupilot.org  | dataflash log meta data, parameter metadata | Not Possible | Ardupilot Team |
-| Many | your choice of map provider google/bing/openstreetmap/etc | User selectable | User/Many |
-| https://www.cloudflare.com | geo location provider - for NFZ selection | Not Possible | Michael Oborne |
-| https://esua.cad.gov.hk | HK no fly zones - user enabled | User selectable | HK Gov |
-| https://ssl.google-analytics.com | Google Analytics Anonymous Stats - Screen Loads, Exceptions/Crashs, Events (Connect), Startup Timing, FW upload (FW Type and Board Type) | disable in Config > Planner > OptOut Anon Stats | Michael Oborne |
-| https://api.dronelogbook.com | logging - disabled | N/A | N/A |
-| https://ardupilot.org | help urls on many pages | User Initiated | ArduPilot Team |
-| https://www.youtube.com | help videos on many pages | User Initiated | ArduPilot Team |
-| https://files.rfdesign.com.au | RFD firmwares | User Initiated | RFDesign |
-| https://teck.airmarket.io | airmarket - disabled | N/A | N/A |
-
-### Offline Use - No Internet
-
-| Location | Use | Transferable between pcs |
-|---|---|---|
-| C:\ProgramData\Mission Planner\gmapcache | Map cache | yes |
-| C:\ProgramData\Mission Planner\srtm | Elevation data cache | yes |
-| C:\ProgramData\Mission Planner\\*.pdef.xml | Parameter cache | yes |
-| C:\ProgramData\Mission Planner\LogMessages*.xml | DF Log metadata cache | yes |
-
-on linux this is in /home/<user>/.local/share/Mission Planner/
-
-### Offline Data Supported
-#### Elevation
-* SRTM Cache
-* GeoTiff's in WGS84/EGM96
-* DTED
-
-#### Images
-* Map Cache
-* WMS
-* WMTS
-* GDAL
-
-### Paths used - Default
-
-| Location | Use |
+| Screen | Highlights |
 |---|---|
-| C:\ProgramData\Mission Planner | All cross user content |
-| C:\Users\USERNAME\Documents\Mission Planner | All per user content |
+| **Data** | Attitude HUD with video behind it (RTSP, UDP H.264/H.265, MPEG-TS, MJPEG or any GStreamer pipeline); tabs for quick values, actions (arm, modes, waypoints, Do Action), messages, status, pre-flight checklist, gauges, servo/relay, aux functions, gimbal, transponder; map with vehicle, track, mission, ADS-B traffic, Fly To Here; telemetry log playback; DataFlash log download and browser; live tuning graph; spoken alerts |
+| **Plan** | Mission, fence and rally editor on the map; waypoint grid with per-command fields; survey grid; read/write to the vehicle; QGC WPL files |
+| **Setup** | Firmware install; frame type; accelerometer, compass and radio calibration (with optional QGroundControl-style channel mapping); servo outputs with a motor layout tab (motor order wizard, motor direction, frame type); serial ports; ESC calibration; flight modes; failsafe; battery; motor test; rangefinder, airspeed, optical flow, OSD layout editor, gimbal, parachute, CompassMot, ADS-B, hardware IDs, initial tuning parameters; RTK/GPS injection (NTRIP or base station); joystick; SiK radio; DroneCAN; MAVLink shell terminal |
+| **Config** | Basic and extended tuning laid out as in Mission Planner for each vehicle; standard and advanced parameters; full parameter list and tree with value lists and bitmask editors, compare, load/save, reboot; user parameter list; MAVFTP file browser; MAVLink inspector |
+| **Simulation** | Downloads and runs ArduPilot SITL (Plane, Copter, Rover, Heli) and connects to it |
+| **Settings** | Theme (Mission Planner, Dark, Light, High Contrast, Midnight), maps, logs, parameter docs, telemetry rates, units |
 
-on linux this is in /home/<user>/.local/share/Mission Planner/
+Connecting: pick a serial port or TCP/UDP at the top right, or tick **Auto-connect** to find a
+vehicle on USB or UDP 14550 by itself. Parameters download over MAVFTP when the autopilot
+supports it. Unplugging USB disconnects; a TCP or UDP link that drops shows *Reconnecting* and
+resumes on its own.
 
-### CA Cert
-A CA cert is installed to the root store and used to sign the windows serial port drivers, and is installed as part of the MSI install.
+## Getting it
 
-[![FlagCounter](https://s01.flagcounter.com/count2/A4bA/bg_FFFFFF/txt_000000/border_CCCCCC/columns_8/maxflags_40/viewers_0/labels_1/pageviews_0/flags_0/percent_0/)](https://info.flagcounter.com/A4bA)
+There are no packaged releases yet; build it from source. You need the
+[.NET 10 SDK](https://dotnet.microsoft.com/download) and git.
+
+```sh
+git clone -b avalonia-port https://github.com/DangerD1024/MissionPlanner.git
+cd MissionPlanner
+dotnet run --project src/MissionPlanner.App
+```
+
+A self-contained folder you can copy and launch (Linux x64 shown; use `win-x64`, `osx-arm64` or
+`osx-x64` for the others):
+
+```sh
+dotnet publish src/MissionPlanner.App -c Release -r linux-x64 --self-contained false -o bin/next-linux-x64
+./bin/next-linux-x64/MissionPlanner.App
+```
+
+On Linux, Help → *Add to applications menu* adds it to your desktop's launcher.
+
+### Optional system packages
+
+The app runs without these; the features that need them say so when they are missing.
+
+| Feature | Linux (Debian/Ubuntu) | Windows | macOS |
+|---|---|---|---|
+| Video in the HUD | `gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-libav` | [GStreamer](https://gstreamer.freedesktop.org/download/) runtime | `brew install gstreamer` |
+| Joystick | `libsdl2-2.0-0` | `SDL2.dll` next to the app | `brew install sdl2` |
+| Spoken alerts | `speech-dispatcher` or `espeak-ng` | built in | built in |
+| Serial ports | add yourself to the `dialout` group | — | — |
+
+Linux is where it is developed and tested. Windows is built and tested in CI but has seen little
+hands-on use; macOS has not been built or run yet.
+
+## Development
+
+```sh
+dotnet build MissionPlanner.Next.sln
+dotnet test src/MissionPlanner.App.Tests
+```
+
+The tests talk to scripted fake vehicles over TCP, UDP and a virtual serial port (`socat`, Linux
+and macOS). Opt-in suites go further:
+
+| Variable | Runs |
+|---|---|
+| `MP_TEST_SITL=1` | end-to-end tests against ArduPilot SITL (connect, parameters, missions, arm/take off/land, tuning, setup pages, reconnect); uses the binaries the Simulation screen downloads |
+| `MP_TEST_SERIAL_PORT=/dev/serial/by-id/...` | read-only connect and telemetry check against a real flight controller |
+| `MP_TEST_NETWORK=1` | fetches a tile from every map provider |
+
+Project layout:
+
+| Path | Contents |
+|---|---|
+| `src/MissionPlanner.App.Core` | Vehicle session, parameters, missions, maps and every screen's logic (no UI types) |
+| `src/MissionPlanner.App` | Avalonia views, controls (map, HUD, motor diagram…) and the desktop entry point |
+| `src/MissionPlanner.App.Tests` | MSTest suite |
+| `ExtLibs/` | Libraries shared with the classic app: MAVLink, comms, vehicle state, firmware, logs, maps |
+
+More detail for contributors is in [src/README.md](src/README.md). The version shown in the title
+bar is set in one place, `MissionPlannerVersion` in `src/Directory.Build.props`.
+
+## Data and settings
+
+Mission Planner 2.0 shares the classic app's data folder — map tile cache, terrain (SRTM),
+parameter documentation, logs and SITL binaries — so both apps can be used side by side.
+Its own settings live in `config.next.xml` and never overwrite the classic app's `config.xml`.
+
+| OS | Folder |
+|---|---|
+| Linux | `~/.local/share/Mission Planner/` (or `~/Documents/Mission Planner/` if that folder exists) |
+| Windows | `C:\ProgramData\Mission Planner\` (shared data) and `Documents\Mission Planner\` (settings, logs) |
+| macOS | `~/Library/Application Support/Mission Planner/` or `~/Documents/Mission Planner/` |
+
+Copy the map cache (`gmapcache`), `srtm` folder and `*.pdef.xml` files to another computer to work
+offline there.
+
+## Internet access
+
+| Server | Used for |
+|---|---|
+| `firmware.ardupilot.org` | Firmware manifest and downloads, SITL binaries |
+| `firmware.oborne.me` | Mirror of the firmware manifest, used when the main one fails |
+| `autotest.ardupilot.org` | Parameter documentation (checked weekly) |
+| `raw.githubusercontent.com` | SITL default parameters; peripheral firmware manifest |
+| `terrain.ardupilot.org` | Terrain elevation tiles |
+| Map providers you select | Google, Bing, OpenStreetMap, Esri |
+| NTRIP casters you configure | RTK corrections |
+
+There is no analytics or usage tracking.
+
+## Classic Mission Planner
+
+This repository still contains the Windows Forms Mission Planner (`MissionPlanner.sln`), which the
+new app's libraries come from. Downloads: [Windows installer](https://firmware.ardupilot.org/Tools/MissionPlanner/MissionPlanner-latest.msi),
+[Android](https://play.google.com/store/apps/details?id=com.michaeloborne.MissionPlanner); history
+in the [changelog](ChangeLog.txt).
+
+To build it on Windows: install Visual Studio 2022 with the components in
+[vs2022.vsconfig](vs2022.vsconfig) (Visual Studio Installer → More → Import configuration), then
+
+```bat
+git submodule update --init
+.nuget\nuget.exe restore MissionPlanner.sln
+msbuild -v:m -restore -t:Build -p:Configuration=Release MissionPlanner.sln
+```
+
+or open `MissionPlanner.sln` and build. On Linux it runs under Mono — see
+[Linux/README.md](Linux/README.md) (`./Linux/build.sh`, then `./Linux/run.sh`).
