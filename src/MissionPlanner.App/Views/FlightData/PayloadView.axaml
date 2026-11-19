@@ -1,0 +1,70 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             x:Class="MissionPlanner.App.Views.FlightData.PayloadView"
+             x:DataType="vm:PayloadViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="Button.cmd">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="MinHeight" Value="32" />
+    </Style>
+    <Style Selector="TextBlock.caption">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
+    </Style>
+    <Style Selector="TextBlock.angle">
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="MinWidth" Value="56" />
+      <Setter Property="TextAlignment" Value="Right" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="10" Spacing="10">
+      <Border Classes="card" Padding="10,8">
+        <StackPanel Spacing="2">
+          <TextBlock Text="{Binding MountText}" FontWeight="SemiBold" TextWrapping="Wrap" />
+          <TextBlock Text="{Binding AttitudeText}" Classes="caption" IsVisible="{Binding AttitudeText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        </StackPanel>
+      </Border>
+
+      <StackPanel Spacing="10" IsEnabled="{Binding IsConnected}">
+        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+          <TextBlock Classes="caption" Text="Pitch (tilt)" />
+          <Slider Grid.Row="1" Minimum="{Binding PitchMin}" Maximum="{Binding PitchMax}" Value="{Binding Pitch}"
+                  SmallChange="1" LargeChange="10" TickFrequency="1" IsSnapToTickEnabled="True" />
+          <TextBlock Grid.Row="1" Grid.Column="1" Classes="angle" Text="{Binding Pitch, StringFormat='{}{0:0}°'}" />
+        </Grid>
+
+        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+          <TextBlock Classes="caption" Text="Yaw (pan)" />
+          <Slider Grid.Row="1" Minimum="{Binding YawMin}" Maximum="{Binding YawMax}" Value="{Binding Yaw}"
+                  SmallChange="1" LargeChange="10" TickFrequency="1" IsSnapToTickEnabled="True" />
+          <TextBlock Grid.Row="1" Grid.Column="1" Classes="angle" Text="{Binding Yaw, StringFormat='{}{0:0}°'}" />
+        </Grid>
+
+        <CheckBox Content="Yaw lock (hold the heading instead of following the vehicle)" IsChecked="{Binding YawLock}"
+                  IsVisible="{Binding UsesGimbalManager}" />
+
+        <UniformGrid Columns="3" ColumnSpacing="6" RowSpacing="6">
+          <Button Classes="cmd" Content="Center" Command="{Binding CenterCommand}" IsEnabled="{Binding CanCommand}"
+                  ToolTip.Tip="Pitch and yaw to 0 (MAVLink targeting)" />
+          <Button Classes="cmd" Content="Look Down" Command="{Binding LookDownCommand}" IsEnabled="{Binding CanCommand}" />
+          <Button Classes="cmd" Content="RC Targeting" Command="{Binding RcTargetingCommand}" IsEnabled="{Binding CanCommand}"
+                  ToolTip.Tip="Hand the gimbal back to the RC sticks" />
+          <Button Classes="cmd" Content="Retract" Command="{Binding RetractCommand}" IsEnabled="{Binding CanCommand}" />
+          <Button Classes="cmd" Content="Neutral" Command="{Binding NeutralCommand}" IsEnabled="{Binding CanCommand}" />
+          <Button Classes="cmd" Content="Clear ROI" Command="{Binding ClearRoiCommand}" IsEnabled="{Binding CanCommand}"
+                  ToolTip.Tip="Stop pointing at a region of interest" />
+        </UniformGrid>
+      </StackPanel>
+
+      <TextBlock Classes="caption" TextWrapping="Wrap"
+                 Text="Moving a slider points the gimbal (DO_GIMBAL_MANAGER_PITCHYAW, or DO_MOUNT_CONTROL on older mounts). Right-click the map and choose 'Point Camera Here' to aim at a location." />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

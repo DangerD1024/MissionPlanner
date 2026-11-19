@@ -21,6 +21,7 @@ public sealed partial class FlightDataView : UserControl
     private readonly MenuItem _flyTo;
     private readonly MenuItem _flyToAlt;
     private readonly MenuItem _setHome;
+    private readonly MenuItem _pointCamera;
 
     public FlightDataView()
     {
@@ -29,6 +30,7 @@ public sealed partial class FlightDataView : UserControl
         _flyTo = Item("Fly To Here", () => _vm?.FlyToHereAsync(_menuAt.Lat, _menuAt.Lng));
         _flyToAlt = Item("Fly To Here Alt", () => _vm?.FlyToHereAltAsync(_menuAt.Lat, _menuAt.Lng));
         _setHome = Item("Set Home Here", () => _vm?.SetHomeHereAsync(_menuAt.Lat, _menuAt.Lng));
+        _pointCamera = Item("Point Camera Here", () => _vm?.PointCameraHereAsync(_menuAt.Lat, _menuAt.Lng));
         _menu = new MenuFlyout
         {
             Items =
@@ -36,6 +38,7 @@ public sealed partial class FlightDataView : UserControl
                 _flyTo,
                 _flyToAlt,
                 _setHome,
+                _pointCamera,
                 new Separator(),
                 Item("Clear Track", () => _vm?.ClearTrack()),
                 Item("Zoom to vehicle", () => _vm?.ZoomToVehicle()),
@@ -69,6 +72,7 @@ public sealed partial class FlightDataView : UserControl
         vm.TelemetryUpdated += OnTelemetry;
         Map.Layers.Add(new MissionLayer(vm.MapModel));
         Map.Layers.Add(new TrackLayer(vm.MapModel));
+        Map.Layers.Add(new AdsbLayer(vm.MapModel));
         Map.Layers.Add(new VehicleLayer(vm.MapModel));
     }
 
@@ -102,6 +106,7 @@ public sealed partial class FlightDataView : UserControl
         _flyTo.IsEnabled = connected;
         _flyToAlt.IsEnabled = connected;
         _setHome.IsEnabled = connected;
+        _pointCamera.IsEnabled = connected;
         _menu.ShowAt(Map, showAtPointer: true);
     }
 

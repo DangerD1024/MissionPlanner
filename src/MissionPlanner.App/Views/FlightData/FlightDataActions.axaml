@@ -23,6 +23,7 @@
 
   <Grid RowDefinitions="*,Auto">
     <ScrollViewer>
+      <StackPanel>
       <StackPanel Margin="8" Spacing="8" IsEnabled="{Binding IsConnected}">
 
         <!-- the big four -->
@@ -79,6 +80,15 @@
                         HorizontalContentAlignment="Center" MinHeight="32"
                         ToolTip.Tip="Show altitude above sea level instead of above home" />
         </UniformGrid>
+      </StackPanel>
+
+      <!-- speech works without a vehicle too (settings, test) -->
+      <Grid ColumnDefinitions="*,120" ColumnSpacing="6" Margin="8,0,8,8">
+        <CheckBox Content="Speech" IsChecked="{Binding SpeechEnabled}" MinHeight="32"
+                  ToolTip.Tip="Spoken announcements: mode, waypoint, arm/disarm, warnings, vehicle messages" />
+        <Button Grid.Column="1" Content="Speech..." Command="{Binding OpenSpeechSettingsCommand}"
+                ToolTip.Tip="Choose what is announced" />
+      </Grid>
       </StackPanel>
     </ScrollViewer>
 

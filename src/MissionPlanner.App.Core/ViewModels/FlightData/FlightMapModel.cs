@@ -267,4 +267,7 @@ public sealed class FlightMapModel
     public TrackBuffer Track { get; } = new();
 
     public MissionOverlay Mission = MissionOverlay.Empty;
+
+    /// <summary>ADS-B traffic (ADSB_VEHICLE), refreshed at 2 Hz; stale contacts are flagged.</summary>
+    public IReadOnlyList<AdsbContact> Traffic = [];
 }

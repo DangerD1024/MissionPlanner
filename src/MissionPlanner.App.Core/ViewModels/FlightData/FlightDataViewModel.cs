@@ -13,22 +13,29 @@ public sealed record MapProviderOption(string Name, GMap.NET.MapProviders.GMapPr
     public override string ToString() => Name;
 }
 
-/// <summary>Tabs under the HUD, in display order.</summary>
+/// <summary>Tabs under the HUD, in display order (Mission Planner's order).</summary>
 public enum FlightDataTab
 {
     Quick,
     Actions,
     Messages,
+    PreFlight,
+    Gauges,
+    Transponder,
     Status,
+    Servo,
+    AuxFunction,
+    Payload,
     TelemetryLogs,
     DataFlashLogs,
 }
 
 /// <summary>
 /// DATA screen, after Mission Planner's Flight Data: HUD, telemetry tabs (Quick, Actions,
-/// Messages, Status, Telemetry Logs, DataFlash Logs) and the map. Everything is copied from
-/// CurrentState in <see cref="Tick"/>; values that did not change raise no notifications, and
-/// nothing reads properties by reflection while running.
+/// Messages, PreFlight, Gauges, Transponder, Status, Servo/Relay, Aux Function, Payload,
+/// Telemetry Logs, DataFlash Logs) and the map. Everything is copied from CurrentState in
+/// <see cref="Tick"/>; values that did not change raise no notifications, and nothing reads
+/// properties by reflection while running.
 /// </summary>
 public sealed partial class FlightDataViewModel : PageViewModel
 {
@@ -74,6 +81,8 @@ public sealed partial class FlightDataViewModel : PageViewModel
         OnMissionChanged();
         // Plane, Copter and Rover mode tables come from the parameter metadata
         services.Params.MetadataChanged += (_, _) => RefreshModes(services.Session.Cs, force: true);
+
+        InitExtras();
     }
 
     public AppServices Services { get; }
@@ -214,6 +223,7 @@ public sealed partial class FlightDataViewModel : PageViewModel
 
     partial void OnSelectedTabIndexChanged(int value)
     {
+        SwitchTab(value);
         if (value == (int)FlightDataTab.Status)
         {
             if (_statusAll == null)
@@ -272,6 +282,7 @@ public sealed partial class FlightDataViewModel : PageViewModel
         Tlogs.OnShown();
         if (ShowTuning)
             Tuning.OnShown();
+        ShowExtras(true);
     }
 
     public override void OnHidden()
@@ -280,6 +291,7 @@ public sealed partial class FlightDataViewModel : PageViewModel
         Tlogs.OnHidden();
         if (ShowTuning)
             Tuning.OnHidden();
+        ShowExtras(false);
         SaveMapPosition();
     }
 
@@ -318,6 +330,7 @@ public sealed partial class FlightDataViewModel : PageViewModel
         Tlogs.Tick();
         if (ShowTuning)
             Tuning.Tick();
+        TickExtras(tick);
 
         TelemetryUpdated?.Invoke(this, EventArgs.Empty);
     }
