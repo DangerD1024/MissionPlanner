@@ -1,0 +1,154 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
+             xmlns:oh="using:MissionPlanner.App.Core.ViewModels.SetupScreens.OptionalHardware"
+             xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
+             x:Class="MissionPlanner.App.Views.SetupScreens.MountView"
+             x:DataType="vm:MountViewModel">
+
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1240" HorizontalAlignment="Left">
+      <hwv:PageHeader Description="Camera gimbal: its type, angle limits, the outputs and RC channels of each axis, and the camera shutter. Changes are written as you make them; a new gimbal type takes effect after a reboot." />
+
+      <WrapPanel>
+        <!-- gimbal -->
+        <Border Classes="card" Width="560" Margin="0,0,16,16" VerticalAlignment="Top">
+          <StackPanel Spacing="6">
+            <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4">
+              <TextBlock Classes="h2" Text="{Binding Selected.Title, FallbackValue='Mount'}" VerticalAlignment="Center" />
+              <ComboBox Grid.Column="1" ItemsSource="{Binding Mounts}" SelectedItem="{Binding Selected}" MinWidth="140"
+                        IsVisible="{Binding HasSeveral}" />
+            </Grid>
+            <StackPanel Spacing="6" DataContext="{Binding Selected}" x:DataType="oh:MountInstance">
+              <hwv:ParamRow DataContext="{Binding Type}" />
+              <TextBlock Classes="muted" TextWrapping="Wrap" FontSize="12" IsVisible="{Binding !IsFitted}"
+                         Text="Choose the gimbal type to use a mount. It takes effect after a reboot." />
+              <hwv:ParamRow DataContext="{Binding DefaultMode}" />
+              <hwv:ParamRow DataContext="{Binding RcRate}" />
+              <hwv:ParamRow DataContext="{Binding Options}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- live angles -->
+        <Border Classes="card" Width="300" Margin="0,0,16,16" VerticalAlignment="Top">
+          <StackPanel Spacing="4">
+            <TextBlock Classes="muted" Text="GIMBAL ANGLES" FontSize="11" FontWeight="Bold" />
+            <Grid ColumnDefinitions="*,Auto" Margin="0,6,0,0">
+              <TextBlock Text="Roll" VerticalAlignment="Center" />
+              <TextBlock Grid.Column="1" Classes="h1" FontSize="22" Text="{Binding RollText}" />
+            </Grid>
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Text="Pitch (tilt)" VerticalAlignment="Center" />
+              <TextBlock Grid.Column="1" Classes="h1" FontSize="22" Text="{Binding PitchText}" />
+            </Grid>
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Text="Yaw (pan)" VerticalAlignment="Center" />
+              <TextBlock Grid.Column="1" Classes="h1" FontSize="22" Text="{Binding YawText}" />
+            </Grid>
+            <TextBlock Classes="muted" FontSize="11.5" TextWrapping="Wrap" Margin="0,6,0,0"
+                       Text="From the gimbal's attitude report (GIMBAL_DEVICE_ATTITUDE_STATUS or MOUNT_STATUS)." />
+          </StackPanel>
+        </Border>
+      </WrapPanel>
+
+      <WrapPanel DataContext="{Binding Selected}" x:DataType="oh:MountInstance" IsVisible="{Binding IsFitted}">
+        <!-- limits and RC inputs, per axis -->
+        <Border Classes="card" Width="560" Margin="0,0,16,16" VerticalAlignment="Top">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="h2" Text="Angle limits and RC input" Margin="0,0,0,4" />
+            <ItemsControl ItemsSource="{Binding Axes}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="oh:MountAxis">
+                  <StackPanel Spacing="4" Margin="0,4,0,10">
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="14" />
+                    <hwv:ScaledRow DataContext="{Binding Min}" />
+                    <hwv:ScaledRow DataContext="{Binding Max}" />
+                    <hwv:ChannelPickerRow DataContext="{Binding Input}" />
+                    <hwv:ParamRow DataContext="{Binding InputField}" />
+                    <hwv:ParamRow DataContext="{Binding Stabilise}" />
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <!-- servo outputs -->
+        <Border Classes="card" Width="560" Margin="0,0,16,16" VerticalAlignment="Top">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="h2" Text="Servo outputs" Margin="0,0,0,4" />
+            <TextBlock Classes="muted" TextWrapping="Wrap" FontSize="12" IsVisible="{Binding !UsesServos}"
+                       Text="This gimbal type is not driven by servo outputs." />
+            <StackPanel Spacing="6" IsVisible="{Binding UsesServos}">
+              <ItemsControl ItemsSource="{Binding Axes}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="oh:MountAxis">
+                    <StackPanel Spacing="4" Margin="0,4,0,10">
+                      <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="14" />
+                      <hwv:ChannelPickerRow DataContext="{Binding Output}" />
+                      <hwv:ParamRow DataContext="{Binding ServoMin}" />
+                      <hwv:ParamRow DataContext="{Binding ServoMax}" />
+                      <hwv:ParamRow DataContext="{Binding ServoReversed}" />
+                    </StackPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <hwv:ChannelPickerRow DataContext="{Binding RetractOutput}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- neutral / retract -->
+        <Border Classes="card" Width="560" Margin="0,0,16,16" VerticalAlignment="Top">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="h2" Text="Neutral angles" />
+            <ItemsControl ItemsSource="{Binding Neutral}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="hw:ScaledField">
+                  <hwv:ScaledRow />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Classes="h2" Text="Retract angles" Margin="0,10,0,0" />
+            <ItemsControl ItemsSource="{Binding Retract}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="hw:ScaledField">
+                  <hwv:ScaledRow />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <Border Classes="card" Width="560" Margin="0,0,16,16" VerticalAlignment="Top" IsVisible="{Binding HasOther}">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="h2" Text="Other settings" Margin="0,0,0,4" />
+            <ItemsControl ItemsSource="{Binding Other}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="hw:ParamField">
+                  <hwv:ParamRow />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </WrapPanel>
+
+      <!-- camera shutter -->
+      <Border Classes="card" Width="560" Margin="0,0,16,16" HorizontalAlignment="Left" IsVisible="{Binding HasCamera}">
+        <StackPanel Spacing="6">
+          <TextBlock Classes="h2" Text="Camera shutter" Margin="0,0,0,4" />
+          <hwv:ParamRow DataContext="{Binding CameraType}" />
+          <StackPanel Spacing="6" IsVisible="{Binding IsServoShutter}">
+            <hwv:ChannelPickerRow DataContext="{Binding ShutterOutput}" />
+            <hwv:ParamRow DataContext="{Binding ShutterOn}" />
+            <hwv:ParamRow DataContext="{Binding ShutterOff}" />
+          </StackPanel>
+          <hwv:ParamRow DataContext="{Binding ShutterDuration}" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

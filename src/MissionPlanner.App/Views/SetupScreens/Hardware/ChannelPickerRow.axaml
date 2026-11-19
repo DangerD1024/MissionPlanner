@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
+             x:Class="MissionPlanner.App.Views.SetupScreens.Hardware.ChannelPickerRow"
+             x:DataType="hw:ChannelPicker">
+
+  <!-- which channel carries a function: the chosen one gets it, any other that had it is cleared -->
+  <Grid ColumnDefinitions="200,*,56" Margin="0,3">
+    <StackPanel VerticalAlignment="Center" Margin="0,0,10,0">
+      <TextBlock Text="{Binding Label}" TextWrapping="Wrap" />
+      <TextBlock Name="Hint" Classes="muted" FontSize="11" />
+    </StackPanel>
+    <ComboBox Grid.Column="1" ItemsSource="{Binding Options}" SelectedItem="{Binding Selected}"
+              HorizontalAlignment="Stretch" MaxWidth="320" MaxDropDownHeight="420" IsEnabled="{Binding !IsBusy}">
+      <ComboBox.ItemTemplate>
+        <DataTemplate x:DataType="hw:ChannelOption">
+          <TextBlock Text="{Binding Label}" />
+        </DataTemplate>
+      </ComboBox.ItemTemplate>
+    </ComboBox>
+    <ProgressBar Grid.Column="2" IsIndeterminate="True" IsVisible="{Binding IsBusy}" Width="40" Margin="8,0,0,0"
+                 VerticalAlignment="Center" />
+  </Grid>
+</UserControl>

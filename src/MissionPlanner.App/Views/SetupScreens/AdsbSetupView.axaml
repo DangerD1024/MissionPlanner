@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
+             xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
+             x:Class="MissionPlanner.App.Views.SetupScreens.AdsbSetupView"
+             x:DataType="vm:AdsbSetupViewModel">
+
+  <Grid RowDefinitions="Auto,Auto,*" Margin="24,20" RowSpacing="12">
+    <hwv:PageHeader Description="ADS-B receiver or transponder and traffic avoidance. Edit the values, then Write Params (changed values have a blue outline). Setting ADSB_TYPE adds the receiver's other settings." />
+
+    <Grid Grid.Row="1" ColumnDefinitions="300,*,Auto">
+      <TextBox Text="{Binding Filter}" PlaceholderText="Filter parameters…" />
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+        <Button Content="Refresh Params" Command="{Binding RefreshParamsCommand}" />
+        <Button Content="Discard" Command="{Binding DiscardCommand}" IsEnabled="{Binding HasChanges}" />
+        <Button Classes="accent" Content="{Binding WriteText}" Command="{Binding WriteCommand}" />
+      </StackPanel>
+    </Grid>
+
+    <ScrollViewer Grid.Row="2">
+      <ItemsControl ItemsSource="{Binding Groups}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="hw:ParamGroup">
+            <Border Classes="card" Width="600" Margin="0,0,16,16" VerticalAlignment="Top">
+              <StackPanel Spacing="4">
+                <TextBlock Classes="h2" Text="{Binding Title}" Margin="0,0,0,4" />
+                <ItemsControl ItemsSource="{Binding Fields}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="hw:ParamField">
+                      <StackPanel Margin="0,2,0,6">
+                        <hwv:ParamRow />
+                        <TextBlock Classes="muted" FontSize="11.5" TextWrapping="Wrap" Text="{Binding Description}"
+                                   Margin="0,0,56,0" MaxHeight="48" TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

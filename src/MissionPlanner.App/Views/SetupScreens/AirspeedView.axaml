@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
+             xmlns:oh="using:MissionPlanner.App.Core.ViewModels.SetupScreens.OptionalHardware"
+             xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
+             x:Class="MissionPlanner.App.Views.SetupScreens.AirspeedView"
+             x:DataType="vm:AirspeedViewModel">
+
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1200" HorizontalAlignment="Left">
+      <hwv:PageHeader Description="Pitot-static airspeed sensors. Set the sensor type and how it is connected, then zero its offset with the vehicle still. Changes are written as you make them; a new type takes effect after a reboot." />
+
+      <WrapPanel>
+        <!-- sensors -->
+        <Border Classes="card" Width="560" Margin="0,0,16,16" VerticalAlignment="Top">
+          <StackPanel Spacing="6">
+            <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4">
+              <TextBlock Classes="h2" Text="{Binding Selected.Title, FallbackValue='Airspeed sensor'}" VerticalAlignment="Center" />
+              <ComboBox Grid.Column="1" ItemsSource="{Binding Sensors}" SelectedItem="{Binding Selected}" MinWidth="200"
+                        IsVisible="{Binding HasSeveralSensors}">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="oh:InstancePanel">
+                    <TextBlock Text="{Binding Summary}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+            </Grid>
+            <hwv:ParamRow DataContext="{Binding Enable}" />
+            <StackPanel Spacing="6" DataContext="{Binding Selected}" x:DataType="oh:InstancePanel">
+              <hwv:ParamRow DataContext="{Binding Type}" />
+              <TextBlock Classes="muted" TextWrapping="Wrap" FontSize="12" IsVisible="{Binding !IsEnabled}"
+                         Text="Choose a sensor type to use airspeed. The other settings apply after a reboot." />
+              <ItemsControl ItemsSource="{Binding Main}" IsVisible="{Binding IsEnabled}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="hw:ParamField">
+                    <hwv:ParamRow />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- live and calibration -->
+        <Border Classes="card" Width="300" Margin="0,0,16,16" VerticalAlignment="Top">
+          <StackPanel Spacing="4">
+            <TextBlock Classes="muted" Text="AIRSPEED" FontSize="11" FontWeight="Bold" />
+            <TextBlock Classes="h1" Text="{Binding AirspeedText}" FontSize="28" />
+            <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+              <TextBlock Classes="muted" Text="Ratio (auto-cal)" />
+              <TextBlock Grid.Column="1" Text="{Binding RatioText}" FontWeight="SemiBold" />
+            </Grid>
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Classes="muted" Text="Sensor temperature" />
+              <TextBlock Grid.Column="1" Text="{Binding TemperatureText}" FontWeight="SemiBold" />
+            </Grid>
+            <Separator Margin="0,10" />
+            <TextBlock Classes="h2" Text="Offset calibration" />
+            <TextBlock Classes="muted" TextWrapping="Wrap" FontSize="12"
+                       Text="With the vehicle disarmed and the pitot shielded from wind, re-zero the sensor (also re-zeroes the barometer)." />
+            <Button Classes="accent" Content="Calibrate airspeed" Command="{Binding CalibrateCommand}" Margin="0,6,0,0"
+                    IsEnabled="{Binding !IsArmed}" />
+            <TextBlock Text="{Binding CalibrationNote}" Foreground="{DynamicResource Info}" TextWrapping="Wrap" />
+          </StackPanel>
+        </Border>
+
+        <!-- library settings -->
+        <Border Classes="card" Width="560" Margin="0,0,16,16" VerticalAlignment="Top" IsVisible="{Binding HasGeneral}">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="h2" Text="All sensors" Margin="0,0,0,4" />
+            <ItemsControl ItemsSource="{Binding General}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="hw:ParamField">
+                  <hwv:ParamRow />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </WrapPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

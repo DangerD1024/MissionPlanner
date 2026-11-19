@@ -1,0 +1,64 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
+             xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
+             xmlns:ohc="using:MissionPlanner.App.Controls.SetupScreens.OptionalHardware"
+             x:Class="MissionPlanner.App.Views.SetupScreens.CompassMotView"
+             x:DataType="vm:CompassMotViewModel">
+
+  <Grid RowDefinitions="Auto,*" Margin="24,20">
+    <StackPanel Spacing="12">
+      <hwv:PageHeader Description="Compass/motor interference calibration: measures how much the motor current disturbs the compass and saves a compensation. Propellers on and the vehicle tied down; raise the throttle slowly to 50-75 %, then lower it and press Finish." />
+      <Grid ColumnDefinitions="Auto,*">
+        <Button Name="Toggle" Classes="accent" MinWidth="120" Height="36" FontSize="15" HorizontalContentAlignment="Center"
+                Content="{Binding ButtonText}" Command="{Binding ToggleCommand}" />
+        <TextBlock Grid.Column="1" Text="{Binding RatingText}" TextWrapping="Wrap" VerticalAlignment="Center" Margin="16,0,0,0"
+                   Name="Rating" />
+      </Grid>
+    </StackPanel>
+
+    <Grid Grid.Row="1" ColumnDefinitions="*,16,340" Margin="0,16,0,0">
+      <Border Classes="card" Padding="8">
+        <ohc:CompassMotGraph Points="{Binding Points}" MinHeight="320"
+                             Background="{DynamicResource Bg1}" GridBrush="{DynamicResource Line}" TextBrush="{DynamicResource Muted}"
+                             InterferenceBrush="{DynamicResource Danger}" CurrentBrush="{DynamicResource Accent}" />
+      </Border>
+
+      <Grid Grid.Column="2" RowDefinitions="Auto,Auto,*" RowSpacing="16">
+        <Border Classes="card">
+          <StackPanel Spacing="4">
+            <TextBlock Classes="muted" Text="STATUS" FontSize="11" FontWeight="Bold" />
+            <TextBlock Text="{Binding StatusText}" FontFamily="Cascadia Mono,Consolas,DejaVu Sans Mono,monospace" FontSize="13"
+                       TextWrapping="Wrap" />
+          </StackPanel>
+        </Border>
+        <Border Grid.Row="1" Classes="card">
+          <StackPanel Spacing="4">
+            <TextBlock Classes="muted" Text="SAVED COMPENSATION" FontSize="11" FontWeight="Bold" />
+            <TextBlock Text="Compensation type (COMPASS_MOTCT)" FontSize="12.5" Margin="0,4,0,0" />
+            <hwv:ParamEditor DataContext="{Binding CompensationType}" HorizontalAlignment="Stretch" Margin="0,0,0,6" />
+            <ItemsControl ItemsSource="{Binding Compensation}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="hw:ParamField">
+                  <Grid ColumnDefinitions="*,Auto" Margin="0,2" ToolTip.Tip="{Binding ToolTip}">
+                    <TextBlock Text="{Binding Name}" Classes="muted" />
+                    <TextBlock Grid.Column="1" Text="{Binding ValueText}" FontWeight="SemiBold" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+        <Border Grid.Row="2" Classes="card">
+          <Grid RowDefinitions="Auto,*">
+            <TextBlock Classes="muted" Text="MESSAGES" FontSize="11" FontWeight="Bold" />
+            <ScrollViewer Grid.Row="1" Name="MessagesScroll" Margin="0,6,0,0">
+              <SelectableTextBlock Text="{Binding MessagesText}" TextWrapping="Wrap" FontSize="12" />
+            </ScrollViewer>
+          </Grid>
+        </Border>
+      </Grid>
+    </Grid>
+  </Grid>
+</UserControl>

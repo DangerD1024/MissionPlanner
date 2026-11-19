@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
+             x:Class="MissionPlanner.App.Views.SetupScreens.Hardware.ScaledRow"
+             x:DataType="hw:ScaledField">
+
+  <!-- a ParamRow for a value shown in other units than stored (centidegrees as degrees) -->
+  <UserControl.Styles>
+    <Style Selector="Border.frame">
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="CornerRadius" Value="5" />
+    </Style>
+    <Style Selector="Border.frame.error">
+      <Setter Property="BorderBrush" Value="{DynamicResource Danger}" />
+    </Style>
+    <Style Selector="Border.frame.busy">
+      <Setter Property="BorderBrush" Value="{DynamicResource Warn}" />
+    </Style>
+    <Style Selector="Border.frame.dirty">
+      <Setter Property="BorderBrush" Value="{DynamicResource Info}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="200,*,56" Margin="0,3">
+    <StackPanel VerticalAlignment="Center" Margin="0,0,10,0" ToolTip.Tip="{Binding ToolTip}">
+      <TextBlock Text="{Binding Label}" TextWrapping="Wrap" />
+      <TextBlock Text="{Binding Name}" Classes="muted" FontSize="11" />
+    </StackPanel>
+    <Border Grid.Column="1" Classes="frame" MaxWidth="320" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+            Classes.error="{Binding Field.HasError}"
+            Classes.busy="{Binding Field.IsBusy}"
+            Classes.dirty="{Binding Field.IsDirty}"
+            ToolTip.Tip="{Binding ToolTip}">
+      <NumericUpDown Value="{Binding Value}" Minimum="{Binding Minimum}" Maximum="{Binding Maximum}"
+                     Increment="{Binding Increment}" FormatString="{Binding FormatString}"
+                     ClipValueToMinMax="True" MinWidth="70" IsEnabled="{Binding Field.IsEditable}" />
+    </Border>
+    <TextBlock Grid.Column="2" Text="{Binding Units}" Classes="muted" VerticalAlignment="Center" Margin="8,0,0,0"
+               TextTrimming="CharacterEllipsis" />
+  </Grid>
+</UserControl>
