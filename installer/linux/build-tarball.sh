@@ -26,3 +26,8 @@ chmod 755 "$stage/$name/MissionPlanner.App" "$stage/$name/createdump"
 out="bin/$name-$rid.tar.gz"
 tar -C "$stage" --owner=0 --group=0 -czf "$out" "$name"
 echo "Built $root/$out ($(du -h "$out" | cut -f1))"
+
+# the same file without the version, for the fixed .../releases/latest/download/ link: attach both to the release
+mkdir -p bin/latest
+cp "$out" "bin/latest/MissionPlanner-$rid.tar.gz"
+echo "Copy for the latest link: $root/bin/latest/MissionPlanner-$rid.tar.gz"

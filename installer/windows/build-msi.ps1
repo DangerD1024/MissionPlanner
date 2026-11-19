@@ -62,3 +62,9 @@ try {
 finally { Pop-Location }
 
 Write-Host "Built $msi ($([math]::Round((Get-Item $msi).Length / 1MB, 1)) MB)"
+
+# the same file without the version, for the fixed .../releases/latest/download/ link: attach both to the release
+$latest = Join-Path $root "bin\latest"
+New-Item -ItemType Directory -Force $latest | Out-Null
+Copy-Item $msi (Join-Path $latest "MissionPlanner-$Runtime.msi")
+Write-Host "Copy for the latest link: $latest\MissionPlanner-$Runtime.msi"

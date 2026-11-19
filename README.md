@@ -38,7 +38,11 @@ resumes on its own.
 
 ## Getting it
 
-Download a build from [Releases](https://github.com/DangerD1024/MissionPlanner/releases):
+Download the latest release ([release notes](https://github.com/DangerD1024/MissionPlanner/releases/latest), [all releases](https://github.com/DangerD1024/MissionPlanner/releases)):
+
+- Windows installer: https://github.com/DangerD1024/MissionPlanner/releases/latest/download/MissionPlanner-win-x64.msi
+- Linux package: https://github.com/DangerD1024/MissionPlanner/releases/latest/download/MissionPlanner-linux-x64.tar.gz
+
 
 - **Windows:** `MissionPlanner-<version>-win-x64.msi` — installs to *Program Files\Mission Planner 2*
   with Start menu and desktop shortcuts, next to (not over) the classic Mission Planner. Includes
