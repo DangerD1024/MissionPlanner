@@ -21,7 +21,7 @@
 
     <!-- translucent panels over the map -->
     <Style Selector="Border.overlay">
-      <Setter Property="Background" Value="#d0101317" />
+      <Setter Property="Background" Value="{DynamicResource Overlay}" />
       <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="6" />
@@ -34,11 +34,11 @@
       <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="HorizontalContentAlignment" Value="Center" />
       <Setter Property="VerticalContentAlignment" Value="Center" />
-      <Setter Property="Background" Value="#e0161a1f" />
+      <Setter Property="Background" Value="{DynamicResource Overlay}" />
     </Style>
 
     <Style Selector="Border.toast">
-      <Setter Property="Background" Value="#f0161a1f" />
+      <Setter Property="Background" Value="{DynamicResource Overlay}" />
       <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="Border.toast.error">

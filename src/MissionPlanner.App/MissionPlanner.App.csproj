@@ -28,6 +28,7 @@
     <Content Include="..\..\APMotorLayout.json" Link="APMotorLayout.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\SerialOptionRules.json" Link="SerialOptionRules.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\acsimplepids.xml" Link="acsimplepids.xml" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\checklistDefault.xml" Link="checklistDefault.xml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
