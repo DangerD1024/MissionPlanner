@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds the Linux package of Mission Planner 2 (src/MissionPlanner.App): a self-contained
+# Builds the Linux package of Mission Planner 3 (src/MissionPlanner.App): a self-contained
 # publish (no .NET install needed on the target) packed as bin/MissionPlanner-<version>-<rid>.tar.gz
 # with a top-level MissionPlanner-<version>/ folder. Run on Linux with the .NET 10 SDK:
 #   installer/linux/build-tarball.sh [linux-x64|linux-arm64]

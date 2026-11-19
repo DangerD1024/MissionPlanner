@@ -1,10 +1,10 @@
 <!--
-  Windows installer (MSI) for Mission Planner 2 (src/MissionPlanner.App), WiX Toolset v5.
+  Windows installer (MSI) for Mission Planner 3 (src/MissionPlanner.App), WiX Toolset v5.
   Build it with build-msi.ps1 next to this file; it publishes the app and passes:
-    -d Version=2.0.1   numeric MSI version (from MissionPlannerVersion in src/Directory.Build.props)
-    -d DisplayVersion=2.0.1b
+    -d Version=3.0.2   numeric MSI version (from MissionPlannerVersion in src/Directory.Build.props)
+    -d DisplayVersion=3.0.2b
     -bindpath publish=<self-contained win-x64 publish folder>
-  Installs per machine to "Program Files\Mission Planner 2", beside (not over) the classic
+  Installs per machine to "Program Files\Mission Planner 3", beside (not over) the classic
   Mission Planner, which has its own UpgradeCode and folder.
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
@@ -19,9 +19,9 @@
 
     <SummaryInformation Description="Mission Planner $(DisplayVersion) installer" />
 
-    <!-- a newer version replaces an older one; the same numeric version (2.0.1b then 2.0.1) too -->
+    <!-- a newer version replaces an older one; the same numeric version (3.0.2b then 3.0.2) too -->
     <MajorUpgrade AllowSameVersionUpgrades="yes"
-                  DowngradeErrorMessage="A newer version of Mission Planner 2 is already installed." />
+                  DowngradeErrorMessage="A newer version of Mission Planner 3 is already installed." />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
     <Icon Id="AppIcon" SourceFile="..\..\mpdesktop.ico" />
@@ -30,7 +30,7 @@
     <Property Id="ARPHELPLINK" Value="https://discuss.ardupilot.org/c/ground-control-software/mission-planner" />
 
     <StandardDirectory Id="ProgramFiles64Folder">
-      <Directory Id="INSTALLFOLDER" Name="Mission Planner 2" />
+      <Directory Id="INSTALLFOLDER" Name="Mission Planner 3" />
     </StandardDirectory>
     <StandardDirectory Id="ProgramMenuFolder" />
     <StandardDirectory Id="DesktopFolder" />
@@ -47,23 +47,23 @@
     </ComponentGroup>
 
     <Component Id="StartMenuShortcut" Directory="ProgramMenuFolder">
-      <Shortcut Id="StartMenuShortcut" Name="Mission Planner 2"
+      <Shortcut Id="StartMenuShortcut" Name="Mission Planner 3"
                 Description="Ground control station for ArduPilot vehicles"
                 Target="[#MainExe]" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon" />
-      <RegistryValue Root="HKCU" Key="Software\Mission Planner 2" Name="StartMenuShortcut"
+      <RegistryValue Root="HKCU" Key="Software\Mission Planner 3" Name="StartMenuShortcut"
                      Type="integer" Value="1" KeyPath="yes" />
     </Component>
 
     <Component Id="DesktopShortcut" Directory="DesktopFolder" Condition="INSTALLDESKTOPSHORTCUT = 1">
-      <Shortcut Id="DesktopShortcut" Name="Mission Planner 2"
+      <Shortcut Id="DesktopShortcut" Name="Mission Planner 3"
                 Description="Ground control station for ArduPilot vehicles"
                 Target="[#MainExe]" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon" />
-      <RegistryValue Root="HKCU" Key="Software\Mission Planner 2" Name="DesktopShortcut"
+      <RegistryValue Root="HKCU" Key="Software\Mission Planner 3" Name="DesktopShortcut"
                      Type="integer" Value="1" KeyPath="yes" />
     </Component>
     <Property Id="INSTALLDESKTOPSHORTCUT" Value="1" />
 
-    <Feature Id="Main" Title="Mission Planner 2" Level="1">
+    <Feature Id="Main" Title="Mission Planner 3" Level="1">
       <ComponentGroupRef Id="AppFiles" />
       <ComponentRef Id="StartMenuShortcut" />
       <ComponentRef Id="DesktopShortcut" />
@@ -72,7 +72,7 @@
     <!-- licence, folder choice, install; "Launch" checkbox on the last page -->
     <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
     <WixVariable Id="WixUILicenseRtf" Value="..\..\Msi\licence.rtf" />
-    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Mission Planner 2" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Mission Planner 3" />
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
     <CustomAction Id="LaunchApp" Directory="INSTALLFOLDER" ExeCommand="[#MainExe]" Return="asyncNoWait" Impersonate="yes" />
     <UI>

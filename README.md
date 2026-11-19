@@ -1,6 +1,6 @@
-# Mission Planner 2.0
+# Mission Planner 3
 
-[![Mission Planner 2.0 build and tests](https://github.com/DangerD1024/MissionPlanner/actions/workflows/next.yml/badge.svg?branch=main)](https://github.com/DangerD1024/MissionPlanner/actions/workflows/next.yml)
+[![Mission Planner 3 build and tests](https://github.com/DangerD1024/MissionPlanner/actions/workflows/next.yml/badge.svg?branch=main)](https://github.com/DangerD1024/MissionPlanner/actions/workflows/next.yml)
 
 A cross-platform ground control station for [ArduPilot](https://ardupilot.org) vehicles: plan
 missions, set up and tune the autopilot, and fly with live telemetry, map and video. It is a new
@@ -8,7 +8,7 @@ interface for [Mission Planner](https://ardupilot.org/planner/), built on .NET 1
 that runs natively on **Linux, Windows and macOS** while reusing Mission Planner's proven MAVLink
 and vehicle libraries.
 
-> **Status: preview (2.0.2b).** The main screens of the classic Mission Planner are in place and
+> **Status: preview (3.0.2b).** The main screens of the classic Mission Planner are in place and
 > tested against ArduPilot SITL, and the setup screens were checked read-only on a real flight
 > controller. It has not yet been flown with real aircraft — try it on the simulator or a bench
 > vehicle with the propellers removed.
@@ -44,7 +44,7 @@ Download the latest release ([release notes](https://github.com/DangerD1024/Miss
 - Linux package: https://github.com/DangerD1024/MissionPlanner/releases/latest/download/MissionPlanner-linux-x64.tar.gz
 
 
-- **Windows:** `MissionPlanner-<version>-win-x64.msi` — installs to *Program Files\Mission Planner 2*
+- **Windows:** `MissionPlanner-<version>-win-x64.msi` — installs to *Program Files\Mission Planner 3*
   with Start menu and desktop shortcuts, next to (not over) the classic Mission Planner. Includes
   the .NET runtime and SDL2 (joystick); video needs the GStreamer runtime (below).
 - **Linux:** `MissionPlanner-<version>-linux-x64.tar.gz` — unpack anywhere and run
@@ -123,7 +123,7 @@ bar is set in one place, `MissionPlannerVersion` in `src/Directory.Build.props`.
 
 ## Data and settings
 
-Mission Planner 2.0 shares the classic app's data folder — map tile cache, terrain (SRTM),
+Mission Planner 3 shares the classic app's data folder — map tile cache, terrain (SRTM),
 parameter documentation, logs and SITL binaries — so both apps can be used side by side.
 Its own settings live in `config.next.xml` and never overwrite the classic app's `config.xml`.
 

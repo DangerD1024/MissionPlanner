@@ -1,5 +1,5 @@
 <#
-  Builds the Windows installer for Mission Planner 2 (src/MissionPlanner.App):
+  Builds the Windows installer for Mission Planner 3 (src/MissionPlanner.App):
     1. publishes the app self-contained for win-x64 (no .NET install needed on the target PC)
     2. adds SDL2.dll (joystick support; zlib licence) from libsdl.org's release
     3. packages it with WiX v5 into bin\MissionPlanner-<version>-win-x64.msi

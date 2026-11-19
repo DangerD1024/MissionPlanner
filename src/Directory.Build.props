@@ -11,12 +11,12 @@
 
   <!-- The app's version, shown in the window title and on Help. Change this one line for each release. -->
   <PropertyGroup>
-    <MissionPlannerVersion>2.0.2b</MissionPlannerVersion>
+    <MissionPlannerVersion>3.0.2b</MissionPlannerVersion>
   </PropertyGroup>
 
   <PropertyGroup>
     <InformationalVersion>$(MissionPlannerVersion)</InformationalVersion>
-    <!-- assembly versions must be numeric: 2.0.1b -> 2.0.1 -->
+    <!-- assembly versions must be numeric: 3.0.2b -> 3.0.2 -->
     <Version>$([System.Text.RegularExpressions.Regex]::Match($(MissionPlannerVersion), '^\d+(\.\d+){0,3}').Value)</Version>
     <!-- keep the git commit hash out of the displayed version -->
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
