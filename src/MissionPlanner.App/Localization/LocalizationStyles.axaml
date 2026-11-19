@@ -1,0 +1,20 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="using:MissionPlanner.App.Controls"
+        xmlns:fd="using:MissionPlanner.App.Controls.FlightData"
+        xmlns:su="using:MissionPlanner.App.Controls.SetupScreens"
+        xmlns:hw="using:MissionPlanner.App.Controls.SetupScreens.Hardware"
+        xmlns:oh="using:MissionPlanner.App.Controls.SetupScreens.OptionalHardware"
+        xmlns:scottplot="using:ScottPlot.Avalonia">
+
+  <!-- the language's layout direction (Arabic: right to left) and font, set by LocalizationSetup -->
+  <Style Selector=":is(Window)">
+    <Setter Property="FlowDirection" Value="{DynamicResource AppFlowDirection}" />
+    <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
+  </Style>
+
+  <!-- drawn controls (map, HUD, gauges, graphs, diagrams) keep their geometry and text unmirrored -->
+  <Style Selector="c|MapView, c|Hud, fd|DialGauge, su|MotorDiagram, su|RcBar, su|VehicleOrientationGlyph, hw|PwmBar, hw|MotorLayoutView, oh|OsdCanvas, oh|CompassMotGraph, scottplot|AvaPlot">
+    <Setter Property="FlowDirection" Value="LeftToRight" />
+  </Style>
+</Styles>

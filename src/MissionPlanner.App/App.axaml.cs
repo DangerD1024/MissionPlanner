@@ -6,6 +6,7 @@ using MissionPlanner.App.Core;
 using MissionPlanner.App.Core.Maps;
 using MissionPlanner.App.Core.Services;
 using MissionPlanner.App.Core.ViewModels;
+using MissionPlanner.App.Localization;
 using MissionPlanner.App.Services;
 using MissionPlanner.App.Views;
 
@@ -23,7 +24,9 @@ public sealed class App : Application
         var dialogs = new DialogService();
 
         // settings, library hooks and the map cache, before anything reads them
+        LocalizationSetup.AddBuiltInTables();
         AppStartup.Initialize(dispatcher, dialogs);
+        LocalizationSetup.Attach(this);
 
         if (Environment.GetEnvironmentVariable("MP_LOG_TILES") == "1")
         {

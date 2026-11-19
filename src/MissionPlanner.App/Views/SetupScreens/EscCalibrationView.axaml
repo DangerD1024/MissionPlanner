@@ -3,6 +3,7 @@
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
              xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
              xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.EscCalibrationView"
              x:DataType="vm:EscCalibrationViewModel">
 
@@ -13,23 +14,23 @@
       <WrapPanel>
         <Border Classes="card" Width="440" Margin="0,0,16,16" VerticalAlignment="Top">
           <StackPanel Spacing="12">
-            <TextBlock Classes="h2" Text="ESC Calibration (AC3.3+)" />
+            <TextBlock Classes="h2" Text="{l:Tr 'ESC Calibration (AC3.3+)'}" />
             <Border Background="#33e5534b" BorderBrush="{DynamicResource Danger}" BorderThickness="1" CornerRadius="6" Padding="12,8">
-              <TextBlock Text="Remove the propellers before calibrating!" FontWeight="SemiBold" Foreground="{DynamicResource Danger}" />
+              <TextBlock Text="{l:Tr 'Remove the propellers before calibrating!'}" FontWeight="SemiBold" Foreground="{DynamicResource Danger}" />
             </Border>
-            <TextBlock Text="{Binding InstructionsText}" TextWrapping="Wrap" LineHeight="20" />
-            <Button Classes="accent" Content="Calibrate ESCs" Command="{Binding CalibrateCommand}"
+            <TextBlock Text="{l:TrBind {Binding InstructionsText}}" TextWrapping="Wrap" LineHeight="20" />
+            <Button Classes="accent" Content="{l:Tr 'Calibrate ESCs'}" Command="{Binding CalibrateCommand}"
                     IsEnabled="{Binding CanCalibrate}" HorizontalAlignment="Left" Padding="18,8" />
             <TextBlock Classes="muted" TextWrapping="Wrap" IsVisible="{Binding CalibrationArmed}"
-                       Text="Calibration is set. It runs the next time the autopilot starts from the battery; afterwards it clears itself." />
+                       Text="{l:Tr 'Calibration is set. It runs the next time the autopilot starts from the battery; afterwards it clears itself.'}" />
           </StackPanel>
         </Border>
 
         <Border Classes="card" Width="560" Margin="0,0,16,16" VerticalAlignment="Top">
           <StackPanel Spacing="8">
-            <TextBlock Classes="h2" Text="Motor output" />
+            <TextBlock Classes="h2" Text="{l:Tr 'Motor output'}" />
             <TextBlock Classes="muted" TextWrapping="Wrap" FontSize="12"
-                       Text="ESC type and output range. Leave the PWM min/max at 0 to use the RC input range." />
+                       Text="{l:Tr 'ESC type and output range. Leave the PWM min/max at 0 to use the RC input range.'}" />
             <ItemsControl ItemsSource="{Binding OutputFields}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="hw:ParamField">

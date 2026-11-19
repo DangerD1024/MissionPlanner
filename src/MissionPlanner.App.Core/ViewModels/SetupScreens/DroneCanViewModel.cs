@@ -330,7 +330,7 @@ public sealed partial class DroneCanViewModel : PageViewModel
             return;
         }
 
-        if (!await Services.Dialogs.ConfirmAsync("DroneCAN", $"Write {changed.Count} parameter(s) to node {node}?", "Write"))
+        if (!await Services.Dialogs.ConfirmAsync("DroneCAN", L.Format("Write {0} parameter(s) to node {1}?", changed.Count, node), "Write"))
             return;
 
         var bus = _bus!;
@@ -386,7 +386,7 @@ public sealed partial class DroneCanViewModel : PageViewModel
     private async Task RestartNodeAsync()
     {
         var node = SelectedNode!.Id;
-        if (!await Services.Dialogs.ConfirmAsync("DroneCAN", $"Restart node {node} ({SelectedNode.Name})?", "Restart"))
+        if (!await Services.Dialogs.ConfirmAsync("DroneCAN", L.Format("Restart node {0} ({1})?", node, SelectedNode.Name), "Restart"))
             return;
         await RunNodeOperation($"Restarting node {node}…", bus => bus.RestartNode(node),
             $"Node {node} is restarting.", $"Node {node} did not confirm the restart.");

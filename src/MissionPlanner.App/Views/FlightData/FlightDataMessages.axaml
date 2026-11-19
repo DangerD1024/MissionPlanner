@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.FlightData.FlightDataMessages"
              x:DataType="vm:FlightDataViewModel">
 
@@ -29,7 +30,7 @@
         </DataTemplate>
       </ListBox.ItemTemplate>
     </ListBox>
-    <TextBlock Classes="muted" Text="No messages from the vehicle yet." HorizontalAlignment="Center" VerticalAlignment="Center"
+    <TextBlock Classes="muted" Text="{l:Tr 'No messages from the vehicle yet.'}" HorizontalAlignment="Center" VerticalAlignment="Center"
                IsVisible="{Binding !Messages.Count}" />
   </Panel>
 </UserControl>

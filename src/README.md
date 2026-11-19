@@ -59,3 +59,11 @@ Settings are kept separately in `config.next.xml` so the two apps never overwrit
 - Opening a link never prompts: `LinkFactory` answers the transports' settings/input hooks from a
   `LinkSpec` (`tcp:host:port`, `udp:port`, `udpout:host:port`, `serial:port[:baud]`).
 - Call `MapTiles.Initialize()` before anything touches `GMaps.Instance`.
+- UI text is written in English and translated with Mission Planner's own translations (SETTINGS >
+  App Settings > Language): `Text="{l:Tr 'Load File...'}"` in XAML (`xmlns:l="using:MissionPlanner.App.Localization"`,
+  escape a quote as `\'`), `{l:TrBind {Binding StatusText}}` for English text from a view-model, `L.Tr("...")` /
+  `L.Format("... {0}", x)` in code. Dialog titles, messages and window titles are translated by the dialog and
+  window services. After adding strings run `dotnet run --project src/tools/LocalizationHarvest`, which rebuilds
+  `MissionPlanner.App/Localization/<culture>.json` from the WinForms `.resx` files and lists the gaps in
+  `Localization/untranslated.txt`; corrections and new translations go in a table's `"overrides"` section (kept
+  by the tool), or for one user in `<data folder>/Localization/<culture>.json`.

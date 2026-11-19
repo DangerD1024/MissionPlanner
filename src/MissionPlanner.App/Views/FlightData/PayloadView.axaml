@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.FlightData.PayloadView"
              x:DataType="vm:PayloadViewModel">
 
@@ -34,37 +35,37 @@
 
       <StackPanel Spacing="10" IsEnabled="{Binding IsConnected}">
         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-          <TextBlock Classes="caption" Text="Pitch (tilt)" />
+          <TextBlock Classes="caption" Text="{l:Tr 'Pitch (tilt)'}" />
           <Slider Grid.Row="1" Minimum="{Binding PitchMin}" Maximum="{Binding PitchMax}" Value="{Binding Pitch}"
                   SmallChange="1" LargeChange="10" TickFrequency="1" IsSnapToTickEnabled="True" />
           <TextBlock Grid.Row="1" Grid.Column="1" Classes="angle" Text="{Binding Pitch, StringFormat='{}{0:0}°'}" />
         </Grid>
 
         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-          <TextBlock Classes="caption" Text="Yaw (pan)" />
+          <TextBlock Classes="caption" Text="{l:Tr 'Yaw (pan)'}" />
           <Slider Grid.Row="1" Minimum="{Binding YawMin}" Maximum="{Binding YawMax}" Value="{Binding Yaw}"
                   SmallChange="1" LargeChange="10" TickFrequency="1" IsSnapToTickEnabled="True" />
           <TextBlock Grid.Row="1" Grid.Column="1" Classes="angle" Text="{Binding Yaw, StringFormat='{}{0:0}°'}" />
         </Grid>
 
-        <CheckBox Content="Yaw lock (hold the heading instead of following the vehicle)" IsChecked="{Binding YawLock}"
+        <CheckBox Content="{l:Tr 'Yaw lock (hold the heading instead of following the vehicle)'}" IsChecked="{Binding YawLock}"
                   IsVisible="{Binding UsesGimbalManager}" />
 
         <UniformGrid Columns="3" ColumnSpacing="6" RowSpacing="6">
-          <Button Classes="cmd" Content="Center" Command="{Binding CenterCommand}" IsEnabled="{Binding CanCommand}"
-                  ToolTip.Tip="Pitch and yaw to 0 (MAVLink targeting)" />
-          <Button Classes="cmd" Content="Look Down" Command="{Binding LookDownCommand}" IsEnabled="{Binding CanCommand}" />
-          <Button Classes="cmd" Content="RC Targeting" Command="{Binding RcTargetingCommand}" IsEnabled="{Binding CanCommand}"
-                  ToolTip.Tip="Hand the gimbal back to the RC sticks" />
-          <Button Classes="cmd" Content="Retract" Command="{Binding RetractCommand}" IsEnabled="{Binding CanCommand}" />
-          <Button Classes="cmd" Content="Neutral" Command="{Binding NeutralCommand}" IsEnabled="{Binding CanCommand}" />
-          <Button Classes="cmd" Content="Clear ROI" Command="{Binding ClearRoiCommand}" IsEnabled="{Binding CanCommand}"
-                  ToolTip.Tip="Stop pointing at a region of interest" />
+          <Button Classes="cmd" Content="{l:Tr 'Center'}" Command="{Binding CenterCommand}" IsEnabled="{Binding CanCommand}"
+                  ToolTip.Tip="{l:Tr 'Pitch and yaw to 0 (MAVLink targeting)'}" />
+          <Button Classes="cmd" Content="{l:Tr 'Look Down'}" Command="{Binding LookDownCommand}" IsEnabled="{Binding CanCommand}" />
+          <Button Classes="cmd" Content="{l:Tr 'RC Targeting'}" Command="{Binding RcTargetingCommand}" IsEnabled="{Binding CanCommand}"
+                  ToolTip.Tip="{l:Tr 'Hand the gimbal back to the RC sticks'}" />
+          <Button Classes="cmd" Content="{l:Tr 'Retract'}" Command="{Binding RetractCommand}" IsEnabled="{Binding CanCommand}" />
+          <Button Classes="cmd" Content="{l:Tr 'Neutral'}" Command="{Binding NeutralCommand}" IsEnabled="{Binding CanCommand}" />
+          <Button Classes="cmd" Content="{l:Tr 'Clear ROI'}" Command="{Binding ClearRoiCommand}" IsEnabled="{Binding CanCommand}"
+                  ToolTip.Tip="{l:Tr 'Stop pointing at a region of interest'}" />
         </UniformGrid>
       </StackPanel>
 
       <TextBlock Classes="caption" TextWrapping="Wrap"
-                 Text="Moving a slider points the gimbal (DO_GIMBAL_MANAGER_PITCHYAW, or DO_MOUNT_CONTROL on older mounts). Right-click the map and choose 'Point Camera Here' to aim at a location." />
+                 Text="{l:Tr 'Moving a slider points the gimbal (DO_GIMBAL_MANAGER_PITCHYAW, or DO_MOUNT_CONTROL on older mounts). Right-click the map and choose \'Point Camera Here\' to aim at a location.'}" />
     </StackPanel>
   </ScrollViewer>
 </UserControl>

@@ -292,7 +292,7 @@ public sealed partial class PayloadViewModel : PageViewModel
             return;
         }
 
-        var answer = await Services.Dialogs.PromptAsync("Point Camera Here", $"Target altitude above home ({Units.Altitude})", "0");
+        var answer = await Services.Dialogs.PromptAsync("Point Camera Here", L.Format("Target altitude above home ({0})", Units.Altitude), "0");
         if (answer == null)
             return;
         if (!FlightDataViewModel.TryParseNumber(answer, out var alt))

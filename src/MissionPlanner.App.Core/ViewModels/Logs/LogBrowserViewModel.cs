@@ -294,7 +294,7 @@ public sealed partial class LogBrowserViewModel : PageViewModel, IDisposable
                 return;
             IsLoading = false;
             Status = "Could not open the log: " + ex.Message;
-            await Services.Dialogs.ShowMessageAsync("Log Browser", $"Could not open {FileName}:\n{ex.Message}", MessageKind.Error);
+            await Services.Dialogs.ShowMessageAsync("Log Browser", L.Format("Could not open {0}:\n{1}", FileName, ex.Message), MessageKind.Error);
             return;
         }
 

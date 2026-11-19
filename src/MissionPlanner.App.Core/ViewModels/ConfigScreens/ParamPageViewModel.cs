@@ -167,7 +167,7 @@ public abstract partial class ParamPageViewModel : PageViewModel, IParamRowHost
     {
         if (row.IsReadOnly)
         {
-            await Services.Dialogs.ShowMessageAsync("ReadOnly", $"{row.Name} is marked as ReadOnly, and will not be changed.",
+            await Services.Dialogs.ShowMessageAsync("ReadOnly", L.Format("{0} is marked as ReadOnly, and will not be changed.", row.Name),
                 MessageKind.Warning);
             return false;
         }

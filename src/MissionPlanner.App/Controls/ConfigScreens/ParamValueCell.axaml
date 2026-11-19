@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.ConfigScreens"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Controls.ConfigScreens.ParamValueCell"
              x:DataType="vm:ParamRow">
 
@@ -36,11 +37,11 @@
     </Grid>
 
     <Button Grid.Column="1" x:Name="OptionsButton" Classes="cell" IsVisible="{Binding IsOptions}"
-            IsEnabled="{Binding IsEditable}" Click="OnOptionsClick" ToolTip.Tip="Pick a documented value">
+            IsEnabled="{Binding IsEditable}" Click="OnOptionsClick" ToolTip.Tip="{l:Tr 'Pick a documented value'}">
       <Path Classes="icon" Data="{StaticResource IconDown}" />
     </Button>
     <Button Grid.Column="1" Classes="cell" IsVisible="{Binding IsBitmask}" IsEnabled="{Binding IsEditable}"
-            Content="Set bitmask" Command="{Binding EditBitmaskCommand}"
-            ToolTip.Tip="Tick the bits in a list (Mission Planner's Set Bitmask)" />
+            Content="{l:Tr 'Set bitmask'}" Command="{Binding EditBitmaskCommand}"
+            ToolTip.Tip="{l:Tr 'Tick the bits in a list (Mission Planner\'s Set Bitmask)'}" />
   </Grid>
 </UserControl>

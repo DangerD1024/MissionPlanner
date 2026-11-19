@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GMap.NET.MapProviders;
 using log4net;
+using MissionPlanner.App.Core.Localization;
 using MissionPlanner.App.Core.Maps;
 using MissionPlanner.App.Core.Services;
 using MissionPlanner.Utilities;
@@ -19,8 +20,8 @@ public sealed record RateChoice(int Hz)
 {
     public string Label => Hz switch
     {
-        -1 => "Don't request",
-        0 => "0 (off)",
+        -1 => L.N("Don't request"),
+        0 => L.N("0 (off)"),
         _ => $"{Hz} Hz",
     };
 
@@ -186,20 +187,34 @@ public sealed partial class PlannerSettingsViewModel : PageViewModel
 
     public static IReadOnlyList<UnitChoice> DistanceChoices { get; } =
     [
-        new(nameof(distances.Meters), "Meters (m)"),
-        new(nameof(distances.Feet), "Feet (ft)"),
+        new(nameof(distances.Meters), L.N("Meters (m)")),
+        new(nameof(distances.Feet), L.N("Feet (ft)")),
     ];
 
     public static IReadOnlyList<UnitChoice> SpeedChoices { get; } =
     [
-        new(nameof(speeds.meters_per_second), "Meters per second (m/s)"),
-        new(nameof(speeds.kph), "Kilometers per hour (kph)"),
-        new(nameof(speeds.mph), "Miles per hour (mph)"),
-        new(nameof(speeds.knots), "Knots (kts)"),
-        new(nameof(speeds.fps), "Feet per second (fps)"),
+        new(nameof(speeds.meters_per_second), L.N("Meters per second (m/s)")),
+        new(nameof(speeds.kph), L.N("Kilometers per hour (kph)")),
+        new(nameof(speeds.mph), L.N("Miles per hour (mph)")),
+        new(nameof(speeds.knots), L.N("Knots (kts)")),
+        new(nameof(speeds.fps), L.N("Feet per second (fps)")),
     ];
 
     private bool _loading = true;
+
+    // ---- language -------------------------------------------------------------------------------
+
+    /// <summary>English and the languages Mission Planner has translations for, named in their own language.</summary>
+    public IReadOnlyList<Localization.LanguageInfo> Languages { get; }
+
+    [ObservableProperty]
+    private Localization.LanguageInfo _selectedLanguage;
+
+    partial void OnSelectedLanguageChanged(Localization.LanguageInfo value)
+    {
+        if (!_loading && value != null && value.Code != Services.Localizer.Culture)
+            Services.Localizer.SetLanguage(value.Code, save: true);
+    }
 
     // ---- appearance -----------------------------------------------------------------------------
 
@@ -218,6 +233,8 @@ public sealed partial class PlannerSettingsViewModel : PageViewModel
         : base("App Settings")
     {
         Services = services;
+        Languages = services.Localizer.Languages;
+        _selectedLanguage = Languages.FirstOrDefault(l => l.Code == services.Localizer.Culture) ?? Languages[0];
         Themes = services.Themes.Themes;
         _selectedTheme = Themes.FirstOrDefault(t => t.Name == services.Themes.Current) ?? Themes[0];
         PlannerSettings.ApplyStored();
@@ -231,11 +248,11 @@ public sealed partial class PlannerSettingsViewModel : PageViewModel
         var cs = services.Session.IsConnected ? services.Session.Cs : null;
         Rates =
         [
-            new(this, PlannerSettings.StreamGroup.Attitude, "Attitude", "ATTITUDE, VFR_HUD (EXTRA1, EXTRA2)", cs?.rateattitude ?? CurrentState.rateattitudebackup),
-            new(this, PlannerSettings.StreamGroup.Position, "Position", "GLOBAL_POSITION_INT, GPS (POSITION)", cs?.rateposition ?? CurrentState.ratepositionbackup),
-            new(this, PlannerSettings.StreamGroup.Status, "Mode / Status", "SYS_STATUS, mission (EXTENDED_STATUS)", cs?.ratestatus ?? CurrentState.ratestatusbackup),
-            new(this, PlannerSettings.StreamGroup.Rc, "RC", "RC_CHANNELS, SERVO_OUTPUT_RAW (RC_CHANNELS)", cs?.raterc ?? CurrentState.ratercbackup),
-            new(this, PlannerSettings.StreamGroup.Sensors, "Sensors", "raw IMU, extra (EXTRA3, RAW_SENSORS)", cs?.ratesensors ?? CurrentState.ratesensorsbackup),
+            new(this, PlannerSettings.StreamGroup.Attitude, L.N("Attitude"), "ATTITUDE, VFR_HUD (EXTRA1, EXTRA2)", cs?.rateattitude ?? CurrentState.rateattitudebackup),
+            new(this, PlannerSettings.StreamGroup.Position, L.N("Position"), "GLOBAL_POSITION_INT, GPS (POSITION)", cs?.rateposition ?? CurrentState.ratepositionbackup),
+            new(this, PlannerSettings.StreamGroup.Status, L.N("Mode / Status"), "SYS_STATUS, mission (EXTENDED_STATUS)", cs?.ratestatus ?? CurrentState.ratestatusbackup),
+            new(this, PlannerSettings.StreamGroup.Rc, L.N("RC"), "RC_CHANNELS, SERVO_OUTPUT_RAW (RC_CHANNELS)", cs?.raterc ?? CurrentState.ratercbackup),
+            new(this, PlannerSettings.StreamGroup.Sensors, L.N("Sensors"), "raw IMU, extra (EXTRA3, RAW_SENSORS)", cs?.ratesensors ?? CurrentState.ratesensorsbackup),
         ];
 
         _distanceUnit = Choose(DistanceChoices, Settings.Instance[PlannerSettings.DistanceKey]);
@@ -303,7 +320,7 @@ public sealed partial class PlannerSettingsViewModel : PageViewModel
         }
         else
         {
-            LogDirectoryError = "This folder does not exist; logs keep going to the previous one.";
+            LogDirectoryError = L.N("This folder does not exist; logs keep going to the previous one.");
         }
     }
 
@@ -344,18 +361,18 @@ public sealed partial class PlannerSettingsViewModel : PageViewModel
     private async Task UpdateParamDocsAsync()
     {
         IsUpdatingDocs = true;
-        DocsStatus = "Downloading parameter documentation...";
+        DocsStatus = L.Tr("Downloading parameter documentation...");
         try
         {
             await ParameterMetaDataRepositoryAPMpdef.GetMetaData(true);
             if (Services.Session.IsConnected)
                 await Services.Params.LoadMetadataAsync();
-            DocsStatus = "Parameter documentation updated.";
+            DocsStatus = L.Tr("Parameter documentation updated.");
         }
         catch (Exception ex)
         {
             Log.Warn("metadata update", ex);
-            DocsStatus = "Update failed: " + ex.Message;
+            DocsStatus = L.Tr("Update failed:") + " " + ex.Message;
         }
         finally
         {
@@ -369,8 +386,8 @@ public sealed partial class PlannerSettingsViewModel : PageViewModel
         if (!IsUpdatingDocs)
         {
             DocsStatus = Services.Params.MetadataLoaded
-                ? $"Documentation loaded for the connected {Services.Session.Cs.firmware}."
-                : Services.Session.IsConnected ? "No documentation loaded for this vehicle yet." : "Documentation loads when a vehicle connects.";
+                ? L.Format("Documentation loaded for the connected {0}.", Services.Session.Cs.firmware)
+                : L.Tr(Services.Session.IsConnected ? "No documentation loaded for this vehicle yet." : "Documentation loads when a vehicle connects.");
         }
 
         UpdateDocsFiles();
@@ -386,7 +403,7 @@ public sealed partial class PlannerSettingsViewModel : PageViewModel
                 : [];
             if (files.Count == 0)
             {
-                DocsFiles = "No downloaded files yet; the copy shipped with the app is used.";
+                DocsFiles = L.Tr("No downloaded files yet; the copy shipped with the app is used.");
                 return;
             }
 
@@ -456,7 +473,7 @@ public sealed partial class PlannerSettingsViewModel : PageViewModel
     partial void OnSpeedUnitChanged(UnitChoice value) => StoreUnit(PlannerSettings.SpeedKey, value);
 
     public string UnitsExample =>
-        $"Shown as: distance {CurrentState.DistanceUnit}, altitude {CurrentState.AltUnit}, speed {CurrentState.SpeedUnit}";
+        L.Format("Shown as: distance {0}, altitude {1}, speed {2}", CurrentState.DistanceUnit, CurrentState.AltUnit, CurrentState.SpeedUnit);
 
     private void StoreUnit(string key, UnitChoice? value)
     {

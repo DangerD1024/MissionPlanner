@@ -390,7 +390,7 @@ public sealed partial class FlightPlanViewModel : PageViewModel
     {
         if (CurrentList.Count == 0)
             return;
-        if (!await Services.Dialogs.ConfirmAsync(ClearListText, $"Remove all {CurrentList.Count} items of the {ListName}?", "Clear"))
+        if (!await Services.Dialogs.ConfirmAsync(ClearListText, L.Format("Remove all {0} items of the {1}?", CurrentList.Count, ListName), "Clear"))
             return;
         CurrentList.Clear();
         SelectedItem = null;
@@ -440,7 +440,7 @@ public sealed partial class FlightPlanViewModel : PageViewModel
             var first = File.ReadLines(path).FirstOrDefault() ?? "";
             if (!first.Contains("QGC WPL", StringComparison.Ordinal))
             {
-                await Services.Dialogs.ShowMessageAsync("Load file", $"{Path.GetFileName(path)} is not a QGC WPL waypoint file.",
+                await Services.Dialogs.ShowMessageAsync("Load file", L.Format("{0} is not a QGC WPL waypoint file.", Path.GetFileName(path)),
                     MessageKind.Error);
                 return false;
             }
@@ -494,7 +494,7 @@ public sealed partial class FlightPlanViewModel : PageViewModel
         var type = MissionType;
         var list = CurrentList;
         if (list.Count > 0 &&
-            !await Services.Dialogs.ConfirmAsync($"Read {ListName}", "This will clear your existing points, Continue?", "Continue"))
+            !await Services.Dialogs.ConfirmAsync(L.Format("Read {0}", ListName), "This will clear your existing points, Continue?", "Continue"))
             return;
 
         var ok = await RunTransferAsync($"Reading {ListName}…",
@@ -517,7 +517,7 @@ public sealed partial class FlightPlanViewModel : PageViewModel
         var type = MissionType;
         var session = Services.Session;
         if (session.Cs.armed &&
-            !await Services.Dialogs.ConfirmAsync($"Write {ListName}",
+            !await Services.Dialogs.ConfirmAsync(L.Format("Write {0}", ListName),
                 "The vehicle is armed. Writing now changes what it does next. Continue?", "Write"))
             return;
 

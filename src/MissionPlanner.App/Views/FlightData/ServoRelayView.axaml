@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
              xmlns:fd="using:MissionPlanner.App.Controls.FlightData"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.FlightData.ServoRelayView"
              x:DataType="vm:ServoRelayViewModel">
 
@@ -72,11 +73,11 @@
   <ScrollViewer HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="8" Spacing="6">
       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
-        <TextBlock Classes="h2" Text="Servo outputs" VerticalAlignment="Center" />
-        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" ToolTip.Tip="Repeat: cycles and cycle time (DO_REPEAT_SERVO / DO_REPEAT_RELAY)">
-          <TextBlock Classes="small" Text="Repeat" />
+        <TextBlock Classes="h2" Text="{l:Tr 'Servo outputs'}" VerticalAlignment="Center" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" ToolTip.Tip="{l:Tr 'Repeat: cycles and cycle time (DO_REPEAT_SERVO / DO_REPEAT_RELAY)'}">
+          <TextBlock Classes="small" Text="{l:Tr 'Repeat'}" />
           <NumericUpDown Classes="pwm" MinWidth="0" Width="44" Minimum="1" Maximum="100" Value="{Binding RepeatCount}" />
-          <TextBlock Classes="small" Text="× every" />
+          <TextBlock Classes="small" Text="{l:Tr '× every'}" />
           <NumericUpDown Classes="pwm" MinWidth="0" Width="44" Minimum="0.1" Maximum="60" FormatString="0.#" Value="{Binding RepeatSeconds}" />
           <TextBlock Classes="small" Text="s" />
         </StackPanel>
@@ -88,31 +89,31 @@
             <Border Classes="row">
               <Border.ContextMenu>
                 <ContextMenu>
-                  <MenuItem Header="Rename..." Command="{Binding RenameCommand}" />
+                  <MenuItem Header="{l:Tr 'Rename...'}" Command="{Binding RenameCommand}" />
                 </ContextMenu>
               </Border.ContextMenu>
               <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="5">
                 <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
                   <TextBlock Classes="name" Text="{Binding Name}" />
                   <TextBlock Grid.Column="1" Classes="small" Text="{Binding Function}" TextTrimming="CharacterEllipsis"
-                             ToolTip.Tip="SERVOn_FUNCTION: the autopilot drives this output, so it may refuse DO_SET_SERVO" />
+                             ToolTip.Tip="{l:Tr 'SERVOn_FUNCTION: the autopilot drives this output, so it may refuse DO_SET_SERVO'}" />
                   <Border Grid.Column="2" Classes="state" IsVisible="{Binding Position, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                     <TextBlock Text="{Binding Position}" FontSize="11" FontWeight="SemiBold" />
                   </Border>
                   <TextBlock Grid.Column="3" Text="{Binding OutputText, StringFormat='{}{0} µs'}" FontSize="13"
                              FontWeight="SemiBold" VerticalAlignment="Center" MinWidth="58" TextAlignment="Right"
-                             ToolTip.Tip="Live output (SERVO_OUTPUT_RAW)" />
+                             ToolTip.Tip="{l:Tr 'Live output (SERVO_OUTPUT_RAW)'}" />
                 </Grid>
                 <ProgressBar Grid.Row="1" Classes="pwm" Value="{Binding Output, Converter={x:Static fd:PwmPercentConverter.Instance}}" />
                 <Grid Grid.Row="2" ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6">
-                  <NumericUpDown Classes="pwm" Value="{Binding Low}" ToolTip.Tip="Low PWM (SERVOn_MIN)" />
-                  <NumericUpDown Grid.Column="1" Classes="pwm" Value="{Binding High}" ToolTip.Tip="High PWM (SERVOn_MAX)" />
+                  <NumericUpDown Classes="pwm" Value="{Binding Low}" ToolTip.Tip="{l:Tr 'Low PWM (SERVOn_MIN)'}" />
+                  <NumericUpDown Grid.Column="1" Classes="pwm" Value="{Binding High}" ToolTip.Tip="{l:Tr 'High PWM (SERVOn_MAX)'}" />
                   <UniformGrid Grid.Column="2" Columns="4" ColumnSpacing="4">
-                    <Button Classes="cmd" Content="Low" Command="{Binding SetLowCommand}" ToolTip.Tip="DO_SET_SERVO to the low PWM" />
-                    <Button Classes="cmd" Content="High" Command="{Binding SetHighCommand}" ToolTip.Tip="DO_SET_SERVO to the high PWM" />
-                    <Button Classes="cmd" Content="Toggle" Command="{Binding ToggleCommand}" ToolTip.Tip="Switch to the other end" />
-                    <Button Classes="cmd" Content="Repeat" Command="{Binding RepeatCommand}"
-                            ToolTip.Tip="DO_REPEAT_SERVO: alternate between the high PWM and trim" />
+                    <Button Classes="cmd" Content="{l:Tr 'Low'}" Command="{Binding SetLowCommand}" ToolTip.Tip="{l:Tr 'DO_SET_SERVO to the low PWM'}" />
+                    <Button Classes="cmd" Content="{l:Tr 'High'}" Command="{Binding SetHighCommand}" ToolTip.Tip="{l:Tr 'DO_SET_SERVO to the high PWM'}" />
+                    <Button Classes="cmd" Content="{l:Tr 'Toggle'}" Command="{Binding ToggleCommand}" ToolTip.Tip="{l:Tr 'Switch to the other end'}" />
+                    <Button Classes="cmd" Content="{l:Tr 'Repeat'}" Command="{Binding RepeatCommand}"
+                            ToolTip.Tip="{l:Tr 'DO_REPEAT_SERVO: alternate between the high PWM and trim'}" />
                   </UniformGrid>
                 </Grid>
               </Grid>
@@ -121,26 +122,26 @@
         </ItemsControl.ItemTemplate>
       </ItemsControl>
 
-      <TextBlock Classes="h2" Text="Relays" Margin="0,6,0,0" />
+      <TextBlock Classes="h2" Text="{l:Tr 'Relays'}" Margin="0,6,0,0" />
       <ItemsControl ItemsSource="{Binding Relays}" IsEnabled="{Binding CanCommand}">
         <ItemsControl.ItemTemplate>
           <DataTemplate x:DataType="vm:RelayRow">
             <Border Classes="row">
               <Border.ContextMenu>
                 <ContextMenu>
-                  <MenuItem Header="Rename..." Command="{Binding RenameCommand}" />
+                  <MenuItem Header="{l:Tr 'Rename...'}" Command="{Binding RenameCommand}" />
                 </ContextMenu>
               </Border.ContextMenu>
               <Grid ColumnDefinitions="*,Auto,2*" ColumnSpacing="8">
                 <TextBlock Classes="name" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
                 <Border Grid.Column="1" Classes="state" Classes.on="{Binding IsOn}" Classes.off="{Binding IsOff}" MinWidth="44">
-                  <TextBlock Text="{Binding StateText}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                  <TextBlock Text="{l:TrBind {Binding StateText}}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
                 </Border>
                 <UniformGrid Grid.Column="2" Columns="4" ColumnSpacing="4">
-                  <Button Classes="cmd" Content="On" Command="{Binding OnCommand}" ToolTip.Tip="DO_SET_RELAY on" />
-                  <Button Classes="cmd" Content="Off" Command="{Binding OffCommand}" ToolTip.Tip="DO_SET_RELAY off" />
-                  <Button Classes="cmd" Content="Toggle" Command="{Binding ToggleCommand}" />
-                  <Button Classes="cmd" Content="Repeat" Command="{Binding RepeatCommand}" ToolTip.Tip="DO_REPEAT_RELAY" />
+                  <Button Classes="cmd" Content="{l:Tr 'On'}" Command="{Binding OnCommand}" ToolTip.Tip="{l:Tr 'DO_SET_RELAY on'}" />
+                  <Button Classes="cmd" Content="{l:Tr 'Off'}" Command="{Binding OffCommand}" ToolTip.Tip="{l:Tr 'DO_SET_RELAY off'}" />
+                  <Button Classes="cmd" Content="{l:Tr 'Toggle'}" Command="{Binding ToggleCommand}" />
+                  <Button Classes="cmd" Content="{l:Tr 'Repeat'}" Command="{Binding RepeatCommand}" ToolTip.Tip="DO_REPEAT_RELAY" />
                 </UniformGrid>
               </Grid>
             </Border>
@@ -148,7 +149,7 @@
         </ItemsControl.ItemTemplate>
       </ItemsControl>
       <TextBlock Classes="small" TextWrapping="Wrap" Margin="2,0"
-                 Text="Right-click a row to rename it. Outputs work only when SERVOn_FUNCTION is 0 (or RC passthrough); relays need RELAYn_FUNCTION / RELAYn_PIN set." />
+                 Text="{l:Tr 'Right-click a row to rename it. Outputs work only when SERVOn_FUNCTION is 0 (or RC passthrough); relays need RELAYn_FUNCTION / RELAYn_PIN set.'}" />
     </StackPanel>
   </ScrollViewer>
 </UserControl>

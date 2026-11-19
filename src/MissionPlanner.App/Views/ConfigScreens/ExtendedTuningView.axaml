@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.ConfigScreens"
              xmlns:cs="using:MissionPlanner.App.Controls.ConfigScreens"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.ConfigScreens.ExtendedTuningView"
              x:DataType="vm:ExtendedTuningViewModel">
 
@@ -23,7 +24,7 @@
     <Panel Grid.Row="1">
       <cs:TuningCards IsVisible="{Binding HasCards}" />
       <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Classes="muted" TextWrapping="Wrap" MaxWidth="480"
-                 TextAlignment="Center" Text="{Binding EmptyText}" IsVisible="{Binding IsEmpty}" />
+                 TextAlignment="Center" Text="{l:TrBind {Binding EmptyText}}" IsVisible="{Binding IsEmpty}" />
     </Panel>
   </Grid>
 </UserControl>

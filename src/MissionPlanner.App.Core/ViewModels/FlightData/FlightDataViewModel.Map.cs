@@ -315,7 +315,7 @@ public sealed partial class FlightDataViewModel
             MAVLink.MAV_FRAME.GLOBAL_TERRAIN_ALT or MAVLink.MAV_FRAME.GLOBAL_TERRAIN_ALT_INT => "above terrain",
             _ => "above home",
         };
-        var answer = await Services.Dialogs.PromptAsync("Fly To Here Alt", $"Guided mode altitude ({Units.Altitude}, {reference})", initial);
+        var answer = await Services.Dialogs.PromptAsync("Fly To Here Alt", L.Format("Guided mode altitude ({0}, {1})", Units.Altitude, reference), initial);
         if (answer == null)
             return false;
         if (!TryParseNumber(answer, out var alt))

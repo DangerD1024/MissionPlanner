@@ -3,6 +3,7 @@
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
              xmlns:controls="using:MissionPlanner.App.Controls"
              xmlns:views="using:MissionPlanner.App.Views.FlightData"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.FlightData.FlightDataView"
              x:DataType="vm:FlightDataViewModel">
 
@@ -60,40 +61,40 @@
       </Border>
 
       <TabControl Grid.Row="1" Classes="fd" SelectedIndex="{Binding SelectedTabIndex}">
-        <TabItem Header="Quick">
+        <TabItem Header="{l:Tr 'Quick'}">
           <views:FlightDataQuick />
         </TabItem>
-        <TabItem Header="Actions">
+        <TabItem Header="{l:Tr 'Actions'}">
           <views:FlightDataActions />
         </TabItem>
-        <TabItem Header="Messages">
+        <TabItem Header="{l:Tr 'Messages'}">
           <views:FlightDataMessages />
         </TabItem>
-        <TabItem Header="PreFlight">
+        <TabItem Header="{l:Tr 'PreFlight'}">
           <ContentControl Content="{Binding PreFlight}" />
         </TabItem>
-        <TabItem Header="Gauges">
+        <TabItem Header="{l:Tr 'Gauges'}">
           <ContentControl Content="{Binding Gauges}" />
         </TabItem>
-        <TabItem Header="Transponder">
+        <TabItem Header="{l:Tr 'Transponder'}">
           <ContentControl Content="{Binding Transponder}" />
         </TabItem>
-        <TabItem Header="Status">
+        <TabItem Header="{l:Tr 'Status'}">
           <views:FlightDataStatus />
         </TabItem>
-        <TabItem Header="Servo/Relay">
+        <TabItem Header="{l:Tr 'Servo/Relay'}">
           <ContentControl Content="{Binding ServoRelay}" />
         </TabItem>
-        <TabItem Header="Aux Function">
+        <TabItem Header="{l:Tr 'Aux Function'}">
           <ContentControl Content="{Binding AuxFunctions}" />
         </TabItem>
-        <TabItem Header="Payload">
+        <TabItem Header="{l:Tr 'Payload'}">
           <ContentControl Content="{Binding Payload}" />
         </TabItem>
-        <TabItem Header="Telemetry Logs">
+        <TabItem Header="{l:Tr 'Telemetry Logs'}">
           <ContentControl Content="{Binding Tlogs}" Margin="6" />
         </TabItem>
-        <TabItem Header="DataFlash Logs">
+        <TabItem Header="{l:Tr 'DataFlash Logs'}">
           <StackPanel Margin="14" Spacing="10" HorizontalAlignment="Stretch">
             <TextBlock Classes="muted" TextWrapping="Wrap"
                        Text="Logs recorded on the autopilot's SD card. Download them over the MAVLink link, or open one you already have." />
@@ -119,17 +120,17 @@
 
         <!-- provider, top right; zoom slider on the right edge below it -->
         <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10" Spacing="10">
-          <ComboBox MinWidth="200" HorizontalAlignment="Right" ToolTip.Tip="Map type"
+          <ComboBox MinWidth="200" HorizontalAlignment="Right" ToolTip.Tip="{l:Tr 'Map type'}"
                     ItemsSource="{Binding MapProviders}" SelectedItem="{Binding SelectedMapProvider}" />
           <Border Classes="overlay" HorizontalAlignment="Right" Padding="3">
             <StackPanel Spacing="4">
-              <Button Classes="mapbtn" Content="+" Command="{Binding ZoomInCommand}" ToolTip.Tip="Zoom in" />
+              <Button Classes="mapbtn" Content="+" Command="{Binding ZoomInCommand}" ToolTip.Tip="{l:Tr 'Zoom in'}" />
               <Slider Orientation="Vertical" Height="180" HorizontalAlignment="Center"
                       Minimum="{Binding MinZoom}" Maximum="{Binding MaxZoom}" Value="{Binding ZoomValue}"
                       TickFrequency="1" IsSnapToTickEnabled="True" SmallChange="1" LargeChange="2"
-                      ToolTip.Tip="Zoom" />
+                      ToolTip.Tip="{l:Tr 'Zoom'}" />
               <TextBlock Text="{Binding Zoom}" HorizontalAlignment="Center" FontSize="11" Classes="muted" />
-              <Button Classes="mapbtn" Content="−" Command="{Binding ZoomOutCommand}" ToolTip.Tip="Zoom out" />
+              <Button Classes="mapbtn" Content="−" Command="{Binding ZoomOutCommand}" ToolTip.Tip="{l:Tr 'Zoom out'}" />
             </StackPanel>
           </Border>
         </StackPanel>
@@ -139,7 +140,7 @@
                 HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,12,0,0" Padding="14,8"
                 MaxWidth="560" BorderThickness="0,0,0,2">
           <Grid ColumnDefinitions="*,Auto">
-            <TextBlock Text="{Binding ToastText}" TextWrapping="Wrap" VerticalAlignment="Center" FontWeight="SemiBold" />
+            <TextBlock Text="{l:TrBind {Binding ToastText}}" TextWrapping="Wrap" VerticalAlignment="Center" FontWeight="SemiBold" />
             <Button Grid.Column="1" Content="✕" Padding="6,0" Margin="10,0,0,0" Background="Transparent"
                     VerticalAlignment="Center" Command="{Binding DismissToastCommand}" />
           </Grid>
@@ -168,19 +169,19 @@
               </StackPanel.Styles>
               <StackPanel Orientation="Horizontal">
                 <Border Classes="swatch" Background="#ff3b30" />
-                <TextBlock Text="Current Heading" />
+                <TextBlock Text="{l:Tr 'Current Heading'}" />
               </StackPanel>
               <StackPanel Orientation="Horizontal">
                 <Border Classes="swatch" Background="#ff8000" />
-                <TextBlock Text="Direct to current WP" />
+                <TextBlock Text="{l:Tr 'Direct to current WP'}" />
               </StackPanel>
               <StackPanel Orientation="Horizontal">
                 <Border Classes="swatch" Background="#2ecc40" />
-                <TextBlock Text="Target Heading" />
+                <TextBlock Text="{l:Tr 'Target Heading'}" />
               </StackPanel>
               <StackPanel Orientation="Horizontal">
                 <Border Classes="swatch" Background="Black" BorderBrush="#9aa4b0" BorderThickness="0.5" />
-                <TextBlock Text="GPS Track" />
+                <TextBlock Text="{l:Tr 'GPS Track'}" />
               </StackPanel>
             </StackPanel>
           </Border>
@@ -192,10 +193,10 @@
               Padding="10,3">
         <Grid ColumnDefinitions="*,Auto,Auto">
           <TextBlock Text="{Binding PointerText}" VerticalAlignment="Center" FontSize="12" Classes="muted" />
-          <CheckBox Grid.Column="1" Content="Tuning" IsChecked="{Binding ShowTuning}" Margin="0,0,16,0" MinHeight="26"
-                    FontSize="12" ToolTip.Tip="Graph telemetry over the map" />
-          <CheckBox Grid.Column="2" Content="Auto Pan" IsChecked="{Binding AutoPan}" MinHeight="26" FontSize="12"
-                    ToolTip.Tip="Keep the vehicle in the middle of the map" />
+          <CheckBox Grid.Column="1" Content="{l:Tr 'Tuning'}" IsChecked="{Binding ShowTuning}" Margin="0,0,16,0" MinHeight="26"
+                    FontSize="12" ToolTip.Tip="{l:Tr 'Graph telemetry over the map'}" />
+          <CheckBox Grid.Column="2" Content="{l:Tr 'Auto Pan'}" IsChecked="{Binding AutoPan}" MinHeight="26" FontSize="12"
+                    ToolTip.Tip="{l:Tr 'Keep the vehicle in the middle of the map'}" />
         </Grid>
       </Border>
     </Grid>

@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.MenuScreenView"
              x:DataType="vm:MenuScreenViewModel">
 
@@ -11,8 +12,8 @@
         <ListBox.ItemTemplate>
           <DataTemplate x:DataType="vm:MenuItemViewModel">
             <Panel>
-              <TextBlock Text="{Binding Title}" IsVisible="{Binding IsPage}" Padding="14,8" FontSize="13.5" />
-              <TextBlock Text="{Binding Title}" IsVisible="{Binding IsHeader}" Padding="8,12,8,2"
+              <TextBlock Text="{l:TrBind {Binding Title}}" IsVisible="{Binding IsPage}" Padding="14,8" FontSize="13.5" />
+              <TextBlock Text="{l:TrBind {Binding Title}}" IsVisible="{Binding IsHeader}" Padding="8,12,8,2"
                          FontSize="11" FontWeight="Bold" Classes="muted" />
             </Panel>
           </DataTemplate>
@@ -24,8 +25,8 @@
       <ContentControl Content="{Binding Content}" />
       <StackPanel IsVisible="{Binding Content, Converter={x:Static ObjectConverters.IsNull}}"
                   HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6">
-        <TextBlock Classes="h1" Text="{Binding Title}" HorizontalAlignment="Center" />
-        <TextBlock Classes="muted" Text="Connect to a vehicle to see its setup pages." HorizontalAlignment="Center" />
+        <TextBlock Classes="h1" Text="{l:TrBind {Binding Title}}" HorizontalAlignment="Center" />
+        <TextBlock Classes="muted" Text="{l:Tr 'Connect to a vehicle to see its setup pages.'}" HorizontalAlignment="Center" />
       </StackPanel>
     </Panel>
   </Grid>

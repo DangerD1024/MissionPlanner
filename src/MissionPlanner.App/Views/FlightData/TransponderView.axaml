@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.FlightData.TransponderView"
              x:DataType="vm:TransponderViewModel">
 
@@ -28,64 +29,64 @@
       <Grid ColumnDefinitions="*,100" ColumnSpacing="6">
         <Button Content="{Binding LinkText}" Command="{Binding ConnectCommand}" IsEnabled="{Binding CanConnect}"
                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="38" Classes="accent"
-                ToolTip.Tip="Ask the autopilot for the transponder's status (UAVIONIX_ADSB_OUT_STATUS)" />
-        <Button Grid.Column="1" Classes="mode" Classes.danger="{Binding IdentActive}" Content="IDENT"
-                Command="{Binding IdentCommand}" IsEnabled="{Binding CanIdent}" ToolTip.Tip="Squawk ident" />
+                ToolTip.Tip="{l:Tr 'Ask the autopilot for the transponder\'s status (UAVIONIX_ADSB_OUT_STATUS)'}" />
+        <Button Grid.Column="1" Classes="mode" Classes.danger="{Binding IdentActive}" Content="{l:Tr 'IDENT'}"
+                Command="{Binding IdentCommand}" IsEnabled="{Binding CanIdent}" ToolTip.Tip="{l:Tr 'Squawk ident'}" />
       </Grid>
 
       <StackPanel Spacing="10" IsEnabled="{Binding IsActive}">
         <UniformGrid Columns="3" ColumnSpacing="6">
-          <Button Classes="mode" Classes.accent="{Binding IsStandby}" Content="STBY" Command="{Binding StandbyCommand}"
-                  ToolTip.Tip="Standby: no replies" />
-          <Button Classes="mode" Classes.accent="{Binding IsOn}" Content="ON" Command="{Binding OnCommand}"
-                  ToolTip.Tip="Modes A, S and 1090ES on" />
-          <Button Classes="mode" Classes.accent="{Binding IsAlt}" Content="ALT" Command="{Binding AltCommand}"
-                  ToolTip.Tip="ON plus mode C altitude reporting" />
+          <Button Classes="mode" Classes.accent="{Binding IsStandby}" Content="{l:Tr 'STBY'}" Command="{Binding StandbyCommand}"
+                  ToolTip.Tip="{l:Tr 'Standby: no replies'}" />
+          <Button Classes="mode" Classes.accent="{Binding IsOn}" Content="{l:Tr 'ON'}" Command="{Binding OnCommand}"
+                  ToolTip.Tip="{l:Tr 'Modes A, S and 1090ES on'}" />
+          <Button Classes="mode" Classes.accent="{Binding IsAlt}" Content="{l:Tr 'ALT'}" Command="{Binding AltCommand}"
+                  ToolTip.Tip="{l:Tr 'ON plus mode C altitude reporting'}" />
         </UniformGrid>
 
         <Grid ColumnDefinitions="*,*" ColumnSpacing="10" RowDefinitions="Auto,Auto">
-          <TextBlock Classes="caption" Text="Squawk" />
-          <TextBlock Grid.Column="1" Classes="caption" Text="Flight ID" />
+          <TextBlock Classes="caption" Text="{l:Tr 'Squawk'}" />
+          <TextBlock Grid.Column="1" Classes="caption" Text="{l:Tr 'Flight ID'}" />
           <NumericUpDown Grid.Row="1" Value="{Binding Squawk}" Minimum="0" Maximum="7777" Increment="1" FormatString="0000"
-                         FontSize="18" FontWeight="SemiBold" ToolTip.Tip="Mode A code: four octal digits (0-7)" />
+                         FontSize="18" FontWeight="SemiBold" ToolTip.Tip="{l:Tr 'Mode A code: four octal digits (0-7)'}" />
           <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding FlightId}" MaxLength="8" FontSize="16"
-                   x:Name="FlightIdBox" ToolTip.Tip="Up to 8 characters; Enter to send" />
+                   x:Name="FlightIdBox" ToolTip.Tip="{l:Tr 'Up to 8 characters; Enter to send'}" />
         </Grid>
 
         <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
           <Border Classes="card" Padding="10,6">
             <StackPanel>
-              <TextBlock Classes="caption" Text="Modes" Margin="0,0,0,2" />
-              <CheckBox Classes="flag" Content="Mode A" IsChecked="{Binding ModeA}" />
-              <CheckBox Classes="flag" Content="Mode C" IsChecked="{Binding ModeC}" />
-              <CheckBox Classes="flag" Content="Mode S" IsChecked="{Binding ModeS}" />
-              <CheckBox Classes="flag" Content="1090ES TX" IsChecked="{Binding Es1090}" />
+              <TextBlock Classes="caption" Text="{l:Tr 'Modes'}" Margin="0,0,0,2" />
+              <CheckBox Classes="flag" Content="{l:Tr 'Mode A'}" IsChecked="{Binding ModeA}" />
+              <CheckBox Classes="flag" Content="{l:Tr 'Mode C'}" IsChecked="{Binding ModeC}" />
+              <CheckBox Classes="flag" Content="{l:Tr 'Mode S'}" IsChecked="{Binding ModeS}" />
+              <CheckBox Classes="flag" Content="{l:Tr '1090ES TX'}" IsChecked="{Binding Es1090}" />
             </StackPanel>
           </Border>
           <Border Grid.Column="1" Classes="card" Padding="10,6">
             <StackPanel>
-              <TextBlock Classes="caption" Text="Faults" Margin="0,0,0,2" />
-              <CheckBox Classes="flag" Content="Maintenance required" IsChecked="{Binding FaultMaintenance}" />
-              <CheckBox Classes="flag" Content="GPS unavailable" IsChecked="{Binding FaultGpsUnavailable}" />
-              <CheckBox Classes="flag" Content="GPS no fix" IsChecked="{Binding FaultGpsNoFix}" />
-              <CheckBox Classes="flag" Content="ADS-B TX system fail" IsChecked="{Binding FaultTxSystem}" />
-              <CheckBox Classes="flag" Content="Airborne" IsChecked="{Binding Airborne}" />
+              <TextBlock Classes="caption" Text="{l:Tr 'Faults'}" Margin="0,0,0,2" />
+              <CheckBox Classes="flag" Content="{l:Tr 'Maintenance required'}" IsChecked="{Binding FaultMaintenance}" />
+              <CheckBox Classes="flag" Content="{l:Tr 'GPS unavailable'}" IsChecked="{Binding FaultGpsUnavailable}" />
+              <CheckBox Classes="flag" Content="{l:Tr 'GPS no fix'}" IsChecked="{Binding FaultGpsNoFix}" />
+              <CheckBox Classes="flag" Content="{l:Tr 'ADS-B TX system fail'}" IsChecked="{Binding FaultTxSystem}" />
+              <CheckBox Classes="flag" Content="{l:Tr 'Airborne'}" IsChecked="{Binding Airborne}" />
             </StackPanel>
           </Border>
         </Grid>
 
         <Grid ColumnDefinitions="Auto,*,Auto,*,Auto,*" ColumnSpacing="6">
-          <TextBlock Classes="caption" Text="NIC" VerticalAlignment="Center" />
+          <TextBlock Classes="caption" Text="{l:Tr 'NIC'}" VerticalAlignment="Center" />
           <TextBlock Grid.Column="1" Text="{Binding Nic}" FontWeight="SemiBold" />
-          <TextBlock Grid.Column="2" Classes="caption" Text="NACp" VerticalAlignment="Center" />
+          <TextBlock Grid.Column="2" Classes="caption" Text="{l:Tr 'NACp'}" VerticalAlignment="Center" />
           <TextBlock Grid.Column="3" Text="{Binding Nacp}" FontWeight="SemiBold" />
-          <TextBlock Grid.Column="4" Classes="caption" Text="Temp" VerticalAlignment="Center" />
+          <TextBlock Grid.Column="4" Classes="caption" Text="{l:Tr 'Temp'}" VerticalAlignment="Center" />
           <TextBlock Grid.Column="5" Text="{Binding BoardTemperature}" FontWeight="SemiBold" />
         </Grid>
       </StackPanel>
 
       <TextBlock Classes="caption" TextWrapping="Wrap"
-                 Text="For uAvionix transponders on ADSB_TYPE = 1 (MAVLink). Status comes from UAVIONIX_ADSB_OUT_STATUS; changes go out as UAVIONIX_ADSB_OUT_CONTROL. Without a status, IDENT sends DO_ADSB_OUT_IDENT." />
+                 Text="{l:Tr 'For uAvionix transponders on ADSB_TYPE = 1 (MAVLink). Status comes from UAVIONIX_ADSB_OUT_STATUS; changes go out as UAVIONIX_ADSB_OUT_CONTROL. Without a status, IDENT sends DO_ADSB_OUT_IDENT.'}" />
     </StackPanel>
   </ScrollViewer>
 </UserControl>

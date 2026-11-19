@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
              xmlns:rtk="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Rtk"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.GpsInjectView"
              x:DataType="vm:GpsInjectViewModel">
 
@@ -73,83 +74,83 @@
   <ScrollViewer HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="24,20" Spacing="16" MaxWidth="1280" HorizontalAlignment="Left">
       <StackPanel Spacing="4">
-        <TextBlock Classes="h1" Text="RTK/GPS Inject" />
+        <TextBlock Classes="h1" Text="{l:Tr 'RTK/GPS Inject'}" />
         <TextBlock Classes="muted" TextWrapping="Wrap"
-                   Text="Send RTCM 3 corrections from an NTRIP caster or your own base station to the vehicle's GPS (GPS_RTCM_DATA). Injection keeps running when you leave this page." />
+                   Text="{l:Tr 'Send RTCM 3 corrections from an NTRIP caster or your own base station to the vehicle\'s GPS (GPS_RTCM_DATA). Injection keeps running when you leave this page.'}" />
       </StackPanel>
 
       <Grid ColumnDefinitions="460,16,*">
         <!-- source -->
         <Border Classes="card" Padding="18" VerticalAlignment="Top">
           <StackPanel Spacing="12">
-            <TextBlock Classes="h2" Text="Correction source" />
+            <TextBlock Classes="h2" Text="{l:Tr 'Correction source'}" />
             <ComboBox ItemsSource="{Binding SourceOptions}" SelectedItem="{Binding SelectedSource}" IsEnabled="{Binding IsIdle}"
                       HorizontalAlignment="Stretch" />
 
             <!-- NTRIP -->
             <Grid IsVisible="{Binding IsNtrip}" IsEnabled="{Binding IsIdle}" ColumnDefinitions="96,*,8,Auto"
                   RowDefinitions="Auto,8,Auto,8,Auto,8,Auto,8,Auto">
-              <TextBlock Classes="label" Text="Caster" />
-              <TextBox Grid.Column="1" Text="{Binding NtripHost}" PlaceholderText="caster.example.com or http://user:pass@host:2101/MOUNT" />
+              <TextBlock Classes="label" Text="{l:Tr 'Caster'}" />
+              <TextBox Grid.Column="1" Text="{Binding NtripHost}" PlaceholderText="{l:Tr 'caster.example.com or http://user:pass@host:2101/MOUNT'}" />
               <NumericUpDown Grid.Column="3" Width="120" Value="{Binding NtripPort}" Minimum="1" Maximum="65535" Increment="1"
-                             FormatString="0" ToolTip.Tip="Port (NTRIP usually 2101)" />
+                             FormatString="0" ToolTip.Tip="{l:Tr 'Port (NTRIP usually 2101)'}" />
 
-              <TextBlock Grid.Row="2" Classes="label" Text="Mountpoint" />
-              <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding NtripMountpoint}" PlaceholderText="e.g. MOUNT01" />
-              <Button Grid.Row="2" Grid.Column="3" Width="120" HorizontalContentAlignment="Center" Content="List mountpoints"
+              <TextBlock Grid.Row="2" Classes="label" Text="{l:Tr 'Mountpoint'}" />
+              <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding NtripMountpoint}" PlaceholderText="{l:Tr 'e.g. MOUNT01'}" />
+              <Button Grid.Row="2" Grid.Column="3" Width="120" HorizontalContentAlignment="Center" Content="{l:Tr 'List mountpoints'}"
                       Command="{Binding LoadMountpointsCommand}" FontSize="12" />
 
-              <TextBlock Grid.Row="4" Classes="label" Text="Username" />
+              <TextBlock Grid.Row="4" Classes="label" Text="{l:Tr 'Username'}" />
               <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding NtripUsername}" />
 
-              <TextBlock Grid.Row="6" Classes="label" Text="Password" />
+              <TextBlock Grid.Row="6" Classes="label" Text="{l:Tr 'Password'}" />
               <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding NtripPassword}" PasswordChar="•" />
 
               <WrapPanel Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="3">
-                <CheckBox Content="Send GGA position" IsChecked="{Binding SendGga}" Margin="0,0,16,0"
-                          ToolTip.Tip="VRS and nearest-base casters need the vehicle's position. The vehicle's own fix is used when it has one, else its home." />
-                <CheckBox Content="NTRIP v1" IsChecked="{Binding NtripV1}" Margin="0,0,16,0" />
-                <CheckBox Content="TLS (https)" IsChecked="{Binding NtripTls}" />
+                <CheckBox Content="{l:Tr 'Send GGA position'}" IsChecked="{Binding SendGga}" Margin="0,0,16,0"
+                          ToolTip.Tip="{l:Tr 'VRS and nearest-base casters need the vehicle\'s position. The vehicle\'s own fix is used when it has one, else its home.'}" />
+                <CheckBox Content="{l:Tr 'NTRIP v1'}" IsChecked="{Binding NtripV1}" Margin="0,0,16,0" />
+                <CheckBox Content="{l:Tr 'TLS (https)'}" IsChecked="{Binding NtripTls}" />
               </WrapPanel>
             </Grid>
 
             <!-- serial -->
             <Grid IsVisible="{Binding IsSerial}" IsEnabled="{Binding IsIdle}" ColumnDefinitions="96,*,8,Auto" RowDefinitions="Auto,8,Auto,8,Auto">
-              <TextBlock Classes="label" Text="Port" />
+              <TextBlock Classes="label" Text="{l:Tr 'Port'}" />
               <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding Ports}" SelectedItem="{Binding SerialPort}" />
-              <Button Grid.Column="3" ToolTip.Tip="Refresh the port list" Command="{Binding RefreshPortsCommand}" Padding="6">
+              <Button Grid.Column="3" ToolTip.Tip="{l:Tr 'Refresh the port list'}" Command="{Binding RefreshPortsCommand}" Padding="6">
                 <Path Classes="icon" Data="{StaticResource IconRefresh}" Width="18" Height="18" />
               </Button>
-              <TextBlock Grid.Row="2" Classes="label" Text="Baud rate" />
+              <TextBlock Grid.Row="2" Classes="label" Text="{l:Tr 'Baud rate'}" />
               <ComboBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding BaudRates}" SelectedItem="{Binding SerialBaud}" />
-              <CheckBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" Content="Configure as u-blox M8P/F9P base"
+              <CheckBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" Content="{l:Tr 'Configure as u-blox M8P/F9P base'}"
                         IsChecked="{Binding UbloxConfigure}"
-                        ToolTip.Tip="Sets 460800 baud, the RTCM messages and survey-in or a fixed position when connecting" />
+                        ToolTip.Tip="{l:Tr 'Sets 460800 baud, the RTCM messages and survey-in or a fixed position when connecting'}" />
             </Grid>
 
             <!-- TCP -->
             <Grid IsVisible="{Binding IsTcp}" IsEnabled="{Binding IsIdle}" ColumnDefinitions="96,*,8,Auto">
-              <TextBlock Classes="label" Text="Server" />
-              <TextBox Grid.Column="1" Text="{Binding TcpHost}" PlaceholderText="host" />
+              <TextBlock Classes="label" Text="{l:Tr 'Server'}" />
+              <TextBox Grid.Column="1" Text="{Binding TcpHost}" PlaceholderText="{l:Tr 'host'}" />
               <NumericUpDown Grid.Column="3" Width="120" Value="{Binding TcpPort}" Minimum="1" Maximum="65535" Increment="1" FormatString="0" />
             </Grid>
 
             <!-- UDP -->
             <Grid IsVisible="{Binding IsUdp}" IsEnabled="{Binding IsIdle}" ColumnDefinitions="96,Auto">
-              <TextBlock Classes="label" Text="Local port" />
+              <TextBlock Classes="label" Text="{l:Tr 'Local port'}" />
               <NumericUpDown Grid.Column="1" Width="140" Value="{Binding UdpPort}" Minimum="1" Maximum="65535" Increment="1" FormatString="0" />
             </Grid>
 
-            <CheckBox Content="Save the raw stream (.gpsbase in the log folder)" IsChecked="{Binding LogRaw}" IsEnabled="{Binding IsIdle}" />
+            <CheckBox Content="{l:Tr 'Save the raw stream (.gpsbase in the log folder)'}" IsChecked="{Binding LogRaw}" IsEnabled="{Binding IsIdle}" />
 
             <Grid ColumnDefinitions="Auto,12,*">
               <Button Classes="accent" MinWidth="120" Padding="16,8" HorizontalContentAlignment="Center"
-                      Content="{Binding ConnectText}" Command="{Binding ToggleCommand}" IsVisible="{Binding IsIdle}" />
+                      Content="{l:TrBind {Binding ConnectText}}" Command="{Binding ToggleCommand}" IsVisible="{Binding IsIdle}" />
               <Button Classes="danger" MinWidth="120" Padding="16,8" HorizontalContentAlignment="Center"
-                      Content="{Binding ConnectText}" Command="{Binding ToggleCommand}" IsVisible="{Binding IsRunning}" />
+                      Content="{l:TrBind {Binding ConnectText}}" Command="{Binding ToggleCommand}" IsVisible="{Binding IsRunning}" />
               <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                 <Ellipse Classes="state" Classes.ok="{Binding StateOk}" Classes.warn="{Binding StateWarn}" Classes.error="{Binding StateError}" />
-                <TextBlock Text="{Binding StateText}" TextWrapping="Wrap" MaxWidth="280" />
+                <TextBlock Text="{l:TrBind {Binding StateText}}" TextWrapping="Wrap" MaxWidth="280" />
               </StackPanel>
             </Grid>
             <TextBlock Classes="muted" FontSize="11.5" TextWrapping="Wrap" Text="{Binding GgaText}" IsVisible="{Binding IsNtrip}" />
@@ -162,28 +163,28 @@
             <StackPanel Spacing="14">
               <Grid ColumnDefinitions="*,*,*,*">
                 <StackPanel Spacing="2">
-                  <TextBlock Classes="caption" Text="RECEIVED" />
+                  <TextBlock Classes="caption" Text="{l:Tr 'RECEIVED'}" />
                   <TextBlock Classes="value" Text="{Binding InRateText}" />
                   <TextBlock Classes="muted" FontSize="12" Text="{Binding BytesInText}" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Spacing="2">
-                  <TextBlock Classes="caption" Text="TO VEHICLE" />
+                  <TextBlock Classes="caption" Text="{l:Tr 'TO VEHICLE'}" />
                   <TextBlock Classes="value" Text="{Binding OutRateText}" />
                   <TextBlock Classes="muted" FontSize="12" Text="{Binding BytesOutText}" />
                 </StackPanel>
                 <StackPanel Grid.Column="2" Spacing="2">
                   <TextBlock Classes="caption" Text="GPS_RTCM_DATA" />
                   <TextBlock Classes="value" Text="{Binding PacketsText}" />
-                  <TextBlock Classes="muted" FontSize="12" Text="packets sent" />
+                  <TextBlock Classes="muted" FontSize="12" Text="{l:Tr 'packets sent'}" />
                 </StackPanel>
                 <StackPanel Grid.Column="3" Spacing="2">
-                  <TextBlock Classes="caption" Text="LAST MESSAGE" />
+                  <TextBlock Classes="caption" Text="{l:Tr 'LAST MESSAGE'}" />
                   <TextBlock Classes="value" Text="{Binding LastMessageText}" />
                 </StackPanel>
               </Grid>
               <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{Binding ErrorsText}" />
               <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Classes="caption" Text="VEHICLE" VerticalAlignment="Center" />
+                <TextBlock Classes="caption" Text="{l:Tr 'VEHICLE'}" VerticalAlignment="Center" />
                 <TextBlock Text="{Binding VehicleGpsText}" Classes.rtk="{Binding VehicleRtk}" FontWeight="SemiBold" />
               </StackPanel>
             </StackPanel>
@@ -192,8 +193,8 @@
           <Border Classes="card" Padding="18">
             <StackPanel Spacing="10">
               <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Classes="h2" Text="Corrections" />
-                <Button Grid.Column="1" Content="Clear" Command="{Binding ClearStatisticsCommand}" FontSize="12" Padding="10,4" />
+                <TextBlock Classes="h2" Text="{l:Tr 'Corrections'}" />
+                <Button Grid.Column="1" Content="{l:Tr 'Clear'}" Command="{Binding ClearStatisticsCommand}" FontSize="12" Padding="10,4" />
               </Grid>
               <ItemsControl ItemsSource="{Binding Indicators}">
                 <ItemsControl.ItemsPanel>
@@ -216,7 +217,7 @@
                 </ItemsControl.ItemTemplate>
               </ItemsControl>
               <StackPanel Spacing="2">
-                <TextBlock Classes="caption" Text="BASE POSITION" />
+                <TextBlock Classes="caption" Text="{l:Tr 'BASE POSITION'}" />
                 <SelectableTextBlock Text="{Binding BasePositionText}" TextWrapping="Wrap" />
                 <TextBlock Classes="muted" FontSize="12" Text="{Binding BaseDistanceText}" />
               </StackPanel>
@@ -229,11 +230,11 @@
       <Border Classes="card" Padding="18" IsVisible="{Binding IsNtrip}">
         <StackPanel Spacing="8">
           <Grid ColumnDefinitions="*,Auto">
-            <TextBlock Classes="h2" Text="Mountpoints" />
-            <TextBlock Grid.Column="1" Classes="muted" FontSize="12" VerticalAlignment="Center" Text="{Binding MountpointStatus}" />
+            <TextBlock Classes="h2" Text="{l:Tr 'Mountpoints'}" />
+            <TextBlock Grid.Column="1" Classes="muted" FontSize="12" VerticalAlignment="Center" Text="{l:TrBind {Binding MountpointStatus}}" />
           </Grid>
           <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding !HasMountpoints}"
-                     Text="List mountpoints downloads the caster's source table; pick one to fill the mountpoint." />
+                     Text="{l:Tr 'List mountpoints downloads the caster\'s source table; pick one to fill the mountpoint.'}" />
           <ListBox ItemsSource="{Binding Mountpoints}" SelectedItem="{Binding SelectedMountpoint}" MaxHeight="260"
                    IsVisible="{Binding HasMountpoints}" IsEnabled="{Binding IsIdle}" Background="Transparent">
             <ListBox.ItemTemplate>
@@ -253,31 +254,31 @@
       <!-- u-blox base -->
       <Border Classes="card" Padding="18" IsVisible="{Binding ShowUblox}">
         <StackPanel Spacing="12">
-          <TextBlock Classes="h2" Text="u-blox M8P/F9P base" />
+          <TextBlock Classes="h2" Text="{l:Tr 'u-blox M8P/F9P base'}" />
           <Grid ColumnDefinitions="Auto,12,140,24,Auto,12,140,24,*">
-            <TextBlock Classes="label" Text="Survey-in time (s)" />
+            <TextBlock Classes="label" Text="{l:Tr 'Survey-in time (s)'}" />
             <NumericUpDown Grid.Column="2" Value="{Binding SurveyInSeconds}" Minimum="1" Maximum="86400" Increment="10" FormatString="0" />
-            <TextBlock Grid.Column="4" Classes="label" Text="Accuracy (m)" />
+            <TextBlock Grid.Column="4" Classes="label" Text="{l:Tr 'Accuracy (m)'}" />
             <NumericUpDown Grid.Column="6" Value="{Binding SurveyInAccuracy}" Minimum="0.01" Maximum="100" Increment="0.1" FormatString="0.00" />
-            <CheckBox Grid.Column="8" Content="MSM4 output (M8P firmware 1.30+)" IsChecked="{Binding UbloxMsm4}" IsEnabled="{Binding IsIdle}" />
+            <CheckBox Grid.Column="8" Content="{l:Tr 'MSM4 output (M8P firmware 1.30+)'}" IsChecked="{Binding UbloxMsm4}" IsEnabled="{Binding IsIdle}" />
           </Grid>
           <Grid ColumnDefinitions="Auto,16,Auto,8,150,16,Auto,8,150,16,Auto,8,110">
-            <CheckBox Content="Fixed position" IsChecked="{Binding UseFixedPosition}" />
+            <CheckBox Content="{l:Tr 'Fixed position'}" IsChecked="{Binding UseFixedPosition}" />
             <TextBlock Grid.Column="2" Classes="label" Text="Lat" />
             <NumericUpDown Grid.Column="4" Value="{Binding FixedLat}" Minimum="-90" Maximum="90" Increment="0.000001" FormatString="0.0000000"
                            IsEnabled="{Binding UseFixedPosition}" ShowButtonSpinner="False" />
             <TextBlock Grid.Column="6" Classes="label" Text="Lng" />
             <NumericUpDown Grid.Column="8" Value="{Binding FixedLng}" Minimum="-180" Maximum="180" Increment="0.000001" FormatString="0.0000000"
                            IsEnabled="{Binding UseFixedPosition}" ShowButtonSpinner="False" />
-            <TextBlock Grid.Column="10" Classes="label" Text="Alt (m)" />
+            <TextBlock Grid.Column="10" Classes="label" Text="{l:Tr 'Alt (m)'}" />
             <NumericUpDown Grid.Column="12" Value="{Binding FixedAlt}" Minimum="-1000" Maximum="30000" Increment="0.01" FormatString="0.000"
                            IsEnabled="{Binding UseFixedPosition}" ShowButtonSpinner="False" />
           </Grid>
           <WrapPanel>
-            <Button Content="Apply position" Command="{Binding ApplyBasePositionCommand}" Margin="0,0,8,0"
-                    ToolTip.Tip="Send the fixed position (or survey-in settings) to the connected receiver" />
-            <Button Content="Restart survey-in" Command="{Binding RestartSurveyInCommand}" Margin="0,0,8,0" />
-            <Button Content="Save current base position…" Command="{Binding SaveCurrentBaseCommand}" />
+            <Button Content="{l:Tr 'Apply position'}" Command="{Binding ApplyBasePositionCommand}" Margin="0,0,8,0"
+                    ToolTip.Tip="{l:Tr 'Send the fixed position (or survey-in settings) to the connected receiver'}" />
+            <Button Content="{l:Tr 'Restart survey-in'}" Command="{Binding RestartSurveyInCommand}" Margin="0,0,8,0" />
+            <Button Content="{l:Tr 'Save current base position…'}" Command="{Binding SaveCurrentBaseCommand}" />
           </WrapPanel>
           <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding HasSurveyIn}">
             <Ellipse Classes="dot" Classes.on="{Binding SurveyInValid}" />
@@ -285,7 +286,7 @@
           </StackPanel>
 
           <StackPanel Spacing="4" IsVisible="{Binding HasSavedBases}">
-            <TextBlock Classes="caption" Text="SAVED BASE POSITIONS" />
+            <TextBlock Classes="caption" Text="{l:Tr 'SAVED BASE POSITIONS'}" />
             <ItemsControl ItemsSource="{Binding SavedBases}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="rtk:SavedBasePosition">
@@ -300,10 +301,10 @@
                         </MultiBinding>
                       </TextBlock.Text>
                     </TextBlock>
-                    <Button Grid.Column="2" Content="Use" Margin="8,0,0,0" Padding="10,4"
+                    <Button Grid.Column="2" Content="{l:Tr 'Use'}" Margin="8,0,0,0" Padding="10,4"
                             Command="{Binding $parent[UserControl].((vm:GpsInjectViewModel)DataContext).UseSavedBaseCommand}"
                             CommandParameter="{Binding}" />
-                    <Button Grid.Column="3" Margin="6,0,0,0" Padding="4" ToolTip.Tip="Delete"
+                    <Button Grid.Column="3" Margin="6,0,0,0" Padding="4" ToolTip.Tip="{l:Tr 'Delete'}"
                             Command="{Binding $parent[UserControl].((vm:GpsInjectViewModel)DataContext).DeleteSavedBaseCommand}"
                             CommandParameter="{Binding}">
                       <Path Classes="icon" Data="{StaticResource IconDelete}" Width="18" Height="18" />
@@ -320,13 +321,13 @@
         <!-- messages -->
         <Border Classes="card" Padding="18" VerticalAlignment="Top">
           <StackPanel Spacing="6">
-            <TextBlock Classes="h2" Text="RTCM messages" />
-            <TextBlock Classes="muted" FontSize="12" IsVisible="{Binding !HasMessages}" Text="No RTCM messages received yet." />
+            <TextBlock Classes="h2" Text="{l:Tr 'RTCM messages'}" />
+            <TextBlock Classes="muted" FontSize="12" IsVisible="{Binding !HasMessages}" Text="{l:Tr 'No RTCM messages received yet.'}" />
             <Grid ColumnDefinitions="60,*,80,70" IsVisible="{Binding HasMessages}">
-              <TextBlock Classes="caption" Text="TYPE" />
-              <TextBlock Grid.Column="1" Classes="caption" Text="MESSAGE" />
-              <TextBlock Grid.Column="2" Classes="caption" Text="COUNT" HorizontalAlignment="Right" />
-              <TextBlock Grid.Column="3" Classes="caption" Text="AGE" HorizontalAlignment="Right" />
+              <TextBlock Classes="caption" Text="{l:Tr 'TYPE'}" />
+              <TextBlock Grid.Column="1" Classes="caption" Text="{l:Tr 'MESSAGE'}" />
+              <TextBlock Grid.Column="2" Classes="caption" Text="{l:Tr 'COUNT'}" HorizontalAlignment="Right" />
+              <TextBlock Grid.Column="3" Classes="caption" Text="{l:Tr 'AGE'}" HorizontalAlignment="Right" />
             </Grid>
             <ItemsControl ItemsSource="{Binding Messages}">
               <ItemsControl.ItemTemplate>
@@ -347,10 +348,10 @@
         <Border Grid.Column="2" Classes="card" Padding="18" VerticalAlignment="Top">
           <StackPanel Spacing="8">
             <Grid ColumnDefinitions="*,Auto">
-              <TextBlock Classes="h2" Text="Base satellites (signal, dB-Hz)" />
+              <TextBlock Classes="h2" Text="{l:Tr 'Base satellites (signal, dB-Hz)'}" />
             </Grid>
             <TextBlock Classes="muted" FontSize="12" IsVisible="{Binding !HasSatellites}" TextWrapping="Wrap"
-                       Text="Signal bars appear for observation messages that carry them (1002, 1004, 1012, MSM4, MSM7)." />
+                       Text="{l:Tr 'Signal bars appear for observation messages that carry them (1002, 1004, 1012, MSM4, MSM7).'}" />
             <ItemsControl ItemsSource="{Binding Satellites}" IsVisible="{Binding HasSatellites}">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -359,12 +360,12 @@
               </ItemsControl.ItemsPanel>
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:SatelliteBar">
-                  <StackPanel Width="30" Margin="0,0,3,8" Spacing="2" ToolTip.Tip="{Binding Label}">
+                  <StackPanel Width="30" Margin="0,0,3,8" Spacing="2" ToolTip.Tip="{l:TrBind {Binding Label}}">
                     <TextBlock Text="{Binding Snr, StringFormat='{}{0:0}'}" FontSize="10" HorizontalAlignment="Center" Classes="muted" />
                     <Border Height="110" Background="{DynamicResource Bg2}" CornerRadius="2">
                       <Border Classes="bar" Classes.good="{Binding IsGood}" Classes.weak="{Binding IsWeak}" Height="{Binding BarHeight}" />
                     </Border>
-                    <TextBlock Text="{Binding Label}" FontSize="10" HorizontalAlignment="Center" />
+                    <TextBlock Text="{l:TrBind {Binding Label}}" FontSize="10" HorizontalAlignment="Center" />
                   </StackPanel>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>

@@ -242,7 +242,7 @@ public sealed partial class ParamChoiceViewModel : ObservableObject
 
     private async Task WriteAsync(ParamOption option)
     {
-        if (!await _services.Dialogs.ConfirmAsync(Label, $"Set {Name} to {ParamFormat.Value(option.Value)} ({option.Label})?", "Write"))
+        if (!await _services.Dialogs.ConfirmAsync(Label, L.Format("Set {0} to {1} ({2})?", Name, ParamFormat.Value(option.Value), option.Label), "Write"))
         {
             Refresh();
             return;

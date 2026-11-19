@@ -143,7 +143,7 @@ public sealed partial class FlightDataViewModel
         var s = Services.Session;
         var armed = s.Cs.armed;
         var action = armed ? "Disarm" : "Arm";
-        if (!await Services.Dialogs.ConfirmAsync(action, $"Are you sure you want to {action.ToLowerInvariant()} the vehicle?", action))
+        if (!await Services.Dialogs.ConfirmAsync(action, L.Format("Are you sure you want to {0} the vehicle?", action.ToLowerInvariant()), action))
             return;
 
         IsCommandRunning = true;
@@ -300,7 +300,7 @@ public sealed partial class FlightDataViewModel
     {
         if (SelectedDoAction is not { } option || !CheckCanCommand())
             return;
-        if (!await Services.Dialogs.ConfirmAsync("Action", $"Are you sure you want to do {option.Name}?", option.Name))
+        if (!await Services.Dialogs.ConfirmAsync("Action", L.Format("Are you sure you want to do {0}?", option.Name), option.Name))
             return;
         await RunAsync(option.Name, (mav, sysid, compid, cs) => FlightActions.Execute(mav, sysid, compid, option.Action, cs),
             $"{option.Name}: done", $"{option.Name}: the vehicle rejected the command");

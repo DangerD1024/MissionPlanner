@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.FlightData.AuxFunctionView"
              x:DataType="vm:AuxFunctionViewModel">
 
@@ -26,7 +27,7 @@
   </UserControl.Styles>
 
   <Grid RowDefinitions="Auto,Auto,*" Margin="8">
-    <TextBox PlaceholderText="Search functions (e.g. camera, relay, 41)" Text="{Binding Filter}" Margin="0,0,0,4" />
+    <TextBox PlaceholderText="{l:Tr 'Search functions (e.g. camera, relay, 41)'}" Text="{Binding Filter}" Margin="0,0,0,4" />
     <TextBlock Grid.Row="1" Classes="muted" FontSize="11" Margin="2,0,0,6" TextWrapping="Wrap"
                Text="{Binding SourceText}" />
 
@@ -41,19 +42,19 @@
         <DataTemplate x:DataType="vm:AuxFunctionRow">
           <Grid ColumnDefinitions="Auto,34,*,Auto" ColumnSpacing="6">
             <Button Classes="pin" Classes.pinned="{Binding IsPinned}" Content="★" Command="{Binding TogglePinCommand}"
-                    ToolTip.Tip="Pin to the top of the list" />
+                    ToolTip.Tip="{l:Tr 'Pin to the top of the list'}" />
             <TextBlock Grid.Column="1" Text="{Binding IdText}" Classes="muted" FontSize="12" VerticalAlignment="Center"
                        TextAlignment="Right" />
             <TextBlock Grid.Column="2" Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                        ToolTip.Tip="{Binding Name}" />
             <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="3"
                         IsEnabled="{Binding $parent[ListBox].((vm:AuxFunctionViewModel)DataContext).CanCommand}">
-              <Button Classes="pos" Classes.accent="{Binding IsLow}" Content="Low" Command="{Binding LowCommand}"
-                      ToolTip.Tip="DO_AUX_FUNCTION: switch low" />
-              <Button Classes="pos" Classes.accent="{Binding IsMiddle}" Content="Mid" Command="{Binding MiddleCommand}"
-                      ToolTip.Tip="DO_AUX_FUNCTION: switch middle" />
-              <Button Classes="pos" Classes.accent="{Binding IsHigh}" Content="High" Command="{Binding HighCommand}"
-                      ToolTip.Tip="DO_AUX_FUNCTION: switch high" />
+              <Button Classes="pos" Classes.accent="{Binding IsLow}" Content="{l:Tr 'Low'}" Command="{Binding LowCommand}"
+                      ToolTip.Tip="{l:Tr 'DO_AUX_FUNCTION: switch low'}" />
+              <Button Classes="pos" Classes.accent="{Binding IsMiddle}" Content="{l:Tr 'Mid'}" Command="{Binding MiddleCommand}"
+                      ToolTip.Tip="{l:Tr 'DO_AUX_FUNCTION: switch middle'}" />
+              <Button Classes="pos" Classes.accent="{Binding IsHigh}" Content="{l:Tr 'High'}" Command="{Binding HighCommand}"
+                      ToolTip.Tip="{l:Tr 'DO_AUX_FUNCTION: switch high'}" />
             </StackPanel>
           </Grid>
         </DataTemplate>

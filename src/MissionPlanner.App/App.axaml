@@ -8,6 +8,7 @@
     <FluentTheme />
     <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
     <StyleInclude Source="avares://MissionPlanner.App/Styles/Theme.axaml" />
+    <StyleInclude Source="avares://MissionPlanner.App/Localization/LocalizationStyles.axaml" />
   </Application.Styles>
 
   <!-- pages are found by name: ViewModels.X.FooViewModel shows Views.X.FooView -->

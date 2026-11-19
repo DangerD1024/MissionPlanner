@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
              xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.SerialPortsView"
              x:DataType="vm:SerialPortsViewModel">
 
@@ -10,16 +11,16 @@
 
     <Border Grid.Row="1" Margin="0,12,0,0" Background="#33e5534b" BorderBrush="{DynamicResource Danger}" BorderThickness="1"
             CornerRadius="6" Padding="12,8" IsVisible="{Binding TooManyMavlink}">
-      <TextBlock Text="{Binding MavlinkWarning}" TextWrapping="Wrap" />
+      <TextBlock Text="{l:TrBind {Binding MavlinkWarning}}" TextWrapping="Wrap" />
     </Border>
 
     <!-- column headings -->
     <Grid Grid.Row="2" Margin="12,14,12,6" ColumnDefinitions="150,1.6*,1*,1.6*,1*">
-      <TextBlock Classes="muted" Text="Port" FontWeight="SemiBold" />
-      <TextBlock Grid.Column="1" Classes="muted" Text="Protocol" FontWeight="SemiBold" Margin="6,0" />
-      <TextBlock Grid.Column="2" Classes="muted" Text="Baud" FontWeight="SemiBold" Margin="6,0" />
-      <TextBlock Grid.Column="3" Classes="muted" Text="Options" FontWeight="SemiBold" Margin="6,0" />
-      <TextBlock Grid.Column="4" Classes="muted" Text="RTS/CTS" FontWeight="SemiBold" Margin="6,0"
+      <TextBlock Classes="muted" Text="{l:Tr 'Port'}" FontWeight="SemiBold" />
+      <TextBlock Grid.Column="1" Classes="muted" Text="{l:Tr 'Protocol'}" FontWeight="SemiBold" Margin="6,0" />
+      <TextBlock Grid.Column="2" Classes="muted" Text="{l:Tr 'Baud'}" FontWeight="SemiBold" Margin="6,0" />
+      <TextBlock Grid.Column="3" Classes="muted" Text="{l:Tr 'Options'}" FontWeight="SemiBold" Margin="6,0" />
+      <TextBlock Grid.Column="4" Classes="muted" Text="{l:Tr 'RTS/CTS'}" FontWeight="SemiBold" Margin="6,0"
                  IsVisible="{Binding HasFlowControl}" />
     </Grid>
 
@@ -31,7 +32,7 @@
               <Border BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1" Padding="12,8">
                 <Grid ColumnDefinitions="150,1.6*,1*,1.6*,1*">
                   <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                    <TextBlock Text="{l:TrBind {Binding Title}}" FontWeight="SemiBold" />
                     <TextBlock Text="{Binding UartName}" Classes="muted" FontSize="12" IsVisible="{Binding HasUartName}" />
                   </StackPanel>
                   <hwv:ParamEditor Grid.Column="1" DataContext="{Binding Protocol}" Margin="6,0" />
@@ -47,7 +48,7 @@
     </Border>
 
     <StackPanel Grid.Row="4" Margin="0,12,0,0" Spacing="6">
-      <TextBlock Text="{Binding RuleNote}" IsVisible="{Binding HasRuleNote}" Foreground="{DynamicResource Info}" TextWrapping="Wrap" />
+      <TextBlock Text="{l:TrBind {Binding RuleNote}}" IsVisible="{Binding HasRuleNote}" Foreground="{DynamicResource Info}" TextWrapping="Wrap" />
       <TextBlock Classes="muted" Text="{Binding RebootNote, StringFormat='Note: {0}'}" TextWrapping="Wrap" />
     </StackPanel>
   </Grid>

@@ -5,6 +5,7 @@
              xmlns:fd="using:MissionPlanner.App.Core.ViewModels.FlightData"
              xmlns:controls="using:MissionPlanner.App.Controls"
              xmlns:fwc="using:MissionPlanner.App.Controls.SetupScreens.Firmware"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.Simulation.SimulationView"
              x:DataType="vm:SimulationViewModel">
 
@@ -80,15 +81,15 @@
     <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Disabled" Background="{DynamicResource Bg1}">
       <StackPanel Spacing="14" Margin="20,18,20,20">
         <StackPanel Spacing="4">
-          <TextBlock Classes="h1" Text="Simulation" />
+          <TextBlock Classes="h1" Text="{l:Tr 'Simulation'}" />
           <TextBlock Classes="muted" TextWrapping="Wrap"
-                     Text="Runs ArduPilot's software-in-the-loop simulator on this computer and connects to it, so you can fly without a vehicle." />
+                     Text="{l:Tr 'Runs ArduPilot\'s software-in-the-loop simulator on this computer and connects to it, so you can fly without a vehicle.'}" />
           <TextBlock Classes="muted" FontSize="12" Text="{Binding HostText}" />
         </StackPanel>
 
         <!-- vehicle -->
         <StackPanel Spacing="6">
-          <TextBlock Classes="caption" Text="VEHICLE" />
+          <TextBlock Classes="caption" Text="{l:Tr 'VEHICLE'}" />
           <ItemsControl ItemsSource="{Binding Vehicles}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
@@ -103,11 +104,11 @@
                   <Grid RowDefinitions="*,Auto,Auto">
                     <Path Classes="vehicleicon" Data="{Binding Icon, Converter={StaticResource VehicleIcon}}"
                           HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    <TextBlock Grid.Row="1" Classes="tiletitle" Text="{Binding Title}" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                    <TextBlock Grid.Row="1" Classes="tiletitle" Text="{l:TrBind {Binding Title}}" FontWeight="SemiBold" HorizontalAlignment="Center" />
                     <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
                       <TextBlock Classes="muted" FontSize="10.5" Text="{Binding VersionText}" />
                       <Ellipse Width="6" Height="6" Fill="{DynamicResource Accent}" VerticalAlignment="Center"
-                               IsVisible="{Binding IsDownloaded}" ToolTip.Tip="Downloaded" />
+                               IsVisible="{Binding IsDownloaded}" ToolTip.Tip="{l:Tr 'Downloaded'}" />
                     </StackPanel>
                   </Grid>
                 </Button>
@@ -117,7 +118,7 @@
 
           <Grid ColumnDefinitions="*,10,*" Margin="0,4,0,0">
             <StackPanel>
-              <TextBlock Classes="label" Text="Release" />
+              <TextBlock Classes="label" Text="{l:Tr 'Release'}" />
               <ComboBox ItemsSource="{Binding Releases}" SelectedItem="{Binding SelectedRelease}" HorizontalAlignment="Stretch">
                 <ComboBox.ItemTemplate>
                   <DataTemplate x:DataType="fw:ReleaseOption">
@@ -127,7 +128,7 @@
               </ComboBox>
             </StackPanel>
             <StackPanel Grid.Column="2">
-              <TextBlock Classes="label" Text="Model (frame) override" />
+              <TextBlock Classes="label" Text="{l:Tr 'Model (frame) override'}" />
               <ComboBox ItemsSource="{Binding ModelOptions}" SelectedItem="{Binding SelectedModel}" HorizontalAlignment="Stretch"
                         MaxDropDownHeight="420" />
             </StackPanel>
@@ -136,46 +137,46 @@
 
         <!-- home -->
         <StackPanel Spacing="6">
-          <TextBlock Classes="caption" Text="HOME LOCATION" />
+          <TextBlock Classes="caption" Text="{l:Tr 'HOME LOCATION'}" />
           <Grid ColumnDefinitions="*,10,*" RowDefinitions="Auto,8,Auto">
             <StackPanel>
-              <TextBlock Classes="label" Text="Latitude" />
+              <TextBlock Classes="label" Text="{l:Tr 'Latitude'}" />
               <TextBox Text="{Binding LatText}" />
             </StackPanel>
             <StackPanel Grid.Column="2">
-              <TextBlock Classes="label" Text="Longitude" />
+              <TextBlock Classes="label" Text="{l:Tr 'Longitude'}" />
               <TextBox Text="{Binding LngText}" />
             </StackPanel>
             <StackPanel Grid.Row="2">
-              <TextBlock Classes="label" Text="Altitude (m AMSL)" />
+              <TextBlock Classes="label" Text="{l:Tr 'Altitude (m AMSL)'}" />
               <TextBox Text="{Binding AltText}" />
             </StackPanel>
             <StackPanel Grid.Row="2" Grid.Column="2">
-              <TextBlock Classes="label" Text="Heading (°)" />
+              <TextBlock Classes="label" Text="{l:Tr 'Heading (°)'}" />
               <TextBox Text="{Binding HeadingText}" />
             </StackPanel>
           </Grid>
-          <TextBlock Text="{Binding HomeError}" Foreground="{DynamicResource Danger}" FontSize="12" TextWrapping="Wrap"
+          <TextBlock Text="{l:TrBind {Binding HomeError}}" Foreground="{DynamicResource Danger}" FontSize="12" TextWrapping="Wrap"
                      IsVisible="{Binding HomeError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
           <WrapPanel>
-            <Button Content="CMAC (default)" Margin="0,0,6,6" Command="{Binding UseCmacCommand}"
-                    ToolTip.Tip="Canberra Model Aircraft Club, ArduPilot's usual test field" />
-            <Button Content="Use map centre" Margin="0,0,6,6" Command="{Binding UseMapCentreCommand}" />
-            <Button Content="Use planned home" Margin="0,0,6,6" Command="{Binding UsePlannedHomeCommand}"
+            <Button Content="{l:Tr 'CMAC (default)'}" Margin="0,0,6,6" Command="{Binding UseCmacCommand}"
+                    ToolTip.Tip="{l:Tr 'Canberra Model Aircraft Club, ArduPilot\'s usual test field'}" />
+            <Button Content="{l:Tr 'Use map centre'}" Margin="0,0,6,6" Command="{Binding UseMapCentreCommand}" />
+            <Button Content="{l:Tr 'Use planned home'}" Margin="0,0,6,6" Command="{Binding UsePlannedHomeCommand}"
                     IsVisible="{Binding HasPlannedHome}" />
           </WrapPanel>
         </StackPanel>
 
         <!-- options -->
         <StackPanel Spacing="6">
-          <TextBlock Classes="caption" Text="OPTIONS" />
+          <TextBlock Classes="caption" Text="{l:Tr 'OPTIONS'}" />
           <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,8,Auto,8,Auto,8,Auto">
-            <TextBlock Classes="label" Text="Speed-up" VerticalAlignment="Center" Margin="0,0,12,0" />
+            <TextBlock Classes="label" Text="{l:Tr 'Speed-up'}" VerticalAlignment="Center" Margin="0,0,12,0" />
             <NumericUpDown Grid.Column="1" Value="{Binding SpeedUp}" Minimum="1" Maximum="100" Increment="1" FormatString="0"
                            Width="130" HorizontalAlignment="Left" />
-            <CheckBox Grid.Row="2" Grid.Column="1" IsChecked="{Binding Wipe}" Content="Wipe EEPROM (reset parameters)" />
-            <TextBlock Grid.Row="4" Classes="label" Text="Extra arguments" VerticalAlignment="Center" Margin="0,0,12,0" />
-            <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding ExtraArguments}" PlaceholderText="e.g. --uartC tcp:2" />
+            <CheckBox Grid.Row="2" Grid.Column="1" IsChecked="{Binding Wipe}" Content="{l:Tr 'Wipe EEPROM (reset parameters)'}" />
+            <TextBlock Grid.Row="4" Classes="label" Text="{l:Tr 'Extra arguments'}" VerticalAlignment="Center" Margin="0,0,12,0" />
+            <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding ExtraArguments}" PlaceholderText="{l:Tr 'e.g. --uartC tcp:2'}" />
             <Border Grid.Row="6" Grid.ColumnSpan="2" Background="{DynamicResource Bg0}" CornerRadius="6" Padding="8,6">
               <TextBlock Text="{Binding CommandPreview}" FontFamily="monospace" FontSize="11" TextWrapping="Wrap"
                          Foreground="{DynamicResource Muted}" />
@@ -191,13 +192,13 @@
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <Path Classes="icon" Data="{StaticResource IconSim}" Width="18" Height="18" Stretch="Uniform"
                       Stroke="{DynamicResource AccentText}" />
-                <TextBlock Text="Start simulation" />
+                <TextBlock Text="{l:Tr 'Start simulation'}" />
               </StackPanel>
             </Button>
             <Button Grid.Column="2" Classes="danger" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="0,10"
-                    Content="Stop" Command="{Binding StopCommand}" />
+                    Content="{l:Tr 'Stop'}" Command="{Binding StopCommand}" />
           </Grid>
-          <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" />
+          <TextBlock Text="{l:TrBind {Binding StatusText}}" TextWrapping="Wrap" />
           <ProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Height="6" MinHeight="6"
                        IsIndeterminate="{Binding IsProgressIndeterminate}" IsVisible="{Binding IsBusy}" />
           <TextBlock Classes="muted" FontSize="12" Text="{Binding ConnectionText}" />
@@ -214,7 +215,7 @@
                           CenterLng="{Binding MapCenterLng}"
                           Zoom="{Binding MapZoom}" />
         <Border Classes="overlay" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10" IsHitTestVisible="False">
-          <TextBlock FontSize="12" Text="Click the map to set the home location; drag H to move it." />
+          <TextBlock FontSize="12" Text="{l:Tr 'Click the map to set the home location; drag H to move it.'}" />
         </Border>
         <ComboBox HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10" MinWidth="180"
                   ItemsSource="{Binding MapProviders}" SelectedItem="{Binding SelectedMapProvider}">
@@ -230,8 +231,8 @@
 
       <Grid Grid.Row="2" RowDefinitions="Auto,*" Background="{DynamicResource Bg1}">
         <Grid ColumnDefinitions="*,Auto" Margin="12,6">
-          <TextBlock Classes="caption" Text="SIMULATOR OUTPUT" VerticalAlignment="Center" />
-          <Button Grid.Column="1" Content="Clear" Padding="8,2" FontSize="12" Command="{Binding ClearConsoleCommand}" />
+          <TextBlock Classes="caption" Text="{l:Tr 'SIMULATOR OUTPUT'}" VerticalAlignment="Center" />
+          <Button Grid.Column="1" Content="{l:Tr 'Clear'}" Padding="8,2" FontSize="12" Command="{Binding ClearConsoleCommand}" />
         </Grid>
         <ListBox x:Name="ConsoleList" Grid.Row="1" Classes="console" ItemsSource="{Binding ConsoleLines}" />
       </Grid>

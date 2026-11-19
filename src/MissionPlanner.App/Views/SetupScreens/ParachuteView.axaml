@@ -3,6 +3,7 @@
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
              xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
              xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.ParachuteView"
              x:DataType="vm:ParachuteViewModel">
 
@@ -13,10 +14,10 @@
       <WrapPanel>
         <Border Classes="card" Width="560" Margin="0,0,16,16" VerticalAlignment="Top">
           <StackPanel Spacing="6">
-            <TextBlock Classes="h2" Text="Parachute" Margin="0,0,0,4" />
+            <TextBlock Classes="h2" Text="{l:Tr 'Parachute'}" Margin="0,0,0,4" />
             <hwv:ParamRow DataContext="{Binding Enabled}" />
             <TextBlock Classes="muted" TextWrapping="Wrap" FontSize="12" IsVisible="{Binding !IsEnabled}"
-                       Text="Enable the parachute to set it up (its other settings are downloaded when it is enabled)." />
+                       Text="{l:Tr 'Enable the parachute to set it up (its other settings are downloaded when it is enabled).'}" />
             <StackPanel Spacing="6" IsVisible="{Binding IsEnabled}">
               <hwv:ParamRow DataContext="{Binding Type}" />
               <StackPanel Spacing="6" IsVisible="{Binding IsServo}">
@@ -38,11 +39,11 @@
 
         <Border Classes="card" Width="300" Margin="0,0,16,16" VerticalAlignment="Top">
           <StackPanel Spacing="6">
-            <TextBlock Classes="h2" Text="Notes" />
+            <TextBlock Classes="h2" Text="{l:Tr 'Notes'}" />
             <TextBlock Classes="muted" TextWrapping="Wrap" FontSize="12"
-                       Text="A servo release needs a servo output whose function is Parachute; picking one here sets it and clears any other output that had it." />
+                       Text="{l:Tr 'A servo release needs a servo output whose function is Parachute; picking one here sets it and clears any other output that had it.'}" />
             <TextBlock Classes="muted" TextWrapping="Wrap" FontSize="12"
-                       Text="The parachute is only released above the minimum altitude (0 = no limit). Test the release with the propellers removed." />
+                       Text="{l:Tr 'The parachute is only released above the minimum altitude (0 = no limit). Test the release with the propellers removed.'}" />
           </StackPanel>
         </Border>
       </WrapPanel>

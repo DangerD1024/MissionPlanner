@@ -4,6 +4,7 @@
              xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
              xmlns:oh="using:MissionPlanner.App.Core.ViewModels.SetupScreens.OptionalHardware"
              xmlns:hwv="using:MissionPlanner.App.Views.SetupScreens.Hardware"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.RangefinderView"
              x:DataType="vm:RangefinderViewModel">
 
@@ -15,8 +16,8 @@
               IsVisible="{Binding TypeChanged}">
         <Grid ColumnDefinitions="*,Auto">
           <TextBlock TextWrapping="Wrap" VerticalAlignment="Center"
-                     Text="The new type's own settings appear after the autopilot reboots and the parameters are downloaded again." />
-          <Button Grid.Column="1" Margin="12,0,0,0" Content="Refresh parameters" Command="{Binding RefreshParamsCommand}" />
+                     Text="{l:Tr 'The new type\'s own settings appear after the autopilot reboots and the parameters are downloaded again.'}" />
+          <Button Grid.Column="1" Margin="12,0,0,0" Content="{l:Tr 'Refresh parameters'}" Command="{Binding RefreshParamsCommand}" />
         </Grid>
       </Border>
 
@@ -24,15 +25,15 @@
         <!-- instances -->
         <Border Classes="card" Width="260" Margin="0,0,16,16" VerticalAlignment="Top" Padding="8">
           <StackPanel Spacing="6">
-            <TextBlock Classes="h2" Text="Rangefinders" Margin="8,4,0,4" />
+            <TextBlock Classes="h2" Text="{l:Tr 'Rangefinders'}" Margin="8,4,0,4" />
             <ListBox ItemsSource="{Binding Instances}" SelectedItem="{Binding Selected}" Background="Transparent">
               <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="oh:InstancePanel">
                   <StackPanel Spacing="1" Margin="0,2">
-                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                    <TextBlock Text="{l:TrBind {Binding Title}}" FontWeight="SemiBold" />
                     <TextBlock Classes="muted" FontSize="11.5" Text="{Binding Type.ValueText, FallbackValue=''}"
                                IsVisible="{Binding IsEnabled}" TextTrimming="CharacterEllipsis" />
-                    <TextBlock Classes="muted" FontSize="11.5" Text="not fitted" IsVisible="{Binding !IsEnabled}" />
+                    <TextBlock Classes="muted" FontSize="11.5" Text="{l:Tr 'not fitted'}" IsVisible="{Binding !IsEnabled}" />
                   </StackPanel>
                 </DataTemplate>
               </ListBox.ItemTemplate>
@@ -43,10 +44,10 @@
         <!-- the selected instance -->
         <Border Classes="card" Width="560" Margin="0,0,16,16" VerticalAlignment="Top" IsVisible="{Binding Selected, Converter={x:Static ObjectConverters.IsNotNull}}">
           <StackPanel Spacing="6" DataContext="{Binding Selected}" x:DataType="oh:InstancePanel">
-            <TextBlock Classes="h2" Text="{Binding Title}" Margin="0,0,0,4" />
+            <TextBlock Classes="h2" Text="{l:TrBind {Binding Title}}" Margin="0,0,0,4" />
             <hwv:ParamRow DataContext="{Binding Type}" />
             <TextBlock Classes="muted" TextWrapping="Wrap" FontSize="12" IsVisible="{Binding !IsEnabled}"
-                       Text="Choose a type to use this rangefinder. Its settings apply after a reboot." />
+                       Text="{l:Tr 'Choose a type to use this rangefinder. Its settings apply after a reboot.'}" />
             <StackPanel Spacing="6" IsVisible="{Binding IsEnabled}">
               <ItemsControl ItemsSource="{Binding Main}">
                 <ItemsControl.ItemTemplate>
@@ -72,30 +73,30 @@
         <!-- live -->
         <Border Classes="card" Width="260" Margin="0,0,16,16" VerticalAlignment="Top">
           <StackPanel Spacing="4">
-            <TextBlock Classes="muted" Text="DISTANCE" FontSize="11" FontWeight="Bold" />
+            <TextBlock Classes="muted" Text="{l:Tr 'DISTANCE'}" FontSize="11" FontWeight="Bold" />
             <TextBlock Classes="h1" Text="{Binding DistanceText}" FontSize="28" />
-            <TextBlock Classes="muted" Text="VOLTAGE" FontSize="11" FontWeight="Bold" Margin="0,10,0,0" />
+            <TextBlock Classes="muted" Text="{l:Tr 'VOLTAGE'}" FontSize="11" FontWeight="Bold" Margin="0,10,0,0" />
             <TextBlock Classes="h1" Text="{Binding VoltageText}" FontSize="28" />
-            <TextBlock Classes="muted" Text="PER SENSOR" FontSize="11" FontWeight="Bold" Margin="0,10,0,0" />
+            <TextBlock Classes="muted" Text="{l:Tr 'PER SENSOR'}" FontSize="11" FontWeight="Bold" Margin="0,10,0,0" />
             <ItemsControl ItemsSource="{Binding Instances}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="oh:InstancePanel">
                   <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HasReading}" Margin="0,2">
-                    <TextBlock Text="{Binding Title}" />
+                    <TextBlock Text="{l:TrBind {Binding Title}}" />
                     <TextBlock Grid.Column="1" Text="{Binding Reading}" FontWeight="SemiBold" />
                   </Grid>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
             <TextBlock Classes="muted" FontSize="11.5" TextWrapping="Wrap" Margin="0,6,0,0"
-                       Text="Distance is from the downward-facing sensor; per-sensor values come from DISTANCE_SENSOR." />
+                       Text="{l:Tr 'Distance is from the downward-facing sensor; per-sensor values come from DISTANCE_SENSOR.'}" />
           </StackPanel>
         </Border>
 
         <!-- shared settings -->
         <Border Classes="card" Width="560" Margin="0,0,16,16" VerticalAlignment="Top" IsVisible="{Binding HasGeneral}">
           <StackPanel Spacing="6">
-            <TextBlock Classes="h2" Text="All rangefinders" Margin="0,0,0,4" />
+            <TextBlock Classes="h2" Text="{l:Tr 'All rangefinders'}" Margin="0,0,0,4" />
             <ItemsControl ItemsSource="{Binding General}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="hw:ParamField">

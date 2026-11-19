@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.FlightData.FlightDataActions"
              x:DataType="vm:FlightDataViewModel">
 
@@ -28,32 +29,32 @@
 
         <!-- the big four -->
         <UniformGrid Columns="4" ColumnSpacing="6">
-          <Button Content="{Binding ArmText}" Classes.danger="{Binding IsArmed}" Classes.accent="{Binding !IsArmed}"
-                  Command="{Binding ArmDisarmCommand}" IsEnabled="{Binding CanCommand}" ToolTip.Tip="Arm or disarm the motors" />
-          <Button Content="Auto" Classes="accent" Command="{Binding AutoCommand}" IsEnabled="{Binding CanCommand}" />
-          <Button Content="Loiter" Classes="accent" Command="{Binding LoiterCommand}" IsEnabled="{Binding CanCommand}" />
-          <Button Content="RTL" Classes="accent" Command="{Binding RtlCommand}" IsEnabled="{Binding CanCommand}" />
+          <Button Content="{l:TrBind {Binding ArmText}}" Classes.danger="{Binding IsArmed}" Classes.accent="{Binding !IsArmed}"
+                  Command="{Binding ArmDisarmCommand}" IsEnabled="{Binding CanCommand}" ToolTip.Tip="{l:Tr 'Arm or disarm the motors'}" />
+          <Button Content="{l:Tr 'Auto'}" Classes="accent" Command="{Binding AutoCommand}" IsEnabled="{Binding CanCommand}" />
+          <Button Content="{l:Tr 'Loiter'}" Classes="accent" Command="{Binding LoiterCommand}" IsEnabled="{Binding CanCommand}" />
+          <Button Content="{l:Tr 'RTL'}" Classes="accent" Command="{Binding RtlCommand}" IsEnabled="{Binding CanCommand}" />
         </UniformGrid>
 
         <Grid ColumnDefinitions="*,120" ColumnSpacing="6" RowDefinitions="Auto,Auto">
-          <TextBlock Classes="caption" Text="Flight mode" />
+          <TextBlock Classes="caption" Text="{l:Tr 'Flight mode'}" />
           <ComboBox Grid.Row="1" ItemsSource="{Binding Modes}" SelectedItem="{Binding SelectedMode}"
-                    PlaceholderText="No modes for this firmware" x:Name="ModeCombo" />
-          <Button Grid.Row="1" Grid.Column="1" Content="Set Mode" Classes="accent" Command="{Binding SetModeCommand}"
+                    PlaceholderText="{l:Tr 'No modes for this firmware'}" x:Name="ModeCombo" />
+          <Button Grid.Row="1" Grid.Column="1" Content="{l:Tr 'Set Mode'}" Classes="accent" Command="{Binding SetModeCommand}"
                   IsEnabled="{Binding CanCommand}" />
         </Grid>
 
         <Grid ColumnDefinitions="*,120" ColumnSpacing="6" RowDefinitions="Auto,Auto">
-          <TextBlock Classes="caption" Text="Waypoint" />
+          <TextBlock Classes="caption" Text="{l:Tr 'Waypoint'}" />
           <ComboBox Grid.Row="1" ItemsSource="{Binding WaypointNumbers}" SelectedIndex="{Binding SelectedWaypoint}" />
-          <Button Grid.Row="1" Grid.Column="1" Content="Set WP" Classes="accent" Command="{Binding SetWaypointCommand}"
-                  IsEnabled="{Binding CanCommand}" ToolTip.Tip="Fly to this mission item next" />
+          <Button Grid.Row="1" Grid.Column="1" Content="{l:Tr 'Set WP'}" Classes="accent" Command="{Binding SetWaypointCommand}"
+                  IsEnabled="{Binding CanCommand}" ToolTip.Tip="{l:Tr 'Fly to this mission item next'}" />
         </Grid>
 
         <Grid ColumnDefinitions="*,120" ColumnSpacing="6" RowDefinitions="Auto,Auto">
-          <TextBlock Classes="caption" Text="Action" />
+          <TextBlock Classes="caption" Text="{l:Tr 'Action'}" />
           <ComboBox Grid.Row="1" ItemsSource="{Binding DoActions}" SelectedItem="{Binding SelectedDoAction}" />
-          <Button Grid.Row="1" Grid.Column="1" Content="Do Action" Classes="accent" Command="{Binding DoActionCommand}"
+          <Button Grid.Row="1" Grid.Column="1" Content="{l:Tr 'Do Action'}" Classes="accent" Command="{Binding DoActionCommand}"
                   IsEnabled="{Binding CanCommand}" />
         </Grid>
 
@@ -61,33 +62,33 @@
           <TextBlock Classes="caption" Text="{Binding AltitudeUnit, StringFormat='Altitude ({0})'}" />
           <NumericUpDown Grid.Row="1" Value="{Binding NewAltitude}" Minimum="-1000" Maximum="100000" Increment="5"
                          FormatString="0.#" />
-          <Button Grid.Row="1" Grid.Column="1" Content="Change Alt" Classes="accent" Command="{Binding ChangeAltitudeCommand}"
-                  IsEnabled="{Binding CanCommand}" ToolTip.Tip="New altitude for the current target" />
+          <Button Grid.Row="1" Grid.Column="1" Content="{l:Tr 'Change Alt'}" Classes="accent" Command="{Binding ChangeAltitudeCommand}"
+                  IsEnabled="{Binding CanCommand}" ToolTip.Tip="{l:Tr 'New altitude for the current target'}" />
         </Grid>
 
         <Grid ColumnDefinitions="*,120" ColumnSpacing="6" RowDefinitions="Auto,Auto">
           <TextBlock Classes="caption" Text="{Binding SpeedUnit, StringFormat='Speed ({0})'}" />
           <NumericUpDown Grid.Row="1" Value="{Binding NewSpeed}" Minimum="0" Maximum="1000" Increment="1" FormatString="0.#" />
-          <Button Grid.Row="1" Grid.Column="1" Content="Change Speed" Classes="accent" Command="{Binding ChangeSpeedCommand}"
+          <Button Grid.Row="1" Grid.Column="1" Content="{l:Tr 'Change Speed'}" Classes="accent" Command="{Binding ChangeSpeedCommand}"
                   IsEnabled="{Binding CanCommand}" />
         </Grid>
 
         <UniformGrid Columns="2" ColumnSpacing="6">
-          <Button Content="Restart Mission" Command="{Binding RestartMissionCommand}" IsEnabled="{Binding CanCommand}"
-                  ToolTip.Tip="Start the mission again from the first item" />
-          <ToggleButton Content="Set Home Alt" IsChecked="{Binding HomeAltOffsetActive, Mode=OneWay}"
+          <Button Content="{l:Tr 'Restart Mission'}" Command="{Binding RestartMissionCommand}" IsEnabled="{Binding CanCommand}"
+                  ToolTip.Tip="{l:Tr 'Start the mission again from the first item'}" />
+          <ToggleButton Content="{l:Tr 'Set Home Alt'}" IsChecked="{Binding HomeAltOffsetActive, Mode=OneWay}"
                         Command="{Binding ToggleHomeAltCommand}" HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Center" MinHeight="32"
-                        ToolTip.Tip="Show altitude above sea level instead of above home" />
+                        ToolTip.Tip="{l:Tr 'Show altitude above sea level instead of above home'}" />
         </UniformGrid>
       </StackPanel>
 
       <!-- speech works without a vehicle too (settings, test) -->
       <Grid ColumnDefinitions="*,120" ColumnSpacing="6" Margin="8,0,8,8">
-        <CheckBox Content="Speech" IsChecked="{Binding SpeechEnabled}" MinHeight="32"
-                  ToolTip.Tip="Spoken announcements: mode, waypoint, arm/disarm, warnings, vehicle messages" />
-        <Button Grid.Column="1" Content="Speech..." Command="{Binding OpenSpeechSettingsCommand}"
-                ToolTip.Tip="Choose what is announced" />
+        <CheckBox Content="{l:Tr 'Speech'}" IsChecked="{Binding SpeechEnabled}" MinHeight="32"
+                  ToolTip.Tip="{l:Tr 'Spoken announcements: mode, waypoint, arm/disarm, warnings, vehicle messages'}" />
+        <Button Grid.Column="1" Content="{l:Tr 'Speech...'}" Command="{Binding OpenSpeechSettingsCommand}"
+                ToolTip.Tip="{l:Tr 'Choose what is announced'}" />
       </Grid>
       </StackPanel>
     </ScrollViewer>
@@ -96,9 +97,9 @@
     <Border Grid.Row="1" Background="{DynamicResource Bg0}" BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0"
             Padding="10,6">
       <Panel>
-        <TextBlock Text="Connect to a vehicle to send commands." Classes="muted" FontSize="12"
+        <TextBlock Text="{l:Tr 'Connect to a vehicle to send commands.'}" Classes="muted" FontSize="12"
                    IsVisible="{Binding !IsConnected}" />
-        <TextBlock Text="{Binding ActionStatus}" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding IsConnected}"
+        <TextBlock Text="{l:TrBind {Binding ActionStatus}}" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding IsConnected}"
                    Foreground="{DynamicResource Text}" Classes.err="{Binding ActionStatusIsError}">
           <TextBlock.Styles>
             <Style Selector="TextBlock.err">

@@ -3,6 +3,7 @@
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
              xmlns:views="using:MissionPlanner.App.Views.SetupScreens"
              xmlns:cc="using:MissionPlanner.App.Controls.SetupScreens"
+             xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.SetupScreens.AccelCalibrationView"
              x:DataType="vm:AccelCalibrationViewModel">
 
@@ -53,7 +54,7 @@
 
   <ScrollViewer HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="24,20" Spacing="16" MaxWidth="1180" HorizontalAlignment="Stretch">
-      <TextBlock Classes="h1" Text="Accelerometer Calibration" />
+      <TextBlock Classes="h1" Text="{l:Tr 'Accelerometer Calibration'}" />
 
       <!-- 6-position calibration -->
       <Border Classes="card" Padding="20">
@@ -62,12 +63,12 @@
             <Border Background="{DynamicResource Bg0}" CornerRadius="8" Padding="8">
               <cc:VehicleOrientationGlyph Position="{Binding Position}" Height="220" />
             </Border>
-            <TextBlock Classes="muted" FontSize="12" HorizontalAlignment="Center" Text="Side view (nose marked blue) or from behind (L / R)" />
+            <TextBlock Classes="muted" FontSize="12" HorizontalAlignment="Center" Text="{l:Tr 'Side view (nose marked blue) or from behind (L / R)'}" />
           </StackPanel>
 
           <StackPanel Grid.Column="2" Spacing="14" VerticalAlignment="Center">
-            <TextBlock Classes="muted" FontSize="12" FontWeight="Bold" Text="CALIBRATE ACCEL  ·  3 AXIS MIN / MAX" />
-            <TextBlock Classes="instruction" Classes.ok="{Binding Succeeded}" Text="{Binding Instruction}" />
+            <TextBlock Classes="muted" FontSize="12" FontWeight="Bold" Text="{l:Tr 'CALIBRATE ACCEL  ·  3 AXIS MIN / MAX'}" />
+            <TextBlock Classes="instruction" Classes.ok="{Binding Succeeded}" Text="{l:TrBind {Binding Instruction}}" />
             <TextBlock Classes="muted" Text="{Binding Detail}" TextWrapping="Wrap" />
 
             <ItemsControl ItemsSource="{Binding Steps}">
@@ -86,12 +87,12 @@
             </ItemsControl>
 
             <StackPanel Orientation="Horizontal" Spacing="10">
-              <Button Classes="accent big" Content="{Binding AccelButtonText}" Command="{Binding AccelCommand}" />
-              <Button Classes="big" MinWidth="110" Content="Cancel" Command="{Binding CancelCommand}" IsVisible="{Binding IsCalibrating}" />
+              <Button Classes="accent big" Content="{l:TrBind {Binding AccelButtonText}}" Command="{Binding AccelCommand}" />
+              <Button Classes="big" MinWidth="110" Content="{l:Tr 'Cancel'}" Command="{Binding CancelCommand}" IsVisible="{Binding IsCalibrating}" />
             </StackPanel>
             <views:CalibrationStatusBanner DataContext="{Binding AccelStatus}" />
             <TextBlock Classes="muted" FontSize="12.5" TextWrapping="Wrap"
-                       Text="Level your Autopilot to set default accelerometer Min/Max (3 axis). This will ask you to place your autopilot on each edge." />
+                       Text="{l:Tr 'Level your Autopilot to set default accelerometer Min/Max (3 axis). This will ask you to place your autopilot on each edge.'}" />
           </StackPanel>
         </Grid>
       </Border>
@@ -99,19 +100,19 @@
       <Grid ColumnDefinitions="*,16,*">
         <Border Classes="card" Padding="18">
           <StackPanel Spacing="10">
-            <TextBlock Classes="h2" Text="Calibrate Level" />
+            <TextBlock Classes="h2" Text="{l:Tr 'Calibrate Level'}" />
             <TextBlock Classes="muted" TextWrapping="Wrap"
-                       Text="Level your Autopilot to set default accelerometer offsets (1 axis/AHRS trims). This requires you to place your autopilot flat and level." />
-            <Button Classes="accent" MinWidth="160" Content="{Binding LevelButtonText}" Command="{Binding CalibrateLevelCommand}" />
+                       Text="{l:Tr 'Level your Autopilot to set default accelerometer offsets (1 axis/AHRS trims). This requires you to place your autopilot flat and level.'}" />
+            <Button Classes="accent" MinWidth="160" Content="{l:TrBind {Binding LevelButtonText}}" Command="{Binding CalibrateLevelCommand}" />
             <views:CalibrationStatusBanner DataContext="{Binding LevelStatus}" />
           </StackPanel>
         </Border>
         <Border Grid.Column="2" Classes="card" Padding="18">
           <StackPanel Spacing="10">
-            <TextBlock Classes="h2" Text="Simple Accel Calibration" />
+            <TextBlock Classes="h2" Text="{l:Tr 'Simple Accel Calibration'}" />
             <TextBlock Classes="muted" TextWrapping="Wrap"
-                       Text="Level your Autopilot to set default accelerometer scale factors for level flight (1 axis). Use it when the vehicle is too large to turn over." />
-            <Button Classes="accent" MinWidth="160" Content="{Binding SimpleButtonText}" Command="{Binding SimpleAccelCommand}" />
+                       Text="{l:Tr 'Level your Autopilot to set default accelerometer scale factors for level flight (1 axis). Use it when the vehicle is too large to turn over.'}" />
+            <Button Classes="accent" MinWidth="160" Content="{l:TrBind {Binding SimpleButtonText}}" Command="{Binding SimpleAccelCommand}" />
             <views:CalibrationStatusBanner DataContext="{Binding SimpleStatus}" />
           </StackPanel>
         </Border>
@@ -120,8 +121,8 @@
       <!-- the autopilot's messages during the 6-position calibration -->
       <Border Classes="card" Padding="18">
         <StackPanel Spacing="8">
-          <TextBlock Classes="h2" Text="Messages" />
-          <TextBlock Classes="muted" Text="The autopilot's messages appear here during the calibration." IsVisible="{Binding !HasMessages}" />
+          <TextBlock Classes="h2" Text="{l:Tr 'Messages'}" />
+          <TextBlock Classes="muted" Text="{l:Tr 'The autopilot\'s messages appear here during the calibration.'}" IsVisible="{Binding !HasMessages}" />
           <ScrollViewer MaxHeight="220" IsVisible="{Binding HasMessages}">
             <ItemsControl ItemsSource="{Binding Messages}">
               <ItemsControl.ItemTemplate>

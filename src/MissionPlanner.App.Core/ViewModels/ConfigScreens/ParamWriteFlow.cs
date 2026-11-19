@@ -74,7 +74,7 @@ public static class ParamWriteFlow
         }
         else
         {
-            await s.Dialogs.ShowMessageAsync("Saved", $"{written.Count} parameter{(written.Count == 1 ? "" : "s")} successfully saved.");
+            await s.Dialogs.ShowMessageAsync("Saved", written.Count == 1 ? L.Tr("1 parameter successfully saved.") : L.Format("{0} parameters successfully saved.", written.Count));
         }
 
         if (result.RebootRequired)

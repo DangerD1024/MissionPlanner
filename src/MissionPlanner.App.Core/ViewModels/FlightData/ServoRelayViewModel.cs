@@ -121,7 +121,7 @@ public sealed partial class ServoChannelRow : ObservableObject
     [RelayCommand]
     private async Task RenameAsync()
     {
-        var name = await _owner.Services.Dialogs.PromptAsync("Description", $"Name for output {Channel}", Name);
+        var name = await _owner.Services.Dialogs.PromptAsync("Description", L.Format("Name for output {0}", Channel), Name);
         if (name == null)
             return;
         name = name.Trim();
@@ -192,7 +192,7 @@ public sealed partial class RelayRow : ObservableObject
     [RelayCommand]
     private async Task RenameAsync()
     {
-        var name = await _owner.Services.Dialogs.PromptAsync("Description", $"Name for relay {Instance + 1}", Name);
+        var name = await _owner.Services.Dialogs.PromptAsync("Description", L.Format("Name for relay {0}", Instance + 1), Name);
         if (name == null)
             return;
         name = name.Trim();

@@ -83,6 +83,9 @@ public sealed class AppServices
     /// <summary>Planned mission, fence and rally points, shared by Flight Data and Flight Plan.</summary>
     public Mission.MissionStore Mission { get; }
 
+    /// <summary>The UI language: <c>Localizer.Tr("English text")</c>; see also <c>L.Tr</c>.</summary>
+    public Localization.Localizer Localizer { get; } = Localization.Localizer.Current;
+
     /// <summary>Colour themes; the UI layer replaces the default.</summary>
     public IThemeService Themes { get; set; } = NullThemeService.Instance;
 
