@@ -316,7 +316,10 @@ public sealed partial class FlightDataViewModel : PageViewModel
             UpdateMap(s.Vehicle, cs);
 
         if (tick % MessagesEvery == 0)
+        {
+            _messages.SeverityOf ??= s.Severities.Find;
             _messages.Update(cs.messages);
+        }
 
         if (tick % StatusEvery == 0 && IsStatusTab)
             RefreshStatus();

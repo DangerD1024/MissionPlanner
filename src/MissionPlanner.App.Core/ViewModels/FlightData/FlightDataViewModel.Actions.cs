@@ -184,6 +184,42 @@ public sealed partial class FlightDataViewModel
         }
     }
 
+    // ---- reboot ------------------------------------------------------------------------------
+
+    /// <summary>Reboots the autopilot after confirming (more strongly when armed), as Config's Reboot does.</summary>
+    [RelayCommand]
+    private async Task RebootAsync()
+    {
+        if (!CheckCanCommand())
+            return;
+
+        var s = Services.Session;
+        var (title, message) = ConfigScreens.ParamPageViewModel.RebootConfirmText(s.Cs.armed, 0);
+        if (!await Services.Dialogs.ConfirmAsync(title, message, "Reboot"))
+            return;
+
+        IsCommandRunning = true;
+        try
+        {
+            Report("Reboot...", false);
+            // MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN p1=1, sent twice without waiting for an ACK
+            var mav = s.Mav;
+            var sent = await Task.Run(() => mav.doReboot(false, true));
+            Report(sent
+                ? "Reboot command sent. The link may drop until the autopilot is back."
+                : "The autopilot did not accept the reboot command.", !sent);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("reboot", ex);
+            Report("Reboot: " + ex.Message, true);
+        }
+        finally
+        {
+            IsCommandRunning = false;
+        }
+    }
+
     /// <summary>Arms or disarms and returns the STATUSTEXT the vehicle sent meanwhile (the reason for a refusal).</summary>
     internal static (bool Ok, string Reasons) ArmCollectingReasons(Session.VehicleSession s, bool arm, bool force)
     {

@@ -4,8 +4,8 @@ namespace MissionPlanner.App.Core.ViewModels.ConfigScreens;
 
 /// <summary>
 /// The write and refresh sequences shared by the parameter pages, following Mission Planner's
-/// Full Parameter List: confirm the list of changes, write, then report failures, needed
-/// reboots and parameter-count changes.
+/// Full Parameter List: confirm the list of changes, write, then report failures (a dialog),
+/// success and needed reboots (toasts) and parameter-count changes.
 /// </summary>
 public static class ParamWriteFlow
 {
@@ -50,7 +50,9 @@ public static class ParamWriteFlow
             return [];
 
         var values = new Dictionary<string, double>(edits.Pending, StringComparer.Ordinal);
-        var progress = new Progress<OperationProgress>(p => status?.Invoke(p.Status));
+        // "Writing NAME (40%)" in the page's status line while the busy bar runs
+        var progress = new Progress<OperationProgress>(p =>
+            status?.Invoke(values.Count > 1 && p.Percent is > 0 and < 100 ? $"{p.Status} ({p.Percent}%)" : p.Status));
         Params.ParamWriteResult result;
         try
         {
@@ -74,11 +76,12 @@ public static class ParamWriteFlow
         }
         else
         {
-            await s.Dialogs.ShowMessageAsync("Saved", written.Count == 1 ? L.Tr("1 parameter successfully saved.") : L.Format("{0} parameters successfully saved.", written.Count));
+            // no dialog for a successful write: a toast that goes away by itself
+            s.Notify(written.Count == 1 ? L.Tr("1 parameter successfully saved.") : L.Format("{0} parameters successfully saved.", written.Count));
         }
 
         if (result.RebootRequired)
-            await s.Dialogs.ShowMessageAsync("Reboot required", "Reboot is required for some parameters to take effect.", MessageKind.Warning);
+            s.Notify("Reboot is required for some parameters to take effect.", MessageKind.Warning);
 
         // enabling a feature adds parameters; ParamService refetches the list when disarmed
         var list = s.Session.Vehicle.param;

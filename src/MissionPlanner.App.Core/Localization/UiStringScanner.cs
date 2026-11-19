@@ -7,7 +7,8 @@ namespace MissionPlanner.App.Core.Localization;
 /// <summary>
 /// Finds the English UI strings in the app's sources, for the string list and coverage report:
 /// <c>{l:Tr 'text'}</c> in XAML, and in C# the literal arguments of <c>L.Tr</c>/<c>L.Format</c>/<c>L.N</c>,
-/// of the dialog calls (which the dialog service translates), of menu entries and of page titles.
+/// of the dialog calls (which the dialog service translates), of toasts (AppServices.Notify), of menu
+/// entries and of page titles.
 /// </summary>
 public static partial class UiStringScanner
 {
@@ -23,6 +24,7 @@ public static partial class UiStringScanner
         ["OpenFileAsync"] = [0],
         ["SaveFileAsync"] = [0],
         ["PickFolderAsync"] = [0],
+        ["Notify"] = [0],
         ["FileFilter"] = [0],
         ["Page"] = [0],
         ["Header"] = [0],
@@ -32,7 +34,7 @@ public static partial class UiStringScanner
     [GeneratedRegex(@"\{l:Tr\s+")]
     private static partial Regex XamlTr();
 
-    [GeneratedRegex(@"(?<!\w)(L\.Tr|L\.Format|L\.N|ShowMessageAsync|ConfirmAsync|PromptAsync|OpenFileAsync|SaveFileAsync|PickFolderAsync|FileFilter|Page|Header|:\s*base)\s*\(")]
+    [GeneratedRegex(@"(?<!\w)(L\.Tr|L\.Format|L\.N|ShowMessageAsync|ConfirmAsync|PromptAsync|OpenFileAsync|SaveFileAsync|PickFolderAsync|Notify|FileFilter|Page|Header|:\s*base)\s*\(")]
     private static partial Regex CSharpCall();
 
     /// <summary>The texts of the <c>{l:Tr ...}</c> extensions in a XAML file.</summary>

@@ -41,7 +41,6 @@ public enum Screen
     Setup,
     Config,
     Simulation,
-    Help,
     Settings,
 }
 
@@ -64,14 +63,45 @@ public sealed partial class ShellViewModel : ObservableObject
             [Screen.Setup] = () => new SetupScreens.SetupViewModel(services),
             [Screen.Config] = () => new ConfigScreens.ConfigViewModel(services),
             [Screen.Simulation] = () => new Simulation.SimulationViewModel(services),
-            [Screen.Help] = () => new HelpViewModel(),
             [Screen.Settings] = () => new ConfigScreens.PlannerSettingsViewModel(services),
         };
         _currentPage = GetPage(Screen.Data);
         _currentPage.OnShown();
         services.Session.StateChanged += (_, _) => services.Dispatcher.Post(() => OnPropertyChanged(nameof(Title)));
         services.ScreenRequested += (_, screen) => services.Dispatcher.Post(() => Navigate(screen));
+        services.Notified += (_, n) => services.Dispatcher.Post(() => ShowToast(n));
     }
+
+    // ---- toast (AppServices.Notify) -----------------------------------------------------------
+
+    [ObservableProperty]
+    private string _toastText = "";
+
+    [ObservableProperty]
+    private bool _isToastVisible;
+
+    [ObservableProperty]
+    private bool _toastIsError;
+
+    [ObservableProperty]
+    private bool _toastIsWarning;
+
+    private int _toastId;
+
+    private async void ShowToast(Notification n)
+    {
+        ToastText = n.Text;
+        ToastIsError = n.Kind == MessageKind.Error;
+        ToastIsWarning = n.Kind == MessageKind.Warning;
+        IsToastVisible = true;
+        var id = ++_toastId;
+        await Task.Delay(n.Kind == MessageKind.Info ? 3500 : 7000);
+        if (id == _toastId)
+            IsToastVisible = false;
+    }
+
+    [RelayCommand]
+    private void DismissToast() => IsToastVisible = false;
 
     public ConnectionViewModel Connection { get; }
 
@@ -88,7 +118,7 @@ public sealed partial class ShellViewModel : ObservableObject
     }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsData), nameof(IsPlan), nameof(IsSetup), nameof(IsConfig), nameof(IsSimulation), nameof(IsHelp), nameof(IsSettings))]
+    [NotifyPropertyChangedFor(nameof(IsData), nameof(IsPlan), nameof(IsSetup), nameof(IsConfig), nameof(IsSimulation), nameof(IsSettings))]
     private Screen _currentScreen;
 
     [ObservableProperty]
@@ -99,7 +129,6 @@ public sealed partial class ShellViewModel : ObservableObject
     public bool IsSetup => CurrentScreen == Screen.Setup;
     public bool IsConfig => CurrentScreen == Screen.Config;
     public bool IsSimulation => CurrentScreen == Screen.Simulation;
-    public bool IsHelp => CurrentScreen == Screen.Help;
     public bool IsSettings => CurrentScreen == Screen.Settings;
 
     [RelayCommand]
@@ -139,6 +168,7 @@ public sealed partial class ShellViewModel : ObservableObject
     }
 }
 
+/// <summary>About: version, data and log folders, the Linux menu entry (shown at the bottom of SETTINGS).</summary>
 public sealed partial class HelpViewModel() : PageViewModel("Help")
 {
     public bool IsLinux { get; } = OperatingSystem.IsLinux();

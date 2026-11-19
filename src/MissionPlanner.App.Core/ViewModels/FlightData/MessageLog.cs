@@ -3,16 +3,61 @@ using System.Globalization;
 
 namespace MissionPlanner.App.Core.ViewModels.FlightData;
 
+/// <summary>How a line on the Messages tab is drawn: red, amber or plain.</summary>
+public enum MessageLevel
+{
+    Info,
+    Warning,
+    Critical,
+}
+
 /// <summary>A STATUSTEXT line on the Messages tab.</summary>
-public sealed record MessageLine(DateTime Time, string Text)
+public sealed record MessageLine(DateTime Time, string Text, MAVLink.MAV_SEVERITY? Severity = null)
 {
     public string TimeText { get; } = Time.ToString("HH:mm:ss", CultureInfo.InvariantCulture);
 
-    /// <summary>Mission Planner colours these: PreArm/failures stand out.</summary>
-    public bool IsWarning { get; } = Text.StartsWith("PreArm", StringComparison.OrdinalIgnoreCase) ||
-                                     Text.StartsWith("Arm:", StringComparison.OrdinalIgnoreCase) ||
-                                     Text.Contains("fail", StringComparison.OrdinalIgnoreCase) ||
-                                     Text.Contains("error", StringComparison.OrdinalIgnoreCase);
+    /// <summary>
+    /// From the STATUSTEXT severity (EMERGENCY..ERROR red, WARNING amber, the rest plain). Without
+    /// one (a log played back, text the GCS added) the text decides, as Mission Planner colours it:
+    /// PreArm/Arm checks red, failures and errors amber.
+    /// </summary>
+    public MessageLevel Level { get; } = Severity switch
+    {
+        <= MAVLink.MAV_SEVERITY.ERROR => MessageLevel.Critical,
+        MAVLink.MAV_SEVERITY.WARNING => MessageLevel.Warning,
+        not null => MessageLevel.Info,
+        null => Guess(Text),
+    };
+
+    /// <summary>The badge: CRIT, WARN, INFO and the other severity names, shortened.</summary>
+    public string LevelText { get; } = Severity switch
+    {
+        MAVLink.MAV_SEVERITY.EMERGENCY => "EMERG",
+        MAVLink.MAV_SEVERITY.ALERT => "ALERT",
+        MAVLink.MAV_SEVERITY.CRITICAL => "CRIT",
+        MAVLink.MAV_SEVERITY.ERROR => "ERROR",
+        MAVLink.MAV_SEVERITY.WARNING => "WARN",
+        MAVLink.MAV_SEVERITY.NOTICE => "NOTICE",
+        MAVLink.MAV_SEVERITY.INFO => "INFO",
+        MAVLink.MAV_SEVERITY.DEBUG => "DEBUG",
+        _ => Guess(Text) switch
+        {
+            MessageLevel.Critical => "CRIT",
+            MessageLevel.Warning => "WARN",
+            _ => "INFO",
+        },
+    };
+
+    public bool IsCritical => Level == MessageLevel.Critical;
+
+    public bool IsWarning => Level == MessageLevel.Warning;
+
+    private static MessageLevel Guess(string text) =>
+        text.StartsWith("PreArm", StringComparison.OrdinalIgnoreCase) || text.StartsWith("Arm:", StringComparison.OrdinalIgnoreCase)
+            ? MessageLevel.Critical
+            : text.Contains("fail", StringComparison.OrdinalIgnoreCase) || text.Contains("error", StringComparison.OrdinalIgnoreCase)
+                ? MessageLevel.Warning
+                : MessageLevel.Info;
 }
 
 /// <summary>
@@ -31,6 +76,9 @@ public sealed class MessageLog
 
     /// <summary>Newest first.</summary>
     public ObservableCollection<MessageLine> Lines { get; } = new();
+
+    /// <summary>The STATUSTEXT severity of a line's text, when known (<see cref="Session.StatusTextSeverities.Find"/>).</summary>
+    public Func<string, MAVLink.MAV_SEVERITY?>? SeverityOf { get; set; }
 
     /// <summary>Checks the vehicle's list; returns true when lines were added or the list was rebuilt.</summary>
     public bool Update(List<(DateTime time, string message)> source)
@@ -122,7 +170,10 @@ public sealed class MessageLog
 
         // newest goes on top
         for (var i = start; i < snapshot.Count; i++)
-            Lines.Insert(0, new MessageLine(snapshot[i].time, snapshot[i].message ?? ""));
+        {
+            var text = snapshot[i].message ?? "";
+            Lines.Insert(0, new MessageLine(snapshot[i].time, text, SeverityOf?.Invoke(text)));
+        }
 
         while (Lines.Count > MaxLines)
             Lines.RemoveAt(Lines.Count - 1);

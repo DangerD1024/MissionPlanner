@@ -94,4 +94,16 @@ public sealed class AppServices
 
     /// <summary>Switches the main window to a screen (call on the UI thread).</summary>
     public void ShowScreen(ViewModels.Screen screen) => ScreenRequested?.Invoke(this, screen);
+
+    /// <summary>Raised by <see cref="Notify"/>; the shell shows it as a toast.</summary>
+    public event EventHandler<Notification>? Notified;
+
+    /// <summary>
+    /// A short message that goes away by itself (bottom right of the window), for outcomes that need
+    /// no answer: "12 parameters saved". Errors that need attention stay dialogs. Any thread.
+    /// </summary>
+    public void Notify(string text, MessageKind kind = MessageKind.Info) => Notified?.Invoke(this, new Notification(text, kind));
 }
+
+/// <summary>A toast: English text (translated when shown) and how it is coloured.</summary>
+public sealed record Notification(string Text, MessageKind Kind);

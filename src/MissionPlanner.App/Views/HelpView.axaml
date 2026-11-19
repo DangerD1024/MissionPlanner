@@ -4,9 +4,9 @@
              xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.HelpView"
              x:DataType="vm:HelpViewModel">
-  <Border Classes="card" Margin="24" HorizontalAlignment="Left" VerticalAlignment="Top" MinWidth="520">
+  <Border Classes="card" VerticalAlignment="Top">
     <StackPanel Spacing="10">
-      <TextBlock Classes="h1" Text="{l:Tr 'Mission Planner (cross-platform preview)'}" />
+      <TextBlock Classes="h2" Text="{l:Tr 'Mission Planner (cross-platform preview)'}" />
       <TextBlock Classes="muted" Text="{l:Tr 'A new interface for the ArduPilot ground station on .NET and Avalonia.'}" TextWrapping="Wrap" />
       <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto" Margin="0,6,0,0">
         <TextBlock Classes="muted" Text="{l:Tr 'Version'}" />

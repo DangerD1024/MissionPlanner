@@ -75,7 +75,7 @@
               </DataGridTemplateColumn.CellTemplate>
               <DataGridTemplateColumn.CellEditingTemplate>
                 <DataTemplate x:DataType="vm:ParamRow">
-                  <TextBox Text="{l:TrBind {Binding EditText}}" VerticalAlignment="Center" Margin="2,0" MinHeight="30"
+                  <TextBox Text="{Binding EditText}" VerticalAlignment="Center" Margin="2,0" MinHeight="30"
                            Padding="6,4" FontSize="12.5" />
                 </DataTemplate>
               </DataGridTemplateColumn.CellEditingTemplate>
