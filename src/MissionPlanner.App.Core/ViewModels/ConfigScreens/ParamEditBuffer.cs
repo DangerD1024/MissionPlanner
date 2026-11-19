@@ -93,12 +93,22 @@ public sealed class ParamEditBuffer
 
     /// <summary>
     /// Checks a typed value as the Full Parameter List does: a number (or simple arithmetic),
-    /// not read-only, inside the documented range unless the user confirms.
+    /// not read-only, inside the documented range unless the user confirms. For enumerated
+    /// parameters a documented label ("Enabled", or "1: Enabled" from the list) is taken too.
     /// </summary>
     public static EditValidation Validate(string name, string? text, ParamMeta? meta)
     {
-        if (!ParamValues.TryParse(text, out var value))
+        if (!ParamValues.TryParse(text, out var value) && !TryParseOption(text, meta, out value))
             return new EditValidation(EditCheck.NotANumber, double.NaN, $"\"{text}\" is not a number.");
+
+        return Validate(name, value, meta);
+    }
+
+    /// <summary>Checks a value picked from a list or a bitmask editor: read-only and range as for typed values.</summary>
+    public static EditValidation Validate(string name, double value, ParamMeta? meta)
+    {
+        if (double.IsNaN(value) || double.IsInfinity(value))
+            return new EditValidation(EditCheck.NotANumber, double.NaN, $"\"{ParamValues.Format(value)}\" is not a number.");
 
         if (meta?.ReadOnly == true)
             return new EditValidation(EditCheck.ReadOnly, value, $"{name} is marked as ReadOnly, and will not be changed.");
@@ -110,6 +120,31 @@ public sealed class ParamEditBuffer
         }
 
         return new EditValidation(EditCheck.Ok, value, "");
+    }
+
+    /// <summary>
+    /// A documented value given by its label, case-insensitive ("enabled"), or as a list entry
+    /// "1: Enabled" (the number before the colon counts).
+    /// </summary>
+    public static bool TryParseOption(string? text, ParamMeta? meta, out double value)
+    {
+        value = double.NaN;
+        if (string.IsNullOrWhiteSpace(text) || meta == null || meta.Values.Count == 0)
+            return false;
+        var s = text.Trim();
+
+        var colon = s.IndexOf(':');
+        if (colon > 0 && ParamValues.TryParse(s[..colon], out var code) && meta.Values.Any(v => ParamValues.Same(v.Key, code)))
+        {
+            value = code;
+            return true;
+        }
+
+        var match = meta.Values.Where(v => string.Equals(v.Value.Trim(), s, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (match.Count != 1)
+            return false;
+        value = match[0].Key;
+        return true;
     }
 }
 

@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.ConfigScreens"
+             x:Class="MissionPlanner.App.Controls.ConfigScreens.ParamValueCell"
+             x:DataType="vm:ParamRow">
+
+  <!--
+    The value cell of the parameter grids (display mode): the value and what it means, plus
+    the editor its documentation calls for. Clicking the value types a number (the grid's
+    editing template); the arrow lists the documented values; "Set bitmask" opens the bit editor.
+  -->
+  <UserControl.Styles>
+    <Style Selector="Button.cell">
+      <Setter Property="Padding" Value="6,0" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Height" Value="28" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="FontSize" Value="11.5" />
+      <Setter Property="Margin" Value="4,0,2,0" />
+    </Style>
+    <Style Selector="Button.cell Path.icon">
+      <Setter Property="Width" Value="14" />
+      <Setter Property="Height" Value="14" />
+      <Setter Property="Stretch" Value="Uniform" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="*,Auto" Margin="2,4">
+    <!-- green while an edit waits for Write Params, red when the typed text was refused -->
+    <Border CornerRadius="4" Background="{DynamicResource Accent}" Opacity="0.28" IsVisible="{Binding IsModified}" />
+    <Border CornerRadius="4" Background="{DynamicResource Danger}" Opacity="0.35" IsVisible="{Binding IsInvalid}" />
+    <Grid ColumnDefinitions="Auto,*" Margin="6,0" ToolTip.Tip="{Binding ValueTip}" Background="Transparent">
+      <TextBlock Text="{Binding ValueText}" VerticalAlignment="Center" FontWeight="SemiBold" />
+      <TextBlock Grid.Column="1" Text="{Binding ValueLabel}" VerticalAlignment="Center" Classes="muted"
+                 FontSize="11.5" Margin="7,0,0,0" TextTrimming="CharacterEllipsis" />
+    </Grid>
+
+    <Button Grid.Column="1" x:Name="OptionsButton" Classes="cell" IsVisible="{Binding IsOptions}"
+            IsEnabled="{Binding IsEditable}" Click="OnOptionsClick" ToolTip.Tip="Pick a documented value">
+      <Path Classes="icon" Data="{StaticResource IconDown}" />
+    </Button>
+    <Button Grid.Column="1" Classes="cell" IsVisible="{Binding IsBitmask}" IsEnabled="{Binding IsEditable}"
+            Content="Set bitmask" Command="{Binding EditBitmaskCommand}"
+            ToolTip.Tip="Tick the bits in a list (Mission Planner's Set Bitmask)" />
+  </Grid>
+</UserControl>
