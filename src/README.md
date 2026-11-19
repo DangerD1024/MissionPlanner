@@ -12,10 +12,11 @@ left menus on SETUP and CONFIG (pages appear only when they apply to the connect
 
 | Screen | Contents |
 |---|---|
-| DATA | HUD; tabs Quick (6 configurable values), Actions (mode, arm/disarm, Auto/Loiter/RTL, set WP, change alt/speed, Do Action), Messages, Status, Telemetry Logs (tlog playback), DataFlash Logs (download window, log browser with graphs and GPS track); map with vehicle, track, mission/fence/rally, heading lines, Fly To Here, Set Home Here; live tuning graph |
+| DATA | HUD with video (right-click: RTSP, UDP H.264/H.265, MPEG-TS, MJPEG or a GStreamer pipeline); tabs Quick (6 configurable values), PreFlight, Gauges, Servo/Relay, Aux Function, Payload, Transponder, Actions (mode, arm/disarm, Auto/Loiter/RTL, set WP, change alt/speed, Do Action), Messages, Status, Telemetry Logs (tlog playback), DataFlash Logs (download window, log browser with graphs and GPS track); map with vehicle, track, mission/fence/rally, heading lines, Fly To Here, Set Home Here; live tuning graph |
 | PLAN | Mission / fence / rally editor: map editing (click, drag, insert, polygon tools), waypoint grid with per-command headers from `mavcmd.xml`, home, file load/save (QGC WPL), read/write to the vehicle, Survey (Grid) dialog |
-| SETUP | Install Firmware (manifest, board detection, bootloader upload), Frame Type, Accel / Compass / Radio calibration, Servo Output, Serial Ports, ESC Calibration, Flight Modes, FailSafe, Battery Monitor, Motor Test |
-| CONFIG | Basic / Extended Tuning, Standard / Advanced Params, Full Parameter List (tree, search, compare, file load/save), MAVFtp browser, MAVLink Inspector, Planner settings |
+| SETUP | Install Firmware (manifest, board detection, bootloader upload), Frame Type, Accel / Compass / Radio calibration (optional QGroundControl-style channel mapping), Servo Output (with a Motor layout tab: frame type, motor order wizard, motor direction, reversed-direction switch), Serial Ports, ESC Calibration, Flight Modes, FailSafe, Battery Monitor, Motor Test, Rangefinder, Airspeed, Optical Flow, OSD, Mount, Parachute, CompassMot, ADSB, HW ID, Initial Parameters, RTK/GPS Inject, Joystick, SiK Radio, DroneCAN, Terminal |
+| CONFIG | Basic / Extended Tuning (Mission Planner layouts per vehicle), Standard / Advanced Params, Full Parameter List (value lists, bitmask editor, compare, file load/save, reboot), Full Parameter Tree, User Params, MAVFtp browser, MAVLink Inspector |
+| SETTINGS | App Settings: theme (Dark, Mission Planner, Light, High Contrast, Midnight), map, logs, parameter docs, telemetry rates, units |
 | SIMULATION | Download and run ArduPilot SITL (Plane, Copter, Rover, Heli) and connect to it |
 
 ## Projects

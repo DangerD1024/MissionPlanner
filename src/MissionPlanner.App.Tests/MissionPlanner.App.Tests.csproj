@@ -12,6 +12,7 @@
   <!-- mode names come from the parameter docs; ship the offline copy so no test depends on a download -->
   <ItemGroup>
     <Content Include="..\..\ParameterMetaDataBackup.xml" Link="ParameterMetaDataBackup.xml" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\APMotorLayout.json" Link="APMotorLayout.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
