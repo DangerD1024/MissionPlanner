@@ -80,6 +80,11 @@
     <Setter Property="Stretch" Value="None" />
   </Style>
 
+  <!-- every window, including dialogs and tool windows made in code, carries Mission Planner's icon -->
+  <Style Selector="Window">
+    <Setter Property="Icon" Value="/Assets/mpdesktop.ico" />
+  </Style>
+
   <!-- top-bar icons; the theme service sets the stroke, fill and which set is shown -->
   <Style Selector="Path.navicon">
     <Setter Property="StrokeThickness" Value="{DynamicResource NavIconStroke}" />

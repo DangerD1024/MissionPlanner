@@ -17,6 +17,12 @@
       </Grid>
       <TextBlock Classes="muted" Margin="0,6,0,0" TextWrapping="Wrap"
                  Text="Documentation: ardupilot.org/planner · Forum: discuss.ardupilot.org" />
+      <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0" IsVisible="{Binding IsLinux}">
+        <Button Content="Add to applications menu" Command="{Binding AddToApplicationsMenuCommand}"
+                ToolTip.Tip="Adds Mission Planner, with its icon, to your desktop's applications menu" />
+        <TextBlock Classes="muted" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="380"
+                   Text="{Binding DesktopEntryStatus}" />
+      </StackPanel>
     </StackPanel>
   </Border>
 </UserControl>

@@ -5,6 +5,8 @@
     <RootNamespace>MissionPlanner.App</RootNamespace>
     <AssemblyName>MissionPlanner.App</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Mission Planner's icon (repo root mpdesktop.ico): the executable on Windows; windows use it too -->
+    <ApplicationIcon>Assets\mpdesktop.ico</ApplicationIcon>
     <!-- compiled bindings are the default in Avalonia 12; stated so it survives a downgrade -->
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
@@ -34,6 +36,8 @@
     <Content Include="..\..\SerialOptionRules.json" Link="SerialOptionRules.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\acsimplepids.xml" Link="acsimplepids.xml" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\checklistDefault.xml" Link="checklistDefault.xml" CopyToOutputDirectory="PreserveNewest" />
+    <!-- the icon for the Linux applications-menu entry (Help > Add to applications menu) -->
+    <Content Include="Assets\mission-planner-128.png" Link="mission-planner-128.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

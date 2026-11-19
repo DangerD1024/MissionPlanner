@@ -18,6 +18,22 @@ public static class TestEnvironment
         ThreadPool.GetMinThreads(out var workers, out var io);
         ThreadPool.SetMinThreads(Math.Max(workers, 64), io);
 
+        // runs that were killed never reach AssemblyCleanup: clear their folders (/tmp is often RAM)
+        foreach (var stale in Directory.GetDirectories(Path.GetTempPath(), "mp-app-tests-*"))
+        {
+            try
+            {
+                if (Directory.GetLastWriteTimeUtc(stale) < DateTime.UtcNow.AddHours(-2))
+                    Directory.Delete(stale, recursive: true);
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+
         DataRoot = Path.Combine(Path.GetTempPath(), "mp-app-tests-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(DataRoot);
         Settings.CustomUserDataDirectory = DataRoot;

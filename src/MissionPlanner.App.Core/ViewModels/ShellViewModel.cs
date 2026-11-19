@@ -139,8 +139,27 @@ public sealed partial class ShellViewModel : ObservableObject
     }
 }
 
-public sealed class HelpViewModel() : PageViewModel("Help")
+public sealed partial class HelpViewModel() : PageViewModel("Help")
 {
+    public bool IsLinux { get; } = OperatingSystem.IsLinux();
+
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    private string _desktopEntryStatus = "";
+
+    /// <summary>Adds the app, with its icon, to the Linux applications menu.</summary>
+    [RelayCommand]
+    private void AddToApplicationsMenu()
+    {
+        try
+        {
+            DesktopEntryStatus = DesktopEntry.Install();
+        }
+        catch (Exception ex)
+        {
+            DesktopEntryStatus = "Could not add it: " + ex.Message;
+        }
+    }
+
     public string Version { get; } = AppVersion.Display;
 
     public string DataDirectory { get; } = MissionPlanner.Utilities.Settings.GetUserDataDirectory();
