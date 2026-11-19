@@ -1,6 +1,6 @@
 # Mission Planner 2.0
 
-[![Mission Planner 2.0 build and tests](https://github.com/DangerD1024/MissionPlanner/actions/workflows/next.yml/badge.svg?branch=avalonia-port)](https://github.com/DangerD1024/MissionPlanner/actions/workflows/next.yml)
+[![Mission Planner 2.0 build and tests](https://github.com/DangerD1024/MissionPlanner/actions/workflows/next.yml/badge.svg?branch=main)](https://github.com/DangerD1024/MissionPlanner/actions/workflows/next.yml)
 
 A cross-platform ground control station for [ArduPilot](https://ardupilot.org) vehicles: plan
 missions, set up and tune the autopilot, and fly with live telemetry, map and video. It is a new
@@ -42,7 +42,7 @@ There are no packaged releases yet; build it from source. You need the
 [.NET 10 SDK](https://dotnet.microsoft.com/download) and git.
 
 ```sh
-git clone -b avalonia-port https://github.com/DangerD1024/MissionPlanner.git
+git clone https://github.com/DangerD1024/MissionPlanner.git
 cd MissionPlanner
 dotnet run --project src/MissionPlanner.App
 ```

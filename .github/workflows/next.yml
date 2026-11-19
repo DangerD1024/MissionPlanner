@@ -2,7 +2,7 @@ name: Next (cross-platform app)
 
 on:
   push:
-    branches: [master, avalonia-port]
+    branches: [main]
     paths:
       - 'src/**'
       - 'ExtLibs/**'
