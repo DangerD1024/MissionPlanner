@@ -18,49 +18,69 @@
           <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsData, Mode=OneWay}"
                        Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Data}">
             <StackPanel Spacing="2">
-              <Path Classes="icon" Data="{StaticResource IconData}" HorizontalAlignment="Center" />
+              <Panel HorizontalAlignment="Center" Height="30">
+                <Path Classes="icon navicon" Data="{StaticResource IconData}" VerticalAlignment="Center" IsVisible="{DynamicResource ShowVectorIcons}" />
+                <Image Source="/Assets/MissionPlannerIcons/light_flightdata_icon.png" Width="33" Height="30" IsVisible="{DynamicResource ShowOriginalIcons}" />
+              </Panel>
               <TextBlock Text="DATA" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
             </StackPanel>
           </RadioButton>
           <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsPlan, Mode=OneWay}"
                        Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Plan}">
             <StackPanel Spacing="2">
-              <Path Classes="icon" Data="{StaticResource IconPlan}" HorizontalAlignment="Center" />
+              <Panel HorizontalAlignment="Center" Height="30">
+                <Path Classes="icon navicon" Data="{StaticResource IconPlan}" VerticalAlignment="Center" IsVisible="{DynamicResource ShowVectorIcons}" />
+                <Image Source="/Assets/MissionPlannerIcons/light_flightplan_icon.png" Width="33" Height="30" IsVisible="{DynamicResource ShowOriginalIcons}" />
+              </Panel>
               <TextBlock Text="PLAN" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
             </StackPanel>
           </RadioButton>
           <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsSetup, Mode=OneWay}"
                        Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Setup}">
             <StackPanel Spacing="2">
-              <Path Classes="icon" Data="{StaticResource IconSetup}" HorizontalAlignment="Center" />
+              <Panel HorizontalAlignment="Center" Height="30">
+                <Path Classes="icon navicon" Data="{StaticResource IconSetup}" VerticalAlignment="Center" IsVisible="{DynamicResource ShowVectorIcons}" />
+                <Image Source="/Assets/MissionPlannerIcons/light_initialsetup_icon.png" Width="33" Height="30" IsVisible="{DynamicResource ShowOriginalIcons}" />
+              </Panel>
               <TextBlock Text="SETUP" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
             </StackPanel>
           </RadioButton>
           <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsConfig, Mode=OneWay}"
                        Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Config}">
             <StackPanel Spacing="2">
-              <Path Classes="icon" Data="{StaticResource IconConfig}" HorizontalAlignment="Center" />
+              <Panel HorizontalAlignment="Center" Height="30">
+                <Path Classes="icon navicon" Data="{StaticResource IconConfig}" VerticalAlignment="Center" IsVisible="{DynamicResource ShowVectorIcons}" />
+                <Image Source="/Assets/MissionPlannerIcons/light_tuningconfig_icon.png" Width="33" Height="30" IsVisible="{DynamicResource ShowOriginalIcons}" />
+              </Panel>
               <TextBlock Text="CONFIG" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
             </StackPanel>
           </RadioButton>
           <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsSimulation, Mode=OneWay}"
                        Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Simulation}">
             <StackPanel Spacing="2">
-              <Path Classes="icon" Data="{StaticResource IconSim}" HorizontalAlignment="Center" />
+              <Panel HorizontalAlignment="Center" Height="30">
+                <Path Classes="icon navicon" Data="{StaticResource IconSim}" VerticalAlignment="Center" IsVisible="{DynamicResource ShowVectorIcons}" />
+                <Image Source="/Assets/MissionPlannerIcons/light_simulation_icon.png" Width="33" Height="30" IsVisible="{DynamicResource ShowOriginalIcons}" />
+              </Panel>
               <TextBlock Text="SIMULATION" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
             </StackPanel>
           </RadioButton>
           <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsHelp, Mode=OneWay}"
                        Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Help}">
             <StackPanel Spacing="2">
-              <Path Classes="icon" Data="{StaticResource IconHelp}" HorizontalAlignment="Center" />
+              <Panel HorizontalAlignment="Center" Height="30">
+                <Path Classes="icon navicon" Data="{StaticResource IconHelp}" VerticalAlignment="Center" IsVisible="{DynamicResource ShowVectorIcons}" />
+                <Image Source="/Assets/MissionPlannerIcons/light_help_icon.png" Width="33" Height="30" IsVisible="{DynamicResource ShowOriginalIcons}" />
+              </Panel>
               <TextBlock Text="HELP" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
             </StackPanel>
           </RadioButton>
           <RadioButton Classes="nav" GroupName="nav" IsChecked="{Binding IsSettings, Mode=OneWay}"
                        Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Settings}">
             <StackPanel Spacing="2">
-              <Path Classes="icon" Data="{StaticResource IconSettings}" HorizontalAlignment="Center" />
+              <Panel HorizontalAlignment="Center" Height="30">
+                <Path Classes="icon navicon" Data="{StaticResource IconSettings}" VerticalAlignment="Center" />
+              </Panel>
               <TextBlock Text="SETTINGS" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
             </StackPanel>
           </RadioButton>
@@ -109,11 +129,20 @@
                 Command="{Binding ToggleConnectCommand}" Width="96" Height="54" Padding="4"
                 Background="Transparent" VerticalAlignment="Center">
           <StackPanel Spacing="2">
-            <Panel HorizontalAlignment="Center">
-              <Path Classes="icon" Data="{StaticResource IconConnect}" IsVisible="{Binding !IsConnected}"
-                    Stroke="{DynamicResource Accent}" />
-              <Path Classes="icon" Data="{StaticResource IconDisconnect}" IsVisible="{Binding IsConnected}"
-                    Stroke="{DynamicResource Danger}" />
+            <Panel HorizontalAlignment="Center" Height="30">
+              <Panel IsVisible="{DynamicResource ShowVectorIcons}">
+                <Path Classes="icon navicon" Data="{StaticResource IconConnect}" IsVisible="{Binding !IsConnected}"
+                      Stroke="{DynamicResource Accent}" VerticalAlignment="Center" />
+                <Path Classes="icon navicon" Data="{StaticResource IconDisconnect}" IsVisible="{Binding IsConnected}"
+                      Stroke="{DynamicResource Danger}" VerticalAlignment="Center" />
+              </Panel>
+              <!-- Mission Planner's plugs: red while disconnected, green while connected -->
+              <Panel IsVisible="{DynamicResource ShowOriginalIcons}">
+                <Image Source="/Assets/MissionPlannerIcons/light_connect_icon.png" Width="33" Height="30"
+                       IsVisible="{Binding !IsConnected}" />
+                <Image Source="/Assets/MissionPlannerIcons/light_disconnect_icon.png" Width="33" Height="30"
+                       IsVisible="{Binding IsConnected}" />
+              </Panel>
             </Panel>
             <TextBlock Text="{Binding ConnectText}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
           </StackPanel>

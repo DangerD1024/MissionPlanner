@@ -33,6 +33,10 @@
       <SolidColorBrush x:Key="Info" Color="{StaticResource InfoColor}" />
       <!-- panels floating over the map or HUD; the theme service replaces it per theme -->
       <SolidColorBrush x:Key="Overlay" Color="#d8161a1f" />
+      <x:Boolean x:Key="ShowOriginalIcons">False</x:Boolean>
+      <x:Boolean x:Key="ShowVectorIcons">True</x:Boolean>
+      <x:Double x:Key="NavIconStroke">1.7</x:Double>
+      <SolidColorBrush x:Key="NavIconFill" Color="Transparent" />
       <!-- translucent tints for highlighted rows and banners; the theme service replaces them -->
       <SolidColorBrush x:Key="AccentSoft" Color="#2e8cc63f" />
       <SolidColorBrush x:Key="AccentSoftStrong" Color="#488cc63f" />
@@ -74,6 +78,12 @@
     <Setter Property="Width" Value="24" />
     <Setter Property="Height" Value="24" />
     <Setter Property="Stretch" Value="None" />
+  </Style>
+
+  <!-- top-bar icons; the theme service sets the stroke, fill and which set is shown -->
+  <Style Selector="Path.navicon">
+    <Setter Property="StrokeThickness" Value="{DynamicResource NavIconStroke}" />
+    <Setter Property="Fill" Value="{DynamicResource NavIconFill}" />
   </Style>
 
   <Style Selector="TextBlock.muted">

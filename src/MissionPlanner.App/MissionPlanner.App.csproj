@@ -18,6 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Mission Planner's own menu icons (Resources/light_*_icon.png), used by the Mission Planner theme -->
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MissionPlanner.App.Core\MissionPlanner.App.Core.csproj" />
   </ItemGroup>
 
