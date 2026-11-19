@@ -1,0 +1,71 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             xmlns:fd="using:MissionPlanner.App.Controls.FlightData"
+             x:Class="MissionPlanner.App.Views.FlightData.PreFlightView"
+             x:DataType="vm:PreFlightViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="Border.check">
+      <Setter Property="Background" Value="{DynamicResource Bg2}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="10,5" />
+      <Setter Property="Margin" Value="0,0,0,4" />
+    </Style>
+    <!-- a line's colour when it has one (green / red...), the theme's text colour otherwise -->
+    <Style Selector="TextBlock.state" x:DataType="vm:ChecklistRow">
+      <Setter Property="Foreground" Value="{DynamicResource Text}" />
+    </Style>
+    <Style Selector="TextBlock.state.colored" x:DataType="vm:ChecklistRow">
+      <Setter Property="Foreground" Value="{Binding Color, Converter={x:Static fd:OptionalColorConverter.Instance}}" />
+    </Style>
+    <Style Selector="Border.chip">
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="10,2" />
+      <Setter Property="Background" Value="{DynamicResource Warn}" />
+    </Style>
+    <Style Selector="Border.chip.ok">
+      <Setter Property="Background" Value="{DynamicResource Accent}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="8">
+    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6" Margin="0,0,0,8">
+      <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+        <Border Classes="chip" Classes.ok="{Binding AllPassed}">
+          <TextBlock Text="{Binding Summary}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentText}" />
+        </Border>
+      </StackPanel>
+      <Button Grid.Column="1" Content="Clear ticks" Command="{Binding ClearTicksCommand}"
+              ToolTip.Tip="Untick the lines you ticked by hand" />
+      <Button Grid.Column="2" Content="Edit..." Classes="accent" Command="{Binding EditCommand}"
+              ToolTip.Tip="Add, remove or change checklist lines" />
+    </Grid>
+
+    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+      <ItemsControl ItemsSource="{Binding Rows}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:ChecklistRow">
+            <Border Classes="check" ToolTip.Tip="{Binding Rule}">
+              <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                <TextBlock Classes="state" Classes.colored="{Binding HasColor}" Text="{Binding Description}"
+                           VerticalAlignment="Center" TextWrapping="Wrap" FontSize="13" />
+                <TextBlock Grid.Column="1" Classes="state" Classes.colored="{Binding HasColor}" Text="{Binding Text}"
+                           VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" MaxWidth="160"
+                           TextTrimming="CharacterEllipsis" />
+                <!-- automatic lines follow the vehicle; manual ones are ticked by the pilot -->
+                <CheckBox Grid.Column="2" IsChecked="{Binding IsChecked}" IsHitTestVisible="{Binding IsManual}"
+                          Focusable="{Binding IsManual}" MinWidth="0" Padding="0" VerticalAlignment="Center" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <TextBlock Grid.Row="2" Classes="muted" FontSize="11" Margin="2,6,0,0" TextTrimming="CharacterEllipsis"
+               Text="{Binding Source, StringFormat='Checklist: {0}'}" />
+  </Grid>
+</UserControl>

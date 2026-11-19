@@ -1,0 +1,141 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             x:Class="MissionPlanner.App.Views.FlightData.SpeechSettingsView"
+             x:DataType="vm:SpeechSettingsViewModel"
+             Background="{DynamicResource Bg1}">
+
+  <UserControl.Styles>
+    <Style Selector="Border.opt">
+      <Setter Property="Background" Value="{DynamicResource Bg2}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="10,6" />
+    </Style>
+    <Style Selector="TextBlock.caption">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="NumericUpDown">
+      <Setter Property="ShowButtonSpinner" Value="False" />
+      <Setter Property="Width" Value="80" />
+      <Setter Property="FormatString" Value="0.##" />
+    </Style>
+    <Style Selector="CheckBox.head">
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="14">
+    <StackPanel Spacing="4" Margin="0,0,0,10">
+      <TextBlock Classes="h2" Text="Speech" />
+      <TextBlock Classes="muted" FontSize="12" Text="{Binding BackendText}" TextWrapping="Wrap" />
+    </StackPanel>
+
+    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Spacing="8">
+        <Border Classes="opt">
+          <StackPanel Spacing="6">
+            <CheckBox Classes="head" Content="Enable speech" IsChecked="{Binding Enabled}" />
+            <CheckBox Content="Only while armed (arm / disarm is always spoken)" IsChecked="{Binding ArmedOnly}" />
+            <Grid ColumnDefinitions="Auto,160" ColumnSpacing="8">
+              <TextBlock Classes="caption" Text="Speak status texts of severity" />
+              <ComboBox Grid.Column="1" ItemsSource="{Binding Severities}" SelectedIndex="{Binding StatusSeverity}"
+                        HorizontalAlignment="Stretch" ToolTip.Tip="Vehicle messages at or above this level are spoken and shown on the HUD" />
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <StackPanel Spacing="8" IsEnabled="{Binding Enabled}">
+          <Border Classes="opt">
+            <Grid ColumnDefinitions="170,*" RowDefinitions="Auto" ColumnSpacing="8">
+              <CheckBox Classes="head" Content="Mode change" IsChecked="{Binding Mode}" />
+              <TextBox Grid.Column="1" Text="{Binding ModeText}" IsEnabled="{Binding Mode}" />
+            </Grid>
+          </Border>
+
+          <Border Classes="opt">
+            <Grid ColumnDefinitions="170,*" ColumnSpacing="8">
+              <CheckBox Classes="head" Content="Waypoint" IsChecked="{Binding Waypoint}" />
+              <TextBox Grid.Column="1" Text="{Binding WaypointText}" IsEnabled="{Binding Waypoint}" />
+            </Grid>
+          </Border>
+
+          <Border Classes="opt">
+            <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+              <CheckBox Classes="head" Content="Arm / disarm" IsChecked="{Binding ArmDisarm}" />
+              <TextBox Grid.Column="1" Text="{Binding ArmText}" IsEnabled="{Binding ArmDisarm}" />
+              <TextBlock Grid.Row="1" Classes="caption" Text="Disarmed" Margin="28,0,0,0" />
+              <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding DisarmText}" IsEnabled="{Binding ArmDisarm}" />
+            </Grid>
+          </Border>
+
+          <Border Classes="opt">
+            <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+              <CheckBox Classes="head" Content="Low battery" IsChecked="{Binding Battery}" />
+              <TextBox Grid.Column="1" Text="{Binding BatteryText}" IsEnabled="{Binding Battery}" />
+              <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" IsEnabled="{Binding Battery}">
+                <TextBlock Classes="caption" Text="below" />
+                <NumericUpDown Value="{Binding BatteryVolt}" Minimum="0" Maximum="100" />
+                <TextBlock Classes="caption" Text="V or" />
+                <NumericUpDown Value="{Binding BatteryPercent}" Minimum="0" Maximum="100" FormatString="0" />
+                <TextBlock Classes="caption" Text="% (every 30 s)" />
+              </StackPanel>
+            </Grid>
+          </Border>
+
+          <Border Classes="opt">
+            <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+              <CheckBox Classes="head" Content="Low altitude" IsChecked="{Binding Altitude}" />
+              <TextBox Grid.Column="1" Text="{Binding AltitudeText}" IsEnabled="{Binding Altitude}" />
+              <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" IsEnabled="{Binding Altitude}">
+                <TextBlock Classes="caption" Text="below" />
+                <NumericUpDown Value="{Binding AltitudeHeight}" Minimum="0" Maximum="100000" />
+                <TextBlock Classes="caption" Text="{Binding AltitudeUnit, StringFormat='{}{0} above home, after having been higher'}" />
+              </StackPanel>
+            </Grid>
+          </Border>
+
+          <Border Classes="opt">
+            <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+              <CheckBox Classes="head" Content="Low speed" IsChecked="{Binding LowSpeed}" />
+              <TextBox Grid.Column="1" Text="{Binding LowGroundText}" IsEnabled="{Binding LowSpeed}" />
+              <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" IsEnabled="{Binding LowSpeed}">
+                <TextBlock Classes="caption" Text="ground speed below" />
+                <NumericUpDown Value="{Binding LowGroundTrigger}" Minimum="0" Maximum="1000" />
+                <TextBlock Classes="caption" Text="m/s (armed)" />
+              </StackPanel>
+              <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding LowAirText}" IsEnabled="{Binding LowSpeed}" />
+              <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" IsEnabled="{Binding LowSpeed}" Margin="28,0,0,0">
+                <TextBlock Classes="caption" Text="airspeed below" />
+                <NumericUpDown Value="{Binding LowAirTrigger}" Minimum="0" Maximum="1000" Width="56" />
+              </StackPanel>
+            </Grid>
+          </Border>
+
+          <Border Classes="opt">
+            <Grid ColumnDefinitions="170,*" ColumnSpacing="8">
+              <CheckBox Classes="head" Content="Every 30 s" IsChecked="{Binding Custom}" />
+              <TextBox Grid.Column="1" Text="{Binding CustomText}" IsEnabled="{Binding Custom}" />
+            </Grid>
+          </Border>
+
+          <Border Classes="opt">
+            <CheckBox Classes="head" IsChecked="{Binding LinkLost}"
+                      Content="Link warning: 'No Data for N Seconds' when telemetry stops while armed" />
+          </Border>
+
+          <TextBlock Classes="caption" TextWrapping="Wrap" Text="{Binding PlaceholderHelp}" />
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+
+    <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8" Margin="0,12,0,0">
+      <Button Content="Test" Command="{Binding TestCommand}" ToolTip.Tip="Say the mode-change text now" />
+      <Button Grid.Column="2" Content="Cancel" Command="{Binding CancelCommand}" IsCancel="True" />
+      <Button Grid.Column="3" Content="Save" Classes="accent" Command="{Binding SaveCommand}" />
+    </Grid>
+  </Grid>
+</UserControl>

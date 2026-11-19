@@ -69,8 +69,26 @@
         <TabItem Header="Messages">
           <views:FlightDataMessages />
         </TabItem>
+        <TabItem Header="PreFlight">
+          <ContentControl Content="{Binding PreFlight}" />
+        </TabItem>
+        <TabItem Header="Gauges">
+          <ContentControl Content="{Binding Gauges}" />
+        </TabItem>
+        <TabItem Header="Transponder">
+          <ContentControl Content="{Binding Transponder}" />
+        </TabItem>
         <TabItem Header="Status">
           <views:FlightDataStatus />
+        </TabItem>
+        <TabItem Header="Servo/Relay">
+          <ContentControl Content="{Binding ServoRelay}" />
+        </TabItem>
+        <TabItem Header="Aux Function">
+          <ContentControl Content="{Binding AuxFunctions}" />
+        </TabItem>
+        <TabItem Header="Payload">
+          <ContentControl Content="{Binding Payload}" />
         </TabItem>
         <TabItem Header="Telemetry Logs">
           <ContentControl Content="{Binding Tlogs}" Margin="6" />

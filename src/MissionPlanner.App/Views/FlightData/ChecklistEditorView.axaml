@@ -1,0 +1,89 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             x:Class="MissionPlanner.App.Views.FlightData.ChecklistEditorView"
+             x:DataType="vm:ChecklistEditorViewModel"
+             Background="{DynamicResource Bg1}">
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.head">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
+    </Style>
+    <Style Selector="Button.icon">
+      <Setter Property="Padding" Value="6,2" />
+      <Setter Property="MinWidth" Value="30" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="14">
+    <StackPanel Spacing="4" Margin="0,0,0,10">
+      <TextBlock Classes="h2" Text="Pre-flight checklist" />
+      <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                 Text="Each line watches a vehicle value (or PARAM with the parameter name in braces in the description, e.g. 'Fence {FENCE_ENABLE}'). Condition NONE makes a tick box for the pilot. In the text, {value}, {trigger} and {name} are filled in." />
+    </StackPanel>
+
+    <Grid Grid.Row="1" ColumnDefinitions="2*,1.4*,90,90,1.4*,100,100,104" ColumnSpacing="6" Margin="4,0,4,4">
+      <TextBlock Classes="head" Text="Description" />
+      <TextBlock Grid.Column="1" Classes="head" Text="Value" />
+      <TextBlock Grid.Column="2" Classes="head" Text="Condition" />
+      <TextBlock Grid.Column="3" Classes="head" Text="Trigger" />
+      <TextBlock Grid.Column="4" Classes="head" Text="Text" />
+      <TextBlock Grid.Column="5" Classes="head" Text="When true" />
+      <TextBlock Grid.Column="6" Classes="head" Text="When false" />
+    </Grid>
+
+    <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
+      <ItemsControl ItemsSource="{Binding Rows}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:ChecklistEditRow">
+            <Border Background="{DynamicResource Bg2}" CornerRadius="6" Padding="4" Margin="0,0,0,4">
+              <Grid ColumnDefinitions="2*,1.4*,90,90,1.4*,100,100,104" ColumnSpacing="6">
+                <TextBox Text="{Binding Description}" />
+                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding $parent[ItemsControl].((vm:ChecklistEditorViewModel)DataContext).Sources}"
+                          SelectedItem="{Binding Source}" />
+                <ComboBox Grid.Column="2" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding $parent[ItemsControl].((vm:ChecklistEditorViewModel)DataContext).Conditions}"
+                          SelectedItem="{Binding Condition}" />
+                <NumericUpDown Grid.Column="3" Value="{Binding Trigger}" ShowButtonSpinner="False" FormatString="0.##" />
+                <TextBox Grid.Column="4" Text="{Binding Text}" />
+                <ComboBox Grid.Column="5" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding $parent[ItemsControl].((vm:ChecklistEditorViewModel)DataContext).Colors}"
+                          SelectedItem="{Binding TrueColor}" />
+                <ComboBox Grid.Column="6" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding $parent[ItemsControl].((vm:ChecklistEditorViewModel)DataContext).Colors}"
+                          SelectedItem="{Binding FalseColor}" />
+                <StackPanel Grid.Column="7" Orientation="Horizontal" Spacing="2">
+                  <Button Classes="icon" Content="↑" ToolTip.Tip="Move up"
+                          Command="{Binding $parent[ItemsControl].((vm:ChecklistEditorViewModel)DataContext).MoveUpCommand}"
+                          CommandParameter="{Binding}" />
+                  <Button Classes="icon" Content="↓" ToolTip.Tip="Move down"
+                          Command="{Binding $parent[ItemsControl].((vm:ChecklistEditorViewModel)DataContext).MoveDownCommand}"
+                          CommandParameter="{Binding}" />
+                  <Button Classes="icon" Content="✕" ToolTip.Tip="Remove"
+                          Command="{Binding $parent[ItemsControl].((vm:ChecklistEditorViewModel)DataContext).RemoveCommand}"
+                          CommandParameter="{Binding}" />
+                </StackPanel>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <Grid Grid.Row="3" ColumnDefinitions="Auto,Auto,*,Auto,Auto" ColumnSpacing="8" Margin="0,10,0,0">
+      <Button Content="Add line" Command="{Binding AddCommand}" />
+      <Button Grid.Column="1" Content="Reset to default" Command="{Binding ResetToDefaultCommand}" />
+      <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="6,0">
+        <TextBlock Classes="muted" FontSize="11" TextTrimming="CharacterEllipsis"
+                   Text="{Binding FilePath, StringFormat='Saved to {0}'}" />
+        <TextBlock FontSize="11" Foreground="{DynamicResource Danger}" Text="{Binding Error}" TextWrapping="Wrap" />
+      </StackPanel>
+      <Button Grid.Column="3" Content="Cancel" Command="{Binding CancelCommand}" IsCancel="True" />
+      <Button Grid.Column="4" Content="Save" Classes="accent" Command="{Binding SaveCommand}" />
+    </Grid>
+  </Grid>
+</UserControl>

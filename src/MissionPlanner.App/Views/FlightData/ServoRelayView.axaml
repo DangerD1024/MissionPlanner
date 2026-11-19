@@ -1,0 +1,154 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             xmlns:fd="using:MissionPlanner.App.Controls.FlightData"
+             x:Class="MissionPlanner.App.Views.FlightData.ServoRelayView"
+             x:DataType="vm:ServoRelayViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="Border.row">
+      <Setter Property="Background" Value="{DynamicResource Bg2}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="8,6" />
+      <Setter Property="Margin" Value="0,0,0,5" />
+    </Style>
+    <Style Selector="Button.cmd">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="Padding" Value="4,3" />
+      <Setter Property="MinHeight" Value="28" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="NumericUpDown.pwm">
+      <Setter Property="ShowButtonSpinner" Value="False" />
+      <Setter Property="Minimum" Value="500" />
+      <Setter Property="Maximum" Value="2500" />
+      <Setter Property="FormatString" Value="0" />
+      <Setter Property="Width" Value="62" />
+      <Setter Property="MinHeight" Value="28" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="TextBlock.name">
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBlock.small">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.state">
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="7,1" />
+      <Setter Property="Background" Value="{DynamicResource Bg3}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.state.on">
+      <Setter Property="Background" Value="{DynamicResource Accent}" />
+    </Style>
+    <Style Selector="Border.state.on TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
+    </Style>
+    <Style Selector="Border.state.off">
+      <Setter Property="Background" Value="{DynamicResource Danger}" />
+    </Style>
+    <Style Selector="Border.state.off TextBlock">
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="ProgressBar.pwm">
+      <Setter Property="MinHeight" Value="5" />
+      <Setter Property="Height" Value="5" />
+      <Setter Property="Minimum" Value="0" />
+      <Setter Property="Maximum" Value="100" />
+      <Setter Property="Foreground" Value="{DynamicResource Accent}" />
+      <Setter Property="Background" Value="{DynamicResource Bg3}" />
+      <Setter Property="CornerRadius" Value="3" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="8" Spacing="6">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+        <TextBlock Classes="h2" Text="Servo outputs" VerticalAlignment="Center" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" ToolTip.Tip="Repeat: cycles and cycle time (DO_REPEAT_SERVO / DO_REPEAT_RELAY)">
+          <TextBlock Classes="small" Text="Repeat" />
+          <NumericUpDown Classes="pwm" MinWidth="0" Width="44" Minimum="1" Maximum="100" Value="{Binding RepeatCount}" />
+          <TextBlock Classes="small" Text="× every" />
+          <NumericUpDown Classes="pwm" MinWidth="0" Width="44" Minimum="0.1" Maximum="60" FormatString="0.#" Value="{Binding RepeatSeconds}" />
+          <TextBlock Classes="small" Text="s" />
+        </StackPanel>
+      </Grid>
+
+      <ItemsControl ItemsSource="{Binding Servos}" IsEnabled="{Binding CanCommand}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:ServoChannelRow">
+            <Border Classes="row">
+              <Border.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="Rename..." Command="{Binding RenameCommand}" />
+                </ContextMenu>
+              </Border.ContextMenu>
+              <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="5">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
+                  <TextBlock Classes="name" Text="{Binding Name}" />
+                  <TextBlock Grid.Column="1" Classes="small" Text="{Binding Function}" TextTrimming="CharacterEllipsis"
+                             ToolTip.Tip="SERVOn_FUNCTION: the autopilot drives this output, so it may refuse DO_SET_SERVO" />
+                  <Border Grid.Column="2" Classes="state" IsVisible="{Binding Position, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <TextBlock Text="{Binding Position}" FontSize="11" FontWeight="SemiBold" />
+                  </Border>
+                  <TextBlock Grid.Column="3" Text="{Binding OutputText, StringFormat='{}{0} µs'}" FontSize="13"
+                             FontWeight="SemiBold" VerticalAlignment="Center" MinWidth="58" TextAlignment="Right"
+                             ToolTip.Tip="Live output (SERVO_OUTPUT_RAW)" />
+                </Grid>
+                <ProgressBar Grid.Row="1" Classes="pwm" Value="{Binding Output, Converter={x:Static fd:PwmPercentConverter.Instance}}" />
+                <Grid Grid.Row="2" ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6">
+                  <NumericUpDown Classes="pwm" Value="{Binding Low}" ToolTip.Tip="Low PWM (SERVOn_MIN)" />
+                  <NumericUpDown Grid.Column="1" Classes="pwm" Value="{Binding High}" ToolTip.Tip="High PWM (SERVOn_MAX)" />
+                  <UniformGrid Grid.Column="2" Columns="4" ColumnSpacing="4">
+                    <Button Classes="cmd" Content="Low" Command="{Binding SetLowCommand}" ToolTip.Tip="DO_SET_SERVO to the low PWM" />
+                    <Button Classes="cmd" Content="High" Command="{Binding SetHighCommand}" ToolTip.Tip="DO_SET_SERVO to the high PWM" />
+                    <Button Classes="cmd" Content="Toggle" Command="{Binding ToggleCommand}" ToolTip.Tip="Switch to the other end" />
+                    <Button Classes="cmd" Content="Repeat" Command="{Binding RepeatCommand}"
+                            ToolTip.Tip="DO_REPEAT_SERVO: alternate between the high PWM and trim" />
+                  </UniformGrid>
+                </Grid>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <TextBlock Classes="h2" Text="Relays" Margin="0,6,0,0" />
+      <ItemsControl ItemsSource="{Binding Relays}" IsEnabled="{Binding CanCommand}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:RelayRow">
+            <Border Classes="row">
+              <Border.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="Rename..." Command="{Binding RenameCommand}" />
+                </ContextMenu>
+              </Border.ContextMenu>
+              <Grid ColumnDefinitions="*,Auto,2*" ColumnSpacing="8">
+                <TextBlock Classes="name" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                <Border Grid.Column="1" Classes="state" Classes.on="{Binding IsOn}" Classes.off="{Binding IsOff}" MinWidth="44">
+                  <TextBlock Text="{Binding StateText}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                </Border>
+                <UniformGrid Grid.Column="2" Columns="4" ColumnSpacing="4">
+                  <Button Classes="cmd" Content="On" Command="{Binding OnCommand}" ToolTip.Tip="DO_SET_RELAY on" />
+                  <Button Classes="cmd" Content="Off" Command="{Binding OffCommand}" ToolTip.Tip="DO_SET_RELAY off" />
+                  <Button Classes="cmd" Content="Toggle" Command="{Binding ToggleCommand}" />
+                  <Button Classes="cmd" Content="Repeat" Command="{Binding RepeatCommand}" ToolTip.Tip="DO_REPEAT_RELAY" />
+                </UniformGrid>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <TextBlock Classes="small" TextWrapping="Wrap" Margin="2,0"
+                 Text="Right-click a row to rename it. Outputs work only when SERVOn_FUNCTION is 0 (or RC passthrough); relays need RELAYn_FUNCTION / RELAYn_PIN set." />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
