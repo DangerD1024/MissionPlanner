@@ -40,7 +40,7 @@
       <Setter Property="Foreground" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="Border.reboot">
-      <Setter Property="Background" Value="#2d2610" />
+      <Setter Property="Background" Value="{DynamicResource WarnSoft}" />
       <Setter Property="BorderBrush" Value="{DynamicResource Warn}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="6" />
@@ -58,7 +58,7 @@
           <TextBlock Classes="muted" Text="Set the Compass Priority by reordering the compasses in the table below (Highest at the top)" />
         </StackPanel>
 
-        <Border Classes="reboot" IsVisible="{Binding AnyMissing}" BorderBrush="{DynamicResource Danger}" Background="#311818">
+        <Border Classes="reboot" IsVisible="{Binding AnyMissing}" BorderBrush="{DynamicResource Danger}" Background="{DynamicResource DangerSoft}">
           <TextBlock TextWrapping="Wrap" Text="Your compass configuration has changed, please review the missing compass" />
         </Border>
 

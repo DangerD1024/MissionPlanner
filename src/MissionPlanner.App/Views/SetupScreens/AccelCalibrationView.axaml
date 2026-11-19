@@ -21,7 +21,7 @@
     </Style>
     <Style Selector="Border.step.current">
       <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
-      <Setter Property="Background" Value="#1c2a14" />
+      <Setter Property="Background" Value="{DynamicResource AccentSoft}" />
     </Style>
     <Style Selector="Border.step.current TextBlock">
       <Setter Property="Foreground" Value="{DynamicResource Accent}" />

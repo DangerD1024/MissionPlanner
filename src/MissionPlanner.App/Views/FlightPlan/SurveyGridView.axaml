@@ -45,7 +45,7 @@
 
     <!-- statistics over the map -->
     <Style Selector="Border.overlay">
-      <Setter Property="Background" Value="#E0101317" />
+      <Setter Property="Background" Value="{DynamicResource Overlay}" />
       <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="8" />
@@ -102,7 +102,7 @@
 
       <Button HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="10" Padding="10,5"
               Click="OnZoomToSurvey" ToolTip.Tip="Zoom to the survey"
-              Background="#D9101317" BorderBrush="{DynamicResource Line}" BorderThickness="1">
+              Background="{DynamicResource Overlay}" BorderBrush="{DynamicResource Line}" BorderThickness="1">
         <TextBlock Text="Zoom to survey" FontSize="12" />
       </Button>
     </Panel>

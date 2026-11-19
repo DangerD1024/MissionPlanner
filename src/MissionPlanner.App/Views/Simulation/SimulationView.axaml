@@ -30,7 +30,7 @@
       <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="Button.vehicle.selected /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="#1f2a17" />
+      <Setter Property="Background" Value="{DynamicResource AccentSoft}" />
       <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="Button.vehicle.selected TextBlock.tiletitle">
@@ -59,7 +59,7 @@
       <Setter Property="Margin" Value="0,0,0,2" />
     </Style>
     <Style Selector="Border.overlay">
-      <Setter Property="Background" Value="#c0101317" />
+      <Setter Property="Background" Value="{DynamicResource Overlay}" />
       <Setter Property="CornerRadius" Value="6" />
       <Setter Property="Padding" Value="10,6" />
     </Style>

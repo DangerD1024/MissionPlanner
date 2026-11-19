@@ -24,7 +24,7 @@
       <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="Button.tile.selected /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="#1f2a17" />
+      <Setter Property="Background" Value="{DynamicResource AccentSoft}" />
       <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="Button.tile.selected TextBlock.tilelabel">

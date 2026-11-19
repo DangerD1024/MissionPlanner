@@ -33,6 +33,12 @@
       <SolidColorBrush x:Key="Info" Color="{StaticResource InfoColor}" />
       <!-- panels floating over the map or HUD; the theme service replaces it per theme -->
       <SolidColorBrush x:Key="Overlay" Color="#d8161a1f" />
+      <!-- translucent tints for highlighted rows and banners; the theme service replaces them -->
+      <SolidColorBrush x:Key="AccentSoft" Color="#2e8cc63f" />
+      <SolidColorBrush x:Key="AccentSoftStrong" Color="#488cc63f" />
+      <SolidColorBrush x:Key="WarnSoft" Color="#2ef0b429" />
+      <SolidColorBrush x:Key="DangerSoft" Color="#2ee5534b" />
+      <SolidColorBrush x:Key="InfoSoft" Color="#2e4fa3e3" />
 
       <!-- Fluent accent follows the palette -->
       <Color x:Key="SystemAccentColor">#8cc63f</Color>

@@ -11,19 +11,19 @@
       <Setter Property="CornerRadius" Value="6" />
       <Setter Property="Padding" Value="10,7" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="Background" Value="#1b2430" />
+      <Setter Property="Background" Value="{DynamicResource InfoSoft}" />
       <Setter Property="BorderBrush" Value="{DynamicResource Info}" />
     </Style>
     <Style Selector="Border.banner.success">
-      <Setter Property="Background" Value="#1c2a14" />
+      <Setter Property="Background" Value="{DynamicResource AccentSoft}" />
       <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="Border.banner.warning">
-      <Setter Property="Background" Value="#2d2610" />
+      <Setter Property="Background" Value="{DynamicResource WarnSoft}" />
       <Setter Property="BorderBrush" Value="{DynamicResource Warn}" />
     </Style>
     <Style Selector="Border.banner.error">
-      <Setter Property="Background" Value="#311818" />
+      <Setter Property="Background" Value="{DynamicResource DangerSoft}" />
       <Setter Property="BorderBrush" Value="{DynamicResource Danger}" />
     </Style>
   </UserControl.Styles>

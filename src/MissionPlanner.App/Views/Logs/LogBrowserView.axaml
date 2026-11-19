@@ -160,7 +160,7 @@
         <Grid Grid.Column="4" x:Name="SidePanel" RowDefinitions="*,4,*" Background="{DynamicResource Bg1}">
           <Panel x:Name="MapPanel" IsVisible="{Binding MapVisible}">
             <controls:MapView x:Name="Map" />
-            <Border Background="#c0101317" CornerRadius="4" Padding="6,2" Margin="8,6" VerticalAlignment="Top"
+            <Border Background="{DynamicResource Overlay}" CornerRadius="4" Padding="6,2" Margin="8,6" VerticalAlignment="Top"
                     HorizontalAlignment="Left" IsHitTestVisible="False">
               <TextBlock Classes="muted" FontSize="11" Text="GPS track · hover the graph to follow it" />
             </Border>

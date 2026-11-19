@@ -5,6 +5,6 @@
              x:DataType="vm:PlaceholderPageViewModel">
   <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
     <TextBlock Text="{Binding Title}" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center" />
-    <TextBlock Text="{Binding Arrives}" Foreground="#a4adb8" HorizontalAlignment="Center" />
+    <TextBlock Text="{Binding Arrives}" Foreground="{DynamicResource Muted}" HorizontalAlignment="Center" />
   </StackPanel>
 </UserControl>

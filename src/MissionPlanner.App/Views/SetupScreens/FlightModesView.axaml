@@ -15,7 +15,7 @@
       <Setter Property="Margin" Value="0,2" />
     </Style>
     <Style Selector="Border.slot.active">
-      <Setter Property="Background" Value="#1f2a17" />
+      <Setter Property="Background" Value="{DynamicResource AccentSoft}" />
       <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
     </Style>
     <Style Selector="Border.slot.active TextBlock.slottitle">

@@ -74,6 +74,19 @@ public sealed class ThemeService : IThemeService
         Brush("Danger", p.Danger);
         Brush("Warn", p.Warn);
         Brush("Info", p.Info);
+        // soft tints for highlighted rows and banners: translucent, so they suit light and dark pages
+        Tint("AccentSoft", p.Accent, 0x2e);
+        Tint("AccentSoftStrong", p.Accent, 0x48);
+        Tint("WarnSoft", p.Warn, 0x2e);
+        Tint("DangerSoft", p.Danger, 0x2e);
+        Tint("InfoSoft", p.Info, 0x2e);
+
+        void Tint(string key, string hex, byte alpha)
+        {
+            var c = Color.Parse(hex);
+            res[key] = new SolidColorBrush(Color.FromArgb(alpha, c.R, c.G, c.B));
+        }
+
         // panels floating over the map or the HUD: translucent page colour, readable with Text
         var overlay = Color.Parse(p.Bg1);
         res["OverlayColor"] = Color.FromArgb(0xd8, overlay.R, overlay.G, overlay.B);

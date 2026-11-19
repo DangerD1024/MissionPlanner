@@ -50,12 +50,12 @@
       <Setter Property="Margin" Value="0,1" />
     </Style>
     <Style Selector="ListBox.ports ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="#1f2a17" />
+      <Setter Property="Background" Value="{DynamicResource AccentSoft}" />
       <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
       <Setter Property="BorderThickness" Value="1" />
     </Style>
     <Style Selector="ListBox.ports ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="#26331b" />
+      <Setter Property="Background" Value="{DynamicResource AccentSoftStrong}" />
     </Style>
     <Style Selector="ListBox.ports ListBoxItem:selected">
       <Setter Property="Foreground" Value="{DynamicResource Text}" />
@@ -229,7 +229,7 @@
           <Button Content="Detect bootloader" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                   Command="{Binding DetectBootloaderCommand}"
                   ToolTip.Tip="Probes every serial port for a board in its bootloader for 20 s: plug the board in (or replug it) after clicking." />
-          <Border IsVisible="{Binding HasDetected}" Background="#1f2a17" CornerRadius="6" Padding="10,8">
+          <Border IsVisible="{Binding HasDetected}" Background="{DynamicResource AccentSoft}" CornerRadius="6" Padding="10,8">
             <Grid ColumnDefinitions="*,Auto">
               <TextBlock Text="{Binding DetectedText}" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource Accent}" />
               <Button Grid.Column="1" Padding="4" Margin="6,0,0,0" VerticalAlignment="Top" Command="{Binding ClearDetectedCommand}"
