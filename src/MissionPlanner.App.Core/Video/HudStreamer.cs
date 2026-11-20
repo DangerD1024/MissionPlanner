@@ -43,6 +43,9 @@ public sealed class HudStreamer : IHudStreamer
     private IntPtr _appsrc;
     private IntPtr _udp;
     private RtspServerNative? _rtsp;
+    private ShmFrameWriter? _shm;
+    private int _shmWidth;
+    private int _shmHeight;
     private int _frameBytes;
     private Thread? _monitor;
     private volatile bool _stopping;
@@ -93,6 +96,20 @@ public sealed class HudStreamer : IHudStreamer
             StopLocked();
             if (settings.Validate() is { } invalid)
                 throw new InvalidOperationException(invalid);
+            if (settings.UsesShm)
+            {
+                // Same-machine raw frames: no GStreamer, no encoder, no network.
+                _shm = new ShmFrameWriter();
+                _shmWidth = settings.Width;
+                _shmHeight = settings.Height;
+                _frameBytes = settings.Width * settings.Height * 4;
+                EncoderName = "shm raw BGRA";
+                Error = null;
+                IsRunning = true;
+                _stopping = false;
+                Log.Info($"streaming {settings.Width}x{settings.Height}@{settings.Fps} raw BGRA via {StreamSettings.ShmPath}");
+                return;
+            }
             if (!IsAvailable(out var message))
                 throw new InvalidOperationException(message);
             var encoder = StreamPipelines.PickEncoder(settings, GstNative.HasElement)
@@ -139,7 +156,14 @@ public sealed class HudStreamer : IHudStreamer
     {
         lock (_gate)
         {
-            if (!IsRunning || _appsrc == IntPtr.Zero || bgra.Length < _frameBytes)
+            if (!IsRunning)
+                return;
+            if (_shm != null)
+            {
+                _shm.Write(bgra, _shmWidth, _shmHeight);
+                return;
+            }
+            if (_appsrc == IntPtr.Zero || bgra.Length < _frameBytes)
                 return;
             var buffer = GstNative.BufferNewAllocate(IntPtr.Zero, (UIntPtr)_frameBytes, IntPtr.Zero);
             if (buffer == IntPtr.Zero)
@@ -172,6 +196,8 @@ public sealed class HudStreamer : IHudStreamer
         _stopping = true;
         var wasRunning = IsRunning;
         IsRunning = false;
+        _shm?.Dispose();
+        _shm = null;
         _rtsp?.Dispose();
         _rtsp = null;
         RtspPort = 0;

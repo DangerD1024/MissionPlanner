@@ -167,6 +167,26 @@ public class JoystickControllerTests
     }
 
     [TestMethod]
+    public async Task ButtonHeldDrivesTwoValueChannel()
+    {
+        var (c, d, v) = Setup();
+        await using (c)
+        {
+            c.Profile.Channel(10).Input = new JoystickInput(JoystickInputKind.Button, 2);
+            c.SetSending(true);
+            d.ButtonValues[2] = false;
+            c.Step();
+            Assert.AreEqual(1000, v.Overrides.Last().chan10_raw, "released");
+            d.ButtonValues[2] = true;
+            c.Step();
+            Assert.AreEqual(2000, v.Overrides.Last().chan10_raw, "pressed");
+            c.Profile.Channel(10).Reverse = true;
+            c.Step();
+            Assert.AreEqual(1000, v.Overrides.Last().chan10_raw, "reverse swaps the pair");
+        }
+    }
+
+    [TestMethod]
     public async Task UnpluggingStopsSendingAndReleases()
     {
         var (c, d, v) = Setup();

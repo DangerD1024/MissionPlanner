@@ -26,6 +26,11 @@ public abstract class PageViewModel : ObservableObject
     public virtual void OnHidden()
     {
     }
+
+    /// <summary>Called on the UI thread when the app is shutting down (last chance to persist).</summary>
+    public virtual void OnShutdown()
+    {
+    }
 }
 
 /// <summary>A screen that is not built yet; says what it will hold.</summary>
@@ -67,6 +72,9 @@ public sealed partial class ShellViewModel : ObservableObject
         };
         _currentPage = GetPage(Screen.Data);
         _currentPage.OnShown();
+        // Eager so the joystick VM's connect subscription exists before first navigation
+        // (a saved "sending" profile resumes without visiting SETUP).
+        GetPage(Screen.Setup);
         services.Session.StateChanged += (_, _) => services.Dispatcher.Post(() => OnPropertyChanged(nameof(Title)));
         services.ScreenRequested += (_, screen) => services.Dispatcher.Post(() => Navigate(screen));
         services.Notified += (_, n) => services.Dispatcher.Post(() => ShowToast(n));
@@ -141,6 +149,9 @@ public sealed partial class ShellViewModel : ObservableObject
         CurrentPage = GetPage(screen);
         CurrentPage.OnShown();
     }
+
+    /// <summary>App exit: let the visible page persist anything it holds in memory.</summary>
+    public void Shutdown() => CurrentPage.OnShutdown();
 
     public T GetPage<T>(Screen screen) where T : PageViewModel => (T)GetPage(screen);
 

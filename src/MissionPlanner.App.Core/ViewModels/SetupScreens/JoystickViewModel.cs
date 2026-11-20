@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using log4net;
 using MissionPlanner.App.Core.Services;
+using MissionPlanner.App.Core.Session;
 using MissionPlanner.App.Core.ViewModels.SetupScreens.Joystick;
 using MissionPlanner.Utilities;
 
@@ -293,6 +294,11 @@ public sealed partial class JoystickViewModel : PageViewModel
             IsSending = false;
             StatusText = _controller.Lost ?? "The joystick was disconnected.";
         });
+        services.Session.StateChanged += (_, state) =>
+        {
+            if (state == LinkState.Connected)
+                services.Dispatcher.Post(ResumeSendingIfWanted);
+        };
     }
 
     public AppServices Services { get; }
@@ -438,10 +444,13 @@ public sealed partial class JoystickViewModel : PageViewModel
     public override void OnHidden()
     {
         _shown = false;
+        SaveIfDirty();
         // a joystick that is not driving the vehicle is let go, as Mission Planner closes it
         if (!IsSending)
             CloseDevice();
     }
+
+    public override void OnShutdown() => SaveIfDirty();
 
     /// <summary>Waits for the backend (tests).</summary>
     internal Task BackendReady => _backendTask ?? Task.CompletedTask;
@@ -479,6 +488,11 @@ public sealed partial class JoystickViewModel : PageViewModel
         }
 
         SelectedDevice = pick;
+        // JoystickDeviceInfo is a record: re-listing the same stick yields an equal value,
+        // so the property change above may not fire even though OnHidden let the device
+        // go. Reopen explicitly or the page comes back with no device and no live rows.
+        if (pick != null && _device == null)
+            OpenDevice(pick);
         if (pick == null)
         {
             CloseDevice();
@@ -534,12 +548,14 @@ public sealed partial class JoystickViewModel : PageViewModel
         OnPropertyChanged(nameof(HasDevice));
         OnPropertyChanged(nameof(ManualControl));
         OnPropertyChanged(nameof(Elevons));
+        ResumeSendingIfWanted();
     }
 
     private void CloseDevice()
     {
         if (_device == null)
             return;
+        SaveIfDirty();
         _controller.Attach(null);
         _ = _controller.StopAsync();
         try
@@ -570,6 +586,8 @@ public sealed partial class JoystickViewModel : PageViewModel
             inputs.Add(new JoystickInput(JoystickInputKind.HatVertical, i));
             inputs.Add(new JoystickInput(JoystickInputKind.HatHorizontal, i));
         }
+        for (var i = 0; i < dev.ButtonCount; i++)
+            inputs.Add(new JoystickInput(JoystickInputKind.Button, i));
 
         inputs.Add(new JoystickInput(JoystickInputKind.ButtonAxis, 0));
         inputs.Add(new JoystickInput(JoystickInputKind.ButtonAxis, 1));
@@ -648,6 +666,26 @@ public sealed partial class JoystickViewModel : PageViewModel
         ProfileText = "Unsaved changes";
     }
 
+    // Mappings used to live only in memory until the Save button: leaving the page (or
+    // closing Mission Planner) dropped them. Persist on every teardown path instead —
+    // device switch, page hidden, app exit — so an edit is never lost by navigating away.
+    private void SaveIfDirty()
+    {
+        if (!IsDirty || _device == null)
+            return;
+        try
+        {
+            _store.Save(_controller.Profile);
+            IsDirty = false;
+            ProfilePath = _store.PathFor(_controller.Profile.Device);
+            ProfileText = "Saved (" + Path.GetFileName(ProfilePath) + ")";
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("joystick profile save", ex);
+        }
+    }
+
     // ---- commands
 
     [RelayCommand]
@@ -695,6 +733,7 @@ public sealed partial class JoystickViewModel : PageViewModel
             _controller.SetSending(false);
             IsSending = false;
             StatusText = "Stopped; the overridden channels were handed back to the RC receiver.";
+            PersistSending();
             return;
         }
 
@@ -711,6 +750,51 @@ public sealed partial class JoystickViewModel : PageViewModel
             return;
         }
 
+        _controller.Start();
+        _controller.SetSending(true);
+        IsSending = true;
+        StatusText = "";
+        PersistSending();
+    }
+
+    private void PersistSending()
+    {
+        _controller.Profile.Sending = IsSending;
+        try
+        {
+            _store.Save(_controller.Profile);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("joystick profile save", ex);
+        }
+    }
+
+    // The sending intent is saved per device; honour it when the page opens on a live
+    // link or the link comes up while the page is open (restarts, reconnects).
+    private void ResumeSendingIfWanted()
+    {
+        if (IsSending)
+            return;
+        if (_device == null)
+        {
+            // Page never opened: bootstrap backend + device from the saved profile.
+            var name = Settings.Instance[DeviceKey];
+            if (name is not { Length: > 0 } || _store.Load(name)?.Sending != true)
+                return;
+            if (_backend == null)
+                OnShown();
+            else
+                RefreshDevices();
+            return; // OpenDevice calls back here with the profile loaded
+        }
+        if (!_controller.Profile.Sending)
+            return;
+        if (!_device.IsAttached || Services.Session.State != LinkState.Connected)
+            return;
+        if (!_controller.Profile.Channels.Any(c => c.Input.Kind != JoystickInputKind.None) &&
+            !_controller.Profile.Buttons.Any(b => b.Button >= 0 && b.Function != JoystickButtonFunction.None))
+            return;
         _controller.Start();
         _controller.SetSending(true);
         IsSending = true;
