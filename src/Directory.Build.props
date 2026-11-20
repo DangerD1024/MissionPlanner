@@ -11,7 +11,7 @@
 
   <!-- The app's version, shown in the window title and on Help. Change this one line for each release. -->
   <PropertyGroup>
-    <MissionPlannerVersion>3.0.2b</MissionPlannerVersion>
+    <MissionPlannerVersion>3.0.3b</MissionPlannerVersion>
   </PropertyGroup>
 
   <PropertyGroup>
