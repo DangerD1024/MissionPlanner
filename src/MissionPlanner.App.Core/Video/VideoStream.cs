@@ -419,7 +419,9 @@ public sealed class VideoStream : IVideoStream
             GstNative.GFree(debug);
             Log.Info($"video: {text} ({detail})");
             // the summary alone ("Could not get/set settings from/on resource") does not say why
-            if (detail?.Contains("already in use", StringComparison.OrdinalIgnoreCase) == true)
+            // Linux/macOS: "Address already in use"; Windows: "Only one usage of each socket address"
+            if (detail != null && (detail.Contains("already in use", StringComparison.OrdinalIgnoreCase) ||
+                                   detail.Contains("Only one usage of each socket address", StringComparison.OrdinalIgnoreCase)))
                 return "the port is already in use by another program";
             return text;
         }

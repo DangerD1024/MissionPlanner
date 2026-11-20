@@ -29,6 +29,10 @@ public sealed class Hud : Control
     public static readonly StyledProperty<string?> VideoStatusProperty =
         AvaloniaProperty.Register<Hud, string?>(nameof(VideoStatus));
 
+    /// <summary>False draws only the picture behind the overlays (video / 3D, or sky and ground): a stream without OSD.</summary>
+    public static readonly StyledProperty<bool> ShowOverlayProperty =
+        AvaloniaProperty.Register<Hud, bool>(nameof(ShowOverlay), true);
+
     private static readonly Typeface Face = new(FontFamily.Default, FontStyle.Normal, FontWeight.SemiBold);
     private static readonly Typeface FaceBold = new(FontFamily.Default, FontStyle.Normal, FontWeight.Bold);
 
@@ -65,7 +69,7 @@ public sealed class Hud : Control
 
     static Hud()
     {
-        AffectsRender<Hud>(ModelProperty, VideoFrameProperty, VideoAspectProperty, VideoStatusProperty);
+        AffectsRender<Hud>(ModelProperty, VideoFrameProperty, VideoAspectProperty, VideoStatusProperty, ShowOverlayProperty);
         ClipToBoundsProperty.OverrideDefaultValue<Hud>(true);
     }
 
@@ -91,6 +95,12 @@ public sealed class Hud : Control
     {
         get => GetValue(VideoStatusProperty);
         set => SetValue(VideoStatusProperty, value);
+    }
+
+    public bool ShowOverlay
+    {
+        get => GetValue(ShowOverlayProperty);
+        set => SetValue(ShowOverlayProperty, value);
     }
 
     private long _drawnVersion = -1;
@@ -119,6 +129,14 @@ public sealed class Hud : Control
 
         var video = VideoFrame;
         var hasVideo = video != null && DrawVideo(ctx, video, VideoAspect, w, h);
+
+        if (!ShowOverlay)
+        {
+            // the picture alone: video / 3D, or the sky and ground following the attitude
+            if (!hasVideo)
+                DrawHorizon(ctx, m, w, h, cx, cy, ppd, scale, sky: true, lines: false);
+            return;
+        }
 
         DrawHorizon(ctx, m, w, h, cx, cy, ppd, scale, sky: !hasVideo);
         DrawRollScale(ctx, m, cx, cy, h, scale);
@@ -169,7 +187,8 @@ public sealed class Hud : Control
         ctx.DrawText(t, new Point(x, y));
     }
 
-    private static void DrawHorizon(DrawingContext ctx, HudModel m, double w, double h, double cx, double cy, double ppd, double scale, bool sky = true)
+    private static void DrawHorizon(DrawingContext ctx, HudModel m, double w, double h, double cx, double cy, double ppd, double scale, bool sky = true,
+        bool lines = true)
     {
         var big = Math.Sqrt(w * w + h * h) * 2;
         var transform = Matrix.CreateTranslation(0, m.Pitch * ppd) * Matrix.CreateRotation(-m.Roll * Math.PI / 180) *
@@ -181,6 +200,9 @@ public sealed class Hud : Control
                 ctx.FillRectangle(Sky, new Rect(-big / 2, -big, big, big));
                 ctx.FillRectangle(Ground, new Rect(-big / 2, 0, big, big));
             }
+
+            if (!lines)
+                return;
 
             ctx.DrawLine(WhitePen, new Point(-big / 2, 0), new Point(big / 2, 0));
 

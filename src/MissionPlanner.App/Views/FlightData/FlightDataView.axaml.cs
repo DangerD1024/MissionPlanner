@@ -83,6 +83,7 @@ public sealed partial class FlightDataView : UserControl
         vm.PropertyChanged += OnVmChanged;
         // opens the HUD window now if it was detached when the app last closed
         HudWindowHost.Track(vm);
+        HudStreamPump.Track(vm);
         SizeHud(LeftColumn.Bounds.Size);
         Map.Layers.Add(new MissionLayer(vm.MapModel));
         Map.Layers.Add(new TrackLayer(vm.MapModel));
