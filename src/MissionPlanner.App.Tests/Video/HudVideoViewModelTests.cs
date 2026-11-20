@@ -350,3 +350,67 @@ public sealed class VideoSettingsViewModelTests
         Assert.IsFalse(page.SaveAndPlayCommand.CanExecute(null));
     }
 }
+
+[TestClass]
+public sealed class FpvCameraTests
+{
+    private static HudVideoViewModel Create(out MemoryVideoStore store)
+    {
+        store = new MemoryVideoStore();
+        return new HudVideoViewModel(new VideoTestUi().CreateServices(), store, new FakeVideoStream());
+    }
+
+    [TestMethod]
+    public void DefaultsMatchTheHudAndChangesApplyAndPersist()
+    {
+        var vm = Create(out var store);
+        Assert.IsNull(vm.FpvFov, "default: the HUD's own field of view");
+        Assert.AreEqual(0, vm.FpvTilt);
+
+        var dialog = new FpvCameraViewModel(vm);
+        dialog.CustomFov = true;
+        Assert.AreEqual(HudVideoViewModel.DefaultFov, vm.FpvFov!.Value, "applied as soon as it is switched on");
+        dialog.Fov = 135;
+        dialog.Tilt = 30;
+        Assert.AreEqual(135, vm.FpvFov!.Value);
+        Assert.AreEqual(30, vm.FpvTilt);
+        Assert.AreEqual("135", store.Get(HudVideoViewModel.FovKey));
+        Assert.AreEqual("30", store.Get(HudVideoViewModel.TiltKey));
+
+        dialog.CustomFov = false;
+        Assert.IsNull(vm.FpvFov);
+        Assert.IsNull(store.Get(HudVideoViewModel.FovKey));
+    }
+
+    [TestMethod]
+    public void CancelPutsBackWhatWasThereAndResetGoesToTheDefaults()
+    {
+        var vm = Create(out _);
+        vm.FpvFov = 90;
+        vm.FpvTilt = 10;
+        var dialog = new FpvCameraViewModel(vm);
+        var closed = (bool?)null;
+        dialog.CloseRequested += (_, ok) => closed = ok;
+        dialog.Fov = 150;
+        dialog.Tilt = 45;
+        dialog.CancelCommand.Execute(null);
+        Assert.IsFalse(closed);
+        Assert.AreEqual(90, vm.FpvFov!.Value);
+        Assert.AreEqual(10, vm.FpvTilt);
+
+        var again = new FpvCameraViewModel(vm);
+        again.ResetCommand.Execute(null);
+        Assert.IsNull(vm.FpvFov);
+        Assert.AreEqual(0, vm.FpvTilt);
+    }
+
+    [TestMethod]
+    public void OutOfRangeValuesAreClamped()
+    {
+        var vm = Create(out _);
+        vm.FpvFov = 400;
+        vm.FpvTilt = -90;
+        Assert.AreEqual(160, vm.FpvFov!.Value);
+        Assert.AreEqual(-30, vm.FpvTilt);
+    }
+}

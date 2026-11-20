@@ -13,6 +13,16 @@ public enum HudLevel
 /// </summary>
 public sealed class HudModel
 {
+    /// <summary>A copy with another attitude (the 3D view's frame, so the ladder matches its horizon).</summary>
+    public HudModel WithAttitude(double roll, double pitch, double heading)
+    {
+        var m = (HudModel)MemberwiseClone();
+        m.Roll = roll;
+        m.Pitch = pitch;
+        m.Heading = heading;
+        return m;
+    }
+
     public long Version;
 
     public bool Connected;

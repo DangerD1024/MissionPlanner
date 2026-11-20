@@ -84,6 +84,7 @@ public sealed partial class FlightDataViewModel : PageViewModel
 
         InitExtras();
         InitHudWindow();
+        InitThreeD();
     }
 
     public AppServices Services { get; }
@@ -306,6 +307,7 @@ public sealed partial class FlightDataViewModel : PageViewModel
         var tick = _tick++;
 
         UpdateHud(s, cs);
+        FeedScene(s, cs);
 
         if (tick % QuickEvery == 0)
         {

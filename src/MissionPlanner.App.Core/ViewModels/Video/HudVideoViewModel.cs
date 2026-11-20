@@ -28,6 +28,8 @@ public sealed partial class HudVideoViewModel : ObservableObject, IDisposable
         Stream = stream;
         _settings = VideoSettings.Load(store);
         stream.StateChanged += (_, _) => services.Dispatcher.Post(SyncState);
+        _threeD = bool.TryParse(store.Get(ThreeDKey), out var on) && on;
+        _threeDFallback = bool.TryParse(store.Get(ThreeDFallbackKey), out var fallback) && fallback;
     }
 
     /// <summary>The app's instance, created (and auto-started if so configured) on first use.</summary>
@@ -55,7 +57,7 @@ public sealed partial class HudVideoViewModel : ObservableObject, IDisposable
     public string? LastPipeline => _settings.LastPipeline;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsActive), nameof(ShowsFrame))]
+    [NotifyPropertyChangedFor(nameof(IsActive), nameof(ShowsFrame), nameof(UsesSynthetic))]
     private VideoStreamState _state;
 
     /// <summary>"Connecting video…", "No video", the error...; empty while playing or stopped.</summary>
@@ -119,6 +121,8 @@ public sealed partial class HudVideoViewModel : ObservableObject, IDisposable
             return false;
         }
 
+        // the camera picture replaces the 3D view
+        ThreeD = false;
         Log.Info($"video: {source.DisplayName}: {pipeline}");
         _startError = null;
         _playing = source.Clone();

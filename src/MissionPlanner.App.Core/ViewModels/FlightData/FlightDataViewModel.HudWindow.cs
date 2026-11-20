@@ -65,6 +65,7 @@ public sealed partial class FlightDataViewModel
         if (!ReferenceEquals(cs, _cs))
             OnVehicleChanged(cs);
         UpdateHud(s, cs);
+        FeedScene(s, cs);
         TelemetryUpdated?.Invoke(this, EventArgs.Empty);
     }
 

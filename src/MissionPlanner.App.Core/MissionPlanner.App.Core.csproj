@@ -3,6 +3,8 @@
   <!-- Services and view-models for the new app. No UI framework types belong here. -->
   <PropertyGroup>
     <RootNamespace>MissionPlanner.App.Core</RootNamespace>
+    <!-- the 3D view hands pixel buffers to OpenGL -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,6 +30,10 @@
     <!-- the libraries reference 4.7.0; the current package has the maintained Linux/macOS implementation -->
     <PackageReference Include="System.IO.Ports" Version="10.0.15" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <!-- 3D view: OpenGL 3.3 in a hidden GLFW window, rendered off screen; tiles decoded in managed code -->
+    <PackageReference Include="Silk.NET.OpenGL" Version="2.23.0" />
+    <PackageReference Include="Silk.NET.Windowing" Version="2.23.0" />
+    <PackageReference Include="StbImageSharp" Version="2.30.15" />
   </ItemGroup>
 
 </Project>

@@ -105,6 +105,19 @@ public sealed class Hud : Control
 
     private long _drawnVersion = -1;
 
+    /// <summary>
+    /// Roll, pitch and yaw to draw instead of the model's: the attitude the 3D picture behind was
+    /// rendered with, so the ladder and the 3D horizon move together (null: the model's).
+    /// </summary>
+    public (double Roll, double Pitch, double Yaw)? AttitudeOverride { get; set; }
+
+    /// <summary>
+    /// The camera behind the HUD (vertical field of view, upward tilt, degrees) when it is not the
+    /// HUD's own (h/50 px per degree, level): the ladder is then placed by perspective so it stays on
+    /// the 3D horizon at any field of view. Null: the classic ladder.
+    /// </summary>
+    public (double VerticalFov, double Tilt)? Camera { get; set; }
+
     /// <summary>Redraws if the model changed since the last frame.</summary>
     public void Refresh()
     {
@@ -116,6 +129,8 @@ public sealed class Hud : Control
     {
         var m = Model ?? new HudModel();
         _drawnVersion = m.Version;
+        if (AttitudeOverride is { } a)
+            m = m.WithAttitude(a.Roll, a.Pitch, a.Yaw);
 
         var w = Bounds.Width;
         var h = Bounds.Height;
@@ -134,11 +149,11 @@ public sealed class Hud : Control
         {
             // the picture alone: video / 3D, or the sky and ground following the attitude
             if (!hasVideo)
-                DrawHorizon(ctx, m, w, h, cx, cy, ppd, scale, sky: true, lines: false);
+                DrawHorizon(ctx, m, w, h, cx, cy, ppd, scale, Camera, sky: true, lines: false);
             return;
         }
 
-        DrawHorizon(ctx, m, w, h, cx, cy, ppd, scale, sky: !hasVideo);
+        DrawHorizon(ctx, m, w, h, cx, cy, ppd, scale, Camera, sky: !hasVideo);
         DrawRollScale(ctx, m, cx, cy, h, scale);
         DrawAircraft(ctx, cx, cy, scale);
         DrawHeadingTape(ctx, m, w, scale);
@@ -187,31 +202,56 @@ public sealed class Hud : Control
         ctx.DrawText(t, new Point(x, y));
     }
 
-    private static void DrawHorizon(DrawingContext ctx, HudModel m, double w, double h, double cx, double cy, double ppd, double scale, bool sky = true,
-        bool lines = true)
+    private static void DrawHorizon(DrawingContext ctx, HudModel m, double w, double h, double cx, double cy, double ppd, double scale,
+        (double VerticalFov, double Tilt)? camera, bool sky = true, bool lines = true)
     {
         var big = Math.Sqrt(w * w + h * h) * 2;
-        var transform = Matrix.CreateTranslation(0, m.Pitch * ppd) * Matrix.CreateRotation(-m.Roll * Math.PI / 180) *
-                        Matrix.CreateTranslation(cx, cy);
+
+        // where an elevation (degrees above the horizon) lands on the vertical axis through the
+        // centre, before roll: linear for the HUD's own camera, perspective for another one
+        Func<double, double> rowOf;
+        double lookPitch;
+        if (camera is { } c)
+        {
+            var f = h / 2 / Math.Tan(c.VerticalFov * Math.PI / 360);
+            lookPitch = m.Pitch + c.Tilt;
+            var p = lookPitch;
+            rowOf = deg =>
+            {
+                var a = Math.Clamp(p - deg, -89, 89) * Math.PI / 180;
+                return f * Math.Tan(a);
+            };
+        }
+        else
+        {
+            lookPitch = m.Pitch;
+            rowOf = deg => (m.Pitch - deg) * ppd;
+        }
+
+        var horizon = rowOf(0);
+        var transform = Matrix.CreateRotation(-m.Roll * Math.PI / 180) * Matrix.CreateTranslation(cx, cy);
         using (ctx.PushTransform(transform))
         {
             if (sky)
             {
-                ctx.FillRectangle(Sky, new Rect(-big / 2, -big, big, big));
-                ctx.FillRectangle(Ground, new Rect(-big / 2, 0, big, big));
+                ctx.FillRectangle(Sky, new Rect(-big / 2, horizon - big, big, big));
+                ctx.FillRectangle(Ground, new Rect(-big / 2, horizon, big, big));
             }
 
             if (!lines)
                 return;
 
-            ctx.DrawLine(WhitePen, new Point(-big / 2, 0), new Point(big / 2, 0));
+            ctx.DrawLine(WhitePen, new Point(-big / 2, horizon), new Point(big / 2, horizon));
 
             // pitch ladder, 5 degree steps, labelled every 10
             for (var deg = -60; deg <= 60; deg += 5)
             {
-                if (deg == 0 || Math.Abs(deg - m.Pitch) > 26)
+                if (deg == 0 || Math.Abs(deg - lookPitch) > 80)
                     continue;
-                var y = -deg * ppd;
+                var y = rowOf(deg);
+                // the classic ladder shows ±26° (26 · h/50 = 0.52 h): the same reach with any camera
+                if (Math.Abs(y) > h * 0.52)
+                    continue;
                 var half = (deg % 10 == 0 ? 46 : 22) * scale;
                 ctx.DrawLine(WhiteThin, new Point(-half, y), new Point(half, y));
                 if (deg % 10 == 0)

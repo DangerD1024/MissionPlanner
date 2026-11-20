@@ -6,6 +6,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
+using MissionPlanner.App.Core.Synthetic;
 using MissionPlanner.App.Core.Video;
 using MissionPlanner.App.Core.ViewModels.FlightData;
 using MissionPlanner.App.Core.ViewModels.Video;
@@ -13,9 +14,10 @@ using MissionPlanner.App.Core.ViewModels.Video;
 namespace MissionPlanner.App.Controls.Video;
 
 /// <summary>
-/// Puts the video behind a <see cref="Hud"/>: copies the newest decoded frame into one reused
-/// <see cref="WriteableBitmap"/> at most once per rendered frame, mirrors the status line and
-/// aspect, and gives the HUD's host its right-click Video menu. The stream itself belongs to
+/// Puts a picture behind a <see cref="Hud"/>: the camera video, or the 3D view (first person, sized
+/// to this HUD so its horizon lines up with the pitch ladder). Copies the newest frame into one
+/// reused <see cref="WriteableBitmap"/> at most once per rendered frame, mirrors the status line and
+/// aspect, and gives the HUD's host its right-click menu. The video stream belongs to
 /// <see cref="HudVideoViewModel"/> (one per app) and keeps running while views come and go.
 /// </summary>
 public sealed class HudVideoPresenter
@@ -28,6 +30,9 @@ public sealed class HudVideoPresenter
     private readonly Action<TimeSpan> _onAnimationFrame;
     private readonly Action _requestFrame;
     private HudVideoViewModel? _video;
+    private SyntheticScene? _scene;
+    private SyntheticView? _view;
+    private IFrameSource? _source;
     private bool _attached;
     private WriteableBitmap? _bitmap;
     private long _sequence;
@@ -54,10 +59,15 @@ public sealed class HudVideoPresenter
             _attached = false;
             Bind();
         };
+        hud.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == Visual.BoundsProperty || e.Property == Visual.IsVisibleProperty)
+                UpdateSource();
+        };
     }
 
     /// <summary>
-    /// Adds video to the HUD in <paramref name="host"/>; the host's DataContext is the
+    /// Adds video / 3D to the HUD in <paramref name="host"/>; the host's DataContext is the
     /// <see cref="FlightDataViewModel"/> (it supplies the app's services).
     /// </summary>
     /// <param name="extraMenu">appends the host's own entries to the right-click menu</param>
@@ -69,18 +79,22 @@ public sealed class HudVideoPresenter
         var services = (_host.DataContext as FlightDataViewModel)?.Services;
         var video = _attached && services != null ? HudVideoViewModel.For(services) : null;
         if (video == _video)
-            return;
-
-        if (_video != null)
         {
-            _video.PropertyChanged -= OnVideoChanged;
-            _video.Stream.FrameArrived -= OnFrameArrived;
+            UpdateSource();
+            return;
         }
 
+        if (_video != null)
+            _video.PropertyChanged -= OnVideoChanged;
+        if (_scene != null)
+            _scene.StateChanged -= OnSceneChanged;
+
         _video = video;
+        _scene = services != null && video != null ? SyntheticScene.For(services) : null;
         if (video == null)
         {
-            // off screen: drop the bitmap, keep the stream
+            // off screen: drop the bitmap and the 3D view, keep the video stream
+            UseSource(null);
             _hud.VideoFrame = null;
             _hud.VideoStatus = null;
             _bitmap?.Dispose();
@@ -90,12 +104,8 @@ public sealed class HudVideoPresenter
 
         HookShutdown(video);
         video.PropertyChanged += OnVideoChanged;
-        video.Stream.FrameArrived += OnFrameArrived;
-        _sequence = 0;
-        SyncFromVideo();
-        Volatile.Write(ref _pending, 0);
-        if (video.ShowsFrame)
-            OnFrameArrived(null, EventArgs.Empty);
+        _scene!.StateChanged += OnSceneChanged;
+        UpdateSource();
     }
 
     private static void HookShutdown(HudVideoViewModel video)
@@ -110,21 +120,78 @@ public sealed class HudVideoPresenter
 
     private void OnVideoChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(HudVideoViewModel.State) or nameof(HudVideoViewModel.StatusText) or nameof(HudVideoViewModel.Aspect))
-            SyncFromVideo();
+        if (e.PropertyName is nameof(HudVideoViewModel.State) or nameof(HudVideoViewModel.StatusText) or nameof(HudVideoViewModel.Aspect)
+            or nameof(HudVideoViewModel.UsesSynthetic) or nameof(HudVideoViewModel.FpvFov) or nameof(HudVideoViewModel.FpvTilt))
+            UpdateSource();
     }
 
-    private void SyncFromVideo()
+    private void OnSceneChanged(object? sender, EventArgs e) => Dispatcher.UIThread.Post(UpdateSource);
+
+    /// <summary>Video or 3D, the 3D view's size, the status line and aspect.</summary>
+    private void UpdateSource()
     {
-        if (_video == null)
+        var video = _video;
+        if (video == null)
             return;
-        _hud.VideoStatus = _video.StatusText;
-        _hud.VideoAspect = _video.Aspect;
-        if (!_video.ShowsFrame)
-            _hud.VideoFrame = null;
+
+        var synthetic = video.UsesSynthetic && _hud.IsVisible && _scene != null;
+        if (synthetic)
+        {
+            _view ??= _scene!.Acquire(SyntheticViewKind.FirstPerson);
+            SizeView(_view);
+            _hud.Camera = HudGeometry.Camera(video, _view, _hud.Bounds.Width, _hud.Bounds.Height);
+            UseSource(_view);
+            _hud.VideoStatus = _scene!.Error is { } error ? "3D: " + error : null;
+            // the 3D picture is rendered at this HUD's shape: fill it exactly
+            _hud.VideoAspect = VideoAspect.Fill;
+        }
+        else
+        {
+            UseSource(video.Stream);
+            _hud.Camera = null;
+            _hud.VideoStatus = video.StatusText;
+            _hud.VideoAspect = video.Aspect;
+            if (!video.ShowsFrame)
+                _hud.VideoFrame = null;
+        }
     }
 
-    /// <summary>Decoder thread: ask for one UI update, however many frames arrive before it runs.</summary>
+    /// <summary>Renders at the HUD's pixel size, with the horizon where the HUD draws it (8·scale below the middle).</summary>
+    private void SizeView(SyntheticView view)
+    {
+        var w = _hud.Bounds.Width;
+        var h = _hud.Bounds.Height;
+        var px = TopLevel.GetTopLevel(_hud)?.RenderScaling ?? 1;
+        view.Width = (int)Math.Round(w * px);
+        view.Height = (int)Math.Round(h * px);
+        view.CentreDownFraction = HudGeometry.HorizonDownFraction(w, h);
+    }
+
+    private void UseSource(IFrameSource? source)
+    {
+        if (ReferenceEquals(source, _source))
+            return;
+        if (_source != null)
+            _source.FrameArrived -= OnFrameArrived;
+        if (_view != null && !ReferenceEquals(source, _view))
+        {
+            _view.Dispose();
+            _view = null;
+        }
+
+        _source = source;
+        _sequence = 0;
+        _hud.AttitudeOverride = null;
+        Volatile.Write(ref _pending, 0);
+        if (source == null)
+            return;
+        source.FrameArrived += OnFrameArrived;
+        OnFrameArrived(null, EventArgs.Empty);
+    }
+
+    private bool ShowsFrame => _source is SyntheticView || _video?.ShowsFrame == true;
+
+    /// <summary>Decoder / render thread: ask for one UI update, however many frames arrive before it runs.</summary>
     private void OnFrameArrived(object? sender, EventArgs e)
     {
         var now = Environment.TickCount64;
@@ -139,7 +206,7 @@ public sealed class HudVideoPresenter
     private void RequestFrame()
     {
         var top = TopLevel.GetTopLevel(_hud);
-        if (top == null || _video == null)
+        if (top == null || _source == null)
         {
             Volatile.Write(ref _pending, 0);
             return;
@@ -152,11 +219,12 @@ public sealed class HudVideoPresenter
     private void OnAnimationFrame(TimeSpan _)
     {
         Volatile.Write(ref _pending, 0);
-        var video = _video;
-        if (video == null || !video.ShowsFrame)
+        var source = _source;
+        if (source == null || !ShowsFrame)
             return;
-        if (!video.Stream.Frames.TryRead(ref _sequence, _reader) || _bitmap == null)
+        if (!source.Frames.TryRead(ref _sequence, _reader) || _bitmap == null)
             return;
+        _hud.AttitudeOverride = (source as SyntheticView)?.FrameAttitude;
 
         if (!ReferenceEquals(_hud.VideoFrame, _bitmap))
             _hud.VideoFrame = _bitmap;
@@ -186,5 +254,31 @@ public sealed class HudVideoPresenter
         var row = Math.Min(stride, fb.RowBytes);
         for (var y = 0; y < height; y++)
             Marshal.Copy(pixels, y * stride, fb.Address + y * fb.RowBytes, row);
+    }
+}
+
+/// <summary>Where the HUD puts things, shared with the 3D view so their horizons agree.</summary>
+public static class HudGeometry
+{
+    /// <summary>The HUD's scale for its size (as in <see cref="Hud.Render"/>).</summary>
+    public static double Scale(double w, double h) => Math.Clamp(Math.Min(w / 480, h / 360), 0.6, 2.2);
+
+    /// <summary>The HUD's level horizon sits 8·scale below the middle: that as a fraction of the height.</summary>
+    public static float HorizonDownFraction(double w, double h) => h <= 0 ? 0 : (float)(8 * Scale(w, h) / h);
+
+    /// <summary>
+    /// Points a first-person 3D view's camera as the settings say and returns the camera model the HUD
+    /// must draw its ladder with (null when it is the HUD's own: default field of view, no tilt).
+    /// </summary>
+    public static (double VerticalFov, double Tilt)? Camera(HudVideoViewModel video, SyntheticView view, double w, double h)
+    {
+        view.HorizontalFov = video.FpvFov;
+        view.CameraTilt = video.FpvTilt;
+        if (video.FpvFov == null && video.FpvTilt == 0)
+            return null;
+        var vfov = video.FpvFov is { } hf && h > 0
+            ? SceneCamera.VerticalFromHorizontal(hf, w / h)
+            : SceneCamera.HudVerticalFov;
+        return (vfov * 180 / Math.PI, video.FpvTilt);
     }
 }

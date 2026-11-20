@@ -5,6 +5,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
+using MissionPlanner.App.Core.Synthetic;
 using MissionPlanner.App.Core.Video;
 using MissionPlanner.App.Core.ViewModels.FlightData;
 using MissionPlanner.App.Core.ViewModels.Video;
@@ -30,6 +31,7 @@ public sealed class HudStreamPump
     private DispatcherTimer? _timer;
     private RenderTargetBitmap? _target;
     private WriteableBitmap? _frame;
+    private SyntheticView? _view;
     private byte[] _pixels = [];
     private long _sequence;
 
@@ -69,6 +71,8 @@ public sealed class HudStreamPump
             _flight.UseInBackground(BackgroundUser, false);
             _target?.Dispose();
             _target = null;
+            _view?.Dispose();
+            _view = null;
         }
     }
 
@@ -85,18 +89,50 @@ public sealed class HudStreamPump
             _pixels = new byte[w * h * 4];
         }
 
-        // the newest video / 3D frame, read from the stream itself (not from an on-screen HUD)
-        if (_video.ShowsFrame)
+        // the newest video frame, or the 3D view rendered at the stream's own size
+        IFrameSource? source = null;
+        if (_video.UsesSynthetic)
         {
-            _video.Stream.Frames.TryRead(ref _sequence, _reader);
+            if (_view == null)
+            {
+                _view = _flight.Scene.Acquire(SyntheticViewKind.FirstPerson);
+                _sequence = 0;
+            }
+
+            _view.Width = w;
+            _view.Height = h;
+            _view.CentreDownFraction = HudGeometry.HorizonDownFraction(w, h);
+            _hud.Camera = HudGeometry.Camera(_video, _view, w, h);
+            source = _view;
+            _hud.VideoAspect = VideoAspect.Fill;
+        }
+        else
+        {
+            if (_view != null)
+            {
+                _view.Dispose();
+                _view = null;
+                _sequence = 0;
+            }
+
+            _hud.Camera = null;
+            if (_video.ShowsFrame)
+                source = _video.Stream;
+            _hud.VideoAspect = _video.Aspect;
+        }
+
+        if (source != null)
+        {
+            source.Frames.TryRead(ref _sequence, _reader);
             _hud.VideoFrame = _frame;
+            _hud.AttitudeOverride = (source as SyntheticView)?.FrameAttitude;
         }
         else
         {
             _hud.VideoFrame = null;
+            _hud.AttitudeOverride = null;
         }
 
-        _hud.VideoAspect = _video.Aspect;
         _hud.ShowOverlay = s.ShowOsd;
         _hud.Measure(new Size(w, h));
         _hud.Arrange(new Rect(0, 0, w, h));

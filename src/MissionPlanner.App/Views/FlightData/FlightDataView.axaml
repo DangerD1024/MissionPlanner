@@ -3,6 +3,7 @@
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
              xmlns:controls="using:MissionPlanner.App.Controls"
              xmlns:views="using:MissionPlanner.App.Views.FlightData"
+             xmlns:synthetic="using:MissionPlanner.App.Controls.Synthetic"
              xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.FlightData.FlightDataView"
              x:DataType="vm:FlightDataViewModel">
@@ -119,7 +120,9 @@
 
     <!-- right: map with its overlays, thin status bar underneath -->
     <Grid Grid.Column="2" RowDefinitions="*,Auto">
-      <Panel ClipToBounds="True">
+      <!-- 2D map, 3D chase view, or both (map on top); rows sized from code as MapView changes -->
+      <Grid x:Name="MapArea" RowDefinitions="*,0,0">
+      <Panel x:Name="Map2DPanel" ClipToBounds="True" IsVisible="{Binding Shows2DMap}">
         <controls:MapView x:Name="Map"
                           Provider="{Binding SelectedMapProvider.Provider}"
                           CenterLat="{Binding CenterLat}"
@@ -195,6 +198,27 @@
           </Border>
         </DockPanel>
       </Panel>
+
+      <GridSplitter x:Name="MapSplitter" Grid.Row="1" ResizeDirection="Rows" Background="{DynamicResource Line}"
+                    IsVisible="{Binding IsSplitMap}" />
+      <synthetic:ChaseView3D x:Name="Chase3D" Grid.Row="2" Scene="{Binding Scene}" IsVisible="{Binding Shows3DMap}" />
+
+      <!-- 2D / 3D / both, top left over whichever is shown -->
+      <Border Grid.RowSpan="3" Classes="overlay" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10" Padding="3"
+              CornerRadius="6">
+        <StackPanel Orientation="Horizontal" Spacing="3">
+          <Button Content="{l:Tr '2D'}" Padding="10,3" MinHeight="26" Classes.accent="{Binding IsMap2D}"
+                  Command="{Binding ShowMapViewCommand}" CommandParameter="{x:Static vm:MapViewMode.Map2D}"
+                  ToolTip.Tip="{l:Tr 'Map'}" />
+          <Button Content="{l:Tr '3D'}" Padding="10,3" MinHeight="26" Classes.accent="{Binding IsMap3D}"
+                  Command="{Binding ShowMapViewCommand}" CommandParameter="{x:Static vm:MapViewMode.Map3D}"
+                  ToolTip.Tip="{l:Tr '3D view following the vehicle'}" />
+          <Button Content="{l:Tr '2D + 3D'}" Padding="10,3" MinHeight="26" Classes.accent="{Binding IsSplitMap}"
+                  Command="{Binding ShowMapViewCommand}" CommandParameter="{x:Static vm:MapViewMode.Split}"
+                  ToolTip.Tip="{l:Tr 'Map on top, 3D view below'}" />
+        </StackPanel>
+      </Border>
+      </Grid>
 
       <!-- under the map: pointer coordinates, tuning and auto pan -->
       <Border Grid.Row="1" Background="{DynamicResource Bg0}" BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0"

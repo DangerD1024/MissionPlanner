@@ -85,6 +85,7 @@ public sealed partial class FlightDataView : UserControl
         HudWindowHost.Track(vm);
         HudStreamPump.Track(vm);
         SizeHud(LeftColumn.Bounds.Size);
+        LayoutMapArea();
         Map.Layers.Add(new MissionLayer(vm.MapModel));
         Map.Layers.Add(new TrackLayer(vm.MapModel));
         Map.Layers.Add(new AdsbLayer(vm.MapModel));
@@ -95,6 +96,18 @@ public sealed partial class FlightDataView : UserControl
     {
         if (e.PropertyName == nameof(FlightDataViewModel.IsHudDetached))
             SizeHud(LeftColumn.Bounds.Size);
+        else if (e.PropertyName == nameof(FlightDataViewModel.MapView))
+            LayoutMapArea();
+    }
+
+    /// <summary>Rows of the map side: 2D only, 3D only, or 2D on top of 3D with a splitter.</summary>
+    private void LayoutMapArea()
+    {
+        var rows = MapArea.RowDefinitions;
+        var mode = _vm?.MapView ?? MapViewMode.Map2D;
+        rows[0].Height = mode == MapViewMode.Map3D ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
+        rows[1].Height = mode == MapViewMode.Split ? new GridLength(4) : new GridLength(0);
+        rows[2].Height = mode == MapViewMode.Map2D ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
     }
 
     private void SizeHud(Size column)

@@ -30,6 +30,7 @@ public static class HudVideoMenu
 
             menu.Items.Clear();
             menu.Items.Add(BuildVideoMenu(vm));
+            menu.Items.Add(Build3DMenu(vm));
             menu.Items.Add(BuildStreamingMenu(StreamingViewModel.For(vm.Services)));
             extra?.Invoke(menu.Items);
         };
@@ -84,6 +85,37 @@ public static class HudVideoMenu
         auto.ToggleType = MenuItemToggleType.CheckBox;
         auto.IsChecked = vm.AutoStart;
         root.Items.Add(auto);
+        return root;
+    }
+
+    /// <summary>3D view behind the HUD: start/stop, the automatic fallback, the renderer or why it cannot run.</summary>
+    private static MenuItem Build3DMenu(HudVideoViewModel vm)
+    {
+        var root = new MenuItem { Header = L.Tr("3D view") };
+        if (vm.ThreeD)
+            root.Items.Add(Item("Stop 3D", vm.Stop3D));
+        else
+            root.Items.Add(Item("Start 3D", vm.Start3D));
+
+        var fallback = Item("Show 3D when there is no video", () => vm.ThreeDFallback = !vm.ThreeDFallback);
+        fallback.ToggleType = MenuItemToggleType.CheckBox;
+        fallback.IsChecked = vm.ThreeDFallback;
+        root.Items.Add(fallback);
+        root.Items.Add(Item("FPV camera (field of view, tilt)…", () => _ = vm.OpenCameraSettingsAsync()));
+
+        var scene = MissionPlanner.App.Core.Synthetic.SyntheticScene.For(vm.Services);
+        if ((scene.Error ?? scene.Renderer) is { } state)
+        {
+            root.Items.Add(new Separator());
+            root.Items.Add(new MenuItem { Header = state, IsEnabled = false });
+            if (scene.Error == null && scene.IsActive)
+                root.Items.Add(new MenuItem
+                {
+                    Header = L.Format("{0:0} fps, attitude {1:0} Hz", scene.RenderFps, scene.AttitudeRate),
+                    IsEnabled = false,
+                });
+        }
+
         return root;
     }
 
