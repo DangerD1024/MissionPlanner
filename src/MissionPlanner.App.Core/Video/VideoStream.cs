@@ -28,7 +28,16 @@ public enum VideoStreamState
 }
 
 /// <summary>A running video source as the UI sees it.</summary>
-public interface IVideoStream : IDisposable
+/// <summary>Something that produces BGRA frames behind the HUD: camera video or the 3D view.</summary>
+public interface IFrameSource
+{
+    VideoFrameBuffer Frames { get; }
+
+    /// <summary>Raised (on a worker thread) after each frame lands in <see cref="Frames"/>.</summary>
+    event EventHandler? FrameArrived;
+}
+
+public interface IVideoStream : IDisposable, IFrameSource
 {
     VideoStreamState State { get; }
 
@@ -38,13 +47,8 @@ public interface IVideoStream : IDisposable
     /// <summary>The pipeline last passed to <see cref="Start"/>.</summary>
     string? Pipeline { get; }
 
-    VideoFrameBuffer Frames { get; }
-
     /// <summary>Raised on the decoder thread.</summary>
     event EventHandler? StateChanged;
-
-    /// <summary>Raised on the decoder thread after each frame lands in <see cref="Frames"/>.</summary>
-    event EventHandler? FrameArrived;
 
     /// <summary>Starts (or restarts with) a GStreamer pipeline ending in <c>appsink name=outsink</c>.</summary>
     void Start(string pipeline);
@@ -419,7 +423,9 @@ public sealed class VideoStream : IVideoStream
             GstNative.GFree(debug);
             Log.Info($"video: {text} ({detail})");
             // the summary alone ("Could not get/set settings from/on resource") does not say why
-            if (detail?.Contains("already in use", StringComparison.OrdinalIgnoreCase) == true)
+            // Linux/macOS: "Address already in use"; Windows: "Only one usage of each socket address"
+            if (detail != null && (detail.Contains("already in use", StringComparison.OrdinalIgnoreCase) ||
+                                   detail.Contains("Only one usage of each socket address", StringComparison.OrdinalIgnoreCase)))
                 return "the port is already in use by another program";
             return text;
         }

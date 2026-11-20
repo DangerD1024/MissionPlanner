@@ -24,7 +24,7 @@ and a menu on the left of Setup and Config that shows only the pages your vehicl
 
 | Screen | Highlights |
 |---|---|
-| **Data** | Attitude HUD with video behind it (RTSP, UDP H.264/H.265, MPEG-TS, MJPEG or any GStreamer pipeline); tabs for quick values, actions (arm, modes, waypoints, Do Action), messages, status, pre-flight checklist, gauges, servo/relay, aux functions, gimbal, transponder; map with vehicle, track, mission, ADS-B traffic, Fly To Here; telemetry log playback; DataFlash log download and browser; live tuning graph; spoken alerts |
+| **Data** | Attitude HUD with video behind it (RTSP, UDP H.264/H.265, MPEG-TS, MJPEG or any GStreamer pipeline) or a 3D view of the terrain from the vehicle (FPV camera field of view and tilt adjustable, or as a fallback when there is no video); the HUD can go to its own window (another monitor, fullscreen) and be streamed to other apps over RTSP or RTP/UDP, with or without the OSD; map in 2D, 3D (third-person view following the vehicle over satellite-draped terrain, orbit with the mouse) or both; tabs for quick values, actions (arm, modes, waypoints, Do Action), messages, status, pre-flight checklist, gauges, servo/relay, aux functions, gimbal, transponder; map with vehicle, track, mission, ADS-B traffic, Fly To Here; telemetry log playback; DataFlash log download and browser; live tuning graph; spoken alerts |
 | **Plan** | Mission, fence and rally editor on the map; waypoint grid with per-command fields; survey grid; read/write to the vehicle; QGC WPL files |
 | **Setup** | Firmware install; frame type; accelerometer, compass and radio calibration (with optional QGroundControl-style channel mapping); servo outputs with a motor layout tab (motor order wizard, motor direction, frame type); serial ports; ESC calibration; flight modes; failsafe; battery; motor test; rangefinder, airspeed, optical flow, OSD layout editor, gimbal, parachute, CompassMot, ADS-B, hardware IDs, initial tuning parameters; RTK/GPS injection (NTRIP or base station); joystick; SiK radio; DroneCAN; MAVLink shell terminal |
 | **Config** | Basic and extended tuning laid out as in Mission Planner for each vehicle; standard and advanced parameters; full parameter list and tree with value lists and bitmask editors, compare, load/save, reboot; user parameter list; MAVFTP file browser; MAVLink inspector |
@@ -81,7 +81,8 @@ The app runs without these; the features that need them say so when they are mis
 
 | Feature | Linux (Debian/Ubuntu) | Windows | macOS |
 |---|---|---|---|
-| Video in the HUD | `gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-libav` | [GStreamer](https://gstreamer.freedesktop.org/download/) runtime | `brew install gstreamer` |
+| Video in the HUD, streaming the HUD | `gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-rtsp` | included in the installer | `brew install gstreamer` |
+| 3D view | OpenGL 3.3 (any desktop driver) | OpenGL 3.3 | OpenGL 3.3 |
 | Joystick | `libsdl2-2.0-0` | `SDL2.dll` next to the app | `brew install sdl2` |
 | Spoken alerts | `speech-dispatcher` or `espeak-ng` | built in | built in |
 | Serial ports | add yourself to the `dialout` group | — | — |

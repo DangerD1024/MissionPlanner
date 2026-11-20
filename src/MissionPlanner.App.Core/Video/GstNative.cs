@@ -99,6 +99,19 @@ internal static class GstNative
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void BufferUnmapFn(IntPtr buffer, ref GstMapInfo info);
 
+    // send side (streaming the HUD)
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate IntPtr BufferNewAllocateFn(IntPtr allocator, UIntPtr size, IntPtr allocParams);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate UIntPtr BufferFillFn(IntPtr buffer, UIntPtr offset, IntPtr src, UIntPtr size);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate int PushBufferFn(IntPtr appsrc, IntPtr buffer);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate IntPtr FactoryFindFn([MarshalAs(UnmanagedType.LPUTF8Str)] string name);
+
     // ---- bound functions (valid after a successful TryInitialize) ------------------------------
 
     public static ParseLaunchFn ParseLaunch = null!;
@@ -119,6 +132,18 @@ internal static class GstNative
     public static StructureGetStringFn StructureGetString = null!;
     public static BufferMapFn BufferMap = null!;
     public static BufferUnmapFn BufferUnmap = null!;
+    public static BufferNewAllocateFn BufferNewAllocate = null!;
+    public static BufferFillFn BufferFill = null!;
+    public static PushBufferFn AppSrcPushBuffer = null!;
+    public static PtrFn AppSrcEndOfStream = null!;
+    public static FactoryFindFn ElementFactoryFind = null!;
+
+    /// <summary>glib, for the RTSP server's main loop (zero if it could not be loaded separately).</summary>
+    public static IntPtr GlibHandle { get; private set; }
+
+    /// <summary>GStreamer core, where glib symbols can also be found on macOS.</summary>
+    public static IntPtr CoreHandle { get; private set; }
+
     private static VoidFn? _gFree;
     private static VoidFn? _gErrorFree;
 
@@ -188,6 +213,13 @@ internal static class GstNative
         AppSinkTryPullSample = Bind<PullSampleFn>(app, "gst_app_sink_try_pull_sample");
         AppSinkSetMaxBuffers = Bind<SetUIntFn>(app, "gst_app_sink_set_max_buffers");
         AppSinkSetDrop = Bind<SetBoolFn>(app, "gst_app_sink_set_drop");
+        BufferNewAllocate = Bind<BufferNewAllocateFn>(core, "gst_buffer_new_allocate");
+        BufferFill = Bind<BufferFillFn>(core, "gst_buffer_fill");
+        ElementFactoryFind = Bind<FactoryFindFn>(core, "gst_element_factory_find");
+        AppSrcPushBuffer = Bind<PushBufferFn>(app, "gst_app_src_push_buffer");
+        AppSrcEndOfStream = Bind<PtrFn>(app, "gst_app_src_end_of_stream");
+        CoreHandle = core;
+        GlibHandle = glib;
 
         // glib is a dependency of GStreamer, so it is normally loaded already; the symbols may
         // also be re-exported by the macOS framework binary
@@ -210,16 +242,26 @@ internal static class GstNative
         return text;
     }
 
+    /// <summary>Whether an element (an encoder, a plugin's element) is installed.</summary>
+    public static bool HasElement(string name)
+    {
+        var factory = ElementFactoryFind(name);
+        if (factory == IntPtr.Zero)
+            return false;
+        ObjectUnref(factory);
+        return true;
+    }
+
     public static void GFree(IntPtr p)
     {
         if (p != IntPtr.Zero)
             _gFree?.Invoke(p);
     }
 
-    private static T Bind<T>(IntPtr lib, string name) where T : Delegate =>
+    internal static T Bind<T>(IntPtr lib, string name) where T : Delegate =>
         Marshal.GetDelegateForFunctionPointer<T>(NativeLibrary.GetExport(lib, name));
 
-    private static IntPtr LoadFirst(IEnumerable<string> candidates)
+    internal static IntPtr LoadFirst(IEnumerable<string> candidates)
     {
         foreach (var c in candidates)
         {
@@ -244,12 +286,19 @@ internal static class GstNative
 
     private static IEnumerable<string> GlibCandidates() => Candidates("libglib-2.0.so.0", "libglib-2.0-0.dll", "libglib-2.0.0.dylib");
 
-    private static IEnumerable<string> Candidates(string linux, string windows, string mac)
+    internal static IEnumerable<string> Candidates(string linux, string windows, string mac)
     {
         if (OperatingSystem.IsWindows())
         {
+            // the official (MSVC) runtime names its DLLs without the "lib" prefix the MinGW build uses
+            var msvc = windows.StartsWith("lib", StringComparison.Ordinal) ? windows[3..] : windows;
             foreach (var dir in WindowsBinDirs())
+            {
+                yield return Path.Combine(dir, msvc);
                 yield return Path.Combine(dir, windows);
+            }
+
+            yield return msvc;
             yield return windows;
         }
         else if (OperatingSystem.IsMacOS())
@@ -268,9 +317,19 @@ internal static class GstNative
         }
     }
 
+    /// <summary>The GStreamer the Windows installer ships next to the app (<c>gstreamerin</c>, <c>lib\gstreamer-1.0</c>).</summary>
+    public static string BundledRoot => Path.Combine(AppContext.BaseDirectory, "gstreamer");
+
     private static List<string> WindowsBinDirs()
     {
         var dirs = new List<string>();
+        var bundledBin = Path.Combine(BundledRoot, "bin");
+        if (Directory.Exists(bundledBin))
+        {
+            dirs.Add(bundledBin);
+            UseBundledPlugins();
+        }
+
         foreach (var env in new[] { "GSTREAMER_1_0_ROOT_MSVC_X86_64", "GSTREAMER_1_0_ROOT_X86_64", "GSTREAMER_1_0_ROOT_MINGW_X86_64", "GSTREAMER_ROOT" })
         {
             if (Environment.GetEnvironmentVariable(env) is { Length: > 0 } root)
@@ -305,6 +364,32 @@ internal static class GstNative
         }
 
         return existing;
+    }
+
+    /// <summary>
+    /// Points GStreamer at the bundled plugins (and its plugin scanner and a registry in the data
+    /// folder) before gst_init, so a separately installed GStreamer is not mixed in.
+    /// </summary>
+    private static void UseBundledPlugins()
+    {
+        var plugins = Path.Combine(BundledRoot, "lib", "gstreamer-1.0");
+        if (!Directory.Exists(plugins) || Environment.GetEnvironmentVariable("GST_PLUGIN_SYSTEM_PATH_1_0") != null)
+            return;
+        Environment.SetEnvironmentVariable("GST_PLUGIN_SYSTEM_PATH_1_0", plugins);
+        Environment.SetEnvironmentVariable("GST_PLUGIN_PATH_1_0", "");
+        var scanner = Path.Combine(BundledRoot, "libexec", "gstreamer-1.0", "gst-plugin-scanner.exe");
+        if (File.Exists(scanner))
+            Environment.SetEnvironmentVariable("GST_PLUGIN_SCANNER_1_0", scanner);
+        try
+        {
+            // the install folder is read-only; the registry cache goes with the app's data
+            var registry = Path.Combine(MissionPlanner.Utilities.Settings.GetDataDirectory(), "gstreamer-registry.bin");
+            Environment.SetEnvironmentVariable("GST_REGISTRY_1_0", registry);
+        }
+        catch (Exception)
+        {
+            // no data folder: GStreamer uses its default location
+        }
     }
 
     private static IEnumerable<string> MacLibDirs() => new[]

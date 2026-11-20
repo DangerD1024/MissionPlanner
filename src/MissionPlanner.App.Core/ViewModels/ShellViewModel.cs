@@ -159,6 +159,10 @@ public sealed partial class ShellViewModel : ObservableObject
     public void Tick()
     {
         CurrentPage.Tick();
+        // the HUD window, 3D view and stream keep the HUD going while another screen is shown
+        if (CurrentPage is not FlightData.FlightDataViewModel && _pages.TryGetValue(Screen.Data, out var data) &&
+            data is FlightData.FlightDataViewModel { NeedsBackgroundTick: true } flight)
+            flight.BackgroundTick();
         Connection.Tick();
         if (++_tick % 20 == 0)
         {

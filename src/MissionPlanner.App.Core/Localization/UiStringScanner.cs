@@ -25,6 +25,7 @@ public static partial class UiStringScanner
         ["SaveFileAsync"] = [0],
         ["PickFolderAsync"] = [0],
         ["Notify"] = [0],
+        ["Item"] = [0],
         ["FileFilter"] = [0],
         ["Page"] = [0],
         ["Header"] = [0],
@@ -34,7 +35,7 @@ public static partial class UiStringScanner
     [GeneratedRegex(@"\{l:Tr\s+")]
     private static partial Regex XamlTr();
 
-    [GeneratedRegex(@"(?<!\w)(L\.Tr|L\.Format|L\.N|ShowMessageAsync|ConfirmAsync|PromptAsync|OpenFileAsync|SaveFileAsync|PickFolderAsync|Notify|FileFilter|Page|Header|:\s*base)\s*\(")]
+    [GeneratedRegex(@"(?<!\w)(L\.Tr|L\.Format|L\.N|ShowMessageAsync|ConfirmAsync|PromptAsync|OpenFileAsync|SaveFileAsync|PickFolderAsync|Notify|Item|FileFilter|Page|Header|:\s*base)\s*\(")]
     private static partial Regex CSharpCall();
 
     /// <summary>The texts of the <c>{l:Tr ...}</c> extensions in a XAML file.</summary>
