@@ -198,6 +198,11 @@
             <Button Grid.Column="2" Classes="danger" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="0,10"
                     Content="{l:Tr 'Stop'}" Command="{Binding StopCommand}" />
           </Grid>
+          <!-- a simulator that kept another aircraft's parameters may never arm: start it over cleanly -->
+          <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                  Content="{l:Tr 'Restart with default parameters'}" Command="{Binding RestartWithDefaultsCommand}"
+                  IsVisible="{Binding IsRunning}"
+                  ToolTip.Tip="{l:Tr 'The simulator keeps every change made to it. This starts it again with default parameters and keeps the current state as a backup copy.'}" />
           <TextBlock Text="{l:TrBind {Binding StatusText}}" TextWrapping="Wrap" />
           <ProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Height="6" MinHeight="6"
                        IsIndeterminate="{Binding IsProgressIndeterminate}" IsVisible="{Binding IsBusy}" />

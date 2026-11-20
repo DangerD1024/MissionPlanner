@@ -47,6 +47,9 @@ public sealed partial class SimulationViewModel : PageViewModel
     private readonly ConcurrentQueue<string> _pending = new();
     private SitlProcess? _process;
     private CancellationTokenSource? _cancel;
+    private CancellationTokenSource? _armingWatch;
+    private bool _wipeOnce;
+    private string? _workDir;
     private LinkSpec? _sitlLink;
     private int _altRequest;
 
@@ -278,11 +281,11 @@ public sealed partial class SimulationViewModel : PageViewModel
     // ---- running --------------------------------------------------------------------------------
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(StartCommand), nameof(StopCommand), nameof(CancelCommand))]
+    [NotifyCanExecuteChangedFor(nameof(StartCommand), nameof(StopCommand), nameof(CancelCommand), nameof(RestartWithDefaultsCommand))]
     private bool _isBusy;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(StopCommand))]
+    [NotifyCanExecuteChangedFor(nameof(StopCommand), nameof(RestartWithDefaultsCommand))]
     private bool _isRunning;
 
     [ObservableProperty] private string _statusText = "Choose a vehicle and a start location, then Start.";
@@ -337,9 +340,12 @@ public sealed partial class SimulationViewModel : PageViewModel
             SetStatus("Getting the default parameters…", -1);
             var defaults = await SitlDefaults.ResolveAsync(FirmwareManifest.Http, SitlDir, model, AddConsoleFromWorker, cancel);
 
-            var launch = new SitlLaunch(model, home, (int)SpeedUp, defaults, ExtraArguments, Wipe);
+            // "Restart with default parameters" wipes once, without changing the Wipe setting
+            var launch = new SitlLaunch(model, home, (int)SpeedUp, defaults, ExtraArguments, Wipe || _wipeOnce);
+            _wipeOnce = false;
             var args = SitlArguments.Build(launch);
             var workDir = SitlArguments.WorkingDirectory(SitlDir, model);
+            _workDir = workDir;
             Directory.CreateDirectory(workDir);
 
             var psi = SitlProcess.CreateStartInfo(exe, args, workDir, SitlDir, Host == SitlHost.WindowsCygwin);
@@ -499,6 +505,7 @@ public sealed partial class SimulationViewModel : PageViewModel
                 SetStatus("Connecting to the simulator on TCP " + spec.Value + "…", -1);
                 await Services.Session.ConnectAsync(spec, getParams: true, progress, cancel);
                 SetStatus("Simulator running and connected.", 100);
+                StartArmingWatch();
                 // as the WinForms app does: go fly it
                 Services.ShowScreen(Screen.Data);
                 return;
@@ -531,11 +538,99 @@ public sealed partial class SimulationViewModel : PageViewModel
     private async Task Stop()
     {
         _cancel?.Cancel();
+        _armingWatch?.Cancel();
         if (_sitlLink != null && Services.Session.Link == _sitlLink && Services.Session.State != LinkState.Disconnected)
             await Services.Session.DisconnectAsync();
         StopProcess();
         SetStatus("Simulator stopped.", -1);
         OnPropertyChanged(nameof(ConnectionText));
+    }
+
+    /// <summary>
+    /// Watches a freshly connected simulator: if it still cannot arm once it should be ready, its saved
+    /// parameters are the cause (see <see cref="SitlArmingCheck"/>); offer to start it over with defaults.
+    /// </summary>
+    private void StartArmingWatch()
+    {
+        _armingWatch?.Cancel();
+        var watch = new CancellationTokenSource();
+        _armingWatch = watch;
+        var link = _sitlLink;
+        var vehicleName = SelectedVehicle?.Title ?? "vehicle";
+        _ = Task.Run(async () =>
+        {
+            var started = DateTime.Now;
+            while (!watch.IsCancellationRequested && DateTime.Now - started < TimeSpan.FromMinutes(2))
+            {
+                await Task.Delay(2000, CancellationToken.None).ConfigureAwait(false);
+                var s = Services.Session;
+                if (s.State != LinkState.Connected || s.Link != link || watch.IsCancellationRequested)
+                    return;
+
+                List<(DateTime, string)> messages;
+                try
+                {
+                    messages = s.Cs.messages.ToList();
+                }
+                catch (InvalidOperationException)
+                {
+                    continue; // changed while copying
+                }
+
+                var blockers = SitlArmingCheck.Blockers(DateTime.Now - s.ConnectedAt, s.Cs.prearmstatus, s.Cs.gpsstatus, messages, DateTime.Now);
+                if (s.Cs.prearmstatus)
+                    return;
+                if (blockers.Count == 0)
+                    continue;
+
+                Services.Dispatcher.Post(() => _ = OfferDefaultsAsync(vehicleName, blockers));
+                return;
+            }
+        });
+    }
+
+    private async Task OfferDefaultsAsync(string vehicleName, IReadOnlyList<string> blockers)
+    {
+        if (!IsRunning)
+            return;
+        var reasons = string.Join("\n", blockers.Take(6).Select(b => "• " + b));
+        var where = _workDir == null ? "eeprom.bin" : Path.Combine(_workDir, "eeprom.bin");
+        if (await Services.Dialogs.ConfirmAsync(L.Tr("Simulation"),
+                L.Format("The simulated {0} cannot arm:\n{1}\n\nIts saved parameters ({2}) differ from the simulator's defaults, for example after loading a real aircraft's parameter file. Restart it with default parameters? The current ones are kept as a backup copy.",
+                    vehicleName, reasons, where),
+                L.Tr("Restart with default parameters")))
+            await RestartWithDefaultsAsync();
+    }
+
+    private bool CanRestartWithDefaults() => IsRunning && !IsBusy;
+
+    /// <summary>Backs up the simulator's saved state, then starts it again with default parameters.</summary>
+    [RelayCommand(CanExecute = nameof(CanRestartWithDefaults))]
+    private async Task RestartWithDefaults()
+    {
+        if (!await Services.Dialogs.ConfirmAsync(L.Tr("Simulation"),
+                L.Tr("Restart the simulator with default parameters? Everything changed in it since its first start (parameters, calibration, mission) is reset; the current state is kept as a backup copy."),
+                L.Tr("Restart with default parameters")))
+            return;
+        await RestartWithDefaultsAsync();
+    }
+
+    private async Task RestartWithDefaultsAsync()
+    {
+        var workDir = _workDir;
+        await Stop();
+        try
+        {
+            if (workDir != null && SitlArmingCheck.BackUpState(workDir, DateTime.Now) is { } backup)
+                AddConsole(L.Format("Saved parameters backed up to {0}", backup));
+        }
+        catch (IOException ex)
+        {
+            AddConsole(ex.Message);
+        }
+
+        _wipeOnce = true;
+        await StartCommand.ExecuteAsync(null);
     }
 
     private bool CanCancel() => IsBusy;

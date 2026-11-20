@@ -237,10 +237,18 @@ internal sealed class SitlProcess : IDisposable
         return null;
     }
 
-    public static async Task<SitlProcess> StartAsync(string binary, string model, string defaults, int instance)
+    /// <summary>Output lines of the simulator (stdout and stderr), filled live; lock it to read.</summary>
+    public List<string> Output { get; private init; } = new();
+
+    public static async Task<SitlProcess> StartAsync(string binary, string model, string defaults, int instance,
+        string? eepromFrom = null)
     {
         var dir = Path.Combine(Path.GetTempPath(), $"mp-sitl-{instance}-{Guid.NewGuid():N}"[..24]);
         Directory.CreateDirectory(dir);
+        // start from someone's saved simulator state instead of a blank one
+        if (eepromFrom != null && File.Exists(eepromFrom))
+            File.Copy(eepromFrom, Path.Combine(dir, "eeprom.bin"));
+        var output = new List<string>();
         var defaultsPath = Path.Combine(Path.GetDirectoryName(binary)!, defaults);
         var psi = new ProcessStartInfo(binary)
         {
@@ -254,8 +262,18 @@ internal sealed class SitlProcess : IDisposable
         psi.Environment["HOME"] = dir;
 
         var p = Process.Start(psi) ?? throw new InvalidOperationException("SITL did not start");
-        p.OutputDataReceived += (_, _) => { };
-        p.ErrorDataReceived += (_, _) => { };
+        p.OutputDataReceived += (_, e) =>
+        {
+            if (e.Data != null)
+                lock (output)
+                    output.Add(e.Data);
+        };
+        p.ErrorDataReceived += (_, e) =>
+        {
+            if (e.Data != null)
+                lock (output)
+                    output.Add(e.Data);
+        };
         p.BeginOutputReadLine();
         p.BeginErrorReadLine();
 
@@ -272,7 +290,7 @@ internal sealed class SitlProcess : IDisposable
                 if (IsListening(port))
                 {
                     await Task.Delay(500);
-                    return new SitlProcess(p, dir, port);
+                    return new SitlProcess(p, dir, port) { Output = output };
                 }
 
                 await Task.Delay(250);
@@ -286,7 +304,7 @@ internal sealed class SitlProcess : IDisposable
                 // SITL accepts one client on serial0: let it reset before the real connection
                 probe.Close();
                 await Task.Delay(1500);
-                return new SitlProcess(p, dir, port);
+                return new SitlProcess(p, dir, port) { Output = output };
             }
             catch (SocketException)
             {
