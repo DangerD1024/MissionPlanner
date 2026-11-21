@@ -298,6 +298,9 @@ public sealed partial class FlightPlanView : UserControl
             Item("Save Polygon", () => vm.SavePolygonCommand.Execute(null), vm.HasPolygon),
             Item("Load Polygon", () => vm.LoadPolygonCommand.Execute(null))));
         items.Add(Sub("Auto WP",
+            Item("Create WP Circle", () => _ = vm.CreateWaypointCircleAsync(at)),
+            Item("Create Spline Circle", () => _ = vm.CreateSplineCircleAsync(at)),
+            Item("Create Circle Survey", () => _ = vm.CreateCircleSurveyAsync(at)),
             Item("Survey (Grid)", () => vm.SurveyGridCommand.Execute(null), vm.Polygon.Count >= 3)));
         items.Add(Sub("Fence",
             Item("Inclusion from Polygon", () => _ = vm.FenceFromPolygonAsync(inclusion: true), vm.Polygon.Count >= 3),

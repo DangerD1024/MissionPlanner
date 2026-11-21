@@ -41,6 +41,8 @@
   <ItemGroup>
     <!-- Mission Planner's Cursor on Target event builder: plain C#, shared with the WinForms app -->
     <Compile Include="..\..\Controls\CotOutput.cs" Link="Outputs\Shared\CotOutput.cs" />
+    <!-- Mission Planner's camera list for the survey, the same file the WinForms app ships -->
+    <EmbeddedResource Include="..\..\camerasBuiltin.xml" Link="ViewModels\FlightPlan\camerasBuiltin.xml" LogicalName="camerasBuiltin.xml" />
   </ItemGroup>
 
 </Project>

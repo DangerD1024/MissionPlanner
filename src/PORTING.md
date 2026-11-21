@@ -53,8 +53,9 @@ comparison of both code bases (Nov 2026). Ticked items are done. Items marked *w
 - [x] Insert WP at current position, Jump (start / WP #), DO_SET_ROI from the map
 - [x] Polygon: from SHP, from waypoints, offset
 - [x] Fence .fen and rally .ral files; mission .plan/.kml/.shp/.mission load, load-and-append, .mission save
-- [ ] Auto WP: circle, spline circle, circle survey, text
-- [ ] Survey: camera database, overlap/sidelap, GSD, footprints
+- [x] Auto WP: circle, spline circle, circle survey
+- [ ] Auto WP: text
+- [x] Survey: camera database, overlap/sidelap, GSD, footprints
 - [x] Map tools: measure distance, reverse WPs
 - [ ] Map tools: rotate map, zoom to place/coords, prefetch tiles (area and WP path), KML overlay, elevation graph
 - [x] Modify alt (all), enter UTM coords

@@ -117,7 +117,33 @@ public sealed class SurveyRouteLayer(SurveyGridViewModel vm) : MapLayer
         if (lanes != null)
             ctx.DrawGeometry(null, SurveyPaint.LanePen, lanes);
 
+        DrawFootprints(ctx, vp, preview.Triggers);
         DrawTriggers(ctx, vp, preview.Triggers);
+    }
+
+    private static readonly IBrush FootprintFill = new SolidColorBrush(Color.FromArgb(28, 64, 200, 255));
+    private static readonly IPen FootprintPen = new Pen(new SolidColorBrush(Color.FromArgb(110, 64, 200, 255)), 0.8);
+
+    /// <summary>Each photo's ground area (Mission Planner's footprints), when a camera is chosen.</summary>
+    private void DrawFootprints(DrawingContext ctx, MapViewport vp, IReadOnlyList<PointLatLng> triggers)
+    {
+        if (!vm.ShowFootprints || vm.FootprintAcross <= 0 || triggers.Count == 0 || triggers.Count > 5000)
+            return;
+        var angle = (double)(vm.Angle ?? 0);
+        foreach (var t in triggers)
+        {
+            var c = SurveyCameraMath.Corners(t, vm.FootprintAcross, vm.FootprintAlong, angle);
+            var geo = new StreamGeometry();
+            using (var g = geo.Open())
+            {
+                g.BeginFigure(vp.ToScreen(c[0]), true);
+                for (var i = 1; i < 4; i++)
+                    g.LineTo(vp.ToScreen(c[i]));
+                g.EndFigure(true);
+            }
+
+            ctx.DrawGeometry(FootprintFill, FootprintPen, geo);
+        }
     }
 
     private static void DrawTriggers(DrawingContext ctx, MapViewport vp, IReadOnlyList<PointLatLng> triggers)

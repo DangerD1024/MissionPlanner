@@ -136,4 +136,57 @@ public sealed partial class FlightPlanViewModel
 
     /// <summary>Whether Measure Distance has its first point.</summary>
     public bool IsMeasuring => _measureFrom != null;
+
+    /// <summary>Auto WP > Create WP Circle round a point.</summary>
+    public async Task CreateWaypointCircleAsync(PointLatLng centre)
+    {
+        if (await PromptNumberAsync("Create WP Circle", "Radius (m)", "50") is not { } radius || radius <= 0 ||
+            await PromptNumberAsync("Create WP Circle", "Number of points", "20") is not { } points || points < 1 ||
+            await PromptNumberAsync("Create WP Circle", "Direction: 1 clockwise, -1 anticlockwise", "1") is not { } dir ||
+            await PromptNumberAsync("Create WP Circle", "Angle of the first point (degrees)", "0") is not { } start)
+            return;
+        ShowList(MAVLink.MAV_MISSION_TYPE.MISSION);
+        var pts = AutoWaypoints.Circle(centre, radius, (int)points, dir < 0 ? -1 : 1, start);
+        foreach (var pt in pts)
+            Store.Mission.Add(Store.NewWaypoint(pt.Lat, pt.Lng));
+        Status = $"Added a circle of {pts.Count} waypoints";
+    }
+
+    /// <summary>Auto WP > Create Spline Circle: spline circles stacked between two altitudes, looking at the centre.</summary>
+    public async Task CreateSplineCircleAsync(PointLatLng centre)
+    {
+        if (await PromptNumberAsync("Create Spline Circle", "Radius (m)", "50") is not { } radius || radius <= 0 ||
+            await PromptNumberAsync("Create Spline Circle", "Lowest altitude (m)", "5") is not { } minAlt ||
+            await PromptNumberAsync("Create Spline Circle", "Highest altitude (m)", "20") is not { } maxAlt ||
+            await PromptNumberAsync("Create Spline Circle", "Altitude step (m)", "5") is not { } step ||
+            await PromptNumberAsync("Create Spline Circle", "Angle of the first point (degrees)", "0") is not { } start)
+            return;
+        AddAll(AutoWaypoints.SplineCircle(centre, radius, minAlt, maxAlt, step, start, DefaultFrame), "spline circle");
+    }
+
+    /// <summary>Auto WP > Create Circle Survey: rings of photos round a point, looking at it (for 3D models).</summary>
+    public async Task CreateCircleSurveyAsync(PointLatLng centre)
+    {
+        if (await PromptNumberAsync("Create Circle Survey", "Start altitude (m)", "10") is not { } startAlt ||
+            await PromptNumberAsync("Create Circle Survey", "End altitude (m)", "20") is not { } endAlt ||
+            await PromptNumberAsync("Create Circle Survey", "Altitude separation (m)", "2") is not { } sep || sep <= 0 ||
+            await PromptNumberAsync("Create Circle Survey", "Radius (m)", "5") is not { } radius || radius <= 0 ||
+            await PromptNumberAsync("Create Circle Survey", "Photos per ring", "50") is not { } photos || photos < 1 ||
+            await PromptNumberAsync("Create Circle Survey", "Start heading (degrees)", "0") is not { } heading)
+            return;
+        AddAll(AutoWaypoints.CircleSurvey(centre, startAlt, endAlt, sep, radius, (int)photos, heading, DefaultFrame), "circle survey");
+    }
+
+    private void AddAll(IEnumerable<MissionItem> items, string what)
+    {
+        ShowList(MAVLink.MAV_MISSION_TYPE.MISSION);
+        var n = 0;
+        foreach (var item in items)
+        {
+            Store.Mission.Add(item);
+            n++;
+        }
+
+        Status = $"Added {n} items ({what})";
+    }
 }
