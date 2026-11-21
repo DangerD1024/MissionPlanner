@@ -39,6 +39,30 @@ public class JoystickControllerTests
         return (c, d, v);
     }
 
+    /// <summary>
+    /// Disable pressed while a frame is being computed: the release must be the last thing the
+    /// vehicle gets, or it would hold the sticks until its override timeout.
+    /// </summary>
+    [TestMethod]
+    public async Task NothingIsSentAfterTheReleaseEvenWhenDisabledMidFrame()
+    {
+        var (c, d, v) = Setup();
+        await using (c)
+        {
+            d.AxisValues[0] = short.MaxValue;
+            c.SetSending(true);
+            c.Step();
+            Assert.AreEqual(2000, v.Overrides.Last().chan1_raw);
+
+            // the frame has already decided to send when Disable comes in from another thread
+            v.OnNextIsConnected = () => Task.Run(() => c.SetSending(false)).Wait();
+            c.Step();
+
+            Assert.IsFalse(c.IsSending);
+            Assert.AreEqual(0, v.Overrides.Last().chan1_raw, "the release is the last override sent");
+        }
+    }
+
     [TestMethod]
     public async Task OutputsFollowTheMappingAndNothingIsSentUntilEnabled()
     {

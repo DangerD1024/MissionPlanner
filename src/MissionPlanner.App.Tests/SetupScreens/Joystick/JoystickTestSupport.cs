@@ -49,7 +49,23 @@ internal sealed class FakeJoystickBackend : IJoystickBackend
 /// <summary>Records what the joystick would send and do.</summary>
 internal sealed class FakeJoystickVehicle : IJoystickVehicle
 {
-    public bool IsConnected { get; set; } = true;
+    private bool _connected = true;
+
+    /// <summary>Runs once, the next time IsConnected is read (the controller reads it mid-step).</summary>
+    public Action? OnNextIsConnected { get; set; }
+
+    public bool IsConnected
+    {
+        get
+        {
+            var hook = OnNextIsConnected;
+            OnNextIsConnected = null;
+            hook?.Invoke();
+            return _connected;
+        }
+        set => _connected = value;
+    }
+
     public uint SysId { get; set; } = 1;
     public byte CompId { get; set; } = 1;
     public bool IsCopter { get; set; } = true;

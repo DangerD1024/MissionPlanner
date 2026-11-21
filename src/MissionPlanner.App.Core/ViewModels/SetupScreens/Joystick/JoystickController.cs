@@ -144,9 +144,20 @@ public sealed class JoystickController : IAsyncDisposable
             _sending = on;
         }
 
+        // after any frame already being sent: nothing may follow the release
         if (was && !on)
-            Release();
+        {
+            lock (_sendGate)
+                Release();
+        }
     }
+
+    /// <summary>
+    /// Held while a frame is sent and while releasing, with the "still sending?" check inside it, so
+    /// a frame read before Disable can never reach the vehicle after the release (it would hold the
+    /// sticks until the autopilot's override timeout).
+    /// </summary>
+    private readonly object _sendGate = new();
 
     private async Task Loop(CancellationToken stop)
     {
@@ -188,7 +199,11 @@ public sealed class JoystickController : IAsyncDisposable
             }
 
             if (wasSending)
-                Release();
+            {
+                lock (_sendGate)
+                    Release();
+            }
+
             DeviceLost?.Invoke(this, EventArgs.Empty);
             return;
         }
@@ -226,6 +241,17 @@ public sealed class JoystickController : IAsyncDisposable
         if (!sending || !connected || device == null)
             return;
 
+        lock (_sendGate)
+        {
+            // switched off while this frame was being computed: the release has gone, send nothing
+            if (!IsSending)
+                return;
+            Send(profile, outputs, buttons);
+        }
+    }
+
+    private void Send(JoystickProfile profile, ushort[] outputs, IReadOnlyList<bool> buttons)
+    {
         try
         {
             if (profile.ManualControl)
