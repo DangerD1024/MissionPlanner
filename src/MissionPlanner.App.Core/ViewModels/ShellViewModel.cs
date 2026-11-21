@@ -42,6 +42,9 @@ public enum Screen
     Config,
     Simulation,
     Settings,
+
+    /// <summary>Mission Planner's Ctrl+F screen; not on the top bar.</summary>
+    Tools,
 }
 
 /// <summary>Main window: top navigation, connect controls and the visible screen.</summary>
@@ -64,6 +67,7 @@ public sealed partial class ShellViewModel : ObservableObject
             [Screen.Config] = () => new ConfigScreens.ConfigViewModel(services),
             [Screen.Simulation] = () => new Simulation.SimulationViewModel(services),
             [Screen.Settings] = () => new ConfigScreens.PlannerSettingsViewModel(services),
+            [Screen.Tools] = () => new Tools.ToolsViewModel(services),
         };
         _currentPage = GetPage(Screen.Data);
         _currentPage.OnShown();
@@ -118,7 +122,7 @@ public sealed partial class ShellViewModel : ObservableObject
     }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsData), nameof(IsPlan), nameof(IsSetup), nameof(IsConfig), nameof(IsSimulation), nameof(IsSettings))]
+    [NotifyPropertyChangedFor(nameof(IsData), nameof(IsPlan), nameof(IsSetup), nameof(IsConfig), nameof(IsSimulation), nameof(IsSettings), nameof(IsTools))]
     private Screen _currentScreen;
 
     [ObservableProperty]
@@ -130,6 +134,52 @@ public sealed partial class ShellViewModel : ObservableObject
     public bool IsConfig => CurrentScreen == Screen.Config;
     public bool IsSimulation => CurrentScreen == Screen.Simulation;
     public bool IsSettings => CurrentScreen == Screen.Settings;
+    public bool IsTools => CurrentScreen == Screen.Tools;
+
+    // ---- Mission Planner's hotkeys (MainV2.ProcessCmdKey) ---------------------------------------
+
+    /// <summary>F12: connect or disconnect.</summary>
+    [RelayCommand]
+    private Task ConnectHotkey() =>
+        Connection.ToggleConnectCommand.CanExecute(null) ? Connection.ToggleConnectCommand.ExecuteAsync(null) : Task.CompletedTask;
+
+    /// <summary>F5: download the parameters again.</summary>
+    [RelayCommand]
+    private async Task RefreshParamsHotkey()
+    {
+        if (!_services.Session.IsConnected)
+            return;
+        _services.Notify("Getting parameters…");
+        try
+        {
+            await _services.Params.RefreshAsync();
+            _services.Notify($"{_services.Params.Count} parameters loaded.");
+        }
+        catch (Exception ex)
+        {
+            _services.Notify("Could not get the parameters: " + ex.Message, MessageKind.Error);
+        }
+    }
+
+    /// <summary>Ctrl+Y: write the parameters to the autopilot's flash (PREFLIGHT_STORAGE).</summary>
+    [RelayCommand]
+    private async Task CommitParamsHotkey()
+    {
+        if (!_services.Session.IsConnected)
+            return;
+        bool ok;
+        try
+        {
+            ok = await _services.Params.CommitToFlashAsync();
+        }
+        catch (Exception)
+        {
+            ok = false;
+        }
+
+        _services.Notify(ok ? "Parameters written to flash." : "The autopilot did not confirm writing the parameters to flash.",
+            ok ? MessageKind.Info : MessageKind.Error);
+    }
 
     [RelayCommand]
     private void Navigate(Screen screen)

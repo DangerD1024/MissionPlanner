@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.ApjToolView"
+             x:DataType="vm:ApjToolViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1100" HorizontalAlignment="Stretch">
+      <tv:ToolHeader />
+      <Border Classes="card" Width="720" HorizontalAlignment="Left">
+        <StackPanel Spacing="10">
+          <Grid ColumnDefinitions="*,8,Auto">
+            <TextBox Text="{Binding Firmware}" Watermark="arducopter.apj" />
+            <Button Grid.Column="2" Content="{l:Tr 'Firmware…'}" Command="{Binding PickFirmwareCommand}" />
+          </Grid>
+          <Grid ColumnDefinitions="*,8,Auto">
+            <TextBox Text="{Binding ParamFile}" Watermark="defaults.param" />
+            <Button Grid.Column="2" Content="{l:Tr 'Parameters…'}" Command="{Binding PickParamsCommand}" />
+          </Grid>
+          <Button Classes="accent" Content="{l:Tr 'Build firmware'}" Command="{Binding BuildCommand}" HorizontalAlignment="Left" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

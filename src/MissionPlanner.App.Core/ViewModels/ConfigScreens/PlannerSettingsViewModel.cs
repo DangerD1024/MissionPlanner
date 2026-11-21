@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GMap.NET.MapProviders;
 using log4net;
@@ -268,6 +268,10 @@ public sealed partial class PlannerSettingsViewModel : PageViewModel
     }
 
     public AppServices Services { get; }
+
+    /// <summary>The TOOLS screen (Mission Planner's Ctrl+F screen).</summary>
+    [RelayCommand]
+    private void OpenTools() => Services.ShowScreen(ViewModels.Screen.Tools);
 
     // ---- map
 

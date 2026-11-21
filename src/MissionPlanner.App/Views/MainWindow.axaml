@@ -10,6 +10,17 @@
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource Bg2}">
 
+  <!-- Mission Planner's hotkeys (MainV2.ProcessCmdKey); a page's own binding for the same keys wins -->
+  <Window.KeyBindings>
+    <KeyBinding Gesture="F12" Command="{Binding ConnectHotkeyCommand}" />
+    <KeyBinding Gesture="F2" Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Data}" />
+    <KeyBinding Gesture="F3" Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Plan}" />
+    <KeyBinding Gesture="F4" Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Config}" />
+    <KeyBinding Gesture="F5" Command="{Binding RefreshParamsHotkeyCommand}" />
+    <KeyBinding Gesture="Ctrl+F" Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Tools}" />
+    <KeyBinding Gesture="Ctrl+Y" Command="{Binding CommitParamsHotkeyCommand}" />
+  </Window.KeyBindings>
+
   <Grid RowDefinitions="72,Auto,*">
 
     <!-- top bar -->

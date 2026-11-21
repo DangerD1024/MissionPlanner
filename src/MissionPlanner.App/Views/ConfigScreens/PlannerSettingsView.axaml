@@ -19,7 +19,11 @@
 
   <ScrollViewer HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="24,18" MaxWidth="900" HorizontalAlignment="Left" Width="900">
-      <TextBlock Classes="h1" Text="{l:Tr 'App Settings'}" />
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Classes="h1" Text="{l:Tr 'App Settings'}" />
+        <Button Grid.Column="1" Content="{l:Tr 'Tools (Ctrl+F)'}" Command="{Binding OpenToolsCommand}"
+                ToolTip.Tip="{l:Tr 'Extra tools from Mission Planner: calibration flags, bootloader, message rates, decoders, …'}" />
+      </Grid>
       <TextBlock Classes="muted" Margin="0,2,0,16" FontSize="12.5"
                  Text="{l:Tr 'Settings of this application. Changes apply and are saved immediately.'}" />
 

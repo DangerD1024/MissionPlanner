@@ -4,18 +4,18 @@ Checklist of features the classic app has and Mission Planner 3 (`src/`) does no
 comparison of both code bases (Nov 2026). Ticked items are done. Items marked *won't port* have a reason.
 
 ## Hotkeys and the Ctrl+F tools screen
-- [ ] Global hotkeys: F12 connect, F2 DATA, F3 PLAN, F4 CONFIG, F5 refresh parameters, Ctrl+F tools, Ctrl+Y write params to flash
-- [ ] TOOLS screen (Ctrl+F) with a left menu
-- [ ] Force accel calibrated / force compass calibrated (PREFLIGHT_CALIBRATION 76)
-- [ ] QNH / adjust ground pressure (GND_ABS_PRESS, BARO1_GND_PRESS)
-- [ ] Bootloader update over MAVLink (FLASH_BOOTLOADER) and reboot to DFU
-- [ ] Arm and takeoff (one click)
-- [ ] Lock-up test (PREFLIGHT_REBOOT_SHUTDOWN 42,24,71,93)
-- [ ] Message interval for any one message
-- [ ] Download onboard file (@SYS/threads.txt etc.)
-- [ ] Parameter restore (ordered: enables first, refetch, retry, report)
-- [ ] MAVLink packet decoder (hex / decimal bytes → fields); hardware ID decoder (typed number)
-- [ ] APJ tool: embed a .param file into a .apj firmware
+- [x] Global hotkeys: F12 connect, F2 DATA, F3 PLAN, F4 CONFIG, F5 refresh parameters, Ctrl+F tools, Ctrl+Y write params to flash
+- [x] TOOLS screen (Ctrl+F) with a left menu
+- [x] Force accel calibrated / force compass calibrated (PREFLIGHT_CALIBRATION 76)
+- [x] QNH / adjust ground pressure (GND_ABS_PRESS, BARO1_GND_PRESS)
+- [x] Bootloader update over MAVLink (FLASH_BOOTLOADER) and reboot to DFU
+- [x] Arm and takeoff (one click)
+- [x] Lock-up test (PREFLIGHT_REBOOT_SHUTDOWN 42,24,71,93)
+- [x] Message interval for any one message
+- [x] Download onboard file (@SYS/threads.txt etc.)
+- [x] Parameter restore (ordered: enables first, refetch, retry, report)
+- [x] MAVLink packet decoder (hex / decimal bytes → fields); hardware ID decoder (typed number)
+- [x] APJ tool: embed a .param file into a .apj firmware
 - [ ] Outputs: MAVLink mirror (serial/TCP/UDP), NMEA position out, Cursor-on-Target, MicroDrone
 - [ ] Log tools: .bin → .log, KML + GPX from .bin/.tlog, split a log, sort logs, anonymise a log,
       DashWare CSV, extract GPS inject data from a tlog, remote DataFlash logger
