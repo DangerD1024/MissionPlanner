@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.FlightData.RawSensorsView"
+             x:DataType="vm:RawSensorsViewModel">
+  <UserControl.DataTemplates>
+    <DataTemplate x:DataType="vm:RawValue">
+      <Grid ColumnDefinitions="70,*,64" Margin="0,2">
+        <TextBlock Text="{l:TrBind {Binding Label}}" FontSize="12" VerticalAlignment="Center" />
+        <ProgressBar Grid.Column="1" Minimum="{Binding Min}" Maximum="{Binding Max}" Value="{Binding Value}" Height="10" MinHeight="10"
+                     VerticalAlignment="Center" />
+        <TextBlock Grid.Column="2" Text="{Binding Text}" FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Center" />
+      </Grid>
+    </DataTemplate>
+  </UserControl.DataTemplates>
+  <Grid RowDefinitions="Auto,*" Margin="16">
+    <StackPanel Spacing="2" Margin="0,0,0,10">
+      <TextBlock Classes="h2" Text="{l:Tr 'Raw sensors'}" />
+      <TextBlock Classes="muted" FontSize="12" Text="{l:TrBind {Binding Note}}" TextWrapping="Wrap" />
+    </StackPanel>
+    <ScrollViewer Grid.Row="1">
+      <Grid ColumnDefinitions="*,16,*,16,*">
+        <ItemsControl ItemsSource="{Binding Imus}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:RawSensorsViewModel+RawGroup">
+              <StackPanel Margin="0,0,0,12">
+                <TextBlock Text="{l:TrBind {Binding Title}}" FontWeight="SemiBold" Margin="0,0,0,4" />
+                <ItemsControl ItemsSource="{Binding Values}" />
+              </StackPanel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <StackPanel Grid.Column="2">
+          <TextBlock Text="{l:Tr 'RC inputs'}" FontWeight="SemiBold" Margin="0,0,0,4" />
+          <ItemsControl ItemsSource="{Binding RcIn}" />
+        </StackPanel>
+        <StackPanel Grid.Column="4">
+          <TextBlock Text="{l:Tr 'Servo outputs'}" FontWeight="SemiBold" Margin="0,0,0,4" />
+          <ItemsControl ItemsSource="{Binding ServoOut}" />
+        </StackPanel>
+      </Grid>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

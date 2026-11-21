@@ -103,6 +103,12 @@ public sealed class AppServices
     /// <summary>Switches the main window to a screen (call on the UI thread).</summary>
     public void ShowScreen(ViewModels.Screen screen) => ScreenRequested?.Invoke(this, screen);
 
+    /// <summary>Raised to open a page of a menu screen (SETUP > Joystick) by its title.</summary>
+    public event EventHandler<(ViewModels.Screen Screen, string Title)>? MenuPageRequested;
+
+    /// <summary>Shows the screen and opens the page with this menu title on it.</summary>
+    public void RequestMenuPage(ViewModels.Screen screen, string title) => MenuPageRequested?.Invoke(this, (screen, title));
+
     /// <summary>Raised by <see cref="Notify"/>; the shell shows it as a toast.</summary>
     public event EventHandler<Notification>? Notified;
 

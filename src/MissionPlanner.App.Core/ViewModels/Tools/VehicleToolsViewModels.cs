@@ -494,12 +494,6 @@ public sealed class ToolsViewModel : MenuScreenViewModel
 
     public const string DeviceOpTitle = "Bus registers";
 
-    /// <summary>Opens a page by its menu title.</summary>
-    public void Show(string title)
-    {
-        if (Items.FirstOrDefault(i => i.IsPage && i.Title == title) is { } item)
-            SelectedItem = item;
-    }
 
     public ToolsViewModel(AppServices s)
         : base("Tools", s)

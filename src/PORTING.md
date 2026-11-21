@@ -35,8 +35,8 @@ comparison of both code bases (Nov 2026). Ticked items are done. Items marked *w
 - [ ] Update check (stable / beta)
 
 ## DATA
-- [ ] Actions: Change loiter radius, Resume mission, Abort landing, mount mode, Raw sensor view, send text message
-- [ ] Map menu: Fly to coords, Point camera coords, Trigger camera now, Set EKF origin here, Takeoff, Jump to tag
+- [x] Actions: Change loiter radius, Resume mission, Abort landing, mount mode, Raw sensor view, send text message, Joystick
+- [x] Map menu: Fly to coords, Point camera coords, Trigger camera now, Set EKF origin here, Takeoff, Jump to tag
 - [ ] Points of interest (add / delete / save / load) on DATA and PLAN maps
 - [ ] Camera overlap (CAMERA_FEEDBACK footprints)
 - [ ] Map: hdop/sats, wind indicator, mission progress bar, click ADS-B aircraft for details

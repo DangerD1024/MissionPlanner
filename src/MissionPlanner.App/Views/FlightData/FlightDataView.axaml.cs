@@ -22,6 +22,7 @@ public sealed partial class FlightDataView : UserControl
     private readonly MenuItem _flyToAlt;
     private readonly MenuItem _setHome;
     private readonly MenuItem _pointCamera;
+    private readonly MenuItem[] _vehicleItems;
 
     public FlightDataView()
     {
@@ -31,14 +32,29 @@ public sealed partial class FlightDataView : UserControl
         _flyToAlt = Item("Fly To Here Alt", () => _vm?.FlyToHereAltAsync(_menuAt.Lat, _menuAt.Lng));
         _setHome = Item("Set Home Here", () => _vm?.SetHomeHereAsync(_menuAt.Lat, _menuAt.Lng));
         _pointCamera = Item("Point Camera Here", () => _vm?.PointCameraHereAsync(_menuAt.Lat, _menuAt.Lng));
+        var flyToCoords = Item("Fly To Coords", () => _vm?.FlyToCoordsAsync());
+        var pointCoords = Item("Point Camera Coords", () => _vm?.PointCameraCoordsAsync());
+        var trigger = Item("Trigger Camera Now", () => _vm?.TriggerCameraAsync());
+        var ekf = Item("Set EKF Origin Here", () => _vm?.SetEkfOriginHereAsync(_menuAt.Lat, _menuAt.Lng));
+        var takeoff = Item("Takeoff", () => _vm?.TakeoffAsync());
+        var jumpTag = Item("Jump to Tag", () => _vm?.JumpToTagAsync());
+        _vehicleItems = [_flyTo, _flyToAlt, flyToCoords, _setHome, ekf, _pointCamera, pointCoords, trigger, takeoff, jumpTag];
         _menu = new MenuFlyout
         {
             Items =
             {
                 _flyTo,
                 _flyToAlt,
-                _setHome,
+                flyToCoords,
+                new Separator(),
                 _pointCamera,
+                pointCoords,
+                trigger,
+                new Separator(),
+                takeoff,
+                jumpTag,
+                _setHome,
+                ekf,
                 new Separator(),
                 Item("Clear Track", () => _vm?.ClearTrack()),
                 Item("Zoom to vehicle", () => _vm?.ZoomToVehicle()),
@@ -147,10 +163,8 @@ public sealed partial class FlightDataView : UserControl
             return;
         _menuAt = e.Position;
         var connected = _vm.CanCommand;
-        _flyTo.IsEnabled = connected;
-        _flyToAlt.IsEnabled = connected;
-        _setHome.IsEnabled = connected;
-        _pointCamera.IsEnabled = connected;
+        foreach (var item in _vehicleItems)
+            item.IsEnabled = connected;
         _menu.ShowAt(Map, showAtPointer: true);
     }
 

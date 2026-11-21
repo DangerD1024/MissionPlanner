@@ -73,6 +73,7 @@ public sealed partial class ShellViewModel : ObservableObject
         _currentPage.OnShown();
         services.Session.StateChanged += (_, _) => services.Dispatcher.Post(() => OnPropertyChanged(nameof(Title)));
         services.ScreenRequested += (_, screen) => services.Dispatcher.Post(() => Navigate(screen));
+        services.MenuPageRequested += (_, r) => services.Dispatcher.Post(() => ShowMenuPage(r.Screen, r.Title));
         services.Notified += (_, n) => services.Dispatcher.Post(() => ShowToast(n));
     }
 
@@ -143,29 +144,25 @@ public sealed partial class ShellViewModel : ObservableObject
     private Task ConnectHotkey() =>
         Connection.ToggleConnectCommand.CanExecute(null) ? Connection.ToggleConnectCommand.ExecuteAsync(null) : Task.CompletedTask;
 
+    /// <summary>Shows a screen and the page with this title in its left menu.</summary>
+    public void ShowMenuPage(Screen screen, string title)
+    {
+        Navigate(screen);
+        if (GetPage(screen) is MenuScreenViewModel menu && !menu.Show(title))
+            _services.Notify(L.Format("{0} is not available for this vehicle.", title), MessageKind.Warning);
+    }
+
     /// <summary>Ctrl+G (Mission Planner's NMEA output): TOOLS > Outputs.</summary>
     [RelayCommand]
-    private void OutputsHotkey()
-    {
-        Navigate(Screen.Tools);
-        GetPage<Tools.ToolsViewModel>(Screen.Tools).Show(Tools.ToolsViewModel.OutputsTitle);
-    }
+    private void OutputsHotkey() => ShowMenuPage(Screen.Tools, Tools.ToolsViewModel.OutputsTitle);
 
     /// <summary>Ctrl+X (Mission Planner's map cache window): TOOLS > Map cache.</summary>
     [RelayCommand]
-    private void MapCacheHotkey()
-    {
-        Navigate(Screen.Tools);
-        GetPage<Tools.ToolsViewModel>(Screen.Tools).Show(Tools.ToolsViewModel.MapCacheTitle);
-    }
+    private void MapCacheHotkey() => ShowMenuPage(Screen.Tools, Tools.ToolsViewModel.MapCacheTitle);
 
     /// <summary>Ctrl+J (Mission Planner's devops window): TOOLS > Bus registers.</summary>
     [RelayCommand]
-    private void DeviceOpHotkey()
-    {
-        Navigate(Screen.Tools);
-        GetPage<Tools.ToolsViewModel>(Screen.Tools).Show(Tools.ToolsViewModel.DeviceOpTitle);
-    }
+    private void DeviceOpHotkey() => ShowMenuPage(Screen.Tools, Tools.ToolsViewModel.DeviceOpTitle);
 
     /// <summary>F5: download the parameters again.</summary>
     [RelayCommand]
