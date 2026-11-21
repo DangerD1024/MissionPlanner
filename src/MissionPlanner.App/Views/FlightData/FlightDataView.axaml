@@ -136,8 +136,8 @@
           <Border Classes="overlay" HorizontalAlignment="Right" Padding="3">
             <StackPanel Spacing="4">
               <Button Classes="mapbtn" Content="+" HorizontalAlignment="Center" Command="{Binding ZoomInCommand}" ToolTip.Tip="{l:Tr 'Zoom in'}" />
-              <!-- as narrow as the buttons, so the column is centred on them -->
-              <Slider Orientation="Vertical" Height="180" Width="30" MinWidth="0" HorizontalAlignment="Center"
+              <!-- the slider keeps its natural width (its template centres the track in it); the buttons centre on it -->
+              <Slider Orientation="Vertical" Height="180" HorizontalAlignment="Center"
                       Minimum="{Binding MinZoom}" Maximum="{Binding MaxZoom}" Value="{Binding ZoomValue}"
                       TickFrequency="1" IsSnapToTickEnabled="True" SmallChange="1" LargeChange="2"
                       ToolTip.Tip="{l:Tr 'Zoom'}" />
