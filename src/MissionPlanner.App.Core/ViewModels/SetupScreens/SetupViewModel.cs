@@ -26,6 +26,7 @@ public sealed class SetupViewModel : MenuScreenViewModel
         Add(Page("FailSafe", () => new FailsafeViewModel(s), Ready));
         Add(Header("Optional Hardware"));
         Add(Page("Battery Monitor", () => new BatteryMonitorViewModel(s), () => Ready() && HasParam("BATT_MONITOR")));
+        Add(Page("Battery Monitor 2", () => BatteryMonitorViewModel.Second(s), () => Ready() && HasParam("BATT2_MONITOR")));
         Add(Page("Motor Test", () => new MotorTestViewModel(s), () => Ready() && HasParam("FRAME_CLASS", "Q_FRAME_CLASS", "FRAME", "FRAME_TYPE")));
         Add(Page("Rangefinder", () => new RangefinderViewModel(s), () => Ready() && HasParam("RNGFND1_TYPE", "RNGFND_TYPE")));
         Add(Page("Airspeed", () => new AirspeedViewModel(s), () => Ready() && HasParam("ARSPD_TYPE", "ARSPD1_TYPE")));

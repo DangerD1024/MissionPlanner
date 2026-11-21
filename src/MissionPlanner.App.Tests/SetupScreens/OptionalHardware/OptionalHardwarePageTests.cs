@@ -2,6 +2,7 @@ using MissionPlanner.App.Core.Services;
 using MissionPlanner.App.Core.ViewModels.SetupScreens;
 using MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware;
 using MissionPlanner.App.Tests.ConfigScreens;
+using MissionPlanner.App.Tests.SetupScreens.Rtk;
 
 namespace MissionPlanner.App.Tests.SetupScreens.OptionalHardware;
 
@@ -27,6 +28,36 @@ public sealed class OptionalHardwarePageTests
             src.Values[$"SERVO{n}_MAX"] = 1900;
             src.Values[$"SERVO{n}_REVERSED"] = 0;
         }
+    }
+
+    [TestMethod]
+    public async Task BatteryMonitor2_UsesTheBatt2Parameters_AndTheSecondBatteryReadings()
+    {
+        var (services, _, src) = Create(
+            ("BATT_MONITOR", 4), ("BATT_VOLT_MULT", 10.1), ("BATT_CAPACITY", 5000),
+            ("BATT2_MONITOR", 4), ("BATT2_CAPACITY", 2200), ("BATT2_VOLT_PIN", 13), ("BATT2_CURR_PIN", 12),
+            ("BATT2_VOLT_MULT", 11), ("BATT2_AMP_PERVLT", 17), ("BATT2_AMP_OFFSET", 0));
+        var vm = new BatteryMonitorViewModel(services, src, 2);
+        vm.OnShown();
+
+        Assert.AreEqual("Battery Monitor 2", vm.Title);
+        Assert.AreEqual("BATT2_MONITOR", vm.Monitor!.Name);
+        Assert.AreEqual("BATT2_CAPACITY", vm.Capacity!.Name);
+        Assert.AreEqual("BATT2_VOLT_MULT", vm.VoltMult!.Name);
+        Assert.AreEqual("BATT2_AMP_PERVLT", vm.AmpPerVolt!.Name);
+        Assert.AreEqual("BATT2_VOLT_PIN", vm.VoltPin!.Name);
+        Assert.IsTrue(vm.IsAnalog);
+
+        var cs = new CurrentState { battery_voltage = 16.8 };
+        cs.battery_voltage2 = 12.0;
+        Assert.AreEqual(12.0, vm.ReportedVoltage(cs), 1e-4, "monitor 2 reads the second battery");
+
+        // disabling monitor 2 clears its own pins, never monitor 1's
+        await vm.Monitor.WriteAsync(0);
+        await Wait.Until(() => src.Values["BATT2_VOLT_PIN"] == -1, TimeSpan.FromSeconds(5));
+        Assert.AreEqual(-1, src.Values["BATT2_VOLT_PIN"]);
+        Assert.AreEqual(-1, src.Values["BATT2_CURR_PIN"]);
+        Assert.AreEqual(10.1, src.Values["BATT_VOLT_MULT"]);
     }
 
     [TestMethod]
