@@ -58,6 +58,58 @@ public class MoreActionsTests
     }
 
     [TestMethod]
+    public void CtrlNumberPicksATab_AndTheLogSpeedSteps()
+    {
+        var services = FakeUi.Services(out _);
+        var vm = new FlightDataViewModel(services);
+        vm.SelectTabCommand.Execute("3");
+        Assert.AreEqual((int)FlightDataTab.Messages, vm.SelectedTabIndex);
+        vm.SelectTabCommand.Execute("0");
+        Assert.AreEqual(9, vm.SelectedTabIndex, "Ctrl+0 is the tenth tab");
+
+        Assert.AreEqual(0.1, vm.Tlogs.Speeds[0].Value, "0.1x as Mission Planner");
+        Assert.AreEqual(1, vm.Tlogs.SelectedSpeed.Value);
+        vm.Tlogs.FasterCommand.Execute(null);
+        Assert.AreEqual(2, vm.Tlogs.SelectedSpeed.Value);
+        vm.Tlogs.SlowerCommand.Execute(null);
+        vm.Tlogs.SlowerCommand.Execute(null);
+        Assert.AreEqual(0.5, vm.Tlogs.SelectedSpeed.Value);
+        for (var i = 0; i < 10; i++)
+            vm.Tlogs.SlowerCommand.Execute(null);
+        Assert.AreEqual(0.1, vm.Tlogs.SelectedSpeed.Value, "stops at the slowest");
+    }
+
+    [TestMethod]
+    public void QuickViewCountChangesTheTiles_AndIsRemembered()
+    {
+        var services = FakeUi.Services(out _);
+        var vm = new FlightDataViewModel(services);
+        try
+        {
+            Assert.HasCount(6, vm.QuickTiles);
+            vm.SetQuickLayoutCommand.Execute("3x4");
+            Assert.AreEqual((3, 4), (vm.QuickColumns, vm.QuickRows));
+            Assert.HasCount(12, vm.QuickTiles);
+            Assert.AreEqual("alt", vm.QuickTiles[0].Field.Name, "the first six keep Mission Planner's defaults");
+            Assert.AreEqual("battery_voltage", vm.QuickTiles[6].Field.Name);
+
+            var again = new FlightDataViewModel(services);
+            Assert.HasCount(12, again.QuickTiles, "remembered");
+
+            vm.SetQuickLayoutCommand.Execute("9x9");
+            Assert.AreEqual((4, 6), (vm.QuickColumns, vm.QuickRows), "clamped");
+            vm.SetQuickLayoutCommand.Execute("nonsense");
+            Assert.AreEqual((4, 6), (vm.QuickColumns, vm.QuickRows));
+        }
+        finally
+        {
+            vm.SetQuickLayoutCommand.Execute("2x3");
+        }
+
+        Assert.HasCount(6, vm.QuickTiles);
+    }
+
+    [TestMethod]
     public void RawSensorWindowListsImusInputsAndOutputs()
     {
         var services = FakeUi.Services(out _);

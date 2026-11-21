@@ -41,10 +41,11 @@ comparison of both code bases (Nov 2026). Ticked items are done. Items marked *w
 - [ ] Camera overlap (CAMERA_FEEDBACK footprints)
 - [ ] Map: hdop/sats, wind indicator, mission progress bar, click ADS-B aircraft for details
 - [ ] HUD: record to video file, user items, ground colour, battery cell voltage, swap with map, click EKF/Vibe/prearm for details
-- [ ] Payload: gimbal roll
-- [ ] Quick view: number of rows/columns
-- [ ] Tabs: Ctrl+1…0, choose visible tabs
-- [ ] Telemetry log: 0.1x speed, Space/+/- keys (tlog → KML is in TOOLS > Log tools)
+- [x] Payload: gimbal roll
+- [x] Quick view: number of rows/columns
+- [x] Tabs: Ctrl+1…0
+- [ ] Tabs: choose visible tabs
+- [x] Telemetry log: 0.1x speed, Space/+/- keys (tlog → KML is in TOOLS > Log tools)
 - [ ] DataFlash: auto analysis, Matlab, geotag images (.bin → .log and KML + GPX are in TOOLS > Log tools)
 - [ ] Scripts tab (Python scripting)
 

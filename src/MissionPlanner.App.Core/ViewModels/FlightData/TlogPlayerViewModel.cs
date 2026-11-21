@@ -155,6 +155,21 @@ public sealed partial class TlogPlayerViewModel : PageViewModel
         Refresh();
     }
 
+    /// <summary>"+" while a log plays (Mission Planner's tlog keys): the next faster speed.</summary>
+    [RelayCommand]
+    private void Faster() => StepSpeed(+1);
+
+    /// <summary>"-" while a log plays: the next slower speed.</summary>
+    [RelayCommand]
+    private void Slower() => StepSpeed(-1);
+
+    private void StepSpeed(int step)
+    {
+        var i = Speeds.ToList().IndexOf(SelectedSpeed) + step;
+        if (i >= 0 && i < Speeds.Count)
+            SelectedSpeed = Speeds[i];
+    }
+
     [RelayCommand(CanExecute = nameof(CanPlay))]
     private void Stop()
     {

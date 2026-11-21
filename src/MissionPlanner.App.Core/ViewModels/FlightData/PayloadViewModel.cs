@@ -97,6 +97,16 @@ public sealed partial class PayloadViewModel : PageViewModel
     [ObservableProperty]
     private double _pitchMax = 30;
 
+    /// <summary>Roll, for mounts driven by DO_MOUNT_CONTROL (the gimbal manager has no roll).</summary>
+    [ObservableProperty]
+    private double _roll;
+
+    [ObservableProperty]
+    private double _rollMin = -30;
+
+    [ObservableProperty]
+    private double _rollMax = 30;
+
     [ObservableProperty]
     private double _yawMin = -180;
 
@@ -119,6 +129,8 @@ public sealed partial class PayloadViewModel : PageViewModel
     partial void OnPitchChanged(double value) => MarkDirty();
 
     partial void OnYawChanged(double value) => MarkDirty();
+
+    partial void OnRollChanged(double value) => MarkDirty();
 
     private void MarkDirty()
     {
@@ -165,6 +177,13 @@ public sealed partial class PayloadViewModel : PageViewModel
             };
             SetRange(Param("MNT1_PITCH_MIN") ?? -90, Param("MNT1_PITCH_MAX") ?? 30, Param("MNT1_YAW_MIN") ?? -180,
                 Param("MNT1_YAW_MAX") ?? 180);
+            var rollMin = Param("MNT1_ROLL_MIN") ?? -30;
+            var rollMax = Param("MNT1_ROLL_MAX") ?? 30;
+            if (rollMin < rollMax)
+            {
+                RollMin = Math.Round(rollMin);
+                RollMax = Math.Round(rollMax);
+            }
         }
 
         var cs = Services.Session.Cs;
@@ -192,7 +211,7 @@ public sealed partial class PayloadViewModel : PageViewModel
 
     /// <summary>The command the sliders send for the current angles.</summary>
     public VehicleCommand AnglesCommand() =>
-        UsesGimbalManager ? GimbalCommands.PitchYaw(Pitch, Yaw, YawLock) : GimbalCommands.MountAngles(Pitch, 0, Yaw);
+        UsesGimbalManager ? GimbalCommands.PitchYaw(Pitch, Yaw, YawLock) : GimbalCommands.MountAngles(Pitch, Roll, Yaw);
 
     private void SendAngles()
     {
@@ -228,6 +247,7 @@ public sealed partial class PayloadViewModel : PageViewModel
         _syncing = true;
         Pitch = pitch;
         Yaw = yaw;
+        Roll = 0;
         _syncing = false;
     }
 

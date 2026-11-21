@@ -281,4 +281,18 @@ internal sealed record QuickDefault(string Name, Func<CurrentState, double> Gett
         // Mission Planner labels this tile "DistToMAV": the distance from home (or the tracker) to the vehicle
         new("DistToHome", cs => cs.DistToHome, "#00fffc", "Dist to MAV"),
     ];
+
+    /// <summary>Defaults of the tiles after the first six, when the view shows more.</summary>
+    public static readonly QuickDefault[] Extra =
+    [
+        new("battery_voltage", cs => cs.battery_voltage, "#ffffff"),
+        new("current", cs => cs.current, "#ffb3ff"),
+        new("satcount", cs => cs.satcount, "#9ad0ff"),
+        new("gpshdop", cs => cs.gpshdop, "#c8ff9a"),
+        new("airspeed", cs => cs.airspeed, "#ffd27f"),
+        new("battery_remaining", cs => cs.battery_remaining, "#7fffd4"),
+    ];
+
+    /// <summary>The default of tile number <paramref name="index"/>.</summary>
+    public static QuickDefault For(int index) => index < All.Length ? All[index] : Extra[(index - All.Length) % Extra.Length];
 }

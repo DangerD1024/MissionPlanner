@@ -67,12 +67,9 @@ public sealed partial class FlightDataViewModel : PageViewModel
         Tlogs = new TlogPlayerViewModel(services);
         Tuning = new TuningGraphViewModel(services);
 
-        QuickTiles = QuickDefault.All.Select((d, i) => new QuickTile(i, d)).ToArray();
-        foreach (var tile in QuickTiles)
-        {
-            if (Settings.Instance["next_quick" + tile.Index] is { Length: > 0 } name)
-                tile.Show(name);
-        }
+        _quickColumns = Math.Clamp(Settings.Instance.GetInt32(QuickColumnsKey, 2), 1, 4);
+        _quickRows = Math.Clamp(Settings.Instance.GetInt32(QuickRowsKey, 3), 1, 6);
+        BuildQuickTiles();
 
         MaxZoom = SelectedMapProvider.Provider.MaxZoom ?? 20;
         RestoreMapPosition();
@@ -123,8 +120,52 @@ public sealed partial class FlightDataViewModel : PageViewModel
 
     // ---- Quick tab ---------------------------------------------------------------------------
 
-    /// <summary>The six readouts, two columns by three rows.</summary>
-    public IReadOnlyList<QuickTile> QuickTiles { get; }
+    /// <summary>The readouts: two columns by three rows by default (Mission Planner's "Set View Count" changes it).</summary>
+    public System.Collections.ObjectModel.ObservableCollection<QuickTile> QuickTiles { get; } = new();
+
+    internal const string QuickColumnsKey = "next_quick_cols";
+    internal const string QuickRowsKey = "next_quick_rows";
+
+    private int _quickColumns;
+    private int _quickRows;
+
+    public int QuickColumns => _quickColumns;
+
+    public int QuickRows => _quickRows;
+
+    /// <summary>Layouts offered on the Quick tab's right-click menu ("columns x rows").</summary>
+    public static IReadOnlyList<string> QuickLayouts { get; } = ["1x2", "1x3", "2x2", "2x3", "2x4", "3x3", "3x4", "4x4", "4x6"];
+
+    /// <summary>Sets the Quick tab to <paramref name="layout"/> ("3x4": three columns, four rows); remembered.</summary>
+    [RelayCommand]
+    private void SetQuickLayout(string? layout)
+    {
+        var parts = layout?.Split('x');
+        if (parts is not { Length: 2 } || !int.TryParse(parts[0], out var cols) || !int.TryParse(parts[1], out var rows))
+            return;
+        _quickColumns = Math.Clamp(cols, 1, 4);
+        _quickRows = Math.Clamp(rows, 1, 6);
+        Settings.Instance[QuickColumnsKey] = _quickColumns.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        Settings.Instance[QuickRowsKey] = _quickRows.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        BuildQuickTiles();
+        OnPropertyChanged(nameof(QuickColumns));
+        OnPropertyChanged(nameof(QuickRows));
+    }
+
+    /// <summary>One tile per cell, each showing what was chosen for it (next_quickN) or its default.</summary>
+    private void BuildQuickTiles()
+    {
+        var count = _quickColumns * _quickRows;
+        while (QuickTiles.Count > count)
+            QuickTiles.RemoveAt(QuickTiles.Count - 1);
+        for (var i = QuickTiles.Count; i < count; i++)
+        {
+            var tile = new QuickTile(i, QuickDefault.For(i));
+            if (Settings.Instance["next_quick" + i] is { Length: > 0 } name)
+                tile.Show(name);
+            QuickTiles.Add(tile);
+        }
+    }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsQuickPickerOpen))]
@@ -221,6 +262,17 @@ public sealed partial class FlightDataViewModel : PageViewModel
             return;
         StatusEntries = _statusAll.Where(e => StatusCatalog.Matches(e, value)).ToArray();
         RefreshStatus();
+    }
+
+    /// <summary>Ctrl+1 … Ctrl+0: tab 1 … 10, as Mission Planner.</summary>
+    [RelayCommand]
+    private void SelectTab(string? key)
+    {
+        if (!int.TryParse(key, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var number))
+            return;
+        var index = (number == 0 ? 10 : number) - 1;
+        if (index >= 0 && index < Enum.GetValues<FlightDataTab>().Length)
+            SelectedTabIndex = index;
     }
 
     partial void OnSelectedTabIndexChanged(int value)

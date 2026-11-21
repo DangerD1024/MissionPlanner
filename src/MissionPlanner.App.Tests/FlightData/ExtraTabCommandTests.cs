@@ -206,6 +206,11 @@ public class ExtraTabCommandTests
         var cmd = vm.AnglesCommand();
         Assert.AreEqual(MAVLink.MAV_CMD.DO_MOUNT_CONTROL, cmd.Command);
         Assert.AreEqual((-20f, 30f), (cmd.P1, cmd.P3));
+
+        // roll goes in p2 for a mount (Mission Planner's Payload roll slider)
+        vm.Roll = 12;
+        Assert.AreEqual(12f, vm.AnglesCommand().P2);
+        Assert.AreEqual((-30.0, 30.0), (vm.RollMin, vm.RollMax), "MNT1_ROLL_MIN/MAX, or +-30");
     }
 
     [TestMethod]

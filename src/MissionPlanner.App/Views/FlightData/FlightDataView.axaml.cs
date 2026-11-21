@@ -79,6 +79,9 @@ public sealed partial class FlightDataView : UserControl
         LeftColumn.SizeChanged += (_, e) => SizeHud(e.NewSize);
 
         DataContextChanged += (_, _) => Attach(DataContext as FlightDataViewModel);
+
+        // while a telemetry log plays: Space pauses, + / - change the speed (not while typing)
+        AddHandler(KeyDownEvent, OnPlaybackKey, Avalonia.Interactivity.RoutingStrategies.Bubble);
     }
 
     private void Attach(FlightDataViewModel? vm)
@@ -173,6 +176,24 @@ public sealed partial class FlightDataView : UserControl
         // Ctrl+click flies there, as in Mission Planner
         if (_vm != null && e.Modifiers.HasFlag(KeyModifiers.Control) && _vm.CanCommand)
             _ = _vm.FlyToHereAsync(e.Position.Lat, e.Position.Lng);
+    }
+
+    private void OnPlaybackKey(object? sender, KeyEventArgs e)
+    {
+        if (e.Handled || _vm == null || e.KeyModifiers != KeyModifiers.None || e.Source is TextBox ||
+            !_vm.Tlogs.PlayPauseCommand.CanExecute(null))
+            return;
+        var command = e.Key switch
+        {
+            Key.Space => _vm.Tlogs.PlayPauseCommand,
+            Key.OemPlus or Key.Add => _vm.Tlogs.FasterCommand,
+            Key.OemMinus or Key.Subtract => _vm.Tlogs.SlowerCommand,
+            _ => null,
+        };
+        if (command == null)
+            return;
+        command.Execute(null);
+        e.Handled = true;
     }
 
     private static MenuItem Item(string header, Action action)

@@ -48,6 +48,13 @@
           <TextBlock Grid.Row="1" Grid.Column="1" Classes="angle" Text="{Binding Yaw, StringFormat='{}{0:0}°'}" />
         </Grid>
 
+        <Grid IsVisible="{Binding !UsesGimbalManager}" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+          <TextBlock Classes="caption" Text="{l:Tr 'Roll'}" />
+          <Slider Grid.Row="1" Minimum="{Binding RollMin}" Maximum="{Binding RollMax}" Value="{Binding Roll}"
+                  SmallChange="1" LargeChange="10" TickFrequency="1" IsSnapToTickEnabled="True" />
+          <TextBlock Grid.Row="1" Grid.Column="1" Classes="angle" Text="{Binding Roll, StringFormat='{}{0:0}°'}" />
+        </Grid>
+
         <CheckBox Content="{l:Tr 'Yaw lock (hold the heading instead of following the vehicle)'}" IsChecked="{Binding YawLock}"
                   IsVisible="{Binding UsesGimbalManager}" />
 

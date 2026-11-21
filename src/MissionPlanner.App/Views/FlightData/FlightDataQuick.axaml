@@ -29,9 +29,23 @@
   <Panel>
     <!-- six large readouts, two columns by three rows; click one to show something else -->
     <ItemsControl ItemsSource="{Binding QuickTiles}" Margin="4">
+      <ItemsControl.ContextMenu>
+        <ContextMenu>
+          <MenuItem Header="{l:Tr 'Set view count'}" ItemsSource="{x:Static vm:FlightDataViewModel.QuickLayouts}">
+            <MenuItem.ItemContainerTheme>
+              <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="x:String">
+                <Setter Property="Header" Value="{Binding}" />
+                <Setter Property="Command" Value="{Binding $parent[ItemsControl].((vm:FlightDataViewModel)DataContext).SetQuickLayoutCommand}" />
+                <Setter Property="CommandParameter" Value="{Binding}" />
+              </ControlTheme>
+            </MenuItem.ItemContainerTheme>
+          </MenuItem>
+        </ContextMenu>
+      </ItemsControl.ContextMenu>
       <ItemsControl.ItemsPanel>
         <ItemsPanelTemplate>
-          <UniformGrid Columns="2" Rows="3" />
+          <UniformGrid Columns="{Binding $parent[ItemsControl].((vm:FlightDataViewModel)DataContext).QuickColumns}"
+                       Rows="{Binding $parent[ItemsControl].((vm:FlightDataViewModel)DataContext).QuickRows}" />
         </ItemsPanelTemplate>
       </ItemsControl.ItemsPanel>
       <ItemsControl.ItemTemplate>
