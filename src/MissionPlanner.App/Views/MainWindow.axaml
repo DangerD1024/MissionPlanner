@@ -20,6 +20,7 @@
     <KeyBinding Gesture="Ctrl+F" Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Tools}" />
     <KeyBinding Gesture="Ctrl+Y" Command="{Binding CommitParamsHotkeyCommand}" />
     <KeyBinding Gesture="Ctrl+G" Command="{Binding OutputsHotkeyCommand}" />
+    <KeyBinding Gesture="Ctrl+X" Command="{Binding MapCacheHotkeyCommand}" />
   </Window.KeyBindings>
 
   <Grid RowDefinitions="72,Auto,*">

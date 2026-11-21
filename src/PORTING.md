@@ -17,9 +17,9 @@ comparison of both code bases (Nov 2026). Ticked items are done. Items marked *w
 - [x] MAVLink packet decoder (hex / decimal bytes → fields); hardware ID decoder (typed number)
 - [x] APJ tool: embed a .param file into a .apj firmware
 - [x] Outputs: MAVLink mirror (serial/TCP/UDP), NMEA position out, Cursor-on-Target, MicroDrone
-- [ ] Log tools: .bin → .log, KML + GPX from .bin/.tlog, split a log, sort logs, anonymise a log,
+- [x] Log tools: .bin → .log, KML + GPX from .bin/.tlog, split a log, sort logs, anonymise a log,
       DashWare CSV, extract GPS inject data from a tlog, remote DataFlash logger
-- [ ] Map cache: size per provider, clear, delete tiles older than 30 days, clear custom imagery
+- [x] Map cache: size per provider, clear, delete tiles older than 30 days, clear custom imagery (Ctrl+X)
 - [ ] Mag calibration from a log
 - [ ] Message interval / camera test / DEVICE_OP (Ctrl+J) developer tools
 - [ ] Firmware download of every build ("rip all fw")
@@ -43,8 +43,8 @@ comparison of both code bases (Nov 2026). Ticked items are done. Items marked *w
 - [ ] Payload: gimbal roll
 - [ ] Quick view: number of rows/columns
 - [ ] Tabs: Ctrl+1…0, choose visible tabs
-- [ ] Telemetry log: 0.1x speed, Space/+/- keys, tlog → KML
-- [ ] DataFlash: auto analysis, Matlab, .bin → .log, KML + GPX, geotag images
+- [ ] Telemetry log: 0.1x speed, Space/+/- keys (tlog → KML is in TOOLS > Log tools)
+- [ ] DataFlash: auto analysis, Matlab, geotag images (.bin → .log and KML + GPX are in TOOLS > Log tools)
 - [ ] Scripts tab (Python scripting)
 
 ## PLAN

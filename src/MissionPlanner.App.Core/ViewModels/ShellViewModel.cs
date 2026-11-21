@@ -151,6 +151,14 @@ public sealed partial class ShellViewModel : ObservableObject
         GetPage<Tools.ToolsViewModel>(Screen.Tools).Show(Tools.ToolsViewModel.OutputsTitle);
     }
 
+    /// <summary>Ctrl+X (Mission Planner's map cache window): TOOLS > Map cache.</summary>
+    [RelayCommand]
+    private void MapCacheHotkey()
+    {
+        Navigate(Screen.Tools);
+        GetPage<Tools.ToolsViewModel>(Screen.Tools).Show(Tools.ToolsViewModel.MapCacheTitle);
+    }
+
     /// <summary>F5: download the parameters again.</summary>
     [RelayCommand]
     private async Task RefreshParamsHotkey()

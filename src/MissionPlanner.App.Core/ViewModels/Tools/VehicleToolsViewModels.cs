@@ -490,6 +490,8 @@ public sealed class ToolsViewModel : MenuScreenViewModel
 {
     public const string OutputsTitle = "Outputs";
 
+    public const string MapCacheTitle = "Map cache";
+
     /// <summary>Opens a page by its menu title.</summary>
     public void Show(string title)
     {
@@ -508,6 +510,10 @@ public sealed class ToolsViewModel : MenuScreenViewModel
         Add(MenuItemViewModel.Page("Parameter restore", () => new ParamRestoreViewModel(s)));
         Add(MenuItemViewModel.Header("OUTPUTS"));
         Add(MenuItemViewModel.Page(OutputsTitle, () => new OutputsViewModel(s)));
+        Add(MenuItemViewModel.Header("LOGS"));
+        Add(MenuItemViewModel.Page("Log tools", () => new LogToolsViewModel(s)));
+        Add(MenuItemViewModel.Header("MAPS"));
+        Add(MenuItemViewModel.Page(MapCacheTitle, () => new MapCacheViewModel(s)));
         Add(MenuItemViewModel.Header("DECODERS"));
         Add(MenuItemViewModel.Page("MAVLink packet decoder", () => new PacketDecoderViewModel(s)));
         Add(MenuItemViewModel.Page("Device ID decoder", () => new DeviceIdDecoderViewModel(s)));
