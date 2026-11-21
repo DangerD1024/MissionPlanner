@@ -20,8 +20,9 @@ comparison of both code bases (Nov 2026). Ticked items are done. Items marked *w
 - [x] Log tools: .bin → .log, KML + GPX from .bin/.tlog, split a log, sort logs, anonymise a log,
       DashWare CSV, extract GPS inject data from a tlog, remote DataFlash logger
 - [x] Map cache: size per provider, clear, delete tiles older than 30 days, clear custom imagery (Ctrl+X)
-- [ ] Mag calibration from a log
-- [ ] Message interval / camera test / DEVICE_OP (Ctrl+J) developer tools
+- [x] Mag calibration from a log
+- [x] DEVICE_OP bus register reader (Ctrl+J)
+- [ ] MAVLink camera test (Ctrl+Z), spectrogram (Ctrl+L), RF propagation (Ctrl+W)
 - [ ] Firmware download of every build ("rip all fw")
 - *won't port*: driver clean (Windows-only driver tool), structtest (developer benchmark), VLC button (the app plays video itself)
 

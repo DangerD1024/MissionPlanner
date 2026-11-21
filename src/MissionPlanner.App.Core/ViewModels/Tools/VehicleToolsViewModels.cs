@@ -492,6 +492,8 @@ public sealed class ToolsViewModel : MenuScreenViewModel
 
     public const string MapCacheTitle = "Map cache";
 
+    public const string DeviceOpTitle = "Bus registers";
+
     /// <summary>Opens a page by its menu title.</summary>
     public void Show(string title)
     {
@@ -508,6 +510,8 @@ public sealed class ToolsViewModel : MenuScreenViewModel
         Add(MenuItemViewModel.Page("Message interval", () => new MessageIntervalViewModel(s)));
         Add(MenuItemViewModel.Page("Onboard files", () => new OnboardFileViewModel(s)));
         Add(MenuItemViewModel.Page("Parameter restore", () => new ParamRestoreViewModel(s)));
+        Add(MenuItemViewModel.Page("Compass from a log", () => new MagLogCalibrationViewModel(s)));
+        Add(MenuItemViewModel.Page(DeviceOpTitle, () => new DeviceOpViewModel(s)));
         Add(MenuItemViewModel.Header("OUTPUTS"));
         Add(MenuItemViewModel.Page(OutputsTitle, () => new OutputsViewModel(s)));
         Add(MenuItemViewModel.Header("LOGS"));

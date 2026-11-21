@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.MagLogCalibrationView"
+             x:DataType="vm:MagLogCalibrationViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="14" MaxWidth="1000" HorizontalAlignment="Left">
+      <tv:ToolHeader />
+      <StackPanel Orientation="Horizontal" Spacing="10">
+        <Button Classes="accent" Content="{l:Tr 'Open a log…'}" Command="{Binding OpenLogCommand}" IsEnabled="{Binding !IsBusy}" />
+        <TextBlock Text="{Binding LogName}" VerticalAlignment="Center" Classes="muted" />
+      </StackPanel>
+      <ItemsControl ItemsSource="{Binding Fits}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:MagLogFit+Fit">
+            <Border Classes="card" Margin="0,0,0,10">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="{Binding Text}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Margin="12,0,0,0" Content="{l:Tr 'Write offsets'}"
+                        Command="{Binding $parent[UserControl].((vm:MagLogCalibrationViewModel)DataContext).ApplyCommand}" CommandParameter="{Binding}" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                 Text="{l:Tr 'Writing turns COMPASS_LEARN off so the autopilot keeps these offsets. The onboard calibration in SETUP > Compass is usually better; use this for a vehicle you cannot rotate on the ground.'}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

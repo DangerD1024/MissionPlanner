@@ -159,6 +159,14 @@ public sealed partial class ShellViewModel : ObservableObject
         GetPage<Tools.ToolsViewModel>(Screen.Tools).Show(Tools.ToolsViewModel.MapCacheTitle);
     }
 
+    /// <summary>Ctrl+J (Mission Planner's devops window): TOOLS > Bus registers.</summary>
+    [RelayCommand]
+    private void DeviceOpHotkey()
+    {
+        Navigate(Screen.Tools);
+        GetPage<Tools.ToolsViewModel>(Screen.Tools).Show(Tools.ToolsViewModel.DeviceOpTitle);
+    }
+
     /// <summary>F5: download the parameters again.</summary>
     [RelayCommand]
     private async Task RefreshParamsHotkey()
