@@ -50,17 +50,19 @@ comparison of both code bases (Nov 2026). Ticked items are done. Items marked *w
 - [ ] Scripts tab (Python scripting)
 
 ## PLAN
-- [ ] Insert WP at current position, Jump (start / WP #), DO_SET_ROI from the map
-- [ ] Polygon: from SHP, from waypoints, offset
-- [ ] Fence .fen and rally .ral files; mission .plan/.kml/.shp/.mission load, load-and-append, .mission save
+- [x] Insert WP at current position, Jump (start / WP #), DO_SET_ROI from the map
+- [x] Polygon: from SHP, from waypoints, offset
+- [x] Fence .fen and rally .ral files; mission .plan/.kml/.shp/.mission load, load-and-append, .mission save
 - [ ] Auto WP: circle, spline circle, circle survey, text
 - [ ] Survey: camera database, overlap/sidelap, GSD, footprints
-- [ ] Map tools: measure distance, rotate map, zoom to place/coords, prefetch tiles (area and WP path),
-      KML overlay, elevation graph, reverse WPs
-- [ ] Modify alt (all), enter UTM coords, coordinate display Geo/UTM/MGRS (+ grid columns)
+- [x] Map tools: measure distance, reverse WPs
+- [ ] Map tools: rotate map, zoom to place/coords, prefetch tiles (area and WP path), KML overlay, elevation graph
+- [x] Modify alt (all), enter UTM coords
+- [ ] Coordinate display Geo/UTM/MGRS (+ grid columns)
 - [ ] Verify height, alt warn, default spline, write fast, MAVFtp upload, home = vehicle position
 - [ ] Group select (Ctrl+drag / Ctrl+click), group move, undo (Ctrl+Z), Ctrl+O/S, Ctrl+Shift+W/R/F
-- [ ] Zoom to vehicle / home, zoom slider, grid columns Angle and TagData
+- [x] Zoom to vehicle / home
+- [ ] Zoom slider, grid columns Angle and TagData
 
 ## SETUP
 - [x] Battery Monitor 2

@@ -270,7 +270,9 @@ public sealed partial class FlightPlanView : UserControl
                 break;
         }
 
-        items.Add(Item("Insert WP", () => _ = vm.InsertWaypointAsync(at, spline: false)));
+        items.Add(Sub("Insert WP",
+            Item("Here", () => _ = vm.InsertWaypointAsync(at, spline: false)),
+            Item("At Current Position", () => _ = vm.InsertWaypointAtVehicleAsync(), vm.VehiclePosition != null)));
         items.Add(Item("Insert Spline WP", () => _ = vm.InsertWaypointAsync(at, spline: true)));
         items.Add(Sub("Loiter",
             Item("Forever", () => vm.AddLoiterUnlimited(at)),
@@ -279,11 +281,19 @@ public sealed partial class FlightPlanView : UserControl
         items.Add(Item("Takeoff", () => _ = vm.AddTakeoffAsync()));
         items.Add(Item("Land", () => vm.AddLand(at)));
         items.Add(Item("RTL", vm.AddReturnToLaunch));
+        items.Add(Sub("Jump",
+            Item("Start", () => _ = vm.AddJumpAsync(toStart: true)),
+            Item("WP #", () => _ = vm.AddJumpAsync(toStart: false))));
+        items.Add(Item("DO_SET_ROI", () => vm.AddRoiHere(at)));
         items.Add(new Separator());
         items.Add(Item("Set Home Here", () => _ = vm.SetHomeHereAsync(at)));
         items.Add(Sub("Draw Polygon",
             Item("Add Polygon Point", () => vm.AddPolygonPoint(at)),
             Item("Clear Polygon", () => vm.ClearPolygonCommand.Execute(null), vm.HasPolygon),
+            new Separator(),
+            Item("From Current Waypoints", vm.PolygonFromWaypoints, vm.Store.Mission.Count >= 3),
+            Item("From SHP", () => _ = vm.PolygonFromShapefileAsync()),
+            Item("Offset Polygon", () => _ = vm.OffsetPolygonAsync(), vm.Polygon.Count >= 3),
             new Separator(),
             Item("Save Polygon", () => vm.SavePolygonCommand.Execute(null), vm.HasPolygon),
             Item("Load Polygon", () => vm.LoadPolygonCommand.Execute(null))));
@@ -296,8 +306,18 @@ public sealed partial class FlightPlanView : UserControl
             Item("Inclusion Circle Here", () => _ = vm.FenceCircleAsync(at, inclusion: true)),
             Item("Exclusion Circle Here", () => _ = vm.FenceCircleAsync(at, inclusion: false)),
             Item("Circle Around Home", () => _ = vm.FenceHomeCircleAsync(), vm.Home != null),
-            Item("Return Point Here", () => vm.FenceReturnPointHere(at))));
-        items.Add(Item("Rally Point Here", () => vm.AddRallyPointHere(at)));
+            Item("Return Point Here", () => vm.FenceReturnPointHere(at)),
+            new Separator(),
+            Item("Load from File (.fen)", () => _ = vm.LoadFenceFileAsync()),
+            Item("Save to File (.fen)", () => _ = vm.SaveFenceFileAsync(), vm.Store.Fence.Count > 0)));
+        items.Add(Sub("Rally Points",
+            Item("Rally Point Here", () => vm.AddRallyPointHere(at)),
+            Item("Load from File (.ral)", () => _ = vm.LoadRallyFileAsync()),
+            Item("Save to File (.ral)", () => _ = vm.SaveRallyFileAsync(), vm.Store.Rally.Count > 0)));
+        items.Add(Sub("File Load/Save",
+            Item("Load WP File (waypoints, plan, mission, KML, SHP)", () => _ = vm.LoadAnyFileAsync(append: false)),
+            Item("Load and Append", () => _ = vm.LoadAnyFileAsync(append: true)),
+            Item("Save as Plan / Mission", () => _ = vm.SaveAnyFileAsync(), vm.Store.Mission.Count > 0)));
         var poi = hit as Core.Mission.Poi;
         items.Add(Sub("POI",
             Item("Add POI Here", () => _ = vm.Poi.AddHereAsync(at.Lat, at.Lng)),
@@ -309,7 +329,15 @@ public sealed partial class FlightPlanView : UserControl
             Item("Load POIs", () => _ = vm.Poi.LoadAsync())));
         items.Add(new Separator());
         items.Add(Item(vm.ClearListText, () => vm.ClearListCommand.Execute(null), vm.CurrentList.Count > 0));
-        items.Add(Item("Zoom to Mission", () => vm.ZoomToMissionCommand.Execute(null)));
+        items.Add(Sub("Map Tool",
+            Item(vm.IsMeasuring ? "Measure Distance (second point)" : "Measure Distance", () => _ = vm.MeasureDistanceAsync(at)),
+            Item("Reverse WPs", vm.ReverseWaypoints, vm.Store.Mission.Count > 1),
+            Item("Modify Alt", () => _ = vm.ModifyAltitudesAsync(), vm.Store.Mission.Count > 0),
+            Item("Enter UTM Coord", () => _ = vm.AddUtmWaypointAsync())));
+        items.Add(Sub("Zoom",
+            Item("Zoom to Mission", () => vm.ZoomToMissionCommand.Execute(null)),
+            Item("Zoom to Vehicle", vm.ZoomToVehicle, vm.VehiclePosition != null),
+            Item("Zoom to Home", vm.ZoomToHome, vm.Home != null)));
 
         menu.ItemsSource = items;
         menu.Closed += (_, _) => menu.ItemsSource = null;
