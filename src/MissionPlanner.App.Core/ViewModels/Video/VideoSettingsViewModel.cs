@@ -32,6 +32,9 @@ public sealed partial class VideoSettingsViewModel : PageViewModel, IDialogPage
         new(VideoSourceType.UdpMpegTs, "MPEG-TS video stream (UDP)", "MPEG transport stream sent to a UDP port on this computer."),
         new(VideoSourceType.MjpegHttp, "MJPEG over HTTP", "Motion JPEG from an IP camera's web address (multipart/x-mixed-replace)."),
         new(VideoSourceType.TestPattern, "Test pattern", "GStreamer's test pattern: checks that video works on this computer."),
+        new(VideoSourceType.CaptureDevice, "Capture device (EasyCap, UVC webcam)",
+            "A video capture device plugged into this computer: an EasyCap or other analog video grabber (5.8 GHz FPV receiver output), " +
+            "a UVC webcam or an HDMI capture stick. Pick it from the list; empty uses the first one."),
         new(VideoSourceType.Custom, "Custom GStreamer pipeline",
             "Any gst-launch pipeline. It must end with an appsink named outsink that receives BGRA frames:\n" +
             "  ... ! " + VideoPipelineBuilder.SinkTail + "\n" +
@@ -189,12 +192,42 @@ public sealed partial class VideoSettingsViewModel : PageViewModel, IDialogPage
         _ = Task.Run(() =>
         {
             var ok = VideoStream.IsAvailable(out var message);
+            var devices = ok ? CaptureDevices.List() : [];
             dispatcher.Post(() =>
             {
                 GStreamerMissing = !ok;
                 GStreamerStatus = ok ? message + " found" : message;
+                ShowDevices(devices);
             });
         });
+    }
+
+    /// <summary>Capture devices connected now (EasyCap, UVC), for the Device list.</summary>
+    public ObservableCollection<string> CaptureDeviceIds { get; } = new();
+
+    [ObservableProperty]
+    private string _captureDevicesText = "";
+
+    [RelayCommand]
+    private void RefreshDevices()
+    {
+        CaptureDevicesText = "Looking for capture devices…";
+        var dispatcher = _owner.Services.Dispatcher;
+        _ = Task.Run(() =>
+        {
+            var devices = CaptureDevices.List();
+            dispatcher.Post(() => ShowDevices(devices));
+        });
+    }
+
+    private void ShowDevices(IReadOnlyList<CaptureDevice> devices)
+    {
+        CaptureDeviceIds.Clear();
+        foreach (var d in devices)
+            CaptureDeviceIds.Add(d.Id);
+        CaptureDevicesText = devices.Count == 0
+            ? "No capture devices found. Plug the EasyCap / camera in and press Refresh."
+            : string.Join(" · ", devices.Select(d => d.ToString()));
     }
 }
 
@@ -210,6 +243,7 @@ public sealed partial class VideoSourceItem : ObservableObject
         _host = config.Host;
         _port = config.Port;
         _pipeline = config.Pipeline;
+        _device = config.Device;
         _lowLatency = config.LowLatency;
         _transport = VideoSettingsViewModel.Transports.First(t => t.Value == config.Transport);
         _decoder = VideoSettingsViewModel.Decoders.First(d => d.Value == config.Decoder);
@@ -222,7 +256,7 @@ public sealed partial class VideoSourceItem : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowUrl), nameof(ShowHost), nameof(ShowPort), nameof(ShowPipeline), nameof(ShowLowLatency),
-        nameof(ShowTransport), nameof(ShowDecoder), nameof(UrlLabel), nameof(UrlWatermark), nameof(PortLabel))]
+        nameof(ShowTransport), nameof(ShowDecoder), nameof(UrlLabel), nameof(UrlWatermark), nameof(PortLabel), nameof(ShowDevice))]
     private VideoTypeOption _type;
 
     [ObservableProperty]
@@ -236,6 +270,10 @@ public sealed partial class VideoSourceItem : ObservableObject
 
     [ObservableProperty]
     private string _pipeline;
+
+    /// <summary>Capture device name (Windows, macOS) or node (Linux).</summary>
+    [ObservableProperty]
+    private string _device;
 
     [ObservableProperty]
     private bool _lowLatency;
@@ -253,6 +291,8 @@ public sealed partial class VideoSourceItem : ObservableObject
     public bool ShowPort => Type.Type is VideoSourceType.UdpH264 or VideoSourceType.UdpH265 or VideoSourceType.UdpMpegTs or VideoSourceType.TcpMpegTs;
 
     public bool ShowPipeline => Type.Type == VideoSourceType.Custom;
+
+    public bool ShowDevice => Type.Type == VideoSourceType.CaptureDevice;
 
     public bool ShowLowLatency => Type.Type is VideoSourceType.UdpH264 or VideoSourceType.UdpH265 or VideoSourceType.Rtsp;
 
@@ -285,6 +325,7 @@ public sealed partial class VideoSourceItem : ObservableObject
         Host = Host.Trim(),
         Port = Port is { } p && p >= 0 && p <= int.MaxValue ? (int)decimal.Truncate(p) : 0,
         Pipeline = Pipeline,
+        Device = (Device ?? "").Trim(),
         LowLatency = LowLatency,
         Transport = Transport.Value,
         Decoder = Decoder.Value,
@@ -294,7 +335,7 @@ public sealed partial class VideoSourceItem : ObservableObject
     {
         base.OnPropertyChanged(e);
         if (e.PropertyName is not (nameof(Name) or nameof(Type) or nameof(Url) or nameof(Host) or nameof(Port) or nameof(Pipeline)
-            or nameof(LowLatency) or nameof(Transport) or nameof(Decoder)))
+            or nameof(Device) or nameof(LowLatency) or nameof(Transport) or nameof(Decoder)))
             return;
         // everything shown about the source depends on all of its fields
         base.OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs(nameof(Summary)));

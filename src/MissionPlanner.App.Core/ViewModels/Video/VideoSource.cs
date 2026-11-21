@@ -29,6 +29,9 @@ public enum VideoSourceType
 
     /// <summary>Any GStreamer pipeline text.</summary>
     Custom,
+
+    /// <summary>A video capture device on this computer: an EasyCap / analog grabber, a UVC webcam or HDMI capture.</summary>
+    CaptureDevice,
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter<RtspTransport>))]
@@ -82,6 +85,12 @@ public sealed class VideoSourceConfig
     /// <summary>UDP port to listen on, or the TCP server's port.</summary>
     public int Port { get; set; } = DefaultH264Port;
 
+    /// <summary>
+    /// Capture device: its name as GStreamer lists it (Windows, macOS) or its node (Linux,
+    /// /dev/video0); empty for the first one found.
+    /// </summary>
+    public string Device { get; set; } = "";
+
     /// <summary>Pipeline text for <see cref="VideoSourceType.Custom"/>.</summary>
     public string Pipeline { get; set; } = "";
 
@@ -96,7 +105,7 @@ public sealed class VideoSourceConfig
 
     /// <summary>True when both describe the same stream (identity and name aside).</summary>
     public bool SameStream(VideoSourceConfig other) =>
-        Type == other.Type && Url == other.Url && Host == other.Host && Port == other.Port && Pipeline == other.Pipeline &&
+        Type == other.Type && Url == other.Url && Host == other.Host && Port == other.Port && Pipeline == other.Pipeline && Device == other.Device &&
         LowLatency == other.LowLatency && Transport == other.Transport && Decoder == other.Decoder;
 
     public static string NewId() => Guid.NewGuid().ToString("N")[..12];
@@ -112,6 +121,7 @@ public sealed class VideoSourceConfig
         VideoSourceType.Rtsp => Url,
         VideoSourceType.MjpegHttp => Url,
         VideoSourceType.TestPattern => "Test pattern",
+        VideoSourceType.CaptureDevice => string.IsNullOrWhiteSpace(Device) ? "Capture device" : "Capture: " + Device,
         _ => "GStreamer pipeline",
     };
 

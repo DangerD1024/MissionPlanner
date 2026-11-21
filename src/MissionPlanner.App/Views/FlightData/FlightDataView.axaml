@@ -133,15 +133,17 @@
         <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10" Spacing="10">
           <ComboBox MinWidth="200" HorizontalAlignment="Right" ToolTip.Tip="{l:Tr 'Map type'}"
                     ItemsSource="{Binding MapProviders}" SelectedItem="{Binding SelectedMapProvider}" />
-          <Border Classes="overlay" HorizontalAlignment="Right" Padding="3">
+          <Border Classes="overlay" HorizontalAlignment="Right" Padding="2,3">
             <StackPanel Spacing="4">
-              <Button Classes="mapbtn" Content="+" Command="{Binding ZoomInCommand}" ToolTip.Tip="{l:Tr 'Zoom in'}" />
-              <Slider Orientation="Vertical" Height="180" HorizontalAlignment="Center"
+              <Button Classes="mapbtn" Content="+" HorizontalAlignment="Center" Command="{Binding ZoomInCommand}" ToolTip.Tip="{l:Tr 'Zoom in'}" />
+              <!-- the slider's template centres its track with empty space either side: an equal negative
+                   margin trims that space, so the column is no wider than the buttons, still centred -->
+              <Slider Orientation="Vertical" Height="180" HorizontalAlignment="Center" Margin="-10,0"
                       Minimum="{Binding MinZoom}" Maximum="{Binding MaxZoom}" Value="{Binding ZoomValue}"
                       TickFrequency="1" IsSnapToTickEnabled="True" SmallChange="1" LargeChange="2"
                       ToolTip.Tip="{l:Tr 'Zoom'}" />
               <TextBlock Text="{Binding Zoom}" HorizontalAlignment="Center" FontSize="11" Classes="muted" />
-              <Button Classes="mapbtn" Content="−" Command="{Binding ZoomOutCommand}" ToolTip.Tip="{l:Tr 'Zoom out'}" />
+              <Button Classes="mapbtn" Content="−" HorizontalAlignment="Center" Command="{Binding ZoomOutCommand}" ToolTip.Tip="{l:Tr 'Zoom out'}" />
             </StackPanel>
           </Border>
         </StackPanel>

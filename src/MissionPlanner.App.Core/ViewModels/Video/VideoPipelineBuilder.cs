@@ -51,13 +51,47 @@ public static partial class VideoPipelineBuilder
                 return null;
             case VideoSourceType.Custom:
                 return string.IsNullOrWhiteSpace(c.Pipeline) ? "Enter a GStreamer pipeline." : null;
+            case VideoSourceType.CaptureDevice:
+                return c.Device.Contains('"') || c.Device.Contains('\n') ? "The device name cannot contain quotes or line breaks." : null;
             default:
                 return "Unknown source type.";
         }
     }
 
     /// <summary>The pipeline for a valid source; throws <see cref="ArgumentException"/> for an invalid one.</summary>
-    public static string Build(VideoSourceConfig c)
+    public static string Build(VideoSourceConfig c) => Build(c, CurrentCapturePlatform);
+
+    /// <summary>Where capture devices come from: Media Foundation, Video4Linux or AVFoundation.</summary>
+    public enum CapturePlatform
+    {
+        Windows,
+        Linux,
+        MacOS,
+    }
+
+    public static CapturePlatform CurrentCapturePlatform =>
+        OperatingSystem.IsWindows() ? CapturePlatform.Windows : OperatingSystem.IsMacOS() ? CapturePlatform.MacOS : CapturePlatform.Linux;
+
+    /// <summary>
+    /// A capture device (EasyCap, UVC webcam, HDMI grabber) on a platform; decodebin3 takes raw
+    /// (YUY2, NV12…) as well as MJPEG output, whichever the device offers.
+    /// </summary>
+    public static string Capture(string device, CapturePlatform platform)
+    {
+        var d = device.Trim();
+        var source = platform switch
+        {
+            CapturePlatform.Windows => d.Length == 0 ? "mfvideosrc" : $"mfvideosrc device-name={Quote(d)}",
+            CapturePlatform.MacOS => int.TryParse(d, NumberStyles.Integer, CultureInfo.InvariantCulture, out var index)
+                ? $"avfvideosrc device-index={index}"
+                : "avfvideosrc",
+            _ => d.Length == 0 ? "v4l2src" : $"v4l2src device={Quote(d)}",
+        };
+        return $"{source} ! decodebin3 ! {Tail}";
+    }
+
+    /// <summary>The pipeline as it would run on a given platform (capture devices differ).</summary>
+    public static string Build(VideoSourceConfig c, CapturePlatform platform)
     {
         if (Validate(c) is { } error)
             throw new ArgumentException(error, nameof(c));
@@ -78,6 +112,7 @@ public static partial class VideoPipelineBuilder
             VideoSourceType.TestPattern =>
                 $"videotestsrc is-live=true ! video/x-raw,width=1280,height=720,framerate=30/1 ! {Tail}",
             VideoSourceType.Custom => CompleteCustom(c.Pipeline),
+            VideoSourceType.CaptureDevice => Capture(c.Device, platform),
             _ => throw new ArgumentOutOfRangeException(nameof(c)),
         };
     }
