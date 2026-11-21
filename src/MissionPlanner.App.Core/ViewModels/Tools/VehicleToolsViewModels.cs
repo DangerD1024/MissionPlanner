@@ -488,6 +488,15 @@ public sealed partial class ApjToolViewModel(AppServices services)
 /// <summary>TOOLS: Mission Planner's Ctrl+F screen, with a left menu.</summary>
 public sealed class ToolsViewModel : MenuScreenViewModel
 {
+    public const string OutputsTitle = "Outputs";
+
+    /// <summary>Opens a page by its menu title.</summary>
+    public void Show(string title)
+    {
+        if (Items.FirstOrDefault(i => i.IsPage && i.Title == title) is { } item)
+            SelectedItem = item;
+    }
+
     public ToolsViewModel(AppServices s)
         : base("Tools", s)
     {
@@ -497,6 +506,8 @@ public sealed class ToolsViewModel : MenuScreenViewModel
         Add(MenuItemViewModel.Page("Message interval", () => new MessageIntervalViewModel(s)));
         Add(MenuItemViewModel.Page("Onboard files", () => new OnboardFileViewModel(s)));
         Add(MenuItemViewModel.Page("Parameter restore", () => new ParamRestoreViewModel(s)));
+        Add(MenuItemViewModel.Header("OUTPUTS"));
+        Add(MenuItemViewModel.Page(OutputsTitle, () => new OutputsViewModel(s)));
         Add(MenuItemViewModel.Header("DECODERS"));
         Add(MenuItemViewModel.Page("MAVLink packet decoder", () => new PacketDecoderViewModel(s)));
         Add(MenuItemViewModel.Page("Device ID decoder", () => new DeviceIdDecoderViewModel(s)));

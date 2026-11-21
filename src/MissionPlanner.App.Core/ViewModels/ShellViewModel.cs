@@ -143,6 +143,14 @@ public sealed partial class ShellViewModel : ObservableObject
     private Task ConnectHotkey() =>
         Connection.ToggleConnectCommand.CanExecute(null) ? Connection.ToggleConnectCommand.ExecuteAsync(null) : Task.CompletedTask;
 
+    /// <summary>Ctrl+G (Mission Planner's NMEA output): TOOLS > Outputs.</summary>
+    [RelayCommand]
+    private void OutputsHotkey()
+    {
+        Navigate(Screen.Tools);
+        GetPage<Tools.ToolsViewModel>(Screen.Tools).Show(Tools.ToolsViewModel.OutputsTitle);
+    }
+
     /// <summary>F5: download the parameters again.</summary>
     [RelayCommand]
     private async Task RefreshParamsHotkey()

@@ -55,9 +55,13 @@ public sealed class App : Application
             });
             timer.Start();
 
+            // outputs (TOOLS > Outputs) that were running when the app closed start again
+            window.Opened += (_, _) => _services.Outputs.StartRemembered();
+
             desktop.ShutdownRequested += (_, _) =>
             {
                 timer.Stop();
+                _services.OutputsIfCreated?.StopAllForExit();
                 _services.Session.DisposeAsync().AsTask().Wait(TimeSpan.FromSeconds(3));
                 AppStartup.Shutdown();
             };

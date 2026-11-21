@@ -83,6 +83,14 @@ public sealed class AppServices
     /// <summary>Planned mission, fence and rally points, shared by Flight Data and Flight Plan.</summary>
     public Mission.MissionStore Mission { get; }
 
+    private Outputs.OutputManager? _outputs;
+
+    /// <summary>The MAVLink mirror and position outputs (TOOLS > Outputs); created on first use.</summary>
+    public Outputs.OutputManager Outputs => _outputs ??= new Outputs.OutputManager(this);
+
+    /// <summary>The outputs, when they have been created (null before first use).</summary>
+    public Outputs.OutputManager? OutputsIfCreated => _outputs;
+
     /// <summary>The UI language: <c>Localizer.Tr("English text")</c>; see also <c>L.Tr</c>.</summary>
     public Localization.Localizer Localizer { get; } = Localization.Localizer.Current;
 

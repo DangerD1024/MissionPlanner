@@ -19,6 +19,7 @@
     <KeyBinding Gesture="F5" Command="{Binding RefreshParamsHotkeyCommand}" />
     <KeyBinding Gesture="Ctrl+F" Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Screen.Tools}" />
     <KeyBinding Gesture="Ctrl+Y" Command="{Binding CommitParamsHotkeyCommand}" />
+    <KeyBinding Gesture="Ctrl+G" Command="{Binding OutputsHotkeyCommand}" />
   </Window.KeyBindings>
 
   <Grid RowDefinitions="72,Auto,*">

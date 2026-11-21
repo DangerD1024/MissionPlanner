@@ -16,7 +16,7 @@ comparison of both code bases (Nov 2026). Ticked items are done. Items marked *w
 - [x] Parameter restore (ordered: enables first, refetch, retry, report)
 - [x] MAVLink packet decoder (hex / decimal bytes → fields); hardware ID decoder (typed number)
 - [x] APJ tool: embed a .param file into a .apj firmware
-- [ ] Outputs: MAVLink mirror (serial/TCP/UDP), NMEA position out, Cursor-on-Target, MicroDrone
+- [x] Outputs: MAVLink mirror (serial/TCP/UDP), NMEA position out, Cursor-on-Target, MicroDrone
 - [ ] Log tools: .bin → .log, KML + GPX from .bin/.tlog, split a log, sort logs, anonymise a log,
       DashWare CSV, extract GPS inject data from a tlog, remote DataFlash logger
 - [ ] Map cache: size per provider, clear, delete tiles older than 30 days, clear custom imagery
@@ -72,7 +72,7 @@ comparison of both code bases (Nov 2026). Ticked items are done. Items marked *w
 - [ ] Bluetooth (HC-05/06) and ESP8266 setup
 - [ ] FFT setup
 - [ ] Antenna tracker (Tracker firmware setup and tuning, and the GCS-driven tracker)
-- [ ] Advanced: Warnings manager, MAVLink signing keys, Proximity view, NMEA output, Follow Me, Moving base, spectrogram / FFT of logs
+- [ ] Advanced: Warnings manager, MAVLink signing keys, Proximity view, Follow Me, Moving base, spectrogram / FFT of logs
 - *won't port*: legacy board presets for APM 2.5 / PX4v1, old APM CLI terminal buttons
 
 ## CONFIG
