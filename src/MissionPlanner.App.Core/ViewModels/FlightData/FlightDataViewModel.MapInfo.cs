@@ -133,6 +133,42 @@ public sealed partial class FlightDataViewModel
     /// <summary>The map's POI menu.</summary>
     public Mission.PoiActions Poi => _poi ??= new Mission.PoiActions(Services);
 
+    /// <summary>A click on the HUD's EKF, Vibe or "Not Ready to Arm" opens its window, as Mission Planner.</summary>
+    public void OpenHudItem(string item)
+    {
+        PageViewModel? page = item switch
+        {
+            "ekf" => new EkfStatusViewModel(Services),
+            "vibe" => new VibrationViewModel(Services),
+            "prearm" => new PrearmViewModel(Services),
+            _ => null,
+        };
+        if (page != null)
+            Services.Windows.Show(page, 560, item == "prearm" ? 420 : 380);
+    }
+
+    private bool? _hudSwapped;
+
+    /// <summary>The HUD is shown big on the map side and the map small in its place (remembered).</summary>
+    public bool IsHudSwapped
+    {
+        get => _hudSwapped ??= Settings.Instance.GetBoolean("next_hud_swap", false);
+        set
+        {
+            if (IsHudSwapped == value)
+                return;
+            _hudSwapped = value;
+            Settings.Instance["next_hud_swap"] = value.ToString();
+            OnPropertyChanged();
+        }
+    }
+
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void SwapHud() => IsHudSwapped = !IsHudSwapped;
+
+    /// <summary>HUD menu > HUD options: ground colour, cells, user items.</summary>
+    public Task OpenHudOptionsAsync() => Services.Windows.ShowDialogAsync(new HudOptionsViewModel(), 820, 620);
+
     /// <summary>Details of an ADS-B aircraft clicked on the map.</summary>
     public void ShowAdsbDetails(AdsbContact c)
     {

@@ -90,6 +90,7 @@ public sealed partial class FlightDataView : UserControl
             },
         };
 
+        HudControl.ItemClicked += (_, item) => _vm?.OpenHudItem(item);
         Map.UserPanned += (_, _) => _vm?.OnUserPanned();
         Map.PointerPositionChanged += (_, p) => _vm?.OnPointerMoved(p.Lat, p.Lng);
         Map.MapContextRequested += OnMapContext;
@@ -101,6 +102,8 @@ public sealed partial class FlightDataView : UserControl
             if (_vm == null)
                 return;
             items.Add(new Separator());
+            items.Add(HudVideoMenu.Item("HUD options…", () => _ = _vm.OpenHudOptionsAsync()));
+            items.Add(HudVideoMenu.Item("Swap with map", () => _vm.SwapHudCommand.Execute(null)));
             items.Add(HudVideoMenu.Item("Detach HUD (own window)", () => _vm.IsHudDetached = true));
         });
 
@@ -134,6 +137,7 @@ public sealed partial class FlightDataView : UserControl
         HudStreamPump.Track(vm);
         SizeHud(LeftColumn.Bounds.Size);
         LayoutMapArea();
+        ApplySwap();
         Map.Layers.Add(new MissionLayer(vm.MapModel));
         Map.Layers.Add(new TrackLayer(vm.MapModel));
         Map.Layers.Add(new AdsbLayer(vm.MapModel));
@@ -149,8 +153,37 @@ public sealed partial class FlightDataView : UserControl
     {
         if (e.PropertyName == nameof(FlightDataViewModel.IsHudDetached))
             SizeHud(LeftColumn.Bounds.Size);
+        else if (e.PropertyName == nameof(FlightDataViewModel.IsHudSwapped))
+            ApplySwap();
         else if (e.PropertyName == nameof(FlightDataViewModel.MapView))
             LayoutMapArea();
+    }
+
+    /// <summary>Moves the HUD onto the map side and the map into the HUD's corner, or back.</summary>
+    private void ApplySwap()
+    {
+        var swapped = _vm?.IsHudSwapped == true;
+        var hudSwapped = HudControl.Parent == SwapHost;
+        if (swapped == hudSwapped)
+            return;
+        if (swapped)
+        {
+            HudPanel.Children.Remove(HudControl);
+            Map2DPanel.Children.Remove(Map);
+            SwapHost.Children.Insert(0, HudControl);
+            HudPanel.Children.Insert(0, Map);
+        }
+        else
+        {
+            SwapHost.Children.Remove(HudControl);
+            HudPanel.Children.Remove(Map);
+            HudPanel.Children.Insert(0, HudControl);
+            Map2DPanel.Children.Insert(0, Map);
+        }
+
+        SwapHost.IsVisible = swapped;
+        HudControl.Refresh();
+        Map.InvalidateVisual();
     }
 
     /// <summary>Rows of the map side: 2D only, 3D only, or 2D on top of 3D with a splitter.</summary>

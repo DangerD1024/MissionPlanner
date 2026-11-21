@@ -39,6 +39,7 @@ public sealed class HudWindow : Window
             Icon = main.Icon;
 
         HudVideoPresenter.Install(host, _hud, AddWindowItems);
+        _hud.ItemClicked += (_, item) => vm.OpenHudItem(item);
         vm.TelemetryUpdated += OnTelemetry;
         KeyDown += OnKey;
         host.DoubleTapped += (_, _) => ToggleFullScreen();
@@ -82,6 +83,7 @@ public sealed class HudWindow : Window
             items.Add(on);
         }
 
+        items.Add(HudVideoMenu.Item("HUD options…", () => _ = _vm.OpenHudOptionsAsync()));
         items.Add(HudVideoMenu.Item("Attach HUD (back to the DATA screen)", Close));
     }
 

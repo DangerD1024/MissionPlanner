@@ -65,4 +65,13 @@ public sealed class HudModel
     /// <summary>Connected, but no packets for a while: "RECONNECTING · 7 s" (TCP/UDP) or "NO DATA · 7 s".</summary>
     public bool LinkLost;
     public string LinkLostText = "";
+
+    /// <summary>Volts per cell (HUD options cell count), or null.</summary>
+    public double? CellVoltage;
+
+    /// <summary>"#rrggbb" ground colour from the HUD options; empty = standard green.</summary>
+    public string GroundColor = "";
+
+    /// <summary>User items: "Label value unit" lines drawn on the left of the HUD.</summary>
+    public string[] UserLines = [];
 }

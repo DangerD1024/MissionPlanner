@@ -45,7 +45,11 @@ public sealed class HudStreamPump
         _streaming.PropertyChanged += OnStreamingChanged;
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.ShutdownRequested += (_, _) => _streaming.Stop();
+            desktop.ShutdownRequested += (_, _) =>
+            {
+                _streaming.StopRecording();
+                _streaming.Stop();
+            };
             desktop.Exit += (_, _) => _streaming.Stop();
         }
     }
@@ -55,9 +59,9 @@ public sealed class HudStreamPump
 
     private void OnStreamingChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName != nameof(StreamingViewModel.IsStreaming))
+        if (e.PropertyName != nameof(StreamingViewModel.IsProducing))
             return;
-        if (_streaming.IsStreaming && _streaming.Active is { } s)
+        if (_streaming.IsProducing && _streaming.Active is { } s)
         {
             _flight.UseInBackground(BackgroundUser, true);
             _timer?.Stop();

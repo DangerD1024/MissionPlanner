@@ -455,10 +455,76 @@ public sealed partial class FlightDataViewModel : PageViewModel
         c |= Set(ref h.Message, cs.messageHigh ?? "");
         c |= Set(ref h.SpeedUnit, Units.Speed);
         c |= Set(ref h.AltUnit, Units.Altitude);
+        c |= UpdateHudOptions(h, cs);
 
         if (c)
             h.Version++;
     }
+
+    private int _hudOptionsVersion = -1;
+    private static int _hudOptionsChanges;
+    private string[] _hudItemNames = [];
+    private Func<CurrentState, double>?[] _hudItemGetters = [];
+    private QuickField[] _hudItemFields = [];
+
+    static FlightDataViewModel() => HudOptions.Changed += (_, _) => Interlocked.Increment(ref _hudOptionsChanges);
+
+    /// <summary>Ground colour, volts per cell and user items from the HUD options.</summary>
+    private bool UpdateHudOptions(HudModel h, CurrentState cs)
+    {
+        var c = false;
+        if (_hudOptionsVersion != _hudOptionsChanges)
+        {
+            _hudOptionsVersion = _hudOptionsChanges;
+            _hudItemNames = HudOptions.UserItems.ToArray();
+            _hudItemGetters = _hudItemNames.Select(QuickValueCatalog.GetGetter).ToArray();
+            _hudItemFields = _hudItemNames.Select(QuickValueCatalog.Describe).ToArray();
+            c |= Set(ref h.GroundColor, HudOptions.GroundColor);
+            _hudCells = HudOptions.CellCount;
+            c = true;
+        }
+
+        var perCell = HudOptions.PerCell(cs.battery_voltage, _hudCells);
+        if (perCell != h.CellVoltage)
+        {
+            h.CellVoltage = perCell;
+            c = true;
+        }
+
+        if (_hudItemNames.Length > 0 || h.UserLines.Length > 0)
+        {
+            var lines = new string[_hudItemNames.Length];
+            for (var i = 0; i < lines.Length; i++)
+            {
+                double v;
+                try
+                {
+                    v = _hudItemGetters[i]?.Invoke(cs) ?? double.NaN;
+                }
+                catch (Exception)
+                {
+                    v = double.NaN;
+                }
+
+                var f = _hudItemFields[i];
+                lines[i] = $"{f.Label} {QuickFormat(v)}{(f.Unit.Length > 0 ? " " + f.Unit : "")}";
+            }
+
+            if (!lines.SequenceEqual(h.UserLines))
+            {
+                h.UserLines = lines;
+                c = true;
+            }
+        }
+
+        return c;
+    }
+
+    private int _hudCells;
+
+    private static string QuickFormat(double v) =>
+        double.IsNaN(v) ? "-" : Math.Abs(v) >= 1000 ? v.ToString("0", System.Globalization.CultureInfo.InvariantCulture)
+            : v.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
 
     public static string GpsText(float status, float sats) => status switch
     {

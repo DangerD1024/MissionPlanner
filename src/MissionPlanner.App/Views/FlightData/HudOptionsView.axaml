@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.FlightData.HudOptionsView"
+             x:DataType="vm:HudOptionsViewModel">
+  <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="18" RowSpacing="10">
+    <TextBlock Classes="h2" Text="{l:Tr 'HUD options'}" />
+    <Grid Grid.Row="1" ColumnDefinitions="Auto,12,220,24,Auto,12,120">
+      <TextBlock Text="{l:Tr 'Ground colour'}" VerticalAlignment="Center" />
+      <ComboBox Grid.Column="2" ItemsSource="{Binding Grounds}" SelectedItem="{Binding SelectedGround}" HorizontalAlignment="Stretch" />
+      <TextBlock Grid.Column="4" Text="{l:Tr 'Battery cells'}" VerticalAlignment="Center"
+                 ToolTip.Tip="{l:Tr 'Cells in series: the HUD adds the voltage per cell (0 = off)'}" />
+      <NumericUpDown Grid.Column="6" Value="{Binding CellCount}" Minimum="0" Maximum="24" Increment="1" FormatString="0" />
+    </Grid>
+    <TextBlock Grid.Row="2" Classes="muted" FontSize="12" TextWrapping="Wrap"
+               Text="{l:Tr 'User items: telemetry values drawn on the left of the HUD (up to 12). Pick a value and press Add.'}" />
+    <Grid Grid.Row="3" ColumnDefinitions="*,12,*">
+      <DockPanel>
+        <TextBox DockPanel.Dock="Top" Text="{Binding Filter}" PlaceholderText="{l:Tr 'Search values (alt, gps, ch3...)'}" Margin="0,0,0,6" />
+        <Button DockPanel.Dock="Bottom" Content="{l:Tr 'Add'}" Command="{Binding AddItemCommand}" Margin="0,6,0,0" HorizontalAlignment="Left" />
+        <ListBox ItemsSource="{Binding Fields}" SelectedItem="{Binding SelectedField}" />
+      </DockPanel>
+      <Border Grid.Column="2" Classes="card" Padding="6">
+        <ItemsControl ItemsSource="{Binding Items}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:HudUserItem">
+              <Grid ColumnDefinitions="*,Auto" Margin="2">
+                <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Content="✕" Padding="6,0"
+                        Command="{Binding $parent[UserControl].((vm:HudOptionsViewModel)DataContext).RemoveItemCommand}" CommandParameter="{Binding}" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Border>
+    </Grid>
+    <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="{l:Tr 'Cancel'}" Command="{Binding CancelCommand}" IsCancel="True" />
+      <Button Classes="accent" Content="{l:Tr 'Save'}" Command="{Binding SaveCommand}" IsDefault="True" />
+    </StackPanel>
+  </Grid>
+</UserControl>

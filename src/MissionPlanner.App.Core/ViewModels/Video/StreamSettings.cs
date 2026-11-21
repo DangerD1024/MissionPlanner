@@ -13,6 +13,9 @@ public enum StreamMode
     UdpPush,
 
     Both,
+
+    /// <summary>Only the frame source runs (recording the HUD to a file without streaming); not offered in the settings.</summary>
+    RecordOnly,
 }
 
 /// <summary>Streaming options, kept under <c>next_stream_*</c> keys.</summary>
@@ -177,6 +180,13 @@ public static class StreamPipelines
     /// <summary>The RTSP media: a bin with the payloader named pay0, as gst-rtsp-server expects.</summary>
     public static string RtspLaunch(StreamSettings s, string encoder) =>
         $"( {Source(s)} ! {Encoder(encoder, s)} ! h264parse ! rtph264pay name=pay0 pt=96 config-interval=1 )";
+
+    /// <summary>
+    /// The HUD to a Matroska file (H.264): plays while being written and survives a crash. The path
+    /// uses forward slashes: gst-launch treats a backslash as an escape.
+    /// </summary>
+    public static string FileRecorder(StreamSettings s, string encoder, string path) =>
+        $"{Source(s)} ! {Encoder(encoder, s)} ! h264parse ! matroskamux ! filesink location=\"{path.Replace('\\', '/').Replace("\"", "")}\"";
 
     /// <summary>RTP/H.264 to one address, as ArduPilot companions send it (port 5600 by default).</summary>
     public static string UdpSender(StreamSettings s, string encoder) =>

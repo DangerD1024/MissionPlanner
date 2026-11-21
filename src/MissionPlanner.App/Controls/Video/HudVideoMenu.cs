@@ -142,6 +142,9 @@ public static class HudVideoMenu
         }
 
         root.Items.Add(new Separator());
+        root.Items.Add(vm.IsRecording
+            ? Item("Stop recording", vm.StopRecording)
+            : Item("Record HUD to file", () => vm.StartRecording()));
         root.Items.Add(Item("Streaming settings…", () => _ = vm.OpenSettingsAsync()));
         if (!string.IsNullOrEmpty(vm.StatusText))
             root.Items.Add(new MenuItem { Header = vm.StatusText, IsEnabled = false });

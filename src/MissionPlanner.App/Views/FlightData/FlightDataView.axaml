@@ -72,7 +72,7 @@
     <!-- left: HUD over the telemetry tabs -->
     <Grid x:Name="LeftColumn" RowDefinitions="Auto,*" Background="{DynamicResource Bg1}">
       <Border x:Name="HudHost" Height="360" Background="#0b0d10">
-        <Panel>
+        <Panel x:Name="HudPanel">
           <controls:Hud x:Name="HudControl" Model="{Binding Hud}" IsVisible="{Binding !IsHudDetached}" />
           <!-- the HUD is in its own window -->
           <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -218,6 +218,12 @@
       <GridSplitter x:Name="MapSplitter" Grid.Row="1" ResizeDirection="Rows" Background="{DynamicResource Line}"
                     IsVisible="{Binding IsSplitMap}" />
       <synthetic:ChaseView3D x:Name="Chase3D" Grid.Row="2" Scene="{Binding Scene}" IsVisible="{Binding Shows3DMap}" />
+
+      <!-- HUD swapped with the map (Mission Planner's "Swap With Map"): the HUD fills the map side -->
+      <Panel x:Name="SwapHost" Grid.RowSpan="3" IsVisible="False" Background="#0b0d10" ZIndex="10">
+        <Button Content="{l:Tr 'Swap back'}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10" ZIndex="1"
+                Command="{Binding SwapHudCommand}" ToolTip.Tip="{l:Tr 'Map back here, HUD back in the corner'}" />
+      </Panel>
 
       <!-- GPS, wind and mission progress (Mission Planner's map labels and distance bar), under the 2D / 3D buttons -->
       <StackPanel Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,50,0,0" Spacing="6">

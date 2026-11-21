@@ -128,6 +128,12 @@ internal static class GstNative
     public static VoidFn ObjectUnref = null!;
     public static VoidFn MiniObjectUnref = null!;
     public static BusPopFn BusTimedPopFiltered = null!;
+
+    /// <summary>gst_element_send_event (element, event): true when handled.</summary>
+    public static PushBufferFn ElementSendEvent = null!;
+
+    /// <summary>gst_event_new_eos: ends a stream so muxers finish their files.</summary>
+    public static NewFn EventNewEos = null!;
     public static ParseErrorFn MessageParseError = null!;
     public static PullSampleFn AppSinkTryPullSample = null!;
     public static SetUIntFn AppSinkSetMaxBuffers = null!;
@@ -216,6 +222,8 @@ internal static class GstNative
         ObjectUnref = Bind<VoidFn>(core, "gst_object_unref");
         MiniObjectUnref = Bind<VoidFn>(core, "gst_mini_object_unref");
         BusTimedPopFiltered = Bind<BusPopFn>(core, "gst_bus_timed_pop_filtered");
+        ElementSendEvent = Bind<PushBufferFn>(core, "gst_element_send_event");
+        EventNewEos = Bind<NewFn>(core, "gst_event_new_eos");
         MessageParseError = Bind<ParseErrorFn>(core, "gst_message_parse_error");
         SampleGetCaps = Bind<PtrFn>(core, "gst_sample_get_caps");
         SampleGetBuffer = Bind<PtrFn>(core, "gst_sample_get_buffer");

@@ -50,6 +50,33 @@ public sealed class Hud : Control
         GradientStops = { new GradientStop(Color.Parse("#7c9a33"), 0), new GradientStop(Color.Parse("#4b621c"), 1) },
     };
 
+    private static string _groundKey = "";
+    private static IBrush _ground = Ground;
+
+    /// <summary>The ground: the standard green, or the HUD options colour shaded the same way.</summary>
+    private static IBrush GroundBrush(string color)
+    {
+        if (color == _groundKey)
+            return _ground;
+        _groundKey = color;
+        if (color.Length == 0 || !Color.TryParse(color, out var c))
+        {
+            _ground = Ground;
+        }
+        else
+        {
+            var dark = Color.FromRgb((byte)(c.R * 0.62), (byte)(c.G * 0.62), (byte)(c.B * 0.62));
+            _ground = new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+                GradientStops = { new GradientStop(c, 0), new GradientStop(dark, 1) },
+            };
+        }
+
+        return _ground;
+    }
+
     private static readonly IBrush White = Brushes.White;
     private static readonly IBrush Shadow = new SolidColorBrush(Color.FromArgb(150, 0, 0, 0));
     private static readonly IBrush TapeBg = new SolidColorBrush(Color.FromArgb(110, 10, 14, 18));
@@ -125,6 +152,31 @@ public sealed class Hud : Control
             InvalidateVisual();
     }
 
+    private Hotspots _hotspots;
+
+    /// <summary>Where the clickable labels were last drawn.</summary>
+    private readonly record struct Hotspots(Rect Ekf, Rect Vibe, Rect Prearm);
+
+    /// <summary>A click on EKF, Vibe or "Not Ready to Arm" ("ekf", "vibe", "prearm"), as Mission Planner opens their windows.</summary>
+    public event EventHandler<string>? ItemClicked;
+
+    protected override void OnPointerPressed(Avalonia.Input.PointerPressedEventArgs e)
+    {
+        base.OnPointerPressed(e);
+        var pt = e.GetCurrentPoint(this);
+        if (!pt.Properties.IsLeftButtonPressed)
+            return;
+        var p = pt.Position;
+        var item = _hotspots.Ekf.Inflate(4).Contains(p) ? "ekf"
+            : _hotspots.Vibe.Inflate(4).Contains(p) ? "vibe"
+            : _hotspots.Prearm.Inflate(4).Contains(p) ? "prearm"
+            : null;
+        if (item == null || ItemClicked == null)
+            return;
+        ItemClicked(this, item);
+        e.Handled = true;
+    }
+
     public override void Render(DrawingContext ctx)
     {
         var m = Model ?? new HudModel();
@@ -159,7 +211,7 @@ public sealed class Hud : Control
         DrawHeadingTape(ctx, m, w, scale);
         DrawSpeedTape(ctx, m, h, cy, scale);
         DrawAltTape(ctx, m, w, h, cy, scale);
-        DrawText(ctx, m, w, h, cx, cy, scale);
+        _hotspots = DrawText(ctx, m, w, h, cx, cy, scale);
         DrawVideoStatus(ctx, VideoStatus, w, scale);
     }
 
@@ -235,7 +287,7 @@ public sealed class Hud : Control
             if (sky)
             {
                 ctx.FillRectangle(Sky, new Rect(-big / 2, horizon - big, big, big));
-                ctx.FillRectangle(Ground, new Rect(-big / 2, horizon, big, big));
+                ctx.FillRectangle(GroundBrush(m.GroundColor), new Rect(-big / 2, horizon, big, big));
             }
 
             if (!lines)
@@ -427,8 +479,9 @@ public sealed class Hud : Control
         ctx.FillRectangle(Magenta, new Rect(x, y - 4 * scale, 4 * scale, 8 * scale));
     }
 
-    private static void DrawText(DrawingContext ctx, HudModel m, double w, double h, double cx, double cy, double scale)
+    private static Hotspots DrawText(DrawingContext ctx, HudModel m, double w, double h, double cx, double cy, double scale)
     {
+        var prearmRect = default(Rect);
         var line = 17 * scale;
         var fs = 13 * scale;
 
@@ -449,7 +502,9 @@ public sealed class Hud : Control
         else if (!m.Armed && !m.ReadyToArm)
         {
             var nr = Text("Not Ready to Arm", 13 * scale, Red, FaceBold);
-            Outlined(ctx, nr, new Point(cx - nr.Width / 2, h - 2 * line - 4 * scale));
+            var nrAt = new Point(cx - nr.Width / 2, h - 2 * line - 4 * scale);
+            Outlined(ctx, nr, nrAt);
+            prearmRect = new Rect(nrAt, new Size(nr.Width, nr.Height));
         }
 
         if (!string.IsNullOrEmpty(m.Message))
@@ -476,6 +531,8 @@ public sealed class Hud : Control
         var batt = m.BatteryRemaining >= 0
             ? $"Bat {m.BatteryVoltage:0.00}v {m.BatteryCurrent:0.0}A {m.BatteryRemaining}%"
             : $"Bat {m.BatteryVoltage:0.00}v {m.BatteryCurrent:0.0}A";
+        if (m.CellVoltage is { } cell)
+            batt += $" ({cell:0.00}v/cell)";
         var battBrush = m.BatteryRemaining is >= 0 and < 20 || (m.BatteryVoltage > 0 && m.BatteryVoltage < 3) ? Red : White;
         var bt = Text(batt, fs, battBrush, FaceBold);
         Outlined(ctx, bt, new Point(8 * scale, y));
@@ -486,12 +543,20 @@ public sealed class Hud : Control
         var ekf = Text("EKF", fs, Level(m.EkfLevel), FaceBold);
         var vibe = Text("Vibe", fs, Level(m.VibeLevel), FaceBold);
         var mid = (8 * scale + bt.Width + (w - 8 * scale - gps.Width)) / 2;
-        Outlined(ctx, ekf, new Point(mid - ekf.Width - 8 * scale, y));
-        Outlined(ctx, vibe, new Point(mid + 8 * scale, y));
+        var ekfAt = new Point(mid - ekf.Width - 8 * scale, y);
+        var vibeAt = new Point(mid + 8 * scale, y);
+        Outlined(ctx, ekf, ekfAt);
+        Outlined(ctx, vibe, vibeAt);
+
+        // user items (HUD options), down the left under the link quality
+        for (var i = 0; i < m.UserLines.Length; i++)
+            Label(ctx, m.UserLines[i], new Point(64 * scale, 30 * scale + (i + 1) * 15 * scale), 11.5 * scale, White);
 
         // link quality, top left under the heading tape
         if (m.Connected)
             Label(ctx, $"{m.LinkQuality}%", new Point(64 * scale, 30 * scale), 11 * scale, m.LinkQuality < 80 ? Amber : White);
+
+        return new Hotspots(new Rect(ekfAt, new Size(ekf.Width, ekf.Height)), new Rect(vibeAt, new Size(vibe.Width, vibe.Height)), prearmRect);
     }
 
     private static IBrush Level(HudLevel l) => l switch
