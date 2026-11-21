@@ -135,13 +135,14 @@
                     ItemsSource="{Binding MapProviders}" SelectedItem="{Binding SelectedMapProvider}" />
           <Border Classes="overlay" HorizontalAlignment="Right" Padding="3">
             <StackPanel Spacing="4">
-              <Button Classes="mapbtn" Content="+" Command="{Binding ZoomInCommand}" ToolTip.Tip="{l:Tr 'Zoom in'}" />
-              <Slider Orientation="Vertical" Height="180" HorizontalAlignment="Center"
+              <Button Classes="mapbtn" Content="+" HorizontalAlignment="Center" Command="{Binding ZoomInCommand}" ToolTip.Tip="{l:Tr 'Zoom in'}" />
+              <!-- as narrow as the buttons, so the column is centred on them -->
+              <Slider Orientation="Vertical" Height="180" Width="30" MinWidth="0" HorizontalAlignment="Center"
                       Minimum="{Binding MinZoom}" Maximum="{Binding MaxZoom}" Value="{Binding ZoomValue}"
                       TickFrequency="1" IsSnapToTickEnabled="True" SmallChange="1" LargeChange="2"
                       ToolTip.Tip="{l:Tr 'Zoom'}" />
               <TextBlock Text="{Binding Zoom}" HorizontalAlignment="Center" FontSize="11" Classes="muted" />
-              <Button Classes="mapbtn" Content="−" Command="{Binding ZoomOutCommand}" ToolTip.Tip="{l:Tr 'Zoom out'}" />
+              <Button Classes="mapbtn" Content="−" HorizontalAlignment="Center" Command="{Binding ZoomOutCommand}" ToolTip.Tip="{l:Tr 'Zoom out'}" />
             </StackPanel>
           </Border>
         </StackPanel>
