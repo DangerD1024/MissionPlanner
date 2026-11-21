@@ -83,6 +83,14 @@ public sealed class AppServices
     /// <summary>Planned mission, fence and rally points, shared by Flight Data and Flight Plan.</summary>
     public Mission.MissionStore Mission { get; }
 
+    private Mission.PoiStore? _pois;
+
+    /// <summary>Points of interest of the DATA and PLAN maps (poi.txt, shared with Mission Planner).</summary>
+    public Mission.PoiStore Pois => _pois ??= new Mission.PoiStore();
+
+    /// <summary>Replaces the POI store (tests).</summary>
+    internal void UsePois(Mission.PoiStore store) => _pois = store;
+
     private Outputs.OutputManager? _outputs;
 
     /// <summary>The MAVLink mirror and position outputs (TOOLS > Outputs); created on first use.</summary>

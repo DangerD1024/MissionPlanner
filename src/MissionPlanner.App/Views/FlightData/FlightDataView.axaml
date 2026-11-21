@@ -219,6 +219,31 @@
                     IsVisible="{Binding IsSplitMap}" />
       <synthetic:ChaseView3D x:Name="Chase3D" Grid.Row="2" Scene="{Binding Scene}" IsVisible="{Binding Shows3DMap}" />
 
+      <!-- GPS, wind and mission progress (Mission Planner's map labels and distance bar), under the 2D / 3D buttons -->
+      <StackPanel Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,50,0,0" Spacing="6">
+        <Border Classes="overlay" Padding="8,4" CornerRadius="6" IsVisible="{Binding GpsInfo, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <TextBlock Text="{Binding GpsInfo}" FontSize="12" />
+        </Border>
+        <Border Classes="overlay" Padding="8,4" CornerRadius="6" IsVisible="{Binding ShowWind}" HorizontalAlignment="Left"
+                ToolTip.Tip="{l:Tr 'Wind: the arrow points where it blows; the number is where it comes from'}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Data="M0,-9 L5,3 L1.2,1.5 L1.2,9 L-1.2,9 L-1.2,1.5 L-5,3 Z" Fill="{DynamicResource Info}" Width="12" Height="18" Stretch="Uniform"
+                  VerticalAlignment="Center" RenderTransformOrigin="50%,50%">
+              <Path.RenderTransform>
+                <RotateTransform Angle="{Binding WindArrowAngle}" />
+              </Path.RenderTransform>
+            </Path>
+            <TextBlock Text="{Binding WindText}" FontSize="12" VerticalAlignment="Center" />
+          </StackPanel>
+        </Border>
+        <Border Classes="overlay" Padding="8,5" CornerRadius="6" IsVisible="{Binding ShowMissionProgress}" Width="240" HorizontalAlignment="Left">
+          <StackPanel Spacing="3">
+            <TextBlock Text="{Binding MissionProgressText}" FontSize="12" />
+            <ProgressBar Minimum="0" Maximum="1" Value="{Binding MissionFraction}" Height="6" MinHeight="6" />
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
       <!-- 2D / 3D / both, top left over whichever is shown -->
       <Border Grid.RowSpan="3" Classes="overlay" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10" Padding="3"
               CornerRadius="6">

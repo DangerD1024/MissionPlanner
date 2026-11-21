@@ -23,6 +23,9 @@ public sealed partial class FlightDataView : UserControl
     private readonly MenuItem _setHome;
     private readonly MenuItem _pointCamera;
     private readonly MenuItem[] _vehicleItems;
+    private readonly MenuItem _poiEdit;
+    private readonly MenuItem _poiDelete;
+    private Core.Mission.Poi? _menuPoi;
 
     public FlightDataView()
     {
@@ -39,10 +42,36 @@ public sealed partial class FlightDataView : UserControl
         var takeoff = Item("Takeoff", () => _vm?.TakeoffAsync());
         var jumpTag = Item("Jump to Tag", () => _vm?.JumpToTagAsync());
         _vehicleItems = [_flyTo, _flyToAlt, flyToCoords, _setHome, ekf, _pointCamera, pointCoords, trigger, takeoff, jumpTag];
+        _poiEdit = Item("Edit POI", () =>
+        {
+            if (_vm != null && _menuPoi != null)
+                _ = _vm.Poi.EditAsync(_menuPoi);
+        });
+        _poiDelete = Item("Delete POI", () =>
+        {
+            if (_vm != null && _menuPoi != null)
+                _vm.Poi.Delete(_menuPoi);
+        });
+        var poiMenu = new MenuItem
+        {
+            Header = "POI",
+            ItemsSource = new Control[]
+            {
+                Item("Add POI Here", () => _vm?.Poi.AddHereAsync(_menuAt.Lat, _menuAt.Lng)),
+                Item("Add POI at Coords", () => _vm?.Poi.AddAtCoordsAsync()),
+                _poiEdit,
+                _poiDelete,
+                new Separator(),
+                Item("Save POIs", () => _vm?.Poi.SaveAsync()),
+                Item("Load POIs", () => _vm?.Poi.LoadAsync()),
+            },
+        };
         _menu = new MenuFlyout
         {
             Items =
             {
+                poiMenu,
+                new Separator(),
                 _flyTo,
                 _flyToAlt,
                 flyToCoords,
@@ -109,7 +138,12 @@ public sealed partial class FlightDataView : UserControl
         Map.Layers.Add(new TrackLayer(vm.MapModel));
         Map.Layers.Add(new AdsbLayer(vm.MapModel));
         Map.Layers.Add(new VehicleLayer(vm.MapModel));
+        Map.Layers.Add(new PoiLayer(vm.Services.Pois));
+        vm.Services.Pois.Changed -= OnPoisChanged;
+        vm.Services.Pois.Changed += OnPoisChanged;
     }
+
+    private void OnPoisChanged(object? sender, EventArgs e) => Map.InvalidateVisual();
 
     private void OnVmChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
@@ -168,11 +202,20 @@ public sealed partial class FlightDataView : UserControl
         var connected = _vm.CanCommand;
         foreach (var item in _vehicleItems)
             item.IsEnabled = connected;
+        _menuPoi = e.Hit as Core.Mission.Poi;
+        _poiEdit.IsEnabled = _poiDelete.IsEnabled = _menuPoi != null;
         _menu.ShowAt(Map, showAtPointer: true);
     }
 
     private void OnMapClick(object? sender, MapPointerEventArgs e)
     {
+        // a click on an ADS-B aircraft shows what it is
+        if (_vm != null && e.Hit is AdsbContact contact)
+        {
+            _vm.ShowAdsbDetails(contact);
+            return;
+        }
+
         // Ctrl+click flies there, as in Mission Planner
         if (_vm != null && e.Modifiers.HasFlag(KeyModifiers.Control) && _vm.CanCommand)
             _ = _vm.FlyToHereAsync(e.Position.Lat, e.Position.Lng);

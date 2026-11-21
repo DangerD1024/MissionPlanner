@@ -99,6 +99,11 @@ public sealed partial class FlightPlanViewModel : PageViewModel
 
     public AppServices Services { get; }
 
+    private Mission.PoiActions? _poi;
+
+    /// <summary>The map's POI menu.</summary>
+    public Mission.PoiActions Poi => _poi ??= new Mission.PoiActions(Services);
+
     public MissionStore Store => Services.Mission;
 
     /// <summary>Ground altitude lookup (m AMSL, null when unknown); replaced in tests.</summary>

@@ -83,6 +83,9 @@ public sealed partial class FlightPlanView : UserControl
         Map.Layers.Add(new HomeLayer(vm));
         Map.Layers.Add(new DrawPolygonLayer(vm));
         Map.Layers.Add(new PlanVehicleLayer(vm));
+        Map.Layers.Add(new PoiLayer(vm.Services.Pois));
+        vm.Services.Pois.Changed -= OnPoisChanged;
+        vm.Services.Pois.Changed += OnPoisChanged;
 
         vm.MapChanged += OnMapChanged;
         vm.ZoomRequested += OnZoomRequested;
@@ -241,6 +244,8 @@ public sealed partial class FlightPlanView : UserControl
 
     // ---- map context menu ----------------------------------------------------------------------
 
+    private void OnPoisChanged(object? sender, EventArgs e) => Map.InvalidateVisual();
+
     private void OnMapContextRequested(object? sender, MapPointerEventArgs e)
     {
         var vm = _vm;
@@ -293,6 +298,15 @@ public sealed partial class FlightPlanView : UserControl
             Item("Circle Around Home", () => _ = vm.FenceHomeCircleAsync(), vm.Home != null),
             Item("Return Point Here", () => vm.FenceReturnPointHere(at))));
         items.Add(Item("Rally Point Here", () => vm.AddRallyPointHere(at)));
+        var poi = hit as Core.Mission.Poi;
+        items.Add(Sub("POI",
+            Item("Add POI Here", () => _ = vm.Poi.AddHereAsync(at.Lat, at.Lng)),
+            Item("Add POI at Coords", () => _ = vm.Poi.AddAtCoordsAsync()),
+            Item("Edit POI", () => _ = vm.Poi.EditAsync(poi!), poi != null),
+            Item("Delete POI", () => vm.Poi.Delete(poi!), poi != null),
+            new Separator(),
+            Item("Save POIs", () => _ = vm.Poi.SaveAsync()),
+            Item("Load POIs", () => _ = vm.Poi.LoadAsync())));
         items.Add(new Separator());
         items.Add(Item(vm.ClearListText, () => vm.ClearListCommand.Execute(null), vm.CurrentList.Count > 0));
         items.Add(Item("Zoom to Mission", () => vm.ZoomToMissionCommand.Execute(null)));

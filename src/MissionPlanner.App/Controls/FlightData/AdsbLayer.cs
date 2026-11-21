@@ -44,6 +44,25 @@ public sealed class AdsbLayer(FlightMapModel model) : MapLayer
         }
     }
 
+    /// <summary>The aircraft under the pointer (within 16 px), for its details on click.</summary>
+    public override object? HitTest(Point screen, MapViewport vp)
+    {
+        AdsbContact? best = null;
+        var bestD = 16.0 * 16.0;
+        foreach (var t in model.Traffic)
+        {
+            var p = vp.ToScreen(t.Lat, t.Lng);
+            var d = (p.X - screen.X) * (p.X - screen.X) + (p.Y - screen.Y) * (p.Y - screen.Y);
+            if (d < bestD)
+            {
+                bestD = d;
+                best = t;
+            }
+        }
+
+        return best;
+    }
+
     private static void Draw(DrawingContext ctx, AdsbContact t, Point p)
     {
         var fill = t.IsStale

@@ -110,6 +110,27 @@ public class MoreActionsTests
     }
 
     [TestMethod]
+    public void MissionProgressFollowsTheRoute()
+    {
+        // home, then 3 waypoints ~111 m apart northwards, with a DO item between
+        var items = new List<(double, double, bool)>
+        {
+            (-35.000, 149, true), (-34.999, 149, true), (0, 0, false), (-34.998, 149, true),
+        };
+        var cum = MissionProgress.Cumulative(-35.001, 149, items);
+        Assert.HasCount(5, cum);
+        Assert.AreEqual(111.2, cum[1], 1);
+        Assert.AreEqual(cum[2], cum[3], 1e-9, "an item without a location adds nothing");
+        Assert.AreEqual(333.6, cum[4], 2);
+
+        var (flown, total) = MissionProgress.At(cum, 2, 50);
+        Assert.AreEqual(cum[2] - 50, flown, 1e-9, "on the way to WP 2, 50 m short");
+        Assert.AreEqual(cum[4], total, 1e-9);
+        Assert.AreEqual(0, MissionProgress.At(cum, 1, 500).Flown, "never negative");
+        Assert.AreEqual((0.0, 0.0), MissionProgress.At([0], 1, 0));
+    }
+
+    [TestMethod]
     public void RawSensorWindowListsImusInputsAndOutputs()
     {
         var services = FakeUi.Services(out _);
@@ -183,6 +204,29 @@ public class MoreActionsTests
                 await Task.Delay(20);
             Assert.AreEqual((float)MAVLink.MAV_MOUNT_MODE.NEUTRAL,
                 vehicle.Commands.Last(c => c.command == (ushort)MAVLink.MAV_CMD.DO_MOUNT_CONTROL).param7);
+
+            // map labels: GPS and wind (a few times a second)
+            services.Session.Cs.gpsstatus = 3;
+            services.Session.Cs.satcount = 14;
+            services.Session.Cs.gpshdop = 0.7f;
+            services.Session.Cs.wind_dir = 270;
+            services.Session.Cs.wind_vel = 6;
+            for (var i = 0; i < 8; i++)
+            {
+                vm.Tick();
+                await Task.Delay(30);
+            }
+
+            Assert.AreEqual("3D fix · HDOP 0.7 · 14 sats", vm.GpsInfo);
+            Assert.IsTrue(vm.ShowWind);
+            Assert.AreEqual(90, vm.WindArrowAngle, 1e-6, "wind from the west blows east");
+            StringAssert.StartsWith(vm.WindText, "270° 6.0");
+
+            var contact = new AdsbContact(0xABC123, "QFA1", -35, 149, 3000, 90, 200, -2.5, 1200, 0,
+                MAVLink.MAV_COLLISION_THREAT_LEVEL.NONE, TimeSpan.FromSeconds(1), false);
+            vm.ShowAdsbDetails(contact);
+            StringAssert.StartsWith(vm.ToastText, "QFA1 (ICAO ABC123) · 3000 m");
+            StringAssert.Contains(vm.ToastText, "squawk 1200");
 
             await vm.TriggerCameraAsync();
             Assert.AreEqual(1f, vehicle.Commands.Last(c => c.command == (ushort)MAVLink.MAV_CMD.DO_DIGICAM_CONTROL).param5);
