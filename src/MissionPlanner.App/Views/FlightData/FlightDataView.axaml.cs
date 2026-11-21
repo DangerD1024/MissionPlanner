@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using MissionPlanner.App.Core.Localization;
+using Avalonia.VisualTree;
 using GMap.NET;
 using MissionPlanner.App.Controls;
 using MissionPlanner.App.Controls.FlightData;
@@ -23,6 +25,7 @@ public sealed partial class FlightDataView : UserControl
     private readonly MenuItem _setHome;
     private readonly MenuItem _pointCamera;
     private readonly MenuItem[] _vehicleItems;
+    private readonly MenuItem _cameraOverlap = new() { Header = "Camera Overlap", ToggleType = MenuItemToggleType.CheckBox };
     private readonly MenuItem _poiEdit;
     private readonly MenuItem _poiDelete;
     private Core.Mission.Poi? _menuPoi;
@@ -52,6 +55,11 @@ public sealed partial class FlightDataView : UserControl
             if (_vm != null && _menuPoi != null)
                 _vm.Poi.Delete(_menuPoi);
         });
+        _cameraOverlap.Click += (_, _) =>
+        {
+            if (_vm != null)
+                _vm.ShowCameraOverlap = !_vm.ShowCameraOverlap;
+        };
         var poiMenu = new MenuItem
         {
             Header = "POI",
@@ -86,11 +94,42 @@ public sealed partial class FlightDataView : UserControl
                 ekf,
                 new Separator(),
                 Item("Clear Track", () => _vm?.ClearTrack()),
+                _cameraOverlap,
+                Item("Camera field of view…", () => _vm?.SetCameraFovAsync()),
                 Item("Zoom to vehicle", () => _vm?.ZoomToVehicle()),
             },
         };
 
         HudControl.ItemClicked += (_, item) => _vm?.OpenHudItem(item);
+
+        // right-click the tab headers: choose which tabs show (Mission Planner's "Customize")
+        // (the headers handle the press themselves, so this listens to handled releases too)
+        DataTabs.AddHandler(PointerReleasedEvent, (_, e) =>
+        {
+            // only a right click on the tab headers: the tabs' content has its own menus
+            if (_vm == null || e.InitialPressMouseButton != MouseButton.Right ||
+                (e.Source as Avalonia.Visual)?.FindAncestorOfType<TabItem>(includeSelf: true) == null)
+                return;
+            var menu = new ContextMenu();
+            var items = new List<Control>();
+            var names = new[] { "Quick", "Actions", "Messages", "PreFlight", "Gauges", "Transponder", "Status", "Servo/Relay",
+                "Aux Function", "Payload", "Telemetry Logs", "DataFlash Logs" };
+            foreach (var tab in Enum.GetValues<FlightDataTab>())
+            {
+                var t = tab;
+                var item = new MenuItem
+                {
+                    Header = L.Tr(names[(int)t]), ToggleType = MenuItemToggleType.CheckBox,
+                    IsChecked = _vm.TabVisible[(int)t], IsEnabled = t != FlightDataTab.Quick,
+                };
+                item.Click += (_, _) => _vm.SetTabVisible(t, !_vm.TabVisible[(int)t]);
+                items.Add(item);
+            }
+
+            menu.ItemsSource = items;
+            menu.Open(DataTabs);
+            e.Handled = true;
+        }, Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
         Map.UserPanned += (_, _) => _vm?.OnUserPanned();
         Map.PointerPositionChanged += (_, p) => _vm?.OnPointerMoved(p.Lat, p.Lng);
         Map.MapContextRequested += OnMapContext;
@@ -139,6 +178,7 @@ public sealed partial class FlightDataView : UserControl
         LayoutMapArea();
         ApplySwap();
         Map.Layers.Add(new MissionLayer(vm.MapModel));
+        Map.Layers.Add(new PhotoLayer(vm.MapModel));
         Map.Layers.Add(new TrackLayer(vm.MapModel));
         Map.Layers.Add(new AdsbLayer(vm.MapModel));
         Map.Layers.Add(new VehicleLayer(vm.MapModel));
@@ -236,6 +276,7 @@ public sealed partial class FlightDataView : UserControl
         foreach (var item in _vehicleItems)
             item.IsEnabled = connected;
         _menuPoi = e.Hit as Core.Mission.Poi;
+        _cameraOverlap.IsChecked = _vm.ShowCameraOverlap;
         _poiEdit.IsEnabled = _poiDelete.IsEnabled = _menuPoi != null;
         _menu.ShowAt(Map, showAtPointer: true);
     }

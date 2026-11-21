@@ -395,6 +395,7 @@ public sealed partial class FlightDataViewModel
 
     public void ClearTrack()
     {
+        Photos.Clear();
         MapModel.Track.Clear();
         MapModel.Version++;
     }

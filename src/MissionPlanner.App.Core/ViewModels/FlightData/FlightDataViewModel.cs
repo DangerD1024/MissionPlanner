@@ -264,6 +264,31 @@ public sealed partial class FlightDataViewModel : PageViewModel
         RefreshStatus();
     }
 
+    internal const string HiddenTabsKey = "next_data_tabs_hidden";
+
+    private System.Collections.ObjectModel.ObservableCollection<bool>? _tabVisible;
+
+    /// <summary>Which DATA tabs show (Mission Planner's tab "Customize"); index = <see cref="FlightDataTab"/>.</summary>
+    public System.Collections.ObjectModel.ObservableCollection<bool> TabVisible => _tabVisible ??= LoadTabVisibility();
+
+    private static System.Collections.ObjectModel.ObservableCollection<bool> LoadTabVisibility()
+    {
+        var hidden = (Settings.Instance[HiddenTabsKey] ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return new(Enum.GetValues<FlightDataTab>().Select(t => t == FlightDataTab.Quick || !hidden.Contains(t.ToString())));
+    }
+
+    /// <summary>Shows or hides a tab (Quick always shows); remembered.</summary>
+    public void SetTabVisible(FlightDataTab tab, bool visible)
+    {
+        if (tab == FlightDataTab.Quick)
+            return;
+        TabVisible[(int)tab] = visible;
+        Settings.Instance[HiddenTabsKey] = string.Join(',',
+            Enum.GetValues<FlightDataTab>().Where(t => !TabVisible[(int)t]).Select(t => t.ToString()));
+        if (!visible && SelectedTabIndex == (int)tab)
+            SelectedTabIndex = (int)FlightDataTab.Quick;
+    }
+
     /// <summary>Ctrl+1 … Ctrl+0: tab 1 … 10, as Mission Planner.</summary>
     [RelayCommand]
     private void SelectTab(string? key)
@@ -271,7 +296,7 @@ public sealed partial class FlightDataViewModel : PageViewModel
         if (!int.TryParse(key, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var number))
             return;
         var index = (number == 0 ? 10 : number) - 1;
-        if (index >= 0 && index < Enum.GetValues<FlightDataTab>().Length)
+        if (index >= 0 && index < Enum.GetValues<FlightDataTab>().Length && TabVisible[index])
             SelectedTabIndex = index;
     }
 

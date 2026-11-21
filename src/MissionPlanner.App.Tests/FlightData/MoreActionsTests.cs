@@ -131,6 +131,31 @@ public class MoreActionsTests
     }
 
     [TestMethod]
+    public void TabsCanBeHidden_ButNotQuick_AndAreRemembered()
+    {
+        var services = FakeUi.Services(out _);
+        var vm = new FlightDataViewModel(services);
+        try
+        {
+            vm.SelectedTabIndex = (int)FlightDataTab.Transponder;
+            vm.SetTabVisible(FlightDataTab.Transponder, false);
+            Assert.IsFalse(vm.TabVisible[(int)FlightDataTab.Transponder]);
+            Assert.AreEqual((int)FlightDataTab.Quick, vm.SelectedTabIndex, "a hidden tab is not left selected");
+            vm.SetTabVisible(FlightDataTab.Quick, false);
+            Assert.IsTrue(vm.TabVisible[(int)FlightDataTab.Quick], "Quick always shows");
+
+            var again = new FlightDataViewModel(services);
+            Assert.IsFalse(again.TabVisible[(int)FlightDataTab.Transponder], "remembered");
+            again.SelectTabCommand.Execute("6");
+            Assert.AreEqual((int)FlightDataTab.Quick, again.SelectedTabIndex, "Ctrl+6 does not open a hidden tab");
+        }
+        finally
+        {
+            vm.SetTabVisible(FlightDataTab.Transponder, true);
+        }
+    }
+
+    [TestMethod]
     public void RawSensorWindowListsImusInputsAndOutputs()
     {
         var services = FakeUi.Services(out _);

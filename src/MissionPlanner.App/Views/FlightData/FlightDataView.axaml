@@ -83,41 +83,41 @@
         </Panel>
       </Border>
 
-      <TabControl Grid.Row="1" Classes="fd" SelectedIndex="{Binding SelectedTabIndex}">
-        <TabItem Header="{l:Tr 'Quick'}">
+      <TabControl Grid.Row="1" Classes="fd" SelectedIndex="{Binding SelectedTabIndex}" x:Name="DataTabs">
+        <TabItem Header="{l:Tr 'Quick'}" IsVisible="{Binding TabVisible[0]}">
           <views:FlightDataQuick />
         </TabItem>
-        <TabItem Header="{l:Tr 'Actions'}">
+        <TabItem Header="{l:Tr 'Actions'}" IsVisible="{Binding TabVisible[1]}">
           <views:FlightDataActions />
         </TabItem>
-        <TabItem Header="{l:Tr 'Messages'}">
+        <TabItem Header="{l:Tr 'Messages'}" IsVisible="{Binding TabVisible[2]}">
           <views:FlightDataMessages />
         </TabItem>
-        <TabItem Header="{l:Tr 'PreFlight'}">
+        <TabItem Header="{l:Tr 'PreFlight'}" IsVisible="{Binding TabVisible[3]}">
           <ContentControl Content="{Binding PreFlight}" />
         </TabItem>
-        <TabItem Header="{l:Tr 'Gauges'}">
+        <TabItem Header="{l:Tr 'Gauges'}" IsVisible="{Binding TabVisible[4]}">
           <ContentControl Content="{Binding Gauges}" />
         </TabItem>
-        <TabItem Header="{l:Tr 'Transponder'}">
+        <TabItem Header="{l:Tr 'Transponder'}" IsVisible="{Binding TabVisible[5]}">
           <ContentControl Content="{Binding Transponder}" />
         </TabItem>
-        <TabItem Header="{l:Tr 'Status'}">
+        <TabItem Header="{l:Tr 'Status'}" IsVisible="{Binding TabVisible[6]}">
           <views:FlightDataStatus />
         </TabItem>
-        <TabItem Header="{l:Tr 'Servo/Relay'}">
+        <TabItem Header="{l:Tr 'Servo/Relay'}" IsVisible="{Binding TabVisible[7]}">
           <ContentControl Content="{Binding ServoRelay}" />
         </TabItem>
-        <TabItem Header="{l:Tr 'Aux Function'}">
+        <TabItem Header="{l:Tr 'Aux Function'}" IsVisible="{Binding TabVisible[8]}">
           <ContentControl Content="{Binding AuxFunctions}" />
         </TabItem>
-        <TabItem Header="{l:Tr 'Payload'}">
+        <TabItem Header="{l:Tr 'Payload'}" IsVisible="{Binding TabVisible[9]}">
           <ContentControl Content="{Binding Payload}" />
         </TabItem>
-        <TabItem Header="{l:Tr 'Telemetry Logs'}">
+        <TabItem Header="{l:Tr 'Telemetry Logs'}" IsVisible="{Binding TabVisible[10]}">
           <ContentControl Content="{Binding Tlogs}" Margin="6" />
         </TabItem>
-        <TabItem Header="{l:Tr 'DataFlash Logs'}">
+        <TabItem Header="{l:Tr 'DataFlash Logs'}" IsVisible="{Binding TabVisible[11]}">
           <StackPanel Margin="14" Spacing="10" HorizontalAlignment="Stretch">
             <TextBlock Classes="muted" TextWrapping="Wrap"
                        Text="Logs recorded on the autopilot's SD card. Download them over the MAVLink link, or open one you already have." />

@@ -270,4 +270,8 @@ public sealed class FlightMapModel
 
     /// <summary>ADS-B traffic (ADSB_VEHICLE), refreshed at 2 Hz; stale contacts are flagged.</summary>
     public IReadOnlyList<AdsbContact> Traffic = [];
+
+    /// <summary>Photos of this flight (CAMERA_FEEDBACK) and whether their footprints are drawn.</summary>
+    public IReadOnlyList<PhotoFootprint> Photos = [];
+    public bool ShowPhotos;
 }

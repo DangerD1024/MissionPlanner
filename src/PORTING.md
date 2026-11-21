@@ -38,13 +38,13 @@ comparison of both code bases (Nov 2026). Ticked items are done. Items marked *w
 - [x] Actions: Change loiter radius, Resume mission, Abort landing, mount mode, Raw sensor view, send text message, Joystick
 - [x] Map menu: Fly to coords, Point camera coords, Trigger camera now, Set EKF origin here, Takeoff, Jump to tag
 - [x] Points of interest (add / delete / save / load) on DATA and PLAN maps
-- [ ] Camera overlap (CAMERA_FEEDBACK footprints)
+- [x] Camera overlap (CAMERA_FEEDBACK footprints)
 - [x] Map: hdop/sats, wind indicator, mission progress bar, click ADS-B aircraft for details
 - [x] HUD: record to video file, user items, ground colour, battery cell voltage, swap with map, click EKF/Vibe/prearm for details
 - [x] Payload: gimbal roll
 - [x] Quick view: number of rows/columns
 - [x] Tabs: Ctrl+1…0
-- [ ] Tabs: choose visible tabs
+- [x] Tabs: choose visible tabs
 - [x] Telemetry log: 0.1x speed, Space/+/- keys (tlog → KML is in TOOLS > Log tools)
 - [ ] DataFlash: auto analysis, Matlab, geotag images (.bin → .log and KML + GPX are in TOOLS > Log tools)
 - [ ] Scripts tab (Python scripting)
