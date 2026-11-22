@@ -8,6 +8,8 @@
   <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
   <uses-permission android:name="android.permission.WAKE_LOCK" />
   <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+  <!-- telemetry radios and flight controllers on an OTG cable; phones without USB host still install -->
+  <uses-feature android:name="android.hardware.usb.host" android:required="false" />
   <application android:label="Mission Planner" android:icon="@drawable/icon" android:usesCleartextTraffic="true"
                android:allowBackup="true" android:supportsRtl="true" />
 </manifest>

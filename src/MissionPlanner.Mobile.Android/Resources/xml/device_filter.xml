@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  USB devices that offer to open Mission Planner when plugged in (and then need no separate
+  permission prompt). Vendor ids in decimal.
+-->
+<resources>
+  <!-- FTDI: 3DR / RFD radios, USB-UART cables -->
+  <usb-device vendor-id="1027" />
+  <!-- Silicon Labs CP210x: Holybro and other SiK radios -->
+  <usb-device vendor-id="4292" />
+  <!-- WCH CH340 / CH341 -->
+  <usb-device vendor-id="6790" />
+  <!-- ArduPilot boards (pid.codes 1209:5740 / 5741) -->
+  <usb-device vendor-id="4617" />
+  <!-- 3D Robotics / PX4 boards -->
+  <usb-device vendor-id="9900" />
+  <!-- CubePilot -->
+  <usb-device vendor-id="11694" />
+  <!-- Holybro -->
+  <usb-device vendor-id="12642" />
+  <!-- CUAV -->
+  <usb-device vendor-id="12643" />
+  <!-- STMicroelectronics (boards in their bootloader, other STM32 CDC devices) -->
+  <usb-device vendor-id="1155" />
+</resources>

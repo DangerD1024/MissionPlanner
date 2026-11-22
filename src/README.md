@@ -61,12 +61,21 @@ as a small picture in the corner (tap it to swap), the action buttons in a colum
 **Fly** (HUD, telemetry strip, map with tap-to-go-here, Arm / Takeoff / Land / RTL / Pause, every one
 confirmed by a slide), **Plan** (tap to add waypoints, read / write), **Setup** (accelerometer and level,
 compass, radio, sensors, flight modes, failsafe, battery, frame, motor test, all parameters),
-**Messages** and **Link** (UDP for Wi-Fi telemetry bridges, TCP, recent links). The preview keeps its own
+**Messages** and **Link** (USB on Android, UDP for Wi-Fi telemetry bridges, TCP, recent links). The preview keeps its own
 settings (`%LOCALAPPDATA%/MissionPlannerPhonePreview`).
 
 Android: `dotnet workload install android`, a JDK 17+ and an Android SDK (platform 36), then
 `JAVA_HOME=... ANDROID_HOME=... installer/android/build-apk.sh` builds `bin/MissionPlanner-<version>-android-arm64.apk`
-(signed with the build machine's debug key, for installing by hand). USB telemetry radios on the phone are not supported yet.
+(signed with the build machine's debug key, for installing by hand).
+
+USB on Android (`App.Core/Links/Usb`): the phone's USB host opens serial ports through drivers written in C#
+for USB CDC-ACM (flight controllers on their own USB port), FTDI, CP210x and CH340 (telemetry radios); a
+link is saved as `serial:usb:<vid>:<pid>:<port>:<baud>`, so a replugged device is found again. Plugging in
+a known radio or board offers to open the app (`Resources/xml/device_filter.xml`). To try it in the
+emulator, give it QEMU's FTDI chip wired to SITL's serial0:
+`-qemu -chardev socket,id=s,host=127.0.0.1,port=5760,reconnect=2 -device qemu-xhci,id=x -device usb-serial,bus=x.0,chardev=s`
+(started with `-writable-system`, after pushing a `android.hardware.usb.host` feature file to
+`/system/etc/permissions`, since the emulator image has no USB host service otherwise).
 
 ## Data and settings
 

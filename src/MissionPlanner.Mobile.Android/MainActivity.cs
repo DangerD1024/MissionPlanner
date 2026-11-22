@@ -1,5 +1,7 @@
 using Android.App;
+using Android.Content;
 using Android.Content.PM;
+using Android.Hardware.Usb;
 using Android.OS;
 using Android.Runtime;
 using Android.Views;
@@ -8,16 +10,29 @@ using Avalonia.Android;
 
 namespace MissionPlanner.Mobile.Android;
 
-/// <summary>Turns with the phone (or as set on the Link tab); the screen stays on while the app is open.</summary>
+/// <summary>
+/// Turns with the phone (or as set on the Link tab); the screen stays on while the app is open.
+/// Plugging in a telemetry radio or flight controller offers to open the app (device_filter.xml).
+/// </summary>
 [Activity(
     Label = "Mission Planner",
     Theme = "@style/MissionPlanner.Theme",
     Icon = "@drawable/icon",
     MainLauncher = true,
+    LaunchMode = LaunchMode.SingleTop,
     ScreenOrientation = ScreenOrientation.FullUser,
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode | ConfigChanges.KeyboardHidden)]
+[IntentFilter([UsbManager.ActionUsbDeviceAttached])]
+[MetaData(UsbManager.ActionUsbDeviceAttached, Resource = "@xml/device_filter")]
 public sealed class MainActivity : AvaloniaMainActivity
 {
+    protected override void OnNewIntent(Intent? intent)
+    {
+        base.OnNewIntent(intent);
+        if (intent?.Action == UsbManager.ActionUsbDeviceAttached)
+            MissionPlannerApplication.Usb?.NotifyChanged();
+    }
+
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
@@ -58,9 +73,20 @@ public sealed class MissionPlannerApplication : AvaloniaAndroidApplication<Mobil
     {
     }
 
+    /// <summary>The phone's USB host, for serial links to radios and flight controllers.</summary>
+    public static AndroidUsbHost? Usb { get; private set; }
+
     public override void OnCreate()
     {
         PrepareData();
+        // not gated on FEATURE_USB_HOST: some phones (and the emulator) leave it out although
+        // OTG works; without a host the device list is simply empty
+        if (GetSystemService(UsbService) is UsbManager)
+        {
+            Usb = new AndroidUsbHost(this);
+            global::MissionPlanner.App.Core.Links.LinkFactory.UsbHost = Usb;
+        }
+
         base.OnCreate();
     }
 

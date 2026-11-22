@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Mobile"
              xmlns:lk="using:MissionPlanner.App.Core.Links"
+             xmlns:usb="using:MissionPlanner.App.Core.Links.Usb"
              xmlns:mc="using:MissionPlanner.Mobile.Controls"
              xmlns:v="using:MissionPlanner.Mobile.Views"
              xmlns:l="using:MissionPlanner.App.Localization"
@@ -41,7 +42,25 @@
             </ListBox.ItemTemplate>
           </ListBox>
           <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{l:TrBind {Binding KindHint}}" />
-          <Grid ColumnDefinitions="*,10,110">
+          <StackPanel Spacing="8" IsVisible="{Binding IsUsb}">
+            <TextBlock Classes="label" Text="{l:Tr 'DEVICE'}" />
+            <ListBox ItemsSource="{Binding UsbPorts}" SelectedItem="{Binding SelectedUsbPort}" Background="Transparent"
+                     IsVisible="{Binding HasUsbPorts}">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="usb:UsbSerialPortInfo">
+                  <StackPanel Orientation="Horizontal" Spacing="10" Margin="10,10">
+                    <mc:Icon Data="{StaticResource IcUsb}" Width="20" Height="20" />
+                    <TextBlock Text="{Binding Title}" FontSize="15" VerticalAlignment="Center" TextWrapping="Wrap" />
+                  </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <TextBlock IsVisible="{Binding ShowNoUsb}" TextWrapping="Wrap" FontSize="14"
+                       Text="{l:Tr 'No USB device found. Plug in the telemetry radio or the flight controller; most phones need a USB OTG adapter.'}" />
+            <TextBlock Classes="label" Text="{l:Tr 'BAUD RATE'}" />
+            <ComboBox ItemsSource="{x:Static vm:MobileLinkViewModel.BaudOptions}" SelectedItem="{Binding Baud}" HorizontalAlignment="Stretch" />
+          </StackPanel>
+          <Grid ColumnDefinitions="*,10,110" IsVisible="{Binding NeedsPort}">
             <StackPanel IsVisible="{Binding NeedsHost}" Spacing="4">
               <TextBlock Classes="label" Text="{l:Tr 'HOST'}" />
               <TextBox Text="{Binding Host}" TextInputOptions.ContentType="Url" />
@@ -72,7 +91,14 @@
                         Command="{Binding $parent[UserControl].((vm:MobileLinkViewModel)DataContext).ConnectRecentCommand}" CommandParameter="{Binding}">
                   <StackPanel Orientation="Horizontal" Spacing="10">
                     <mc:Icon Data="{StaticResource IcLink}" Width="18" Height="18" />
-                    <TextBlock Text="{Binding}" VerticalAlignment="Center" FontFamily="monospace" />
+                    <TextBlock VerticalAlignment="Center" TextWrapping="Wrap">
+                      <TextBlock.Text>
+                        <MultiBinding Converter="{x:Static mc:LinkText.Instance}">
+                          <Binding />
+                          <Binding Path="$parent[UserControl].DataContext" />
+                        </MultiBinding>
+                      </TextBlock.Text>
+                    </TextBlock>
                   </StackPanel>
                 </Button>
               </DataTemplate>
@@ -107,7 +133,7 @@
           <TextBlock Classes="muted" FontSize="13" TextWrapping="Wrap"
                      Text="{l:Tr 'Wi-Fi telemetry (ESP8266/ESP32 MAVLink bridge, ELRS backpack, Herelink): join its Wi-Fi network, then connect with UDP 14550. SITL on a computer: TCP to its address, port 5760.'}" />
           <TextBlock Classes="muted" FontSize="13" TextWrapping="Wrap"
-                     Text="{l:Tr 'USB telemetry radios plugged into the phone are not supported yet.'}" />
+                     Text="{l:Tr 'USB: SiK/RFD telemetry radios (FTDI, CP210x, CH340) at 57600, or the USB port of the flight controller. Android asks once whether Mission Planner may use the device.'}" />
         </StackPanel>
       </Border>
     </StackPanel>

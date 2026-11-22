@@ -91,3 +91,14 @@ public sealed class Positive : IValueConverter
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
+
+/// <summary>A recent link as the user reads it: (LinkSpec, MobileLinkViewModel) → "FT231X (FTDI) · 57600".</summary>
+public sealed class LinkText : IMultiValueConverter
+{
+    public static readonly LinkText Instance = new();
+
+    public object? Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture) =>
+        values.Count == 2 && values[0] is MissionPlanner.App.Core.Links.LinkSpec spec
+            ? values[1] is MobileLinkViewModel vm ? vm.Describe(spec) : spec.ToString()
+            : "";
+}
