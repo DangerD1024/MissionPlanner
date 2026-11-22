@@ -39,7 +39,12 @@ internal sealed class FakeUi : IUiDispatcher, IDialogService, IWindowService
     public Task<string?> PickFolderAsync(string title) => Task.FromResult<string?>(null);
 
     public void Show(PageViewModel page, double width = 1100, double height = 750) => Shown.Add(page);
-    public Task<bool> ShowDialogAsync(PageViewModel page, double width = 1000, double height = 700) => Task.FromResult(false);
+    public List<PageViewModel> Dialogs { get; } = new();
+    public Task<bool> ShowDialogAsync(PageViewModel page, double width = 1000, double height = 700)
+    {
+        Dialogs.Add(page);
+        return Task.FromResult(false);
+    }
 
     public static AppServices Services(out FakeUi ui)
     {

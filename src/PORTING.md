@@ -57,7 +57,7 @@ comparison of both code bases (Nov 2026). Ticked items are done. Items marked *w
 - [ ] Auto WP: text
 - [x] Survey: camera database, overlap/sidelap, GSD, footprints
 - [x] Map tools: measure distance, reverse WPs
-- [ ] Map tools: rotate map, zoom to place/coords, prefetch tiles (area and WP path), KML overlay, elevation graph
+- [x] Map tools: rotate map, zoom to place/coords, prefetch tiles (area and WP path), KML overlay, elevation graph
 - [x] Modify alt (all), enter UTM coords
 - [ ] Coordinate display Geo/UTM/MGRS (+ grid columns)
 - [ ] Verify height, alt warn, default spline, write fast, MAVFtp upload, home = vehicle position

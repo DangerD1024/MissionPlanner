@@ -84,11 +84,14 @@
     <!-- map + right panel -->
     <Grid ColumnDefinitions="*,236">
       <Panel>
-        <controls:MapView x:Name="Map"
-                          Provider="{Binding SelectedMapProvider.Provider}"
-                          CenterLat="{Binding CenterLat}"
-                          CenterLng="{Binding CenterLng}"
-                          Zoom="{Binding Zoom}" />
+        <!-- the host clips the map when Rotate Map turns it -->
+        <Panel x:Name="MapHost" ClipToBounds="True">
+          <controls:MapView x:Name="Map"
+                            Provider="{Binding SelectedMapProvider.Provider}"
+                            CenterLat="{Binding CenterLat}"
+                            CenterLng="{Binding CenterLng}"
+                            Zoom="{Binding Zoom}" />
+        </Panel>
 
         <!-- distances for the mouse position, as Mission Planner's top-left labels -->
         <Border Classes="overlay" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10"
