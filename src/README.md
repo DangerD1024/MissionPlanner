@@ -68,6 +68,15 @@ Android: `dotnet workload install android`, a JDK 17+ and an Android SDK (platfo
 `JAVA_HOME=... ANDROID_HOME=... installer/android/build-apk.sh` builds `bin/MissionPlanner-<version>-android-arm64.apk`
 (signed with the build machine's debug key, for installing by hand).
 
+iPhone (`MissionPlanner.Mobile.iOS`): on a Mac with Xcode and `dotnet workload install ios` (the workload
+version must match the installed Xcode, e.g. 27.0.10722 for Xcode 27.0),
+`BUILD_NUMBER=n installer/ios/build-ipa.sh` builds an Xcode archive; `xcodebuild -exportArchive` with
+`-allowProvisioningUpdates` then signs and uploads it to App Store Connect using the Apple account signed in to
+Xcode (or `installer/ios/build-ipa.sh upload` with an App Store Connect API key). iOS gives apps Bluetooth LE
+only (no classic serial, no USB serial), so the iPhone links are Bluetooth LE, UDP and TCP. `MP_START_TAB=Plan`
+(`SIMCTL_CHILD_MP_START_TAB` for `simctl launch`) opens a tab at start, for screenshots. Privacy policy:
+`src/PRIVACY.md`.
+
 USB on Android (`App.Core/Links/Usb`): the phone's USB host opens serial ports through drivers written in C#
 for USB CDC-ACM (flight controllers on their own USB port), FTDI, CP210x and CH340 (telemetry radios); a
 link is saved as `serial:usb:<vid>:<pid>:<port>:<baud>`, so a replugged device is found again. Plugging in

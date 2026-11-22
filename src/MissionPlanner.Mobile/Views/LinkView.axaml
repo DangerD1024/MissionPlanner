@@ -75,7 +75,7 @@
               </ListBox.ItemTemplate>
             </ListBox>
             <TextBlock IsVisible="{Binding ShowNoBluetooth}" TextWrapping="Wrap" FontSize="14"
-                       Text="{l:Tr 'No Bluetooth device yet. Pair a classic module (HC-05, HC-06) in the phone settings, or scan for Bluetooth LE.'}" />
+                       Text="{l:TrBind {Binding NoBluetoothText}}" />
             <Button HorizontalAlignment="Stretch" Command="{Binding ToggleScanCommand}">
               <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
                 <mc:Icon Data="{StaticResource IcSearch}" Width="18" Height="18" />

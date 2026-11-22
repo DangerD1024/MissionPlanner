@@ -106,7 +106,11 @@ public static class MapTiles
         foreach (var layer in provider.Overlays ?? [provider])
         {
             if (ProvidersInitialized.TryAdd(layer.Id, true))
+            {
                 layer.OnInitialized();
+                if (layer is GoogleMapProviderBase)
+                    _ = GoogleVersions.RefreshOnceAsync();
+            }
         }
     }
 

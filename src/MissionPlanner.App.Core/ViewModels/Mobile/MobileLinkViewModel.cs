@@ -118,6 +118,11 @@ public sealed partial class MobileLinkViewModel : ObservableObject
 
     public bool SupportsClassicBluetooth => _bt?.SupportsClassic == true;
 
+    /// <summary>What to do when the list is empty (the iPhone has no classic Bluetooth to pair).</summary>
+    public string NoBluetoothText => SupportsClassicBluetooth
+        ? "No Bluetooth device yet. Pair a classic module (HC-05, HC-06) in the phone settings, or scan for Bluetooth LE."
+        : "No Bluetooth device yet. Switch the telemetry module on and scan for Bluetooth LE.";
+
     [ObservableProperty]
     private UsbSerialPortInfo? _selectedUsbPort;
 

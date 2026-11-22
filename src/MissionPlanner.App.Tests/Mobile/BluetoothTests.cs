@@ -140,6 +140,7 @@ public class BluetoothTests
         Assert.AreEqual("ESP32 MAVLink · Bluetooth LE", vm.SelectedBluetoothDevice!.Title);
         StringAssert.Contains(vm.Kinds.Single(k => k.IsBluetooth).Hint, "LE");
         Assert.IsFalse(vm.SupportsClassicBluetooth);
+        Assert.IsFalse(vm.NoBluetoothText.Contains("classic", StringComparison.Ordinal));
     }
 
     internal sealed class FakeBluetooth : IBluetoothHost

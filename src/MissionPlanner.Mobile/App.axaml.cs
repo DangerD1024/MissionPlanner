@@ -57,6 +57,9 @@ public sealed partial class MobileApp : Application
         AppServices = services;
         var shell = new MobileShellViewModel(services);
         Shell = shell;
+        // development and store screenshots: MP_START_TAB=Plan opens that tab (the simulator has no taps from scripts)
+        if (Enum.TryParse<MobileTab>(Environment.GetEnvironmentVariable("MP_START_TAB"), true, out var startTab))
+            shell.SelectTabCommand.Execute(startTab);
         ShellCreated?.Invoke(shell);
         var view = new MobileShellView { DataContext = shell, Sheets = sheets };
 
