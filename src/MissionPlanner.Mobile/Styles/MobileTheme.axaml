@@ -27,14 +27,14 @@
       <SolidColorBrush x:Key="WarnDim" Color="#33FFB020" />
       <SolidColorBrush x:Key="BadDim" Color="#33FF4D4F" />
 
-      <StreamGeometry x:Key="IcFly">M12,3 L12,21 M3,12 L21,12 M12,3 L9,6 M12,3 L15,6 M5.5,9.5 A2.3,2.3 0 1 0 5.51,9.5 M18.5,9.5 A2.3,2.3 0 1 0 18.51,9.5 M5.5,14.5 A2.3,2.3 0 1 0 5.51,14.5 M18.5,14.5 A2.3,2.3 0 1 0 18.51,14.5</StreamGeometry>
+      <StreamGeometry x:Key="IcFly">M8.1,8.1 L10,10 M15.9,8.1 L14,10 M8.1,15.9 L10,14 M15.9,15.9 L14,14 M10,10 L12,8.2 L14,10 L14,14 L10,14 Z M3,6 A3,3 0 1 0 9,6 A3,3 0 1 0 3,6 M15,6 A3,3 0 1 0 21,6 A3,3 0 1 0 15,6 M3,18 A3,3 0 1 0 9,18 A3,3 0 1 0 3,18 M15,18 A3,3 0 1 0 21,18 A3,3 0 1 0 15,18</StreamGeometry>
       <StreamGeometry x:Key="IcPlan">M3,6 L9,3.5 L15,6 L21,3.5 L21,18 L15,20.5 L9,18 L3,20.5 Z M9,3.5 L9,18 M15,6 L15,20.5</StreamGeometry>
       <StreamGeometry x:Key="IcParams">M4,6 L20,6 M4,12 L20,12 M4,18 L20,18 M9,4 L9,8 M15,10 L15,14 M7,16 L7,20</StreamGeometry>
       <StreamGeometry x:Key="IcMessages">M4,5 L20,5 L20,16 L10,16 L6,20 L6,16 L4,16 Z M8,9 L16,9 M8,12 L13,12</StreamGeometry>
-      <StreamGeometry x:Key="IcUsb">M12,2 L12,17 M12,2 L9.5,5 M12,2 L14.5,5 M12,14 L7,10.5 L7,7.5 M12,11.5 L17,8.5 L17,6 M5.8,5.8 L8.2,5.8 L8.2,7.5 L5.8,7.5 Z M15.8,4.6 A1.2,1.2 0 1 0 15.81,4.6 M10,19 A2,2 0 1 0 14,19 A2,2 0 1 0 10,19</StreamGeometry>
+      <StreamGeometry x:Key="IcUsb">M12,2 L12,17 M12,2 L9.5,5 M12,2 L14.5,5 M12,14 L7,10.5 L7,7.5 M12,11.5 L17,8.5 L17,6 M5.8,5.8 L8.2,5.8 L8.2,7.5 L5.8,7.5 Z M14.6,5.8 A1.2,1.2 0 1 0 17,5.8 A1.2,1.2 0 1 0 14.6,5.8 M10,19 A2,2 0 1 0 14,19 A2,2 0 1 0 10,19</StreamGeometry>
     <StreamGeometry x:Key="IcBluetooth">M7,7.5 L17,16.5 L12,21 L12,3 L17,7.5 L7,16.5</StreamGeometry>
     <StreamGeometry x:Key="IcLink">M9,3 L9,7 M15,3 L15,7 M7,7 L17,7 L17,11 A5,5 0 0 1 7,11 Z M12,16 L12,21</StreamGeometry>
-      <StreamGeometry x:Key="IcGps">M12,21 C12,21 5,13.5 5,9 A7,7 0 0 1 19,9 C19,13.5 12,21 12,21 Z M12,6.5 A2.5,2.5 0 1 0 12.01,6.5</StreamGeometry>
+      <StreamGeometry x:Key="IcGps">M12,21 C12,21 5,13.5 5,9 A7,7 0 0 1 19,9 C19,13.5 12,21 12,21 Z M9.5,9 A2.5,2.5 0 1 0 14.5,9 A2.5,2.5 0 1 0 9.5,9</StreamGeometry>
       <StreamGeometry x:Key="IcBattery">M3,8 L18,8 L18,16 L3,16 Z M18,10.5 L20.5,10.5 L20.5,13.5 L18,13.5</StreamGeometry>
       <StreamGeometry x:Key="IcSignal">M4,19 L4,16 M9,19 L9,12 M14,19 L14,8 M19,19 L19,4</StreamGeometry>
       <StreamGeometry x:Key="IcTakeoff">M12,20 L12,6 M6,12 L12,6 L18,12 M5,4 L19,4</StreamGeometry>
@@ -42,12 +42,12 @@
       <StreamGeometry x:Key="IcRtl">M4,11 L12,4 L20,11 M6.5,9 L6.5,20 L17.5,20 L17.5,9 M10,20 L10,14 L14,14 L14,20</StreamGeometry>
       <StreamGeometry x:Key="IcPause">M8,5 L8,19 M16,5 L16,19</StreamGeometry>
       <StreamGeometry x:Key="IcPower">M12,3 L12,12 M7,6.5 A7.5,7.5 0 1 0 17,6.5</StreamGeometry>
-      <StreamGeometry x:Key="IcCenter">M12,8.5 A3.5,3.5 0 1 0 12.01,8.5 M12,2 L12,6 M12,18 L12,22 M2,12 L6,12 M18,12 L22,12</StreamGeometry>
+      <StreamGeometry x:Key="IcCenter">M8.5,12 A3.5,3.5 0 1 0 15.5,12 A3.5,3.5 0 1 0 8.5,12 M12,2 L12,6 M12,18 L12,22 M2,12 L6,12 M18,12 L22,12</StreamGeometry>
       <StreamGeometry x:Key="IcSwap">M7,4 L7,18 M3,14 L7,18 L11,14 M17,20 L17,6 M13,10 L17,6 L21,10</StreamGeometry>
       <StreamGeometry x:Key="IcPlus">M12,5 L12,19 M5,12 L19,12</StreamGeometry>
       <StreamGeometry x:Key="IcMinus">M5,12 L19,12</StreamGeometry>
       <StreamGeometry x:Key="IcClose">M6,6 L18,18 M18,6 L6,18</StreamGeometry>
-      <StreamGeometry x:Key="IcSearch">M10.5,4 A6.5,6.5 0 1 0 10.51,4 M15.5,15.5 L20,20</StreamGeometry>
+      <StreamGeometry x:Key="IcSearch">M4,10.5 A6.5,6.5 0 1 0 17,10.5 A6.5,6.5 0 1 0 4,10.5 M15.5,15.5 L20,20</StreamGeometry>
       <StreamGeometry x:Key="IcRefresh">M19,12 A7,7 0 1 1 16.5,6.6 M17,3 L17,7 L13,7</StreamGeometry>
       <StreamGeometry x:Key="IcDownload">M12,4 L12,15 M7,10 L12,15 L17,10 M5,20 L19,20</StreamGeometry>
       <StreamGeometry x:Key="IcUpload">M12,15 L12,4 M7,9 L12,4 L17,9 M5,20 L19,20</StreamGeometry>
@@ -57,15 +57,15 @@
       <StreamGeometry x:Key="IcChevronUp">M6,15 L12,9 L18,15</StreamGeometry>
       <StreamGeometry x:Key="IcSetup">M14.5,4 A4.5,4.5 0 0 0 10.2,9.8 L3.8,16.2 A1.9,1.9 0 0 0 6.5,18.9 L12.9,12.5 A4.5,4.5 0 0 0 18.7,8.2 L16.1,10.8 L13.6,10.1 L12.9,7.6 Z</StreamGeometry>
       <StreamGeometry x:Key="IcLevel">M3,15 L21,15 M6,15 L6,11 L18,11 L18,15 M12,4 L12,8 M9,6 L12,8 L15,6</StreamGeometry>
-      <StreamGeometry x:Key="IcCompass">M12,3 A9,9 0 1 0 12.01,3 M15.5,8.5 L13.4,13.4 L8.5,15.5 L10.6,10.6 Z</StreamGeometry>
-      <StreamGeometry x:Key="IcRadio">M5,9 L19,9 L19,21 L5,21 Z M8,13 A1.5,1.5 0 1 0 8.01,13 M16,13 A1.5,1.5 0 1 0 16.01,13 M8,9 L5,3 M16,9 L19,3 M9,18 L15,18</StreamGeometry>
+      <StreamGeometry x:Key="IcCompass">M3,12 A9,9 0 1 0 21,12 A9,9 0 1 0 3,12 M15.5,8.5 L13.4,13.4 L8.5,15.5 L10.6,10.6 Z</StreamGeometry>
+      <StreamGeometry x:Key="IcRadio">M5,9 L19,9 L19,21 L5,21 Z M6.5,14.5 A1.5,1.5 0 1 0 9.5,14.5 A1.5,1.5 0 1 0 6.5,14.5 M14.5,14.5 A1.5,1.5 0 1 0 17.5,14.5 A1.5,1.5 0 1 0 14.5,14.5 M8,9 L5,3 M16,9 L19,3 M9,18 L15,18</StreamGeometry>
       <StreamGeometry x:Key="IcSensors">M3,12 L7,12 L9,6 L12,18 L15,9 L17,12 L21,12</StreamGeometry>
       <StreamGeometry x:Key="IcShield">M12,3 L19,6 L19,11 C19,15.5 16,19 12,21 C8,19 5,15.5 5,11 L5,6 Z M9,12 L11,14 L15,10</StreamGeometry>
-      <StreamGeometry x:Key="IcFrame">M6,6 L18,18 M18,6 L6,18 M6,3.5 A2.5,2.5 0 1 0 6.01,3.5 M18,3.5 A2.5,2.5 0 1 0 18.01,3.5 M6,15.5 A2.5,2.5 0 1 0 6.01,15.5 M18,15.5 A2.5,2.5 0 1 0 18.01,15.5</StreamGeometry>
-      <StreamGeometry x:Key="IcMotor">M12,9 A3,3 0 1 0 12.01,9 M12,9 C10,5 10,3 12,3 C14,3 14,5 12,9 M15,12 C19,10 21,10 21,12 C21,14 19,14 15,12 M12,15 C14,19 14,21 12,21 C10,21 10,19 12,15 M9,12 C5,14 3,14 3,12 C3,10 5,10 9,12</StreamGeometry>
+      <StreamGeometry x:Key="IcFrame">M6,6 L18,18 M18,6 L6,18 M3.5,6 A2.5,2.5 0 1 0 8.5,6 A2.5,2.5 0 1 0 3.5,6 M15.5,6 A2.5,2.5 0 1 0 20.5,6 A2.5,2.5 0 1 0 15.5,6 M3.5,18 A2.5,2.5 0 1 0 8.5,18 A2.5,2.5 0 1 0 3.5,18 M15.5,18 A2.5,2.5 0 1 0 20.5,18 A2.5,2.5 0 1 0 15.5,18</StreamGeometry>
+      <StreamGeometry x:Key="IcMotor">M9,12 A3,3 0 1 0 15,12 A3,3 0 1 0 9,12 M12,9 C10,5 10,3 12,3 C14,3 14,5 12,9 M15,12 C19,10 21,10 21,12 C21,14 19,14 15,12 M12,15 C14,19 14,21 12,21 C10,21 10,19 12,15 M9,12 C5,14 3,14 3,12 C3,10 5,10 9,12</StreamGeometry>
       <StreamGeometry x:Key="IcBack">M15,5 L8,12 L15,19</StreamGeometry>
       <StreamGeometry x:Key="IcChevronRight">M9,6 L15,12 L9,18</StreamGeometry>
-      <StreamGeometry x:Key="IcTarget">M12,4 A8,8 0 1 0 12.01,4 M12,9 A3,3 0 1 0 12.01,9</StreamGeometry>
+      <StreamGeometry x:Key="IcTarget">M4,12 A8,8 0 1 0 20,12 A8,8 0 1 0 4,12 M9,12 A3,3 0 1 0 15,12 A3,3 0 1 0 9,12</StreamGeometry>
     </ResourceDictionary>
   </Styles.Resources>
 

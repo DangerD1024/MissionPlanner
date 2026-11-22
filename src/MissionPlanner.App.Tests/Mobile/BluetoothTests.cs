@@ -141,6 +141,10 @@ public class BluetoothTests
         StringAssert.Contains(vm.Kinds.Single(k => k.IsBluetooth).Hint, "LE");
         Assert.IsFalse(vm.SupportsClassicBluetooth);
         Assert.IsFalse(vm.NoBluetoothText.Contains("classic", StringComparison.Ordinal));
+        // no USB host there: the USB tip is hidden and the Bluetooth tip says what works
+        Assert.IsFalse(vm.HasUsb);
+        Assert.IsTrue(vm.HasBluetooth);
+        StringAssert.Contains(vm.BluetoothTip, "cannot use USB");
     }
 
     internal sealed class FakeBluetooth : IBluetoothHost

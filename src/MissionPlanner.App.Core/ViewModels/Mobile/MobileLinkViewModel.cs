@@ -118,6 +118,15 @@ public sealed partial class MobileLinkViewModel : ObservableObject
 
     public bool SupportsClassicBluetooth => _bt?.SupportsClassic == true;
 
+    /// <summary>The phone can open USB serial devices (Android); the iPhone cannot.</summary>
+    public bool HasUsb => _usb != null;
+
+    public bool HasBluetooth => _bt != null;
+
+    public string BluetoothTip => SupportsClassicBluetooth
+        ? "Bluetooth: pair a classic module (HC-05, HC-06) in the phone settings first; Bluetooth LE modules (HM-10, ESP32 BLE UART) appear when you scan. Use the baud rate the module is set to."
+        : "Bluetooth LE: a BLE serial module (HM-10, ESP32 BLE UART) on a telemetry port of the flight controller appears when you scan. The iPhone cannot use USB serial or classic Bluetooth modules (HC-05, HC-06).";
+
     /// <summary>What to do when the list is empty (the iPhone has no classic Bluetooth to pair).</summary>
     public string NoBluetoothText => SupportsClassicBluetooth
         ? "No Bluetooth device yet. Pair a classic module (HC-05, HC-06) in the phone settings, or scan for Bluetooth LE."

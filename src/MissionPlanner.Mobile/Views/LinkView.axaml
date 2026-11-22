@@ -156,7 +156,9 @@
           <TextBlock Classes="label" Text="{l:Tr 'TIPS'}" />
           <TextBlock Classes="muted" FontSize="13" TextWrapping="Wrap"
                      Text="{l:Tr 'Wi-Fi telemetry (ESP8266/ESP32 MAVLink bridge, ELRS backpack, Herelink): join its Wi-Fi network, then connect with UDP 14550. SITL on a computer: TCP to its address, port 5760.'}" />
-          <TextBlock Classes="muted" FontSize="13" TextWrapping="Wrap"
+          <TextBlock Classes="muted" FontSize="13" TextWrapping="Wrap" IsVisible="{Binding HasBluetooth}"
+                     Text="{l:TrBind {Binding BluetoothTip}}" />
+          <TextBlock Classes="muted" FontSize="13" TextWrapping="Wrap" IsVisible="{Binding HasUsb}"
                      Text="{l:Tr 'USB: SiK/RFD telemetry radios (FTDI, CP210x, CH340) at 57600, or the USB port of the flight controller. Android asks once whether Mission Planner may use the device.'}" />
         </StackPanel>
       </Border>
