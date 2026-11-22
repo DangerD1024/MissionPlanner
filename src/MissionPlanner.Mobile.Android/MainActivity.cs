@@ -26,6 +26,36 @@ namespace MissionPlanner.Mobile.Android;
 [MetaData(UsbManager.ActionUsbDeviceAttached, Resource = "@xml/device_filter")]
 public sealed class MainActivity : AvaloniaMainActivity
 {
+    private static MainActivity? _current;
+    private static TaskCompletionSource<bool>? _permissions;
+    private const int PermissionRequest = 4711;
+
+    /// <summary>Asks for runtime permissions (Bluetooth); true when all are granted.</summary>
+    public static Task<bool> RequestPermissionsAsync(string[] permissions)
+    {
+        var activity = _current;
+        if (activity == null)
+            return Task.FromResult(false);
+        var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Interlocked.Exchange(ref _permissions, tcs)?.TrySetResult(false);
+        activity.RunOnUiThread(() => activity.RequestPermissions(permissions, PermissionRequest));
+        return tcs.Task;
+    }
+
+    public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
+    {
+        base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PermissionRequest)
+            Interlocked.Exchange(ref _permissions, null)?.TrySetResult(grantResults.Length > 0 && grantResults.All(g => g == Permission.Granted));
+    }
+
+    protected override void OnDestroy()
+    {
+        if (_current == this)
+            _current = null;
+        base.OnDestroy();
+    }
+
     protected override void OnNewIntent(Intent? intent)
     {
         base.OnNewIntent(intent);
@@ -35,6 +65,7 @@ public sealed class MainActivity : AvaloniaMainActivity
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
+        _current = this;
         base.OnCreate(savedInstanceState);
         Window?.AddFlags(WindowManagerFlags.KeepScreenOn);
         // the app's dark background also behind the camera cutout and system bars in landscape
@@ -86,6 +117,9 @@ public sealed class MissionPlannerApplication : AvaloniaAndroidApplication<Mobil
             Usb = new AndroidUsbHost(this);
             global::MissionPlanner.App.Core.Links.LinkFactory.UsbHost = Usb;
         }
+
+        if (GetSystemService(BluetoothService) is global::Android.Bluetooth.BluetoothManager { Adapter: not null })
+            global::MissionPlanner.App.Core.Links.LinkFactory.BluetoothHost = new AndroidBluetoothHost(this);
 
         base.OnCreate();
     }

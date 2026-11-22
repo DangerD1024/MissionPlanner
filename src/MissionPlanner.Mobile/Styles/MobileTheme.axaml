@@ -32,6 +32,7 @@
       <StreamGeometry x:Key="IcParams">M4,6 L20,6 M4,12 L20,12 M4,18 L20,18 M9,4 L9,8 M15,10 L15,14 M7,16 L7,20</StreamGeometry>
       <StreamGeometry x:Key="IcMessages">M4,5 L20,5 L20,16 L10,16 L6,20 L6,16 L4,16 Z M8,9 L16,9 M8,12 L13,12</StreamGeometry>
       <StreamGeometry x:Key="IcUsb">M12,2 L12,17 M12,2 L9.5,5 M12,2 L14.5,5 M12,14 L7,10.5 L7,7.5 M12,11.5 L17,8.5 L17,6 M5.8,5.8 L8.2,5.8 L8.2,7.5 L5.8,7.5 Z M15.8,4.6 A1.2,1.2 0 1 0 15.81,4.6 M10,19 A2,2 0 1 0 14,19 A2,2 0 1 0 10,19</StreamGeometry>
+    <StreamGeometry x:Key="IcBluetooth">M7,7.5 L17,16.5 L12,21 L12,3 L17,7.5 L7,16.5</StreamGeometry>
     <StreamGeometry x:Key="IcLink">M9,3 L9,7 M15,3 L15,7 M7,7 L17,7 L17,11 A5,5 0 0 1 7,11 Z M12,16 L12,21</StreamGeometry>
       <StreamGeometry x:Key="IcGps">M12,21 C12,21 5,13.5 5,9 A7,7 0 0 1 19,9 C19,13.5 12,21 12,21 Z M12,6.5 A2.5,2.5 0 1 0 12.01,6.5</StreamGeometry>
       <StreamGeometry x:Key="IcBattery">M3,8 L18,8 L18,16 L3,16 Z M18,10.5 L20.5,10.5 L20.5,13.5 L18,13.5</StreamGeometry>
