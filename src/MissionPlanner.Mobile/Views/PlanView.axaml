@@ -8,10 +8,10 @@
              x:Class="MissionPlanner.Mobile.Views.PlanView"
              x:DataType="vm:FlightPlanViewModel">
 
-  <Grid RowDefinitions="Auto,*,Auto">
+  <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*" x:Name="Root">
 
     <!-- toolbar: read / write the vehicle's mission, clear, fit -->
-    <Border Grid.Row="0" Background="{StaticResource Surface}" Padding="8,6">
+    <Border Grid.Row="0" x:Name="Toolbar" Background="{StaticResource Surface}" Padding="8,6">
       <Grid ColumnDefinitions="*,Auto">
         <StackPanel Orientation="Horizontal" Spacing="6">
           <Button Padding="12,0" Command="{Binding ReadCommand}">
@@ -39,7 +39,7 @@
     </Border>
 
     <!-- map: tap adds a waypoint, drag one to move it -->
-    <Panel Grid.Row="1" ClipToBounds="True">
+    <Panel Grid.Row="1" x:Name="MapPanel" ClipToBounds="True">
       <c:MapView x:Name="Map"
                  Provider="{Binding SelectedMapProvider.Provider}"
                  CenterLat="{Binding CenterLat}"
@@ -54,10 +54,10 @@
     </Panel>
 
     <!-- waypoints: the list, and the selected one's altitude -->
-    <Border Grid.Row="2" Background="{StaticResource Surface}" CornerRadius="18,18,0,0" Padding="0,6,0,4">
+    <Border Grid.Row="2" x:Name="ListPanel" Background="{StaticResource Surface}" CornerRadius="18,18,0,0" Padding="0,6,0,4">
       <StackPanel>
-        <Button Classes="flat" HorizontalAlignment="Stretch" Height="40" MinHeight="40" Click="OnToggleList">
-          <Grid ColumnDefinitions="*,Auto" Width="360">
+        <Button Classes="flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Height="40" MinHeight="40" Padding="20,0" Click="OnToggleList">
+          <Grid ColumnDefinitions="*,Auto">
             <TextBlock x:Name="ListHeader" FontWeight="Bold" FontSize="15" VerticalAlignment="Center" />
             <mc:Icon Grid.Column="1" x:Name="ListChevron" Data="{StaticResource IcChevronDown}" Width="16" Height="16" />
           </Grid>

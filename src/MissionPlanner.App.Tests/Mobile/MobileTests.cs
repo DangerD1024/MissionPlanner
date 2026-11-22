@@ -18,6 +18,8 @@ public class MobileTests
         Settings.Instance.Remove(MobileLinkViewModel.RecentKey);
         Settings.Instance.Remove(MobileLinkViewModel.AutoKey);
         Settings.Instance.Remove("next_mobile_hud_large");
+        Settings.Instance.Remove("next_mobile_map_main");
+        Settings.Instance.Remove(MobileShellViewModel.OrientationKey);
     }
 
     [TestMethod]
@@ -203,6 +205,18 @@ public class MobileTests
         shell.ToggleModePickerCommand.Execute(null);
         Assert.IsFalse(shell.IsModePickerOpen);
         Assert.IsTrue(shell.IsToastVisible);
+
+        // landscape: swapping puts the map big and is remembered; the orientation choice is saved
+        Assert.IsFalse(shell.IsMapMain);
+        shell.SwapViewsCommand.Execute(null);
+        Assert.IsTrue(shell.IsMapMain);
+        Assert.AreEqual("True", Settings.Instance["next_mobile_map_main"]);
+        CollectionAssert.AreEqual(new[] { ScreenOrientationMode.Auto, ScreenOrientationMode.Portrait, ScreenOrientationMode.Landscape },
+            shell.Orientations.ToArray());
+        Assert.AreEqual(ScreenOrientationMode.Auto, shell.Orientation);
+        shell.Orientation = ScreenOrientationMode.Landscape;
+        Assert.AreEqual("Landscape", Settings.Instance[MobileShellViewModel.OrientationKey]);
+        Assert.AreEqual(ScreenOrientationMode.Landscape, new MobileShellViewModel(services).Orientation);
 
         Assert.IsTrue(shell.IsHudLarge);
         shell.ToggleHudSizeCommand.Execute(null);

@@ -17,14 +17,14 @@
               IsVisible="{Binding Status.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
         <TextBlock Text="{Binding Status.Message}" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="Center" />
       </Border>
-      <Button Classes="fab" Width="40" Height="40" MinHeight="40" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="8"
-              Command="{Binding ToggleHudSizeCommand}">
+      <Button x:Name="SwapButton" Classes="fab" Width="40" Height="40" MinHeight="40" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="8"
+              Click="OnSwapClick">
         <mc:Icon Data="{StaticResource IcSwap}" Width="18" Height="18" />
       </Button>
     </Panel>
 
     <!-- telemetry strip (height, distance home, speeds), as DJI Fly's bottom bar -->
-    <Border Grid.Row="1" Background="{StaticResource Surface}" Padding="6,8">
+    <Border Grid.Row="1" x:Name="Tele" Background="{StaticResource Surface}" Padding="6,8">
       <UniformGrid Columns="4">
         <StackPanel HorizontalAlignment="Center">
           <TextBlock Classes="label" HorizontalAlignment="Center" Text="{l:Tr 'ALT'}" />
@@ -58,14 +58,14 @@
     </Border>
 
     <!-- map: tap to fly there (connected), pinch or the buttons to zoom -->
-    <Panel Grid.Row="2" ClipToBounds="True">
+    <Panel Grid.Row="2" x:Name="MapHost" ClipToBounds="True">
       <c:MapView x:Name="Map"
                  Provider="{Binding Fly.SelectedMapProvider.Provider}"
                  CenterLat="{Binding Fly.CenterLat}"
                  CenterLng="{Binding Fly.CenterLng}"
                  Zoom="{Binding Fly.Zoom}" />
 
-      <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10" Spacing="10">
+      <StackPanel x:Name="MapButtons" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10" Spacing="10">
         <Button Classes="fab" Command="{Binding FollowVehicleCommand}" Background="{Binding Fly.AutoPan, Converter={x:Static mc:BoolBrush.FollowBlue}}">
           <mc:Icon Data="{StaticResource IcCenter}" />
         </Button>
@@ -78,7 +78,7 @@
       </StackPanel>
 
       <!-- go here: after a tap on the map -->
-      <Border Classes="glass" VerticalAlignment="Bottom" Margin="12" Padding="14,12" IsVisible="{Binding HasGoHere}">
+      <Border x:Name="GoHereCard" Classes="glass" VerticalAlignment="Bottom" Margin="12" Padding="14,12" MaxWidth="460" IsVisible="{Binding HasGoHere}">
         <Grid ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="Auto,Auto">
           <mc:Icon Grid.RowSpan="2" Data="{StaticResource IcTarget}" Stroke="{StaticResource Accent}" Margin="0,0,12,0" />
           <TextBlock Grid.Column="1" Text="{l:Tr 'Go here?'}" FontWeight="Bold" FontSize="15" />
@@ -90,40 +90,44 @@
     </Panel>
 
     <!-- action bar: the big buttons, each confirmed by sliding -->
-    <Border Grid.Row="3" Background="{StaticResource Bg}" Padding="8,8,8,6">
-      <Grid ColumnDefinitions="*,6,*,6,*,6,*,6,*">
-        <Button Grid.Column="0" Classes="action" Classes.arm="{Binding !Status.IsArmed}" Classes.disarm="{Binding Status.IsArmed}"
+    <!-- landscape: the small view in the corner swaps with the big one when tapped -->
+    <Border x:Name="MiniTap" Background="Transparent" IsVisible="False" PointerPressed="OnMiniPressed" ZIndex="3"
+            BorderBrush="#B3FFFFFF" BorderThickness="2" CornerRadius="12" />
+
+    <Border Grid.Row="3" x:Name="ActionBar" Background="{StaticResource Bg}" Padding="5,5,5,3">
+      <UniformGrid x:Name="Actions" Columns="5">
+        <Button Margin="3" Classes="action" Classes.arm="{Binding !Status.IsArmed}" Classes.disarm="{Binding Status.IsArmed}"
                 Command="{Binding ArmDisarmCommand}">
           <StackPanel Spacing="4">
             <mc:Icon Data="{StaticResource IcPower}" />
             <TextBlock Text="{l:TrBind {Binding ArmButtonText}}" />
           </StackPanel>
         </Button>
-        <Button Grid.Column="2" Classes="action" Command="{Binding TakeoffCommand}" IsEnabled="{Binding CanTakeoff}">
+        <Button Margin="3" Classes="action" Command="{Binding TakeoffCommand}" IsEnabled="{Binding CanTakeoff}">
           <StackPanel Spacing="4">
             <mc:Icon Data="{StaticResource IcTakeoff}" />
             <TextBlock Text="{l:Tr 'Takeoff'}" />
           </StackPanel>
         </Button>
-        <Button Grid.Column="4" Classes="action" Command="{Binding LandCommand}" IsEnabled="{Binding CanLand}">
+        <Button Margin="3" Classes="action" Command="{Binding LandCommand}" IsEnabled="{Binding CanLand}">
           <StackPanel Spacing="4">
             <mc:Icon Data="{StaticResource IcLand}" />
             <TextBlock Text="{l:Tr 'Land'}" />
           </StackPanel>
         </Button>
-        <Button Grid.Column="6" Classes="action" Command="{Binding ReturnToLaunchCommand}">
+        <Button Margin="3" Classes="action" Command="{Binding ReturnToLaunchCommand}">
           <StackPanel Spacing="4">
             <mc:Icon Data="{StaticResource IcRtl}" />
             <TextBlock Text="{l:Tr 'RTL'}" />
           </StackPanel>
         </Button>
-        <Button Grid.Column="8" Classes="action" Command="{Binding PauseCommand}">
+        <Button Margin="3" Classes="action" Command="{Binding PauseCommand}">
           <StackPanel Spacing="4">
             <mc:Icon Data="{StaticResource IcPause}" />
             <TextBlock Text="{l:Tr 'Pause'}" />
           </StackPanel>
         </Button>
-      </Grid>
+      </UniformGrid>
     </Border>
   </Grid>
 </UserControl>

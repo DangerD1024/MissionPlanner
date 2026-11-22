@@ -7,7 +7,7 @@
              x:Class="MissionPlanner.Mobile.Views.Setup.RadioPage"
              x:DataType="vm:RadioCalibrationViewModel">
   <ScrollViewer>
-    <StackPanel Margin="12" Spacing="12">
+    <StackPanel Margin="12" Spacing="12" MaxWidth="760">
 
       <!-- the sticks -->
       <Border Classes="card">

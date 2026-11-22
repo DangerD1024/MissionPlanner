@@ -26,6 +26,12 @@ public sealed partial class MobileApp : Application
 
     public static MobileShellViewModel? Shell { get; private set; }
 
+    /// <summary>Raised once the shell exists (the Android head applies the orientation setting from it).</summary>
+    public static event Action<MobileShellViewModel>? ShellCreated;
+
+    /// <summary>The desktop preview starts in landscape (--landscape).</summary>
+    public static bool StartLandscape { get; set; }
+
     /// <summary>A link to open at start (the desktop preview's MP_CONNECT, e.g. tcp:127.0.0.1:5760).</summary>
     public static string? StartLink { get; set; }
 
@@ -51,6 +57,7 @@ public sealed partial class MobileApp : Application
         AppServices = services;
         var shell = new MobileShellViewModel(services);
         Shell = shell;
+        ShellCreated?.Invoke(shell);
         var view = new MobileShellView { DataContext = shell, Sheets = sheets };
 
         switch (ApplicationLifetime)
@@ -59,16 +66,26 @@ public sealed partial class MobileApp : Application
                 single.MainView = view;
                 break;
             case IClassicDesktopStyleApplicationLifetime desktop:
+                var landscape = StartLandscape || shell.Orientation == ScreenOrientationMode.Landscape;
                 var window = new Window
                 {
                     Title = "Mission Planner (phone preview)",
-                    Width = 412,
-                    Height = 892,
+                    Width = landscape ? 892 : 412,
+                    Height = landscape ? 412 : 892,
                     CanResize = true,
                     Content = view,
                     Background = Avalonia.Media.Brushes.Black,
                 };
                 desktop.MainWindow = window;
+                // the preview turns like a phone when the orientation is set
+                shell.PropertyChanged += (_, e) =>
+                {
+                    if (e.PropertyName != nameof(MobileShellViewModel.Orientation) || shell.Orientation == ScreenOrientationMode.Auto)
+                        return;
+                    var wide = shell.Orientation == ScreenOrientationMode.Landscape;
+                    if (wide != window.Width > window.Height)
+                        (window.Width, window.Height) = (window.Height, window.Width);
+                };
                 desktop.ShutdownRequested += (_, _) => Stop(services);
                 break;
         }

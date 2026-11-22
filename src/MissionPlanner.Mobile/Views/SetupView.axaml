@@ -23,7 +23,7 @@
 
     <!-- the list -->
     <ScrollViewer Grid.Row="1" IsVisible="{Binding IsList}">
-      <StackPanel Margin="12" Spacing="8">
+      <StackPanel Margin="12" Spacing="8" MaxWidth="760">
         <TextBlock Classes="h1" Text="{l:Tr 'Setup'}" Margin="4,0,0,4" />
         <Border Classes="card" Padding="12" Background="{StaticResource WarnDim}"
                 IsVisible="{Binding Hint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">

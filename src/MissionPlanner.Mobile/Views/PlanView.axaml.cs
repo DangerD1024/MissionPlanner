@@ -74,6 +74,33 @@ public sealed partial class PlanView : UserControl
         ListHeader.Text = $"Waypoints ({n})";
     }
 
+    private bool? _landscape;
+
+    /// <summary>Landscape: the map on the left and the waypoint list as a panel on the right.</summary>
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        var w = availableSize.Width;
+        var h = availableSize.Height;
+        if (w > 0 && h > 0 && !double.IsInfinity(w) && !double.IsInfinity(h) && (w > h * 1.05) != _landscape)
+        {
+            var landscape = w > h * 1.05;
+            _landscape = landscape;
+            Root.ColumnDefinitions = new ColumnDefinitions(landscape ? "*,340" : "*");
+            Grid.SetColumnSpan(Toolbar, landscape ? 2 : 1);
+            Grid.SetRow(ListPanel, landscape ? 1 : 2);
+            Grid.SetColumn(ListPanel, landscape ? 1 : 0);
+            ListPanel.CornerRadius = landscape ? default : new CornerRadius(18, 18, 0, 0);
+            Items.MaxHeight = landscape ? double.PositiveInfinity : 220;
+            if (landscape)
+            {
+                _listOpen = true;
+                Items.IsVisible = true;
+            }
+        }
+
+        return base.MeasureOverride(availableSize);
+    }
+
     private void OnToggleList(object? sender, RoutedEventArgs e)
     {
         _listOpen = !_listOpen;

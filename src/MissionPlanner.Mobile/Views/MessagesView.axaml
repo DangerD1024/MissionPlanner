@@ -6,7 +6,7 @@
              xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.Mobile.Views.MessagesView"
              x:DataType="vm:MobileShellViewModel">
-  <Grid RowDefinitions="Auto,*" Margin="12,10,12,0">
+  <Grid RowDefinitions="Auto,*" Margin="12,10,12,0" MaxWidth="900">
     <TextBlock Classes="h2" Text="{l:Tr 'Vehicle messages'}" Margin="4,0,0,8" />
     <ListBox Grid.Row="1" Background="Transparent" ItemsSource="{Binding Fly.Messages}">
       <ListBox.ItemTemplate>

@@ -3,11 +3,12 @@
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Mobile"
              xmlns:lk="using:MissionPlanner.App.Core.Links"
              xmlns:mc="using:MissionPlanner.Mobile.Controls"
+             xmlns:v="using:MissionPlanner.Mobile.Views"
              xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.Mobile.Views.LinkView"
              x:DataType="vm:MobileLinkViewModel">
   <ScrollViewer>
-    <StackPanel Margin="14" Spacing="14">
+    <StackPanel Margin="14" Spacing="14" MaxWidth="720">
       <StackPanel Orientation="Horizontal" Spacing="12">
         <Image Source="avares://MissionPlanner.Mobile/Assets/mission-planner-128.png" Width="44" Height="44" />
         <StackPanel VerticalAlignment="Center">
@@ -77,6 +78,26 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card" x:DataType="vm:MobileShellViewModel" DataContext="{Binding $parent[v:MobileShellView].((vm:MobileShellViewModel)DataContext)}">
+        <StackPanel Spacing="8">
+          <TextBlock Classes="label" Text="{l:Tr 'SCREEN'}" />
+          <ListBox ItemsSource="{Binding Orientations}" SelectedItem="{Binding Orientation}" Background="Transparent">
+            <ListBox.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid Columns="3" />
+              </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:ScreenOrientationMode">
+                <TextBlock Text="{l:TrBind {Binding}}" HorizontalAlignment="Center" Margin="4,10" FontSize="14" />
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                     Text="{l:Tr 'Auto follows the phone; Portrait or Landscape keeps the screen one way.'}" />
         </StackPanel>
       </Border>
 

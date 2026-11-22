@@ -7,7 +7,7 @@
              x:Class="MissionPlanner.Mobile.Views.Setup.CompassPage"
              x:DataType="vm:CompassViewModel">
   <ScrollViewer>
-    <StackPanel Margin="12" Spacing="12">
+    <StackPanel Margin="12" Spacing="12" MaxWidth="760">
 
       <!-- the reboot the autopilot asks for after a calibration or a new order -->
       <Border Classes="card" Background="{StaticResource WarnDim}" IsVisible="{Binding RebootRequired}">

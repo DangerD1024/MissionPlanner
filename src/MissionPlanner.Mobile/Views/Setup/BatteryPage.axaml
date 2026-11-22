@@ -6,7 +6,7 @@
              x:Class="MissionPlanner.Mobile.Views.Setup.BatteryPage"
              x:DataType="vm:BatteryMonitorViewModel">
   <ScrollViewer>
-    <StackPanel Margin="12" Spacing="12">
+    <StackPanel Margin="12" Spacing="12" MaxWidth="760">
       <!-- what the autopilot reads now -->
       <Border Classes="card">
         <Grid ColumnDefinitions="*,*">

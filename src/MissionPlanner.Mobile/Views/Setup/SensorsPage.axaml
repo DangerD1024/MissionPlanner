@@ -15,7 +15,7 @@
     </DataTemplate>
   </UserControl.DataTemplates>
   <ScrollViewer>
-    <StackPanel Margin="12" Spacing="12">
+    <StackPanel Margin="12" Spacing="12" MaxWidth="760">
       <TextBlock Classes="muted" FontSize="12" Text="{l:TrBind {Binding Note}}" TextWrapping="Wrap" />
       <ItemsControl ItemsSource="{Binding Imus}">
         <ItemsControl.ItemTemplate>

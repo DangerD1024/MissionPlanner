@@ -7,7 +7,7 @@
              x:Class="MissionPlanner.Mobile.Views.Setup.FailsafePage"
              x:DataType="vm:FailsafeViewModel">
   <ScrollViewer>
-    <StackPanel Margin="12" Spacing="12">
+    <StackPanel Margin="12" Spacing="12" MaxWidth="760">
       <!-- the vehicle now: mode (red while a failsafe is active), armed, GPS -->
       <Border Classes="card">
         <Grid ColumnDefinitions="*,*,*">

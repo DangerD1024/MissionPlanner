@@ -7,7 +7,7 @@
              x:Class="MissionPlanner.Mobile.Views.Setup.MotorTestPage"
              x:DataType="vm:MotorTestViewModel">
   <ScrollViewer>
-    <StackPanel Margin="12" Spacing="12">
+    <StackPanel Margin="12" Spacing="12" MaxWidth="760">
       <Border Classes="card" Background="{StaticResource BadDim}" IsVisible="{Binding WarningText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
         <TextBlock Text="{l:TrBind {Binding WarningText}}" FontWeight="Bold" TextWrapping="Wrap" Foreground="{StaticResource Bad}" />
       </Border>

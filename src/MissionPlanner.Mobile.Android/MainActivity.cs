@@ -8,13 +8,13 @@ using Avalonia.Android;
 
 namespace MissionPlanner.Mobile.Android;
 
-/// <summary>Portrait only, the screen kept on while the app is open (a flight).</summary>
+/// <summary>Turns with the phone (or as set on the Link tab); the screen stays on while the app is open.</summary>
 [Activity(
     Label = "Mission Planner",
     Theme = "@style/MissionPlanner.Theme",
     Icon = "@drawable/icon",
     MainLauncher = true,
-    ScreenOrientation = ScreenOrientation.Portrait,
+    ScreenOrientation = ScreenOrientation.FullUser,
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode | ConfigChanges.KeyboardHidden)]
 public sealed class MainActivity : AvaloniaMainActivity
 {
@@ -22,7 +22,31 @@ public sealed class MainActivity : AvaloniaMainActivity
     {
         base.OnCreate(savedInstanceState);
         Window?.AddFlags(WindowManagerFlags.KeepScreenOn);
+        // the app's dark background also behind the camera cutout and system bars in landscape
+        Window?.SetBackgroundDrawable(new global::Android.Graphics.Drawables.ColorDrawable(global::Android.Graphics.Color.ParseColor("#0B0E13")));
+        if (MobileApp.Shell is { } shell)
+            Follow(shell);
+        else
+            MobileApp.ShellCreated += Follow;
     }
+
+    private void Follow(global::MissionPlanner.App.Core.ViewModels.Mobile.MobileShellViewModel shell)
+    {
+        Apply(shell.Orientation);
+        shell.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(shell.Orientation))
+                Apply(shell.Orientation);
+        };
+    }
+
+    private void Apply(global::MissionPlanner.App.Core.ViewModels.Mobile.ScreenOrientationMode mode) =>
+        RequestedOrientation = mode switch
+        {
+            global::MissionPlanner.App.Core.ViewModels.Mobile.ScreenOrientationMode.Portrait => ScreenOrientation.UserPortrait,
+            global::MissionPlanner.App.Core.ViewModels.Mobile.ScreenOrientationMode.Landscape => ScreenOrientation.UserLandscape,
+            _ => ScreenOrientation.FullUser,
+        };
 }
 
 /// <summary>Places the data folder and the data files before the shared app starts.</summary>

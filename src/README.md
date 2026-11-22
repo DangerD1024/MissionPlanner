@@ -54,7 +54,10 @@ dotnet run --project src/MissionPlanner.Mobile.Desktop          # phone-sized pr
 MP_CONNECT=tcp:127.0.0.1:5760 dotnet run --project src/MissionPlanner.Mobile.Desktop   # connected to SITL at start
 ```
 
-The phone app is portrait only: a status bar (mode, GPS, battery, link) and a readiness strip;
+The phone app turns with the phone (or is held one way: Link tab › Screen). Portrait has the tabs at
+the bottom; landscape puts them in a rail on the left, and Fly shows one view full screen with the other
+as a small picture in the corner (tap it to swap), the action buttons in a column on the right.
+`--landscape` starts the preview wide. Both have a status bar (mode, GPS, battery, link) and a readiness strip;
 **Fly** (HUD, telemetry strip, map with tap-to-go-here, Arm / Takeoff / Land / RTL / Pause, every one
 confirmed by a slide), **Plan** (tap to add waypoints, read / write), **Setup** (accelerometer and level,
 compass, radio, sensors, flight modes, failsafe, battery, frame, motor test, all parameters),

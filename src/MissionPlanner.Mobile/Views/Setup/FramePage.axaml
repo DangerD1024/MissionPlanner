@@ -20,7 +20,7 @@
     </DataTemplate>
   </UserControl.DataTemplates>
   <ScrollViewer>
-    <StackPanel Margin="12" Spacing="12">
+    <StackPanel Margin="12" Spacing="12" MaxWidth="760">
       <Border Classes="card">
         <Grid ColumnDefinitions="*,Auto">
           <StackPanel VerticalAlignment="Center">

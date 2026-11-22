@@ -8,6 +8,14 @@ using MissionPlanner.ArduPilot;
 
 namespace MissionPlanner.App.Core.ViewModels.Mobile;
 
+/// <summary>How the phone app turns: with the device, or held one way.</summary>
+public enum ScreenOrientationMode
+{
+    Auto,
+    Portrait,
+    Landscape,
+}
+
 /// <summary>The phone's bottom tabs.</summary>
 public enum MobileTab
 {
@@ -360,4 +368,34 @@ public sealed partial class MobileShellViewModel : ObservableObject
 
     [RelayCommand]
     private void ToggleHudSize() => IsHudLarge = !IsHudLarge;
+
+    /// <summary>Landscape: the map fills the screen and the HUD is the small view in the corner (or the other way).</summary>
+    [ObservableProperty]
+    private bool _isMapMain = MissionPlanner.Utilities.Settings.Instance.GetBoolean("next_mobile_map_main", false);
+
+    partial void OnIsMapMainChanged(bool value) => MissionPlanner.Utilities.Settings.Instance["next_mobile_map_main"] = value.ToString();
+
+    [RelayCommand]
+    private void SwapViews() => IsMapMain = !IsMapMain;
+
+    // ---- screen orientation ------------------------------------------------------------------
+
+    public const string OrientationKey = "next_mobile_orientation";
+
+    /// <summary>Follow the phone, or keep one way (the platform head applies it).</summary>
+    public IReadOnlyList<ScreenOrientationMode> Orientations { get; } = Enum.GetValues<ScreenOrientationMode>();
+
+    [ObservableProperty]
+    private ScreenOrientationMode _orientation =
+        Enum.TryParse<ScreenOrientationMode>(MissionPlanner.Utilities.Settings.Instance[OrientationKey], out var o) ? o : ScreenOrientationMode.Auto;
+
+    partial void OnOrientationChanged(ScreenOrientationMode value)
+    {
+        MissionPlanner.Utilities.Settings.Instance[OrientationKey] = value.ToString();
+        MissionPlanner.Utilities.Settings.Instance.Save();
+    }
+
+    /// <summary>Set by the view from its size: wider than tall.</summary>
+    [ObservableProperty]
+    private bool _isLandscape;
 }

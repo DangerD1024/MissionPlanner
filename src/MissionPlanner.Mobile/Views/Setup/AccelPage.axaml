@@ -7,7 +7,7 @@
              x:Class="MissionPlanner.Mobile.Views.Setup.AccelPage"
              x:DataType="vm:AccelCalibrationViewModel">
   <ScrollViewer>
-    <StackPanel Margin="12" Spacing="12">
+    <StackPanel Margin="12" Spacing="12" MaxWidth="760">
 
       <!-- 6-position calibration: the vehicle drawing shows how to hold it -->
       <Border Classes="card">

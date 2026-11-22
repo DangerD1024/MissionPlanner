@@ -67,6 +67,62 @@ public sealed partial class MobileShellView : UserControl
         }
     }
 
+    private bool? _landscape;
+
+    /// <summary>Landscape: the tabs become a rail on the left, the pages get the full height.</summary>
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        var w = availableSize.Width;
+        var h = availableSize.Height;
+        if (w > 0 && h > 0 && !double.IsInfinity(w) && !double.IsInfinity(h))
+        {
+            var landscape = w > h * 1.05;
+            if (landscape != _landscape)
+            {
+                _landscape = landscape;
+                ApplyOrientation(landscape);
+            }
+        }
+
+        return base.MeasureOverride(availableSize);
+    }
+
+    private void ApplyOrientation(bool landscape)
+    {
+        if (Vm != null)
+            Vm.IsLandscape = landscape;
+        Root.ColumnDefinitions = new ColumnDefinitions(landscape ? "Auto,*" : "*");
+        var content = landscape ? 1 : 0;
+        foreach (var c in new Control[] { TopBar, ReadyStrip, Pages })
+            Grid.SetColumn(c, content);
+        foreach (var c in new Control[] { ModeLayer, SheetLayer })
+        {
+            Grid.SetColumn(c, 0);
+            Grid.SetColumnSpan(c, landscape ? 2 : 1);
+        }
+
+        if (landscape)
+        {
+            Grid.SetRow(NavBar, 0);
+            Grid.SetRowSpan(NavBar, 4);
+            Grid.SetColumn(NavBar, 0);
+            NavBar.Width = 80;
+            NavBar.BorderThickness = new Thickness(0, 0, 1, 0);
+            NavGrid.Columns = 1;
+            NavGrid.Rows = 5;
+        }
+        else
+        {
+            Grid.SetRow(NavBar, 3);
+            Grid.SetRowSpan(NavBar, 1);
+            Grid.SetColumn(NavBar, 0);
+            NavBar.Width = double.NaN;
+            NavBar.BorderThickness = new Thickness(0, 1, 0, 0);
+            NavGrid.Columns = 5;
+            NavGrid.Rows = 1;
+        }
+    }
+
     private void OnSheetScrimPressed(object? sender, PointerPressedEventArgs e) => _sheets?.CancelOpen();
 
     private void OnModeScrimPressed(object? sender, PointerPressedEventArgs e)
