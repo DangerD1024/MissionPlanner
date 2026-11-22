@@ -178,7 +178,6 @@ public static class PlannerSettings
 public sealed partial class PlannerSettingsViewModel : PageViewModel
 {
     /// <summary>Version, data folders and the Linux menu entry, shown at the bottom (there is no HELP screen).</summary>
-    public HelpViewModel About { get; } = new();
 
     private static readonly ILog Log = LogManager.GetLogger(typeof(PlannerSettingsViewModel));
 

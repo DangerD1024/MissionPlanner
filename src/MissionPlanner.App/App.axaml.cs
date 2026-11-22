@@ -57,6 +57,9 @@ public sealed class App : Application
 
             // outputs (TOOLS > Outputs) that were running when the app closed start again
             window.Opened += (_, _) => _services.Outputs.StartRemembered();
+            // a newer release is offered in a banner; the installer closes the app when it starts
+            window.Opened += (_, _) => DispatcherTimer.RunOnce(() => _ = _services.Updates.CheckAtStartupAsync(), TimeSpan.FromSeconds(3));
+            _services.Updates.ExitRequested += (_, _) => desktop.Shutdown();
 
             desktop.ShutdownRequested += (_, _) =>
             {

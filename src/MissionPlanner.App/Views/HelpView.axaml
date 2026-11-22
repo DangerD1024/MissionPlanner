@@ -2,28 +2,75 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels"
              xmlns:l="using:MissionPlanner.App.Localization"
+             xmlns:upd="using:MissionPlanner.App.Core.Updates"
              x:Class="MissionPlanner.App.Views.HelpView"
              x:DataType="vm:HelpViewModel">
-  <Border Classes="card" VerticalAlignment="Top">
-    <StackPanel Spacing="10">
-      <TextBlock Classes="h2" Text="{l:Tr 'Mission Planner (cross-platform preview)'}" />
-      <TextBlock Classes="muted" Text="{l:Tr 'A new interface for the ArduPilot ground station on .NET and Avalonia.'}" TextWrapping="Wrap" />
-      <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto" Margin="0,6,0,0">
-        <TextBlock Classes="muted" Text="{l:Tr 'Version'}" />
-        <SelectableTextBlock Grid.Column="1" Text="{Binding Version}" />
-        <TextBlock Grid.Row="1" Classes="muted" Text="{l:Tr 'Data folder'}" Margin="0,6,0,0" />
-        <SelectableTextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DataDirectory}" Margin="0,6,0,0" />
-        <TextBlock Grid.Row="2" Classes="muted" Text="{l:Tr 'Logs'}" Margin="0,6,0,0" />
-        <SelectableTextBlock Grid.Row="2" Grid.Column="1" Text="{Binding LogDirectory}" Margin="0,6,0,0" />
-      </Grid>
-      <TextBlock Classes="muted" Margin="0,6,0,0" TextWrapping="Wrap"
-                 Text="{l:Tr 'Documentation: ardupilot.org/planner · Forum: discuss.ardupilot.org'}" />
-      <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0" IsVisible="{Binding IsLinux}">
-        <Button Content="{l:Tr 'Add to applications menu'}" Command="{Binding AddToApplicationsMenuCommand}"
-                ToolTip.Tip="{l:Tr 'Adds Mission Planner, with its icon, to your desktop applications menu'}" />
-        <TextBlock Classes="muted" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="380"
-                   Text="{l:TrBind {Binding DesktopEntryStatus}}" />
-      </StackPanel>
+  <ScrollViewer>
+    <StackPanel Spacing="16" Margin="20" MaxWidth="900" HorizontalAlignment="Left">
+
+      <!-- about -->
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="h2" Text="{l:Tr 'Mission Planner (cross-platform preview)'}" />
+          <TextBlock Classes="muted" Text="{l:Tr 'A new interface for the ArduPilot ground station on .NET and Avalonia.'}" TextWrapping="Wrap" />
+          <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto" Margin="0,6,0,0">
+            <TextBlock Classes="muted" Text="{l:Tr 'Version'}" />
+            <SelectableTextBlock Grid.Column="1" Text="{Binding Version}" />
+            <TextBlock Grid.Row="1" Classes="muted" Text="{l:Tr 'Data folder'}" Margin="0,6,0,0" />
+            <SelectableTextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DataDirectory}" Margin="0,6,0,0" />
+            <TextBlock Grid.Row="2" Classes="muted" Text="{l:Tr 'Logs'}" Margin="0,6,0,0" />
+            <SelectableTextBlock Grid.Row="2" Grid.Column="1" Text="{Binding LogDirectory}" Margin="0,6,0,0" />
+          </Grid>
+          <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,4,0,0">
+            <Button Content="{l:Tr 'Open data folder'}" Command="{Binding OpenCommand}" CommandParameter="{Binding DataDirectory}" />
+            <Button Content="{l:Tr 'Open logs folder'}" Command="{Binding OpenCommand}" CommandParameter="{Binding LogDirectory}" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,4,0,0" IsVisible="{Binding IsLinux}">
+            <Button Content="{l:Tr 'Add to applications menu'}" Command="{Binding AddToApplicationsMenuCommand}"
+                    ToolTip.Tip="{l:Tr 'Adds Mission Planner, with its icon, to your desktop applications menu'}" />
+            <TextBlock Classes="muted" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="380"
+                       Text="{l:TrBind {Binding DesktopEntryStatus}}" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <!-- updates -->
+      <Border Classes="card" IsVisible="{Binding Updates, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <StackPanel x:DataType="upd:UpdateViewModel" DataContext="{Binding Updates}" Spacing="8">
+          <TextBlock Classes="h2" Text="{l:Tr 'Updates'}" />
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button Content="{l:Tr 'Check for updates'}" Command="{Binding CheckNowCommand}" Classes="accent" />
+            <CheckBox Content="{l:Tr 'Check at startup'}" IsChecked="{Binding CheckAtStartup}" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding Available, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <Button Content="{l:Tr 'Download'}" Command="{Binding DownloadCommand}" IsVisible="{Binding CanDownload}" Classes="accent" />
+            <Button Content="{l:Tr 'Cancel'}" Command="{Binding CancelDownloadCommand}" IsVisible="{Binding IsDownloading}" />
+            <Button Content="{l:TrBind {Binding InstallText}}" Command="{Binding InstallCommand}" IsVisible="{Binding IsDownloaded}" Classes="accent" />
+            <Button Content="{l:Tr 'Release notes'}" Command="{Binding OpenReleasePageCommand}" />
+          </StackPanel>
+          <ProgressBar Minimum="0" Maximum="100" Value="{Binding DownloadPercent}" Height="6" MinHeight="6" IsVisible="{Binding IsDownloading}" />
+          <TextBlock Classes="muted" Text="{Binding StatusText}" TextWrapping="Wrap" />
+        </StackPanel>
+      </Border>
+
+      <!-- links -->
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="h2" Text="{l:Tr 'Help and feedback'}" />
+          <TextBlock Classes="muted" TextWrapping="Wrap"
+                     Text="{l:Tr 'Questions, ideas and test reports about Mission Planner 3 are welcome in its forum thread.'}" />
+          <WrapPanel ItemSpacing="10" LineSpacing="10">
+            <Button Content="{l:Tr 'Discuss forum thread'}" Classes="accent" Command="{Binding OpenCommand}"
+                    CommandParameter="{x:Static vm:HelpViewModel.DiscussUrl}" ToolTip.Tip="{x:Static vm:HelpViewModel.DiscussUrl}" />
+            <Button Content="{l:Tr 'Mission Planner documentation'}" Command="{Binding OpenCommand}"
+                    CommandParameter="{x:Static vm:HelpViewModel.DocsUrl}" ToolTip.Tip="{x:Static vm:HelpViewModel.DocsUrl}" />
+            <Button Content="{l:Tr 'Report a bug'}" Command="{Binding OpenCommand}"
+                    CommandParameter="{x:Static vm:HelpViewModel.IssuesUrl}" ToolTip.Tip="{x:Static vm:HelpViewModel.IssuesUrl}" />
+            <Button Content="{l:Tr 'All releases'}" Command="{Binding OpenCommand}"
+                    CommandParameter="{x:Static vm:HelpViewModel.ReleasesUrl}" ToolTip.Tip="{x:Static vm:HelpViewModel.ReleasesUrl}" />
+          </WrapPanel>
+        </StackPanel>
+      </Border>
     </StackPanel>
-  </Border>
+  </ScrollViewer>
 </UserControl>

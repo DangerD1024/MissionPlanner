@@ -45,6 +45,9 @@ public enum Screen
 
     /// <summary>Mission Planner's Ctrl+F screen; not on the top bar.</summary>
     Tools,
+
+    /// <summary>Version, updates, documentation and forum links.</summary>
+    Help,
 }
 
 /// <summary>Main window: top navigation, connect controls and the visible screen.</summary>
@@ -68,6 +71,7 @@ public sealed partial class ShellViewModel : ObservableObject
             [Screen.Simulation] = () => new Simulation.SimulationViewModel(services),
             [Screen.Settings] = () => new ConfigScreens.PlannerSettingsViewModel(services),
             [Screen.Tools] = () => new Tools.ToolsViewModel(services),
+            [Screen.Help] = () => new HelpViewModel { Updates = services.Updates },
         };
         _currentPage = GetPage(Screen.Data);
         _currentPage.OnShown();
@@ -76,6 +80,9 @@ public sealed partial class ShellViewModel : ObservableObject
         services.MenuPageRequested += (_, r) => services.Dispatcher.Post(() => ShowMenuPage(r.Screen, r.Title));
         services.Notified += (_, n) => services.Dispatcher.Post(() => ShowToast(n));
     }
+
+    /// <summary>The update banner at the top of the window.</summary>
+    public Updates.UpdateViewModel Updates => _services.Updates;
 
     // ---- toast (AppServices.Notify) -----------------------------------------------------------
 
@@ -123,7 +130,7 @@ public sealed partial class ShellViewModel : ObservableObject
     }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsData), nameof(IsPlan), nameof(IsSetup), nameof(IsConfig), nameof(IsSimulation), nameof(IsSettings), nameof(IsTools))]
+    [NotifyPropertyChangedFor(nameof(IsData), nameof(IsPlan), nameof(IsSetup), nameof(IsConfig), nameof(IsSimulation), nameof(IsSettings), nameof(IsTools), nameof(IsHelp))]
     private Screen _currentScreen;
 
     [ObservableProperty]
@@ -136,6 +143,7 @@ public sealed partial class ShellViewModel : ObservableObject
     public bool IsSimulation => CurrentScreen == Screen.Simulation;
     public bool IsSettings => CurrentScreen == Screen.Settings;
     public bool IsTools => CurrentScreen == Screen.Tools;
+    public bool IsHelp => CurrentScreen == Screen.Help;
 
     // ---- Mission Planner's hotkeys (MainV2.ProcessCmdKey) ---------------------------------------
 
@@ -243,10 +251,34 @@ public sealed partial class ShellViewModel : ObservableObject
     }
 }
 
-/// <summary>About: version, data and log folders, the Linux menu entry (shown at the bottom of SETTINGS).</summary>
+/// <summary>HELP: version and updates, data and log folders, documentation and forum links, the Linux menu entry.</summary>
 public sealed partial class HelpViewModel() : PageViewModel("Help")
 {
     public bool IsLinux { get; } = OperatingSystem.IsLinux();
+
+    public const string DiscussUrl = "https://discuss.ardupilot.org/t/mission-planner-3-0-rewritten-cross-platform-ui-windows-linux-native-net-10/";
+    public const string DocsUrl = "https://ardupilot.org/planner/";
+    public const string IssuesUrl = "https://github.com/" + MissionPlanner.App.Core.Updates.UpdateCheck.Repository + "/issues";
+    public const string ReleasesUrl = "https://github.com/" + MissionPlanner.App.Core.Updates.UpdateCheck.Repository + "/releases";
+
+    /// <summary>Opens a web page (or a folder) in the system's default app.</summary>
+    [RelayCommand]
+    private void Open(string? target)
+    {
+        if (string.IsNullOrEmpty(target))
+            return;
+        try
+        {
+            using var _ = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = target, UseShellExecute = true });
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            DesktopEntryStatus = target;
+        }
+    }
+
+    /// <summary>Check for updates (null in tests that build the page alone).</summary>
+    public Updates.UpdateViewModel? Updates { get; init; }
 
     [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
     private string _desktopEntryStatus = "";

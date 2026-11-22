@@ -32,7 +32,7 @@ comparison of both code bases (Nov 2026). Ticked items are done. Items marked *w
 - [ ] UDP client and WebSocket link types
 - [ ] Link statistics window
 - [ ] ZeroConf / mDNS discovery of MAVLink and video
-- [ ] Update check (stable / beta)
+- [x] Update check (stable / beta)
 
 ## DATA
 - [x] Actions: Change loiter radius, Resume mission, Abort landing, mount mode, Raw sensor view, send text message, Joystick

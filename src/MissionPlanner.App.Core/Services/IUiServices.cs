@@ -96,6 +96,11 @@ public sealed class AppServices
     /// <summary>The MAVLink mirror and position outputs (TOOLS > Outputs); created on first use.</summary>
     public Outputs.OutputManager Outputs => _outputs ??= new Outputs.OutputManager(this);
 
+    private Updates.UpdateViewModel? _updates;
+
+    /// <summary>The update check (startup banner, SETTINGS > About); created on first use.</summary>
+    public Updates.UpdateViewModel Updates => _updates ??= new Updates.UpdateViewModel(this);
+
     /// <summary>The outputs, when they have been created (null before first use).</summary>
     public Outputs.OutputManager? OutputsIfCreated => _outputs;
 
