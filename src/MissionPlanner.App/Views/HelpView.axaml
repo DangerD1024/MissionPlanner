@@ -25,12 +25,37 @@
             <Button Content="{l:Tr 'Open data folder'}" Command="{Binding OpenCommand}" CommandParameter="{Binding DataDirectory}" />
             <Button Content="{l:Tr 'Open logs folder'}" Command="{Binding OpenCommand}" CommandParameter="{Binding LogDirectory}" />
           </StackPanel>
-          <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,4,0,0" IsVisible="{Binding IsLinux}">
+        </StackPanel>
+      </Border>
+
+      <!-- Linux: USB access, DFU, applications menu -->
+      <Border Classes="card" IsVisible="{Binding IsLinux}">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="h2" Text="{l:Tr 'Linux setup'}" />
+          <TextBlock TextWrapping="Wrap" FontWeight="SemiBold" Text="{l:Tr 'USB autopilots and DFU'}" />
+          <TextBlock Classes="muted" TextWrapping="Wrap"
+                     Text="{l:Tr 'Linux opens USB serial ports (/dev/ttyACM*, /dev/ttyUSB*) only for members of the dialout group (uucp on Arch). A board in STM32 DFU mode, used to recover a bootloader with dfu-util, needs a udev rule, and ModemManager must be told to leave autopilots alone, or it holds the port for about 30 seconds after you plug in.'}" />
+          <TextBlock Classes="muted" TextWrapping="Wrap"
+                     Text="{l:Tr 'Allow USB access does all three: it adds you to the group and installs the rules. It asks for your password (administrator rights). Then log out and back in, or restart, for the group to take effect.'}" />
+          <TextBlock TextWrapping="Wrap" Text="{Binding UsbStatus}" />
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button Content="{l:Tr 'Allow USB access…'}" Classes="accent" Command="{Binding AllowUsbCommand}"
+                    ToolTip.Tip="{l:Tr 'Adds you to the serial port group and installs the DFU and ModemManager udev rules (asks for your password)'}" />
+          </StackPanel>
+          <TextBlock Classes="muted" TextWrapping="Wrap" Text="{Binding UsbResult}" />
+          <Expander Header="{l:Tr 'Or run these commands in a terminal'}">
+            <SelectableTextBlock FontFamily="Cascadia Mono, Consolas, Menlo, DejaVu Sans Mono, monospace" FontSize="12" TextWrapping="Wrap" Text="{Binding UsbCommands}" />
+          </Expander>
+
+          <TextBlock TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,8,0,0" Text="{l:Tr 'Applications menu'}" />
+          <TextBlock Classes="muted" TextWrapping="Wrap"
+                     Text="{l:Tr 'Adds a Mission Planner 3 shortcut, with its icon, to your desktop applications menu (for this user, no password needed). Run it again after moving the app to another folder.'}" />
+          <StackPanel Orientation="Horizontal" Spacing="10">
             <Button Content="{l:Tr 'Add to applications menu'}" Command="{Binding AddToApplicationsMenuCommand}"
                     ToolTip.Tip="{l:Tr 'Adds Mission Planner, with its icon, to your desktop applications menu'}" />
-            <TextBlock Classes="muted" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="380"
-                       Text="{l:TrBind {Binding DesktopEntryStatus}}" />
+            <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Already in the menu'}" IsVisible="{Binding IsInApplicationsMenu}" />
           </StackPanel>
+          <TextBlock Classes="muted" TextWrapping="Wrap" Text="{l:TrBind {Binding DesktopEntryStatus}}" />
         </StackPanel>
       </Border>
 

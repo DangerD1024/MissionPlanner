@@ -277,6 +277,48 @@ public sealed partial class HelpViewModel() : PageViewModel("Help")
         }
     }
 
+    // ---- Linux: USB access and the applications menu ----
+
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    private string _usbStatus = "";
+
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    private string _usbResult = "";
+
+    /// <summary>The commands the Allow USB button runs, for doing it by hand in a terminal.</summary>
+    public string UsbCommands => LinuxUsbSetup.ManualCommands(LinuxUsbSetup.CurrentUser, _usbGroup ??= LinuxUsbSetup.SerialGroup());
+
+    public bool IsInApplicationsMenu => IsLinux && File.Exists(DesktopEntry.EntryPath);
+
+    private string? _usbGroup;
+
+    private void RefreshUsbStatus()
+    {
+        if (!IsLinux)
+            return;
+        _usbGroup ??= LinuxUsbSetup.SerialGroup();
+        var user = LinuxUsbSetup.CurrentUser;
+        UsbStatus = LinuxUsbSetup.Describe(user, _usbGroup, LinuxUsbSetup.IsMember(user, _usbGroup), LinuxUsbSetup.RulesInstalled);
+    }
+
+    public override void OnShown()
+    {
+        base.OnShown();
+        RefreshUsbStatus();
+        OnPropertyChanged(nameof(IsInApplicationsMenu));
+    }
+
+    /// <summary>Adds the user to the serial group and installs the udev rules (asks for the password).</summary>
+    [RelayCommand]
+    private async Task AllowUsb()
+    {
+        _usbGroup ??= LinuxUsbSetup.SerialGroup();
+        UsbResult = "Waiting for the password…";
+        var error = await LinuxUsbSetup.ApplyAsync(LinuxUsbSetup.CurrentUser, _usbGroup);
+        UsbResult = error ?? $"Done. Log out and back in (or restart) so the {_usbGroup} group takes effect, then plug the autopilot in again.";
+        RefreshUsbStatus();
+    }
+
     /// <summary>Check for updates (null in tests that build the page alone).</summary>
     public Updates.UpdateViewModel? Updates { get; init; }
 
@@ -290,6 +332,7 @@ public sealed partial class HelpViewModel() : PageViewModel("Help")
         try
         {
             DesktopEntryStatus = DesktopEntry.Install();
+            OnPropertyChanged(nameof(IsInApplicationsMenu));
         }
         catch (Exception ex)
         {
