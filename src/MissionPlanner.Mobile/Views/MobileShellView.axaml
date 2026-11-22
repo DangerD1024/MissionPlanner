@@ -1,0 +1,179 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Mobile"
+             xmlns:mc="using:MissionPlanner.Mobile.Controls"
+             xmlns:v="using:MissionPlanner.Mobile.Views"
+             xmlns:s="using:MissionPlanner.Mobile.Services"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.Mobile.Views.MobileShellView"
+             x:DataType="vm:MobileShellViewModel"
+             Background="{StaticResource Bg}">
+
+  <Grid RowDefinitions="Auto,Auto,*,Auto">
+
+    <!-- top bar: flight mode (tap to change), GPS, battery, link -->
+    <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Height="52" Margin="10,0" x:DataType="vm:MobileShellViewModel">
+      <Button Classes="flat" Padding="10,0" Height="40" MinHeight="40" Command="{Binding ToggleModePickerCommand}"
+              Background="{StaticResource Surface2}" VerticalAlignment="Center">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <TextBlock Text="{Binding Status.ModeText}" FontSize="16" FontWeight="Bold" VerticalAlignment="Center" />
+          <mc:Icon Data="{StaticResource IcChevronDown}" Width="14" Height="14" />
+        </StackPanel>
+      </Button>
+
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <mc:Icon Data="{StaticResource IcGps}" Width="21" Height="21"
+                Stroke="{Binding Status.GpsLevel, Converter={x:Static mc:LevelBrush.Fore}}" />
+          <TextBlock Text="{Binding Status.GpsText}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <mc:Icon Data="{StaticResource IcBattery}" Width="23" Height="21"
+                Stroke="{Binding Status.BatteryLevel, Converter={x:Static mc:LevelBrush.Fore}}" />
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding Status.BatteryText}" FontSize="13" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding Status.VoltageText}" FontSize="10" Classes="muted"
+                       IsVisible="{Binding Status.VoltageText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          </StackPanel>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <mc:Icon Data="{StaticResource IcSignal}" Width="21" Height="21"
+                Stroke="{Binding Status.LinkLevel, Converter={x:Static mc:LevelBrush.Fore}}" />
+          <TextBlock Text="{Binding Status.LinkText}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+        </StackPanel>
+      </StackPanel>
+    </Grid>
+
+    <!-- readiness strip, coloured as DJI's "Ready to Go" line -->
+    <Border Grid.Row="1" Height="28" Background="{Binding Status.ReadyLevel, Converter={x:Static mc:LevelBrush.Back}}">
+      <Grid ColumnDefinitions="Auto,*,Auto" Margin="14,0">
+        <Ellipse Width="8" Height="8" VerticalAlignment="Center"
+                 Fill="{Binding Status.ReadyLevel, Converter={x:Static mc:LevelBrush.Fore}}" />
+        <TextBlock Grid.Column="1" Margin="8,0" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold"
+                   Text="{l:TrBind {Binding Status.ReadyText}}"
+                   Foreground="{Binding Status.ReadyLevel, Converter={x:Static mc:LevelBrush.Fore}}" />
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+          <TextBlock Text="{Binding Status.ArmText}" FontSize="12" FontWeight="Bold"
+                     Foreground="{Binding Status.IsArmed, Converter={x:Static mc:BoolBrush.ArmedRed}}" />
+          <TextBlock Text="{Binding Status.FlightTimeText}" FontSize="12" Classes="muted" FontFamily="monospace" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- the pages: kept alive so the map and lists keep their place -->
+    <Panel Grid.Row="2">
+      <v:FlyView IsVisible="{Binding IsFly}" />
+      <v:PlanView DataContext="{Binding Plan}" IsVisible="{Binding $parent[UserControl].((vm:MobileShellViewModel)DataContext).IsPlan}" />
+      <v:SetupView DataContext="{Binding Setup}" IsVisible="{Binding $parent[UserControl].((vm:MobileShellViewModel)DataContext).IsSetup}" />
+      <v:MessagesView IsVisible="{Binding IsMessages}" />
+      <v:LinkView DataContext="{Binding Link}" IsVisible="{Binding $parent[UserControl].((vm:MobileShellViewModel)DataContext).IsLink}" />
+
+      <!-- toast -->
+      <Border VerticalAlignment="Top" HorizontalAlignment="Center" Margin="16,10" Padding="16,10" CornerRadius="12"
+              Background="{StaticResource Glass}" BorderThickness="0,0,0,3" MaxWidth="380"
+              BorderBrush="{Binding ToastIsError, Converter={x:Static mc:BoolBrush.ErrorRed}}"
+              IsVisible="{Binding IsToastVisible}" PointerPressed="OnToastPressed">
+        <TextBlock Text="{l:TrBind {Binding ToastText}}" TextWrapping="Wrap" FontWeight="SemiBold" FontSize="14" />
+      </Border>
+    </Panel>
+
+    <!-- bottom navigation -->
+    <Border Grid.Row="3" Background="{StaticResource Surface}" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0">
+      <UniformGrid Columns="5">
+        <Button Classes="tab" Classes.on="{Binding IsFly}" Command="{Binding SelectTabCommand}" CommandParameter="{x:Static vm:MobileTab.Fly}">
+          <StackPanel Spacing="3">
+            <mc:Icon Data="{StaticResource IcFly}" />
+            <TextBlock Text="{l:Tr 'Fly'}" />
+          </StackPanel>
+        </Button>
+        <Button Classes="tab" Classes.on="{Binding IsPlan}" Command="{Binding SelectTabCommand}" CommandParameter="{x:Static vm:MobileTab.Plan}">
+          <StackPanel Spacing="3">
+            <mc:Icon Data="{StaticResource IcPlan}" />
+            <TextBlock Text="{l:Tr 'Plan'}" />
+          </StackPanel>
+        </Button>
+        <Button Classes="tab" Classes.on="{Binding IsSetup}" Command="{Binding SelectTabCommand}" CommandParameter="{x:Static vm:MobileTab.Setup}">
+          <StackPanel Spacing="3">
+            <mc:Icon Data="{StaticResource IcSetup}" />
+            <TextBlock Text="{l:Tr 'Setup'}" />
+          </StackPanel>
+        </Button>
+        <Button Classes="tab" Classes.on="{Binding IsMessages}" Command="{Binding SelectTabCommand}" CommandParameter="{x:Static vm:MobileTab.Messages}">
+          <Panel>
+            <StackPanel Spacing="3">
+              <mc:Icon Data="{StaticResource IcMessages}" />
+              <TextBlock Text="{l:Tr 'Messages'}" />
+            </StackPanel>
+            <Border Background="{StaticResource Bad}" CornerRadius="9" MinWidth="21" Height="21" Padding="5,0"
+                    HorizontalAlignment="Center" VerticalAlignment="Top" Margin="26,-4,0,0"
+                    IsVisible="{Binding UnreadMessages, Converter={x:Static mc:Positive.Instance}}">
+              <TextBlock Text="{Binding UnreadMessages}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
+            </Border>
+          </Panel>
+        </Button>
+        <Button Classes="tab" Classes.on="{Binding IsLink}" Command="{Binding SelectTabCommand}" CommandParameter="{x:Static vm:MobileTab.Link}">
+          <StackPanel Spacing="3">
+            <mc:Icon Data="{StaticResource IcLink}"
+                  Stroke="{Binding Status.IsConnected, Converter={x:Static mc:BoolBrush.ConnectedGreen}}" />
+            <TextBlock Text="{l:Tr 'Link'}" />
+          </StackPanel>
+        </Button>
+      </UniformGrid>
+    </Border>
+
+    <!-- flight mode sheet -->
+    <Panel Grid.RowSpan="4" IsVisible="{Binding IsModePickerOpen}">
+      <Border Background="#99000000" PointerPressed="OnModeScrimPressed" />
+      <Border Classes="card" VerticalAlignment="Bottom" CornerRadius="20,20,0,0" Padding="16,12,16,24">
+        <StackPanel Spacing="12">
+          <Border Width="40" Height="4" CornerRadius="2" Background="{StaticResource Line}" HorizontalAlignment="Center" />
+          <TextBlock Classes="h2" Text="{l:Tr 'Flight mode'}" />
+          <ItemsControl ItemsSource="{Binding ModeOptions}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid Columns="3" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:MobileShellViewModel+ModeOption">
+                <Button Margin="4" Padding="4,0" HorizontalAlignment="Stretch" Classes.primary="{Binding IsCurrent}"
+                        Command="{Binding $parent[UserControl].((vm:MobileShellViewModel)DataContext).ChooseModeCommand}"
+                        CommandParameter="{Binding Name}">
+                  <Viewbox StretchDirection="DownOnly" MaxHeight="20">
+                    <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" />
+                  </Viewbox>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </Panel>
+
+    <!-- confirm / prompt / message sheets (the dialog service) -->
+    <Panel Grid.RowSpan="4" x:Name="SheetLayer" IsVisible="False">
+      <Border Background="#99000000" PointerPressed="OnSheetScrimPressed" />
+      <Border Classes="card" VerticalAlignment="Bottom" CornerRadius="20,20,0,0" Padding="20,12,20,28" x:Name="SheetCard">
+        <StackPanel Spacing="14" x:DataType="s:Sheet" x:Name="SheetBody">
+          <Border Width="40" Height="4" CornerRadius="2" Background="{StaticResource Line}" HorizontalAlignment="Center" />
+          <TextBlock Classes="h1" Text="{l:TrBind {Binding Title}}" TextWrapping="Wrap" />
+          <ScrollViewer MaxHeight="300">
+            <TextBlock Text="{l:TrBind {Binding Message}}" TextWrapping="Wrap" FontSize="15" Classes="muted" />
+          </ScrollViewer>
+          <TextBox x:Name="PromptBox" Text="{Binding Text}" IsVisible="{Binding IsPrompt}" />
+          <mc:SlideToConfirm x:Name="Slider" IsVisible="{Binding IsConfirm}" Text="{l:TrBind {Binding SlideText}}" />
+          <Grid ColumnDefinitions="*,12,*">
+            <Button Content="{l:Tr 'Cancel'}" HorizontalAlignment="Stretch" Command="{Binding CancelCommand}"
+                    IsVisible="{Binding IsPrompt}" />
+            <Button Grid.ColumnSpan="3" Content="{l:Tr 'Cancel'}" HorizontalAlignment="Stretch" Command="{Binding CancelCommand}"
+                    IsVisible="{Binding IsConfirm}" />
+            <Button Grid.Column="2" Classes="primary" Content="{l:Tr 'OK'}" HorizontalAlignment="Stretch"
+                    Command="{Binding AcceptCommand}" IsVisible="{Binding IsPrompt}" />
+            <Button Grid.ColumnSpan="3" Classes="primary" Content="{l:Tr 'OK'}" HorizontalAlignment="Stretch"
+                    Command="{Binding AcceptCommand}" IsVisible="{Binding IsMessage}" />
+          </Grid>
+        </StackPanel>
+      </Border>
+    </Panel>
+  </Grid>
+</UserControl>

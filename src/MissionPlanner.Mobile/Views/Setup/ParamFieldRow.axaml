@@ -1,0 +1,64 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
+             xmlns:mc="using:MissionPlanner.Mobile.Controls"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.Mobile.Views.Setup.ParamFieldRow"
+             x:DataType="hw:ParamField">
+
+  <!-- one parameter on a phone: its label and name above a full-width editor -->
+  <StackPanel x:Name="Root" Spacing="4" Margin="0,6" IsVisible="False">
+    <Grid ColumnDefinitions="*,Auto" x:Name="LabelRow">
+      <StackPanel>
+        <TextBlock Text="{l:TrBind {Binding Label}}" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" />
+        <TextBlock Text="{Binding Name}" Classes="muted" FontSize="11" />
+      </StackPanel>
+      <TextBlock Grid.Column="1" Text="{Binding Units}" Classes="muted" VerticalAlignment="Bottom" FontSize="12" />
+    </Grid>
+    <Border CornerRadius="12" BorderThickness="1" BorderBrush="Transparent" x:Name="Frame"
+            Classes.error="{Binding HasError}" Classes.busy="{Binding IsBusy}">
+      <Panel IsEnabled="{Binding IsEditable}">
+        <NumericUpDown IsVisible="{Binding IsNumber}" Value="{Binding NumberValue}" Minimum="{Binding Minimum}"
+                       Maximum="{Binding Maximum}" Increment="{Binding Increment}" FormatString="{Binding FormatString}"
+                       ClipValueToMinMax="True" MinHeight="48" FontSize="16" TextInputOptions.ContentType="Number" />
+        <ComboBox IsVisible="{Binding IsOptions}" ItemsSource="{Binding Options}" SelectedItem="{Binding SelectedOption}"
+                  HorizontalAlignment="Stretch" MinHeight="48" FontSize="15" MaxDropDownHeight="420">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="hw:ParamOption">
+              <TextBlock Text="{l:TrBind {Binding Label}}" TextTrimming="CharacterEllipsis" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <ToggleSwitch IsVisible="{Binding IsToggle}" IsChecked="{Binding IsOn}" OnContent="" OffContent="" />
+        <Button IsVisible="{Binding IsBitmask}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="{Binding BitSummary}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" FontWeight="Normal" />
+            <mc:Icon Grid.Column="1" Data="{StaticResource IcChevronDown}" Width="16" Height="16" />
+          </Grid>
+          <Button.Flyout>
+            <Flyout Placement="Bottom">
+              <ScrollViewer MaxHeight="420" MinWidth="260">
+                <ItemsControl ItemsSource="{Binding Bits}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="hw:BitOption">
+                      <CheckBox IsChecked="{Binding IsChecked}" Content="{l:TrBind {Binding Label}}" MinHeight="40" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </Flyout>
+          </Button.Flyout>
+        </Button>
+      </Panel>
+    </Border>
+  </StackPanel>
+
+  <UserControl.Styles>
+    <Style Selector="Border.error">
+      <Setter Property="BorderBrush" Value="{StaticResource Bad}" />
+    </Style>
+    <Style Selector="Border.busy">
+      <Setter Property="BorderBrush" Value="{StaticResource Warn}" />
+    </Style>
+  </UserControl.Styles>
+</UserControl>

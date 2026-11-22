@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cal="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Calibration"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.Mobile.Views.Setup.StatusBanner"
+             x:DataType="cal:StatusLine"
+             IsVisible="{Binding IsVisible}">
+  <!-- a calibration's result line, tinted by kind -->
+  <Border CornerRadius="10" Padding="12,9" BorderThickness="0,0,0,0" Background="{StaticResource AccentDim}"
+          Classes.ok="{Binding IsSuccess}" Classes.warn="{Binding IsWarning}" Classes.bad="{Binding IsError}">
+    <TextBlock Text="{l:TrBind {Binding Text}}" TextWrapping="Wrap" FontSize="14" />
+  </Border>
+  <UserControl.Styles>
+    <Style Selector="Border.ok">
+      <Setter Property="Background" Value="{StaticResource OkDim}" />
+    </Style>
+    <Style Selector="Border.warn">
+      <Setter Property="Background" Value="{StaticResource WarnDim}" />
+    </Style>
+    <Style Selector="Border.bad">
+      <Setter Property="Background" Value="{StaticResource BadDim}" />
+    </Style>
+  </UserControl.Styles>
+</UserControl>

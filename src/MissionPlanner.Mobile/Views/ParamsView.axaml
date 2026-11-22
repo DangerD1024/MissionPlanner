@@ -1,0 +1,81 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Mobile"
+             xmlns:mc="using:MissionPlanner.Mobile.Controls"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.Mobile.Views.ParamsView"
+             x:DataType="vm:MobileParamsViewModel">
+  <Panel>
+    <Grid RowDefinitions="Auto,Auto,*" Margin="12,10,12,0">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBox Text="{Binding Search}" PlaceholderText="{l:Tr 'Search parameters'}" Padding="40,0,12,0" />
+        <mc:Icon Data="{StaticResource IcSearch}" Width="18" Height="18" HorizontalAlignment="Left" Margin="12,0"
+              Stroke="{StaticResource Muted}" IsHitTestVisible="False" />
+        <Button Grid.Column="1" Classes="fab" Margin="8,0,0,0" Background="{StaticResource Surface2}" Command="{Binding RefreshCommand}">
+          <mc:Icon Data="{StaticResource IcRefresh}" />
+        </Button>
+      </Grid>
+      <TextBlock Grid.Row="1" Classes="muted" FontSize="12" Margin="4,8" Text="{Binding Summary}" TextWrapping="Wrap" />
+      <ListBox Grid.Row="2" Background="Transparent" ItemsSource="{Binding Shown}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:MobileParam">
+            <Button Classes="flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="8,6" CornerRadius="10"
+                    Command="{Binding $parent[UserControl].((vm:MobileParamsViewModel)DataContext).EditCommand}" CommandParameter="{Binding}">
+              <Grid ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="15" />
+                  <TextBlock Text="{Binding Title}" Classes="muted" FontSize="12" TextTrimming="CharacterEllipsis"
+                             IsVisible="{Binding Title, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="{Binding ValueText}" VerticalAlignment="Center" FontSize="15" Foreground="{StaticResource Accent}"
+                           MaxWidth="170" TextTrimming="CharacterEllipsis" Margin="8,0,0,0" />
+              </Grid>
+            </Button>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Grid>
+
+    <!-- edit sheet -->
+    <Panel IsVisible="{Binding IsEditing}">
+      <Border Background="#99000000" PointerPressed="OnScrim" />
+      <Border Classes="card" VerticalAlignment="Bottom" CornerRadius="20,20,0,0" Padding="20,12,20,24">
+        <StackPanel Spacing="12">
+          <Border Width="40" Height="4" CornerRadius="2" Background="{StaticResource Line}" HorizontalAlignment="Center" />
+          <TextBlock Classes="h1" Text="{Binding Editing.Name}" />
+          <TextBlock Text="{Binding Editing.Title}" FontWeight="SemiBold"
+                     IsVisible="{Binding Editing.Title, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          <ScrollViewer MaxHeight="120">
+            <TextBlock Text="{Binding EditDescription}" Classes="muted" TextWrapping="Wrap" FontSize="13" />
+          </ScrollViewer>
+          <TextBlock Text="{Binding EditRange}" Classes="muted" FontSize="12" />
+          <TextBox Text="{Binding EditValue}" TextInputOptions.ContentType="Number" />
+          <ScrollViewer MaxHeight="200" IsVisible="{Binding HasChoices}">
+            <ItemsControl ItemsSource="{Binding EditChoices}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:ParamChoice">
+                  <Button Margin="3" FontSize="13" MinHeight="40" Padding="12,0"
+                          Command="{Binding $parent[UserControl].((vm:MobileParamsViewModel)DataContext).ChooseCommand}" CommandParameter="{Binding}">
+                    <TextBlock Text="{Binding Text}" />
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+          <TextBlock Text="{Binding EditError}" Foreground="{StaticResource Bad}" TextWrapping="Wrap"
+                     IsVisible="{Binding EditError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          <Grid ColumnDefinitions="*,12,*">
+            <Button Content="{l:Tr 'Cancel'}" HorizontalAlignment="Stretch" Command="{Binding CancelEditCommand}" />
+            <Button Grid.Column="2" Classes="primary" Content="{l:Tr 'Write'}" HorizontalAlignment="Stretch"
+                    Command="{Binding SaveCommand}" IsEnabled="{Binding !IsBusy}" />
+          </Grid>
+        </StackPanel>
+      </Border>
+    </Panel>
+  </Panel>
+</UserControl>

@@ -1,0 +1,72 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Mobile"
+             xmlns:su="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:fd="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             xmlns:mc="using:MissionPlanner.Mobile.Controls"
+             xmlns:v="using:MissionPlanner.Mobile.Views"
+             xmlns:sv="using:MissionPlanner.Mobile.Views.Setup"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.Mobile.Views.SetupView"
+             x:DataType="vm:MobileSetupViewModel">
+  <Grid RowDefinitions="Auto,*">
+
+    <!-- a page's header: back to the list -->
+    <Border Grid.Row="0" Background="{StaticResource Surface}" IsVisible="{Binding !IsList}" Padding="4,4,12,4">
+      <Grid ColumnDefinitions="Auto,*">
+        <Button Classes="flat" Width="48" Padding="0" Command="{Binding CloseCommand}">
+          <mc:Icon Data="{StaticResource IcBack}" />
+        </Button>
+        <TextBlock Grid.Column="1" Classes="h2" Text="{l:TrBind {Binding Title}}" VerticalAlignment="Center" Margin="4,0" />
+      </Grid>
+    </Border>
+
+    <!-- the list -->
+    <ScrollViewer Grid.Row="1" IsVisible="{Binding IsList}">
+      <StackPanel Margin="12" Spacing="8">
+        <TextBlock Classes="h1" Text="{l:Tr 'Setup'}" Margin="4,0,0,4" />
+        <Border Classes="card" Padding="12" Background="{StaticResource WarnDim}"
+                IsVisible="{Binding Hint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <TextBlock Text="{l:TrBind {Binding Hint}}" TextWrapping="Wrap" />
+        </Border>
+        <ItemsControl ItemsSource="{Binding Entries}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:MobileSetupEntry">
+              <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Margin="0,0,0,8" Padding="14,10" Height="68"
+                      Background="{StaticResource Surface}" CornerRadius="14" Opacity="{Binding IsAvailable, Converter={x:Static sv:SetupOpacity.Instance}}"
+                      Command="{Binding $parent[UserControl].((vm:MobileSetupViewModel)DataContext).OpenCommand}" CommandParameter="{Binding}">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                  <Border Width="42" Height="42" CornerRadius="12" Background="{StaticResource AccentDim}" Margin="0,0,14,0">
+                    <mc:Icon Data="{Binding Icon, Converter={x:Static sv:IconKey.Instance}}" Stroke="{StaticResource Accent}" Width="28" Height="28" />
+                  </Border>
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{l:TrBind {Binding Title}}" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Text="{l:TrBind {Binding Subtitle}}" Classes="muted" FontSize="12" FontWeight="Normal" TextTrimming="CharacterEllipsis" />
+                  </StackPanel>
+                  <mc:Icon Grid.Column="2" Data="{StaticResource IcChevronRight}" Width="18" Height="18" Stroke="{StaticResource Muted}" />
+                </Grid>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- an open page -->
+    <v:ParamsView Grid.Row="1" DataContext="{Binding Parameters}"
+                  IsVisible="{Binding $parent[UserControl].((vm:MobileSetupViewModel)DataContext).IsParameters}" />
+    <ContentControl Grid.Row="1" Content="{Binding Current}">
+      <ContentControl.DataTemplates>
+        <DataTemplate x:DataType="su:AccelCalibrationViewModel"><sv:AccelPage /></DataTemplate>
+        <DataTemplate x:DataType="su:CompassViewModel"><sv:CompassPage /></DataTemplate>
+        <DataTemplate x:DataType="su:RadioCalibrationViewModel"><sv:RadioPage /></DataTemplate>
+        <DataTemplate x:DataType="fd:RawSensorsViewModel"><sv:SensorsPage /></DataTemplate>
+        <DataTemplate x:DataType="su:FlightModesViewModel"><sv:FlightModesPage /></DataTemplate>
+        <DataTemplate x:DataType="su:FailsafeViewModel"><sv:FailsafePage /></DataTemplate>
+        <DataTemplate x:DataType="su:BatteryMonitorViewModel"><sv:BatteryPage /></DataTemplate>
+        <DataTemplate x:DataType="su:FrameTypeViewModel"><sv:FramePage /></DataTemplate>
+        <DataTemplate x:DataType="su:MotorTestViewModel"><sv:MotorTestPage /></DataTemplate>
+      </ContentControl.DataTemplates>
+    </ContentControl>
+  </Grid>
+</UserControl>

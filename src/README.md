@@ -27,6 +27,9 @@ left menus on SETUP and CONFIG (pages appear only when they apply to the connect
 | `MissionPlanner.App.Core` | Services (session, parameters, mission, map tiles) and view-models. No UI framework types. |
 | `MissionPlanner.App` | Avalonia views, controls (map, HUD, layers) and the desktop entry point. |
 | `MissionPlanner.App.Tests` | MSTest: protocol flows against scripted fake vehicles (TCP/UDP/serial pty), page logic, parsers. |
+| `MissionPlanner.Mobile` | The phone app's UI (portrait): Fly, Plan, Setup, Messages, Link. Reuses Core's view-models and links the desktop HUD, map and layers. |
+| `MissionPlanner.Mobile.Desktop` | The phone app in a phone-sized window, for developing the mobile UI on a computer. |
+| `MissionPlanner.Mobile.Android` | The Android app (not in the solution: it needs the .NET Android workload). |
 
 ## Build, run, test (any OS with the .NET 10 SDK)
 
@@ -43,6 +46,24 @@ MP_TEST_SERIAL_PORT=/dev/serial/by-id/usb-ArduPilot_...-if00 dotnet test src/Mis
 ```
 
 `MP_LOG_TILES=1` prints map tile request failures to the console.
+
+### Phone app
+
+```sh
+dotnet run --project src/MissionPlanner.Mobile.Desktop          # phone-sized preview window
+MP_CONNECT=tcp:127.0.0.1:5760 dotnet run --project src/MissionPlanner.Mobile.Desktop   # connected to SITL at start
+```
+
+The phone app is portrait only: a status bar (mode, GPS, battery, link) and a readiness strip;
+**Fly** (HUD, telemetry strip, map with tap-to-go-here, Arm / Takeoff / Land / RTL / Pause, every one
+confirmed by a slide), **Plan** (tap to add waypoints, read / write), **Setup** (accelerometer and level,
+compass, radio, sensors, flight modes, failsafe, battery, frame, motor test, all parameters),
+**Messages** and **Link** (UDP for Wi-Fi telemetry bridges, TCP, recent links). The preview keeps its own
+settings (`%LOCALAPPDATA%/MissionPlannerPhonePreview`).
+
+Android: `dotnet workload install android`, a JDK 17+ and an Android SDK (platform 36), then
+`JAVA_HOME=... ANDROID_HOME=... installer/android/build-apk.sh` builds `bin/MissionPlanner-<version>-android-arm64.apk`
+(signed with the build machine's debug key, for installing by hand). USB telemetry radios on the phone are not supported yet.
 
 ## Data and settings
 

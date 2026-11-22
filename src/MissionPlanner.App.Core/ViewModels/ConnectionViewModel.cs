@@ -188,7 +188,8 @@ public sealed partial class ConnectionViewModel : ObservableObject
             _services.Session.SelectVehicle(value.SysId, value.CompId);
     }
 
-    [RelayCommand]
+    // runs again while connecting: the same button is Cancel then
+    [RelayCommand(AllowConcurrentExecutions = true)]
     private async Task ToggleConnectAsync()
     {
         switch (State)

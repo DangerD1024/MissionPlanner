@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:sv="using:MissionPlanner.Mobile.Views.Setup"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.Mobile.Views.Setup.FlightModesPage"
+             x:DataType="vm:FlightModesViewModel">
+  <Grid RowDefinitions="Auto,*,Auto">
+    <!-- the mode now and the switch position -->
+    <Border Grid.Row="0" Classes="card" Margin="12,12,12,0">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel>
+          <TextBlock Classes="label" Text="{l:Tr 'CURRENT MODE'}" />
+          <TextBlock Text="{Binding CurrentMode}" FontSize="22" FontWeight="Bold" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+          <TextBlock Classes="label" Text="{l:Tr 'SWITCH PWM'}" HorizontalAlignment="Right" />
+          <TextBlock Text="{Binding SwitchText}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <ScrollViewer Grid.Row="1">
+      <StackPanel Margin="12" Spacing="8">
+        <ItemsControl ItemsSource="{Binding Slots}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:FlightModeSlot">
+              <Border Classes="card" Padding="14,10" Margin="0,0,0,8"
+                      BorderThickness="2" BorderBrush="{Binding IsActive, Converter={x:Static sv:SetupBrushes.AccentOrNone}}">
+                <StackPanel Spacing="2">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="{l:TrBind {Binding Title}}" FontWeight="Bold" />
+                    <TextBlock Grid.Column="1" Text="{Binding Band}" Classes="muted" FontSize="12" />
+                  </Grid>
+                  <sv:ParamFieldRow DataContext="{Binding Mode}" ShowLabel="False" />
+                  <StackPanel Orientation="Horizontal" Spacing="14"
+                              IsVisible="{Binding $parent[ItemsControl].((vm:FlightModesViewModel)DataContext).ShowSimple}">
+                    <CheckBox Content="{l:Tr 'Simple'}" IsChecked="{Binding Simple}" IsEnabled="{Binding SimpleAllowed}" />
+                    <CheckBox Content="{l:Tr 'Super Simple'}" IsChecked="{Binding SuperSimple}" IsEnabled="{Binding SimpleAllowed}" />
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Border Classes="card" IsVisible="{Binding Channel, Converter={x:Static ObjectConverters.IsNotNull}}">
+          <sv:ParamFieldRow DataContext="{Binding Channel}" />
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+
+    <Grid Grid.Row="2" ColumnDefinitions="*,8,*" Margin="12,0,12,10">
+      <Button Classes="primary" HorizontalAlignment="Stretch" Content="{l:TrBind {Binding SaveText}}" Command="{Binding SaveCommand}" />
+      <Button Grid.Column="2" HorizontalAlignment="Stretch" Content="{l:Tr 'Undo changes'}" Command="{Binding RevertCommand}" IsEnabled="{Binding HasChanges}" />
+    </Grid>
+  </Grid>
+</UserControl>
