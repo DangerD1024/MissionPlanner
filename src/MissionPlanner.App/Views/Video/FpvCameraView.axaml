@@ -6,7 +6,7 @@
              x:DataType="vm:FpvCameraViewModel">
   <Grid RowDefinitions="Auto,*,Auto" Margin="18">
     <StackPanel Spacing="4" Margin="0,0,0,10">
-      <TextBlock Classes="h2" Text="{l:Tr 'FPV camera of the 3D view'}" />
+      <TextBlock Classes="h2" Text="{l:Tr '3D view settings'}" />
       <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
                  Text="{l:Tr 'Changes show at once on the HUD. The pitch ladder follows the camera, so it stays on the 3D horizon.'}" />
     </StackPanel>
@@ -25,6 +25,13 @@
       </Grid>
       <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"
                  Text="{l:Tr 'FPV quads usually fly with the camera tilted up 20–40° and a 110–150° lens.'}" />
+      <Grid ColumnDefinitions="150,*,56" Margin="0,16,0,0">
+        <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Drawing distance'}" />
+        <Slider Grid.Column="1" Minimum="2" Maximum="32" Value="{Binding DrawDistanceKm}" TickFrequency="1" IsSnapToTickEnabled="True" />
+        <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding DrawDistanceText}" />
+      </Grid>
+      <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                 Text="{l:Tr 'Drawing distance applies to the HUD, 3D map and stream.'}" />
     </StackPanel>
 
     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">

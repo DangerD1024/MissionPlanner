@@ -1,4 +1,5 @@
 using MissionPlanner.App.Core.Video;
+using MissionPlanner.App.Core.Synthetic;
 
 namespace MissionPlanner.App.Core.ViewModels.Video;
 
@@ -13,6 +14,7 @@ public sealed partial class HudVideoViewModel
     public const string ThreeDFallbackKey = "next_3d_fallback";
     public const string FovKey = "next_3d_fov";
     public const string TiltKey = "next_3d_tilt";
+    public const string DrawDistanceKey = "next_3d_draw_distance_km";
 
     /// <summary>Default horizontal field of view offered when a custom one is switched on (a typical FPV lens).</summary>
     public const double DefaultFov = 110;
@@ -83,8 +85,27 @@ public sealed partial class HudVideoViewModel
         }
     }
 
-    /// <summary>Opens the FPV camera settings (applied live).</summary>
-    public Task OpenCameraSettingsAsync() => Services.Windows.ShowDialogAsync(new FpvCameraViewModel(this), 520, 360);
+    /// <summary>Drawing distance in kilometres, shared by all 3D views and saved between runs.</summary>
+    public double DrawDistanceKm
+    {
+        get => double.TryParse(_store.Get(DrawDistanceKey), System.Globalization.NumberStyles.Float,
+                   System.Globalization.CultureInfo.InvariantCulture, out var v) && double.IsFinite(v)
+            ? Math.Clamp(v, SyntheticScene.MinDrawDistance / 1000, SyntheticScene.MaxDrawDistance / 1000)
+            : SyntheticScene.DefaultDrawDistance / 1000;
+        set
+        {
+            var km = double.IsFinite(value)
+                ? Math.Clamp(value, SyntheticScene.MinDrawDistance / 1000, SyntheticScene.MaxDrawDistance / 1000)
+                : SyntheticScene.DefaultDrawDistance / 1000;
+            _store.Set(DrawDistanceKey, km.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            _store.Save();
+            SyntheticScene.For(Services).DrawDistance = km * 1000;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Opens the 3D view settings (applied live).</summary>
+    public Task OpenCameraSettingsAsync() => Services.Windows.ShowDialogAsync(new FpvCameraViewModel(this), 560, 460);
 
     /// <summary>Whether the HUD shows the 3D view now (rather than video or the plain sky and ground).</summary>
     public bool UsesSynthetic => ThreeD || (ThreeDFallback && State != VideoStreamState.Playing);

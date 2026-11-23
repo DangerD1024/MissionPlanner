@@ -89,6 +89,15 @@ public sealed class AutoConnectService : IDisposable
                     continue;
                 }
 
+                // SITL bench: ArduPlane's serial0 TCP server. Read-only probe, and only
+                // 5760 -- the spare SITL ports belong to the tracker / test scripts and
+                // a probe would steal their single-client TCP slot.
+                if (TcpProbe.HasVehicleHeartbeat("127.0.0.1", 5760, ProbeTime, stop))
+                {
+                    Report(LinkSpec.Tcp("127.0.0.1", 5760), "TCP 5760");
+                    continue;
+                }
+
                 foreach (var (port, bauds) in Candidates(ListPorts()))
                 {
                     if (stop.IsCancellationRequested || _paused || !_canConnect())
@@ -219,6 +228,52 @@ public sealed class AutoConnectService : IDisposable
     }
 
     public void Dispose() => Stop();
+}
+
+/// <summary>Listens on a TCP port for a vehicle heartbeat without writing anything (SITL).</summary>
+public static class TcpProbe
+{
+    public static bool HasVehicleHeartbeat(string host, int port, TimeSpan time, CancellationToken cancel)
+    {
+        try
+        {
+            using var client = new TcpClient();
+            var connect = client.ConnectAsync(host, port);
+            if (!connect.Wait(TimeSpan.FromMilliseconds(500)) || !client.Connected)
+                return false;
+            using var stream = client.GetStream();
+            stream.ReadTimeout = 200;
+            var parse = new MAVLink.MavlinkParse();
+            var buffer = new byte[4096];
+            var accum = new MemoryStream();
+            var end = DateTime.UtcNow + time;
+            while (DateTime.UtcNow < end && !cancel.IsCancellationRequested)
+            {
+                int n;
+                try
+                {
+                    n = stream.Read(buffer, 0, buffer.Length);
+                }
+                catch (IOException)
+                {
+                    continue;
+                }
+                if (n == 0)
+                    return false;
+                accum.Write(buffer, 0, n);
+                if (accum.Length > 64 && SerialProbe.ContainsVehicleHeartbeat(parse, accum.ToArray()))
+                    return true;
+                if (accum.Length > 64 * 1024)
+                    accum.SetLength(0);
+            }
+        }
+        catch (Exception)
+        {
+            // nothing listening there
+        }
+
+        return false;
+    }
 }
 
 /// <summary>Listens on a serial port for a vehicle heartbeat without writing anything.</summary>

@@ -101,7 +101,7 @@ public static class HudVideoMenu
         fallback.ToggleType = MenuItemToggleType.CheckBox;
         fallback.IsChecked = vm.ThreeDFallback;
         root.Items.Add(fallback);
-        root.Items.Add(Item("FPV camera (field of view, tilt)…", () => _ = vm.OpenCameraSettingsAsync()));
+        root.Items.Add(Item("3D view settings…", () => _ = vm.OpenCameraSettingsAsync()));
 
         var scene = MissionPlanner.App.Core.Synthetic.SyntheticScene.For(vm.Services);
         if ((scene.Error ?? scene.Renderer) is { } state)

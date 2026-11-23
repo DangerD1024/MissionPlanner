@@ -1,4 +1,5 @@
 using MissionPlanner.App.Core.Video;
+using MissionPlanner.App.Core.Synthetic;
 using MissionPlanner.App.Core.ViewModels.Video;
 
 namespace MissionPlanner.App.Tests.Video;
@@ -412,5 +413,48 @@ public sealed class FpvCameraTests
         vm.FpvTilt = -90;
         Assert.AreEqual(160, vm.FpvFov!.Value);
         Assert.AreEqual(-30, vm.FpvTilt);
+    }
+
+    [TestMethod]
+    public void DrawingDistanceAppliesToTheScenePersistsAndCanBeCancelledOrReset()
+    {
+        var vm = Create(out var store);
+        Assert.AreEqual(8, vm.DrawDistanceKm);
+        var scene = SyntheticScene.For(vm.Services);
+        var dialog = new FpvCameraViewModel(vm) { DrawDistanceKm = 16 };
+        Assert.AreEqual(16000, scene.DrawDistance);
+        Assert.AreEqual("16", store.Get(HudVideoViewModel.DrawDistanceKey));
+
+        using var reloaded = new HudVideoViewModel(new VideoTestUi().CreateServices(), store, new FakeVideoStream());
+        Assert.AreEqual(16, reloaded.DrawDistanceKm);
+        Assert.AreEqual(16000, SyntheticScene.For(reloaded.Services).DrawDistance);
+
+        dialog.CancelCommand.Execute(null);
+        Assert.AreEqual(8000, scene.DrawDistance);
+        Assert.AreEqual("8", store.Get(HudVideoViewModel.DrawDistanceKey));
+        vm.DrawDistanceKm = 20;
+        var reset = new FpvCameraViewModel(vm);
+        reset.ResetCommand.Execute(null);
+        Assert.AreEqual(8000, scene.DrawDistance);
+    }
+
+    [TestMethod]
+    public void DrawingDistanceRejectsInvalidValuesAndKeepsTheTerrainBudgetBounded()
+    {
+        var vm = Create(out var store);
+        vm.DrawDistanceKm = 1000;
+        Assert.AreEqual(32, vm.DrawDistanceKm);
+        vm.DrawDistanceKm = 0;
+        Assert.AreEqual(2, vm.DrawDistanceKm);
+        vm.DrawDistanceKm = double.NaN;
+        Assert.AreEqual(8, vm.DrawDistanceKm);
+        store.Set(HudVideoViewModel.DrawDistanceKey, "Infinity");
+        Assert.AreEqual(8, vm.DrawDistanceKm);
+
+        var far = PatchSpec.FarFor(32000);
+        Assert.AreEqual(32000, far.Half);
+        Assert.AreEqual(PatchSpec.Far.GridSize, far.GridSize);
+        Assert.AreEqual(PatchSpec.Far.DemZoom - 2, far.DemZoom);
+        Assert.AreEqual(PatchSpec.Far, PatchSpec.FarFor(SyntheticScene.DefaultDrawDistance));
     }
 }
