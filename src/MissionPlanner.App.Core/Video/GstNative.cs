@@ -112,6 +112,13 @@ internal static class GstNative
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate IntPtr FactoryFindFn([MarshalAs(UnmanagedType.LPUTF8Str)] string name);
 
+    // device discovery (capture devices: EasyCap, UVC cameras)
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate IntPtr NewFn();
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate uint AddFilterFn(IntPtr monitor, [MarshalAs(UnmanagedType.LPUTF8Str)] string classes, IntPtr caps);
+
     // ---- bound functions (valid after a successful TryInitialize) ------------------------------
 
     public static ParseLaunchFn ParseLaunch = null!;
@@ -121,6 +128,12 @@ internal static class GstNative
     public static VoidFn ObjectUnref = null!;
     public static VoidFn MiniObjectUnref = null!;
     public static BusPopFn BusTimedPopFiltered = null!;
+
+    /// <summary>gst_element_send_event (element, event): true when handled.</summary>
+    public static PushBufferFn ElementSendEvent = null!;
+
+    /// <summary>gst_event_new_eos: ends a stream so muxers finish their files.</summary>
+    public static NewFn EventNewEos = null!;
     public static ParseErrorFn MessageParseError = null!;
     public static PullSampleFn AppSinkTryPullSample = null!;
     public static SetUIntFn AppSinkSetMaxBuffers = null!;
@@ -137,6 +150,13 @@ internal static class GstNative
     public static PushBufferFn AppSrcPushBuffer = null!;
     public static PtrFn AppSrcEndOfStream = null!;
     public static FactoryFindFn ElementFactoryFind = null!;
+    public static NewFn DeviceMonitorNew = null!;
+    public static AddFilterFn DeviceMonitorAddFilter = null!;
+    public static PtrFn DeviceMonitorGetDevices = null!;
+    public static PtrFn DeviceGetDisplayName = null!;
+    public static PtrFn DeviceGetProperties = null!;
+    public static VoidFn StructureFree = null!;
+    public static VoidFn GListFree = null!;
 
     /// <summary>glib, for the RTSP server's main loop (zero if it could not be loaded separately).</summary>
     public static IntPtr GlibHandle { get; private set; }
@@ -202,6 +222,8 @@ internal static class GstNative
         ObjectUnref = Bind<VoidFn>(core, "gst_object_unref");
         MiniObjectUnref = Bind<VoidFn>(core, "gst_mini_object_unref");
         BusTimedPopFiltered = Bind<BusPopFn>(core, "gst_bus_timed_pop_filtered");
+        ElementSendEvent = Bind<PushBufferFn>(core, "gst_element_send_event");
+        EventNewEos = Bind<NewFn>(core, "gst_event_new_eos");
         MessageParseError = Bind<ParseErrorFn>(core, "gst_message_parse_error");
         SampleGetCaps = Bind<PtrFn>(core, "gst_sample_get_caps");
         SampleGetBuffer = Bind<PtrFn>(core, "gst_sample_get_buffer");
@@ -218,8 +240,18 @@ internal static class GstNative
         ElementFactoryFind = Bind<FactoryFindFn>(core, "gst_element_factory_find");
         AppSrcPushBuffer = Bind<PushBufferFn>(app, "gst_app_src_push_buffer");
         AppSrcEndOfStream = Bind<PtrFn>(app, "gst_app_src_end_of_stream");
+        DeviceMonitorNew = Bind<NewFn>(core, "gst_device_monitor_new");
+        DeviceMonitorAddFilter = Bind<AddFilterFn>(core, "gst_device_monitor_add_filter");
+        DeviceMonitorGetDevices = Bind<PtrFn>(core, "gst_device_monitor_get_devices");
+        DeviceGetDisplayName = Bind<PtrFn>(core, "gst_device_get_display_name");
+        DeviceGetProperties = Bind<PtrFn>(core, "gst_device_get_properties");
+        StructureFree = Bind<VoidFn>(core, "gst_structure_free");
         CoreHandle = core;
         GlibHandle = glib;
+        var gl2 = glib != IntPtr.Zero ? glib : core;
+        GListFree = NativeLibrary.TryGetExport(gl2, "g_list_free", out var listFree)
+            ? Marshal.GetDelegateForFunctionPointer<VoidFn>(listFree)
+            : _ => { };
 
         // glib is a dependency of GStreamer, so it is normally loaded already; the symbols may
         // also be re-exported by the macOS framework binary

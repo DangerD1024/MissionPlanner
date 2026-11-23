@@ -30,13 +30,21 @@ internal sealed class FakeUi : IUiDispatcher, IDialogService, IWindowService
         return Task.FromResult(ConfirmAnswer);
     }
 
-    public Task<string?> PromptAsync(string title, string message, string initialValue = "") => Task.FromResult<string?>(initialValue);
+    /// <summary>What prompts answer; null answers with the suggested value.</summary>
+    public string? PromptAnswer { get; set; }
+
+    public Task<string?> PromptAsync(string title, string message, string initialValue = "") => Task.FromResult<string?>(PromptAnswer ?? initialValue);
     public Task<string?> OpenFileAsync(string title, params FileFilter[] filters) => Task.FromResult<string?>(null);
     public Task<string?> SaveFileAsync(string title, string suggestedName, params FileFilter[] filters) => Task.FromResult<string?>(null);
     public Task<string?> PickFolderAsync(string title) => Task.FromResult<string?>(null);
 
     public void Show(PageViewModel page, double width = 1100, double height = 750) => Shown.Add(page);
-    public Task<bool> ShowDialogAsync(PageViewModel page, double width = 1000, double height = 700) => Task.FromResult(false);
+    public List<PageViewModel> Dialogs { get; } = new();
+    public Task<bool> ShowDialogAsync(PageViewModel page, double width = 1000, double height = 700)
+    {
+        Dialogs.Add(page);
+        return Task.FromResult(false);
+    }
 
     public static AppServices Services(out FakeUi ui)
     {

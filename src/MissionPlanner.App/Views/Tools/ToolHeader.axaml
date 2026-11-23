@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.ToolHeader"
+             x:DataType="vm:ToolPageViewModel">
+  <!-- title, what the page is for, busy bar and the outcome of the last action -->
+  <StackPanel Spacing="8">
+    <Grid ColumnDefinitions="Auto,*,Auto">
+      <TextBlock Classes="h1" Text="{l:TrBind {Binding Title}}" VerticalAlignment="Center" />
+      <ProgressBar Grid.Column="2" IsIndeterminate="True" Width="120" VerticalAlignment="Center" IsVisible="{Binding IsBusy}" />
+    </Grid>
+    <TextBlock Classes="muted" TextWrapping="Wrap" Text="{l:TrBind {Binding Description}}" />
+    <TextBlock Text="{l:TrBind {Binding Status}}" IsVisible="{Binding HasStatus}" TextWrapping="Wrap"
+               Foreground="{DynamicResource Info}" Classes.error="{Binding StatusIsError}" />
+    <TextBlock Foreground="{DynamicResource Warn}" TextWrapping="Wrap" IsVisible="{Binding ShowNotConnected}"
+               Text="{l:Tr 'Not connected: the commands on this page need a vehicle.'}" />
+  </StackPanel>
+  <UserControl.Styles>
+    <Style Selector="TextBlock.error">
+      <Setter Property="Foreground" Value="{DynamicResource Danger}" />
+    </Style>
+  </UserControl.Styles>
+</UserControl>

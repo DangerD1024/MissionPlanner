@@ -1,0 +1,13 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightPlan"
+             xmlns:fp="using:MissionPlanner.App.Controls.FlightPlan"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.FlightPlan.ElevationGraphView"
+             x:DataType="vm:ElevationGraphViewModel">
+  <Grid RowDefinitions="Auto,Auto,*" Margin="16">
+    <TextBlock Classes="h2" Text="{l:Tr 'Elevation graph'}" />
+    <TextBlock Grid.Row="1" Classes="muted" FontSize="12" Margin="0,2,0,8" TextWrapping="Wrap" Text="{Binding Summary}" />
+    <fp:ElevationChart Grid.Row="2" Samples="{Binding Samples}" Waypoints="{Binding Waypoints}" />
+  </Grid>
+</UserControl>

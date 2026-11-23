@@ -361,6 +361,7 @@ public sealed partial class FlightDataViewModel
     {
         IsArmed = cs.armed;
         HomeAltOffsetActive = cs.altoffsethome != 0;
+        RefreshLoiterRadius();
         if (_modesFirmware != cs.firmware)
             RefreshModes(cs);
     }

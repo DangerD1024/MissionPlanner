@@ -457,3 +457,28 @@ public sealed class PlanVehicleLayer(FlightPlanViewModel vm) : MapLayer
         ctx.DrawGeometry(PlanPaint.Vehicle, new Pen(Brushes.White, 1.6), geo);
     }
 }
+
+/// <summary>Map Tool > KML Overlay: the file's lines, polygons and points, drawn for reference only.</summary>
+public sealed class KmlOverlayLayer(FlightPlanViewModel vm) : MapLayer
+{
+    private static readonly Pen LinePen = new(new SolidColorBrush(Color.Parse("#e53935")), 2);
+    private static readonly IBrush PointBrush = new SolidColorBrush(Color.Parse("#8d6e63"));
+    private static readonly Pen PointPen = new(Brushes.White, 1.2);
+
+    public override void Render(DrawingContext ctx, MapViewport vp)
+    {
+        foreach (var shape in vm.KmlOverlay)
+        {
+            var pts = shape.Points.Select(p => new PointLatLng(p.Lat, p.Lng)).ToList();
+            if (pts.Count == 1 || shape.Kind == "Point")
+            {
+                foreach (var p in pts)
+                    ctx.DrawEllipse(PointBrush, PointPen, vp.ToScreen(p), 4.5, 4.5);
+                continue;
+            }
+
+            if (pts.Count >= 2)
+                ctx.DrawGeometry(null, LinePen, PlanPaint.Polyline(pts, vp, closed: shape.IsPolygon, filled: false));
+        }
+    }
+}

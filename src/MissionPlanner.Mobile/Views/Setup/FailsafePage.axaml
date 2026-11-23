@@ -1,0 +1,71 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:hw="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Hardware"
+             xmlns:sv="using:MissionPlanner.Mobile.Views.Setup"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.Mobile.Views.Setup.FailsafePage"
+             x:DataType="vm:FailsafeViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="12" Spacing="12" MaxWidth="760">
+      <!-- the vehicle now: mode (red while a failsafe is active), armed, GPS -->
+      <Border Classes="card">
+        <Grid ColumnDefinitions="*,*,*">
+          <StackPanel>
+            <TextBlock Classes="label" Text="{l:Tr 'MODE'}" />
+            <TextBlock Text="{Binding CurrentMode}" FontSize="16" FontWeight="Bold"
+                       Foreground="{Binding ThrottleFailsafe, Converter={x:Static sv:SetupBrushes.BadOrText}}" />
+          </StackPanel>
+          <StackPanel Grid.Column="1">
+            <TextBlock Classes="label" Text="{l:Tr 'ARMED'}" />
+            <TextBlock Text="{Binding ArmedText}" FontSize="16" FontWeight="Bold" />
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Classes="label" Text="{l:Tr 'GPS'}" />
+            <TextBlock Text="{Binding GpsText}" FontSize="16" FontWeight="Bold" TextWrapping="Wrap" />
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <ItemsControl ItemsSource="{Binding Groups}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="hw:ParamGroup">
+            <Border Classes="card" Margin="0,0,0,12">
+              <StackPanel>
+                <TextBlock Classes="h2" Text="{l:TrBind {Binding Title}}" Margin="0,0,0,4" />
+                <ItemsControl ItemsSource="{Binding Fields}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="hw:ParamField">
+                      <sv:ParamFieldRow />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <Border Classes="card">
+        <StackPanel Spacing="4">
+          <TextBlock Classes="label" Text="{l:Tr 'RC IN'}" />
+          <ItemsControl ItemsSource="{Binding RcIn}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid Columns="4" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="hw:PwmChannel">
+                <StackPanel Margin="0,4">
+                  <TextBlock Text="{Binding Label}" Classes="muted" FontSize="11" />
+                  <TextBlock Text="{Binding Pwm}" FontFamily="monospace" FontSize="14" />
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

@@ -114,6 +114,28 @@
         <ScrollViewer HorizontalScrollBarVisibility="Disabled">
           <StackPanel Margin="14,4,16,12" Spacing="6">
 
+            <TextBlock Classes="section" Text="{l:Tr 'CAMERA'}" />
+            <Grid Classes="row" ColumnDefinitions="112,*">
+              <TextBlock Classes="field" Text="{l:Tr 'Camera'}" />
+              <ComboBox Grid.Column="1" ItemsSource="{Binding Cameras}" SelectedItem="{Binding SelectedCamera}" HorizontalAlignment="Stretch"
+                        ToolTip.Tip="{l:Tr 'With a camera, lane spacing and trigger distance follow from the altitude and the overlaps'}" />
+            </Grid>
+            <StackPanel IsVisible="{Binding HasCamera}" Spacing="6">
+              <Grid Classes="row" ColumnDefinitions="112,*">
+                <TextBlock Classes="field" Text="{l:Tr 'Overlap (%)'}" />
+                <NumericUpDown Grid.Column="1" Value="{Binding Overlap}" Minimum="0" Maximum="95" Increment="5" FormatString="0"
+                               ToolTip.Tip="{l:Tr 'Forward overlap between photos along a lane'}" />
+              </Grid>
+              <Grid Classes="row" ColumnDefinitions="112,*">
+                <TextBlock Classes="field" Text="{l:Tr 'Sidelap (%)'}" />
+                <NumericUpDown Grid.Column="1" Value="{Binding Sidelap}" Minimum="0" Maximum="95" Increment="5" FormatString="0"
+                               ToolTip.Tip="{l:Tr 'Overlap between neighbouring lanes'}" />
+              </Grid>
+              <CheckBox IsChecked="{Binding Portrait}" Content="{l:Tr 'Portrait (long side along the lanes)'}" />
+              <CheckBox IsChecked="{Binding ShowFootprints}" Content="{l:Tr 'Show photo footprints'}" />
+              <TextBlock Classes="muted" FontSize="12" Text="{Binding CameraText}" TextWrapping="Wrap" />
+            </StackPanel>
+
             <TextBlock Classes="section" Text="{l:Tr 'GRID'}" />
             <Grid Classes="row" ColumnDefinitions="112,*">
               <TextBlock Classes="field" Text="{l:Tr 'Altitude (m)'}" />

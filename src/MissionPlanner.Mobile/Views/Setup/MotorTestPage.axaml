@@ -1,0 +1,68 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:hwc="using:MissionPlanner.App.Controls.SetupScreens.Hardware"
+             xmlns:sv="using:MissionPlanner.Mobile.Views.Setup"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.Mobile.Views.Setup.MotorTestPage"
+             x:DataType="vm:MotorTestViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="12" Spacing="12" MaxWidth="760">
+      <Border Classes="card" Background="{StaticResource BadDim}" IsVisible="{Binding WarningText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{l:TrBind {Binding WarningText}}" FontWeight="Bold" TextWrapping="Wrap" Foreground="{StaticResource Bad}" />
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <Grid ColumnDefinitions="*,*">
+            <StackPanel>
+              <TextBlock Text="{Binding ClassText}" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding TypeText}" Classes="muted" />
+            </StackPanel>
+            <hwc:MotorLayoutView Grid.Column="1" Layout="{Binding Layout}" ShowLabels="True" Width="130" Height="130"
+                                 HorizontalAlignment="Right" IsVisible="{Binding HasLayout}" />
+          </Grid>
+          <Grid ColumnDefinitions="*,10,*">
+            <StackPanel Spacing="4">
+              <TextBlock Classes="label" Text="{l:Tr 'THROTTLE %'}" />
+              <NumericUpDown Value="{Binding Throttle}" Minimum="0" Maximum="100" Increment="1" FormatString="0" MinHeight="48" />
+            </StackPanel>
+            <StackPanel Grid.Column="2" Spacing="4">
+              <TextBlock Classes="label" Text="{l:Tr 'SECONDS'}" />
+              <NumericUpDown Value="{Binding Duration}" Minimum="0" Maximum="999" Increment="0.5" FormatString="0.#" MinHeight="48" />
+            </StackPanel>
+          </Grid>
+          <ItemsControl ItemsSource="{Binding Motors}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid Columns="2" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:MotorButton">
+                <Button Margin="3" HorizontalAlignment="Stretch" Command="{Binding TestCommand}" Height="60">
+                  <StackPanel>
+                    <TextBlock Text="{l:TrBind {Binding Title}}" HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding Detail}" Classes="muted" FontSize="11" FontWeight="Normal" HorizontalAlignment="Center" />
+                  </StackPanel>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <Button HorizontalAlignment="Stretch" Content="{l:Tr 'Test all motors'}" Command="{Binding TestAllCommand}" />
+          <Button HorizontalAlignment="Stretch" Content="{l:Tr 'Test all in sequence'}" Command="{Binding TestSequenceCommand}" />
+          <Button Classes="danger" HorizontalAlignment="Stretch" Height="56" Content="{l:Tr 'STOP ALL MOTORS'}" Command="{Binding StopAllCommand}" />
+          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{l:TrBind {Binding NoteText}}" />
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel>
+          <TextBlock Classes="label" Text="{l:Tr 'SPIN SETTINGS'}" />
+          <sv:ParamFieldRow DataContext="{Binding SpinArm}" />
+          <sv:ParamFieldRow DataContext="{Binding SpinMin}" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

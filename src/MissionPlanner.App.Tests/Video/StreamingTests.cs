@@ -36,7 +36,22 @@ internal sealed class FakeStreamer : IHudStreamer
     {
         Stops++;
         IsRunning = false;
+        IsRecording = false;
     }
+
+    public bool IsRecording { get; private set; }
+
+    public List<string> Recordings { get; } = new();
+
+    public void StartRecording(string path)
+    {
+        if (!IsRunning)
+            throw new InvalidOperationException("not running");
+        Recordings.Add(path);
+        IsRecording = true;
+    }
+
+    public void StopRecording() => IsRecording = false;
 
     public void RaiseError(string error)
     {
@@ -192,6 +207,39 @@ public sealed class StreamingViewModelTests
     }
 
     [TestMethod]
+    public void RecordingWithoutStreamingRunsItsOwnFrameSource()
+    {
+        var (vm, streamer, _, _) = Create();
+        var path = Path.Combine(TestEnvironment.DataRoot, "hud.mkv");
+        Assert.IsTrue(vm.StartRecording(path));
+        Assert.IsTrue(vm.IsRecording);
+        Assert.IsTrue(vm.IsProducing, "the pump renders frames");
+        Assert.IsFalse(vm.IsStreaming);
+        Assert.AreEqual(StreamMode.RecordOnly, streamer.Started.Single().Mode);
+        CollectionAssert.AreEqual(new[] { path }, streamer.Recordings);
+
+        // starting the stream saves that file and carries on in a new one on the real stream
+        Assert.IsTrue(vm.Start());
+        Assert.IsTrue(vm.IsRecording);
+        Assert.AreEqual(StreamMode.RtspServer, streamer.Started.Last().Mode);
+        Assert.HasCount(2, streamer.Recordings);
+
+        // stopping the stream ends the recording with it
+        vm.Stop();
+        Assert.IsFalse(vm.IsRecording);
+        Assert.IsFalse(vm.IsProducing);
+        Assert.IsFalse(streamer.IsRunning);
+    }
+
+    [TestMethod]
+    public void RecorderPipelineWritesMatroskaWithForwardSlashes()
+    {
+        var p = StreamPipelines.FileRecorder(new StreamSettings(), "x264enc", @"C:\logs\HUD 1.mkv");
+        StringAssert.Contains(p, "intervideosrc channel=mp3-hud");
+        StringAssert.Contains(p, "! h264parse ! matroskamux ! filesink location=\"C:/logs/HUD 1.mkv\"");
+    }
+
+    [TestMethod]
     public void AFailedStartIsReportedAsAnErrorToast()
     {
         var (vm, streamer, _, toasts) = Create();
@@ -325,6 +373,25 @@ public sealed class HudStreamerIntegrationTests
         }
 
         return until();
+    }
+
+    [TestMethod]
+    [Timeout(60000, CooperativeCancellation = true)]
+    public void TheHudIsRecordedToAPlayableMatroskaFile()
+    {
+        RequireStreaming();
+        var s = new StreamSettings { Mode = StreamMode.RecordOnly, Height = 480, Fps = 15 };
+        var path = Path.Combine(TestEnvironment.DataRoot, "rec-" + Guid.NewGuid().ToString("N") + ".mkv");
+        using var streamer = new HudStreamer();
+        streamer.Start(s);
+        streamer.StartRecording(path);
+        PushUntil(streamer, s, () => false, TimeSpan.FromSeconds(3));
+        streamer.StopRecording();
+        streamer.Stop();
+
+        var bytes = File.ReadAllBytes(path);
+        Assert.IsGreaterThan(5000, bytes.Length, "frames were written");
+        CollectionAssert.AreEqual(new byte[] { 0x1A, 0x45, 0xDF, 0xA3 }, bytes.Take(4).ToArray(), "an EBML (Matroska) header");
     }
 
     [TestMethod]

@@ -34,6 +34,15 @@
     <PackageReference Include="Silk.NET.OpenGL" Version="2.23.0" />
     <PackageReference Include="Silk.NET.Windowing" Version="2.23.0" />
     <PackageReference Include="StbImageSharp" Version="2.30.15" />
+    <!-- heights above the ellipsoid for NMEA and Cursor on Target, as Mission Planner -->
+    <PackageReference Include="GeoidHeightsDotNet" Version="1.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Mission Planner's Cursor on Target event builder: plain C#, shared with the WinForms app -->
+    <Compile Include="..\..\Controls\CotOutput.cs" Link="Outputs\Shared\CotOutput.cs" />
+    <!-- Mission Planner's camera list for the survey, the same file the WinForms app ships -->
+    <EmbeddedResource Include="..\..\camerasBuiltin.xml" Link="ViewModels\FlightPlan\camerasBuiltin.xml" LogicalName="camerasBuiltin.xml" />
   </ItemGroup>
 
 </Project>

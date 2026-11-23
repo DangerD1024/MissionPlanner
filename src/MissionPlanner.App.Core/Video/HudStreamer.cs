@@ -28,6 +28,15 @@ public interface IHudStreamer : IDisposable
     void Push(byte[] bgra);
 
     void Stop();
+
+    /// <summary>Recording the stream to a file (needs <see cref="Start"/> first).</summary>
+    bool IsRecording { get; }
+
+    /// <summary>Starts writing the HUD to <paramref name="path"/>; throws with a message for the user.</summary>
+    void StartRecording(string path);
+
+    /// <summary>Ends the file properly (end of stream) and stops recording.</summary>
+    void StopRecording();
 }
 
 /// <summary>
@@ -42,6 +51,8 @@ public sealed class HudStreamer : IHudStreamer
     private IntPtr _producer;
     private IntPtr _appsrc;
     private IntPtr _udp;
+    private IntPtr _recorder;
+    private StreamSettings? _settings;
     private RtspServerNative? _rtsp;
     private ShmFrameWriter? _shm;
     private int _shmWidth;
@@ -142,6 +153,7 @@ public sealed class HudStreamer : IHudStreamer
             }
 
             _frameBytes = settings.Width * settings.Height * 4;
+            _settings = settings;
             EncoderName = encoder;
             Error = null;
             IsRunning = true;
@@ -189,6 +201,65 @@ public sealed class HudStreamer : IHudStreamer
             StopLocked();
     }
 
+    public bool IsRecording => _recorder != IntPtr.Zero;
+
+    public void StartRecording(string path)
+    {
+        lock (_gate)
+        {
+            if (!IsRunning || _settings == null || EncoderName == null)
+                throw new InvalidOperationException("The HUD frame source is not running.");
+            if (!GstNative.HasElement("matroskamux"))
+                throw new InvalidOperationException("GStreamer's matroskamux is missing (gst-plugins-good).");
+            StopRecordingLocked();
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            _recorder = Launch(StreamPipelines.FileRecorder(_settings, EncoderName, path));
+            try
+            {
+                Play(_recorder);
+            }
+            catch
+            {
+                Shut(ref _recorder);
+                throw;
+            }
+
+            Log.Info("recording the HUD to " + path);
+        }
+    }
+
+    public void StopRecording()
+    {
+        lock (_gate)
+            StopRecordingLocked();
+    }
+
+    /// <summary>End of stream first, so the muxer writes its index; then the pipeline is shut.</summary>
+    private void StopRecordingLocked()
+    {
+        if (_recorder == IntPtr.Zero)
+            return;
+        try
+        {
+            GstNative.ElementSendEvent(_recorder, GstNative.EventNewEos());
+            var bus = GstNative.ElementGetBus(_recorder);
+            if (bus != IntPtr.Zero)
+            {
+                var msg = GstNative.BusTimedPopFiltered(bus, 3_000_000_000UL, GstNative.MessageEos | GstNative.MessageError);
+                if (msg != IntPtr.Zero)
+                    GstNative.MiniObjectUnref(msg);
+                GstNative.ObjectUnref(bus);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("end of recording", ex);
+        }
+
+        Shut(ref _recorder);
+        Log.Info("recording stopped");
+    }
+
     public void Dispose() => Stop();
 
     private void StopLocked()
@@ -198,6 +269,7 @@ public sealed class HudStreamer : IHudStreamer
         IsRunning = false;
         _shm?.Dispose();
         _shm = null;
+        StopRecordingLocked();
         _rtsp?.Dispose();
         _rtsp = null;
         RtspPort = 0;

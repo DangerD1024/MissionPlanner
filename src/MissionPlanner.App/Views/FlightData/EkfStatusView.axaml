@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.FlightData.EkfStatusView"
+             x:DataType="vm:EkfStatusViewModel">
+  <UserControl.Styles>
+    <Style Selector="ProgressBar.l1">
+      <Setter Property="Foreground" Value="{DynamicResource Warn}" />
+    </Style>
+    <Style Selector="ProgressBar.l2">
+      <Setter Property="Foreground" Value="{DynamicResource Danger}" />
+    </Style>
+  </UserControl.Styles>
+  <StackPanel Margin="18" Spacing="10">
+    <TextBlock Classes="h2" Text="{l:Tr 'EKF status'}" />
+    <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+               Text="{l:Tr 'Innovation test ratios: below 0.5 is good, above 0.8 the EKF may reject that sensor (failsafe at 1).'}" />
+    <ItemsControl ItemsSource="{Binding Bars}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="vm:StatusBar">
+          <Grid ColumnDefinitions="170,*,56" Margin="0,3">
+            <TextBlock Text="{l:TrBind {Binding Label}}" VerticalAlignment="Center" />
+            <ProgressBar Grid.Column="1" Minimum="0" Maximum="{Binding Max}" Value="{Binding Value}" Height="12" MinHeight="12"
+                         Classes.l1="{Binding IsWarning}" Classes.l2="{Binding IsBad}" />
+            <TextBlock Grid.Column="2" Text="{Binding Text}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+          </Grid>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+    <TextBlock Text="{Binding Accuracy}" />
+    <TextBlock Classes="h2" Text="{l:Tr 'Flags'}" FontSize="14" />
+    <ItemsControl ItemsSource="{Binding Flags}" />
+  </StackPanel>
+</UserControl>

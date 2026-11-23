@@ -92,14 +92,15 @@ foreach (var language in LanguageCatalog.Languages.Where(l => l.Code != Language
 var appStrings = new Dictionary<string, string>(StringComparer.Ordinal); // key → first form seen
 var src = Path.Combine(repo, "src");
 var translatedProperties = new HashSet<string>(StringComparer.Ordinal);
-foreach (var file in EnumerateSources(Path.Combine(src, "MissionPlanner.App"), "*.axaml"))
+// the desktop app and the phone app (MissionPlanner.Mobile shares the tables)
+foreach (var file in new[] { "MissionPlanner.App", "MissionPlanner.Mobile" }.SelectMany(d => EnumerateSources(Path.Combine(src, d), "*.axaml")))
 {
     var xaml = File.ReadAllText(file);
     AddStrings(UiStringScanner.ScanXaml(xaml));
     translatedProperties.UnionWith(UiStringScanner.ScanXamlTranslatedBindings(xaml));
 }
 
-foreach (var dir in new[] { "MissionPlanner.App", "MissionPlanner.App.Core" })
+foreach (var dir in new[] { "MissionPlanner.App", "MissionPlanner.App.Core", "MissionPlanner.Mobile" })
 {
     foreach (var file in EnumerateSources(Path.Combine(src, dir), "*.cs"))
     {

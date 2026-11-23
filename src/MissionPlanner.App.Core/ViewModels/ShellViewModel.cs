@@ -47,6 +47,12 @@ public enum Screen
     Config,
     Simulation,
     Settings,
+
+    /// <summary>Mission Planner's Ctrl+F screen; not on the top bar.</summary>
+    Tools,
+
+    /// <summary>Version, updates, documentation and forum links.</summary>
+    Help,
 }
 
 /// <summary>Main window: top navigation, connect controls and the visible screen.</summary>
@@ -69,6 +75,8 @@ public sealed partial class ShellViewModel : ObservableObject
             [Screen.Config] = () => new ConfigScreens.ConfigViewModel(services),
             [Screen.Simulation] = () => new Simulation.SimulationViewModel(services),
             [Screen.Settings] = () => new ConfigScreens.PlannerSettingsViewModel(services),
+            [Screen.Tools] = () => new Tools.ToolsViewModel(services),
+            [Screen.Help] = () => new HelpViewModel { Updates = services.Updates },
         };
         _currentPage = GetPage(Screen.Data);
         _currentPage.OnShown();
@@ -77,8 +85,12 @@ public sealed partial class ShellViewModel : ObservableObject
         GetPage(Screen.Setup);
         services.Session.StateChanged += (_, _) => services.Dispatcher.Post(() => OnPropertyChanged(nameof(Title)));
         services.ScreenRequested += (_, screen) => services.Dispatcher.Post(() => Navigate(screen));
+        services.MenuPageRequested += (_, r) => services.Dispatcher.Post(() => ShowMenuPage(r.Screen, r.Title));
         services.Notified += (_, n) => services.Dispatcher.Post(() => ShowToast(n));
     }
+
+    /// <summary>The update banner at the top of the window.</summary>
+    public Updates.UpdateViewModel Updates => _services.Updates;
 
     // ---- toast (AppServices.Notify) -----------------------------------------------------------
 
@@ -126,7 +138,7 @@ public sealed partial class ShellViewModel : ObservableObject
     }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsData), nameof(IsPlan), nameof(IsSetup), nameof(IsConfig), nameof(IsSimulation), nameof(IsSettings))]
+    [NotifyPropertyChangedFor(nameof(IsData), nameof(IsPlan), nameof(IsSetup), nameof(IsConfig), nameof(IsSimulation), nameof(IsSettings), nameof(IsTools), nameof(IsHelp))]
     private Screen _currentScreen;
 
     [ObservableProperty]
@@ -138,6 +150,73 @@ public sealed partial class ShellViewModel : ObservableObject
     public bool IsConfig => CurrentScreen == Screen.Config;
     public bool IsSimulation => CurrentScreen == Screen.Simulation;
     public bool IsSettings => CurrentScreen == Screen.Settings;
+    public bool IsTools => CurrentScreen == Screen.Tools;
+    public bool IsHelp => CurrentScreen == Screen.Help;
+
+    // ---- Mission Planner's hotkeys (MainV2.ProcessCmdKey) ---------------------------------------
+
+    /// <summary>F12: connect or disconnect.</summary>
+    [RelayCommand]
+    private Task ConnectHotkey() =>
+        Connection.ToggleConnectCommand.CanExecute(null) ? Connection.ToggleConnectCommand.ExecuteAsync(null) : Task.CompletedTask;
+
+    /// <summary>Shows a screen and the page with this title in its left menu.</summary>
+    public void ShowMenuPage(Screen screen, string title)
+    {
+        Navigate(screen);
+        if (GetPage(screen) is MenuScreenViewModel menu && !menu.Show(title))
+            _services.Notify(L.Format("{0} is not available for this vehicle.", title), MessageKind.Warning);
+    }
+
+    /// <summary>Ctrl+G (Mission Planner's NMEA output): TOOLS > Outputs.</summary>
+    [RelayCommand]
+    private void OutputsHotkey() => ShowMenuPage(Screen.Tools, Tools.ToolsViewModel.OutputsTitle);
+
+    /// <summary>Ctrl+X (Mission Planner's map cache window): TOOLS > Map cache.</summary>
+    [RelayCommand]
+    private void MapCacheHotkey() => ShowMenuPage(Screen.Tools, Tools.ToolsViewModel.MapCacheTitle);
+
+    /// <summary>Ctrl+J (Mission Planner's devops window): TOOLS > Bus registers.</summary>
+    [RelayCommand]
+    private void DeviceOpHotkey() => ShowMenuPage(Screen.Tools, Tools.ToolsViewModel.DeviceOpTitle);
+
+    /// <summary>F5: download the parameters again.</summary>
+    [RelayCommand]
+    private async Task RefreshParamsHotkey()
+    {
+        if (!_services.Session.IsConnected)
+            return;
+        _services.Notify("Getting parameters…");
+        try
+        {
+            await _services.Params.RefreshAsync();
+            _services.Notify($"{_services.Params.Count} parameters loaded.");
+        }
+        catch (Exception ex)
+        {
+            _services.Notify("Could not get the parameters: " + ex.Message, MessageKind.Error);
+        }
+    }
+
+    /// <summary>Ctrl+Y: write the parameters to the autopilot's flash (PREFLIGHT_STORAGE).</summary>
+    [RelayCommand]
+    private async Task CommitParamsHotkey()
+    {
+        if (!_services.Session.IsConnected)
+            return;
+        bool ok;
+        try
+        {
+            ok = await _services.Params.CommitToFlashAsync();
+        }
+        catch (Exception)
+        {
+            ok = false;
+        }
+
+        _services.Notify(ok ? "Parameters written to flash." : "The autopilot did not confirm writing the parameters to flash.",
+            ok ? MessageKind.Info : MessageKind.Error);
+    }
 
     [RelayCommand]
     private void Navigate(Screen screen)
@@ -183,10 +262,76 @@ public sealed partial class ShellViewModel : ObservableObject
     }
 }
 
-/// <summary>About: version, data and log folders, the Linux menu entry (shown at the bottom of SETTINGS).</summary>
+/// <summary>HELP: version and updates, data and log folders, documentation and forum links, the Linux menu entry.</summary>
 public sealed partial class HelpViewModel() : PageViewModel("Help")
 {
     public bool IsLinux { get; } = OperatingSystem.IsLinux();
+
+    public const string DiscussUrl = "https://discuss.ardupilot.org/t/mission-planner-3-0-rewritten-cross-platform-ui-windows-linux-native-net-10/";
+    public const string DocsUrl = "https://ardupilot.org/planner/";
+    public const string IssuesUrl = "https://github.com/" + MissionPlanner.App.Core.Updates.UpdateCheck.Repository + "/issues";
+    public const string ReleasesUrl = "https://github.com/" + MissionPlanner.App.Core.Updates.UpdateCheck.Repository + "/releases";
+
+    /// <summary>Opens a web page (or a folder) in the system's default app.</summary>
+    [RelayCommand]
+    private void Open(string? target)
+    {
+        if (string.IsNullOrEmpty(target))
+            return;
+        try
+        {
+            using var _ = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = target, UseShellExecute = true });
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            DesktopEntryStatus = target;
+        }
+    }
+
+    // ---- Linux: USB access and the applications menu ----
+
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    private string _usbStatus = "";
+
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    private string _usbResult = "";
+
+    /// <summary>The commands the Allow USB button runs, for doing it by hand in a terminal.</summary>
+    public string UsbCommands => LinuxUsbSetup.ManualCommands(LinuxUsbSetup.CurrentUser, _usbGroup ??= LinuxUsbSetup.SerialGroup());
+
+    public bool IsInApplicationsMenu => IsLinux && File.Exists(DesktopEntry.EntryPath);
+
+    private string? _usbGroup;
+
+    private void RefreshUsbStatus()
+    {
+        if (!IsLinux)
+            return;
+        _usbGroup ??= LinuxUsbSetup.SerialGroup();
+        var user = LinuxUsbSetup.CurrentUser;
+        UsbStatus = LinuxUsbSetup.Describe(user, _usbGroup, LinuxUsbSetup.IsMember(user, _usbGroup), LinuxUsbSetup.RulesInstalled);
+    }
+
+    public override void OnShown()
+    {
+        base.OnShown();
+        RefreshUsbStatus();
+        OnPropertyChanged(nameof(IsInApplicationsMenu));
+    }
+
+    /// <summary>Adds the user to the serial group and installs the udev rules (asks for the password).</summary>
+    [RelayCommand]
+    private async Task AllowUsb()
+    {
+        _usbGroup ??= LinuxUsbSetup.SerialGroup();
+        UsbResult = "Waiting for the password…";
+        var error = await LinuxUsbSetup.ApplyAsync(LinuxUsbSetup.CurrentUser, _usbGroup);
+        UsbResult = error ?? $"Done. Log out and back in (or restart) so the {_usbGroup} group takes effect, then plug the autopilot in again.";
+        RefreshUsbStatus();
+    }
+
+    /// <summary>Check for updates (null in tests that build the page alone).</summary>
+    public Updates.UpdateViewModel? Updates { get; init; }
 
     [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
     private string _desktopEntryStatus = "";
@@ -198,6 +343,7 @@ public sealed partial class HelpViewModel() : PageViewModel("Help")
         try
         {
             DesktopEntryStatus = DesktopEntry.Install();
+            OnPropertyChanged(nameof(IsInApplicationsMenu));
         }
         catch (Exception ex)
         {

@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.OnboardFileView"
+             x:DataType="vm:OnboardFileViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1100" HorizontalAlignment="Stretch">
+      <tv:ToolHeader />
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <Grid ColumnDefinitions="*,8,Auto,8,Auto">
+            <TextBox Text="{Binding Path}" Watermark="@SYS/threads.txt" />
+            <Button Grid.Column="2" Classes="accent" Content="{l:Tr 'Read'}" Command="{Binding DownloadCommand}" IsEnabled="{Binding CanCommand}" />
+            <Button Grid.Column="4" Content="{l:Tr 'Save…'}" Command="{Binding SaveCommand}" IsEnabled="{Binding HasData}" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding Presets}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="x:String">
+                <Button Content="{Binding}" Margin="0,0,6,6" Padding="8,2" FontSize="12"
+                        Command="{Binding $parent[UserControl].((vm:OnboardFileViewModel)DataContext).UsePresetCommand}" CommandParameter="{Binding}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <TextBox Text="{Binding Content}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" MinHeight="380" FontFamily="Cascadia Mono, Consolas, Menlo, DejaVu Sans Mono, monospace" FontSize="12" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

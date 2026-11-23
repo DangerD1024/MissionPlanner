@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GMap.NET.MapProviders;
 using log4net;
@@ -178,7 +178,6 @@ public static class PlannerSettings
 public sealed partial class PlannerSettingsViewModel : PageViewModel
 {
     /// <summary>Version, data folders and the Linux menu entry, shown at the bottom (there is no HELP screen).</summary>
-    public HelpViewModel About { get; } = new();
 
     private static readonly ILog Log = LogManager.GetLogger(typeof(PlannerSettingsViewModel));
 
@@ -268,6 +267,10 @@ public sealed partial class PlannerSettingsViewModel : PageViewModel
     }
 
     public AppServices Services { get; }
+
+    /// <summary>The TOOLS screen (Mission Planner's Ctrl+F screen).</summary>
+    [RelayCommand]
+    private void OpenTools() => Services.ShowScreen(ViewModels.Screen.Tools);
 
     // ---- map
 

@@ -1,0 +1,297 @@
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using MissionPlanner.App.Core.Links;
+using MissionPlanner.App.Core.Maps;
+using MissionPlanner.App.Core.ViewModels;
+using MissionPlanner.App.Core.ViewModels.FlightData;
+using MissionPlanner.Utilities;
+
+namespace MissionPlanner.App.Tests.FlightData;
+
+/// <summary>The Actions tab additions: resume mission, abort landing, mount mode, log message, raw sensors.</summary>
+[TestClass]
+public class MoreActionsTests
+{
+    [ClassInitialize]
+    public static void Init(TestContext _) =>
+        MapTiles.Initialize(Path.Combine(TestEnvironment.DataRoot, "gmapcache") + Path.DirectorySeparatorChar);
+
+    private static Locationwp Wp(MAVLink.MAV_CMD cmd, float alt = 50) => new() { id = (ushort)cmd, alt = alt, lat = -35, lng = 149 };
+
+    [TestMethod]
+    public void ResumeKeepsHomeTakeoffAndSettings_ThenEverythingFromTheResumePoint()
+    {
+        var mission = new List<Locationwp>
+        {
+            Wp(MAVLink.MAV_CMD.WAYPOINT, 0), // home
+            Wp(MAVLink.MAV_CMD.TAKEOFF, 20),
+            Wp(MAVLink.MAV_CMD.WAYPOINT), // 2: skipped
+            Wp(MAVLink.MAV_CMD.DO_SET_CAM_TRIGG_DIST), // 3: kept, still applies
+            Wp(MAVLink.MAV_CMD.LOITER_TIME), // 4: skipped
+            Wp(MAVLink.MAV_CMD.WAYPOINT, 80), // 5: resume here
+            Wp(MAVLink.MAV_CMD.DO_CHANGE_SPEED),
+            Wp(MAVLink.MAV_CMD.RETURN_TO_LAUNCH),
+        };
+
+        var plan = ResumeMission.Plan(mission, 5);
+
+        CollectionAssert.AreEqual(
+            new[] { MAVLink.MAV_CMD.WAYPOINT, MAVLink.MAV_CMD.TAKEOFF, MAVLink.MAV_CMD.DO_SET_CAM_TRIGG_DIST, MAVLink.MAV_CMD.WAYPOINT,
+                MAVLink.MAV_CMD.DO_CHANGE_SPEED, MAVLink.MAV_CMD.RETURN_TO_LAUNCH },
+            plan.Select(w => (MAVLink.MAV_CMD)w.id).ToArray());
+        Assert.AreEqual(80f, plan[3].alt, "the resume waypoint follows the kept items");
+        Assert.HasCount(mission.Count, ResumeMission.Plan(mission, 1), "resuming at 1 keeps everything");
+    }
+
+    [TestMethod]
+    public void TypedCoordinatesInTheUsualForms()
+    {
+        Assert.AreEqual((-35.3632, 149.1652, (double?)50), CoordinateInput.Parse("-35.3632;149.1652;50"));
+        Assert.AreEqual((-35.3632, 149.1652, (double?)null), CoordinateInput.Parse("-35.3632;149.1652"));
+        Assert.AreEqual((-35.3632, 149.1652, (double?)null), CoordinateInput.Parse("-35.3632, 149.1652"));
+        Assert.AreEqual((-35.3632, 149.1652, (double?)12), CoordinateInput.Parse(" -35.3632  149.1652 12 "));
+        Assert.AreEqual((-35.5, 149.25, (double?)null), CoordinateInput.Parse("-35,5;149,25"), "decimal commas with ;");
+        Assert.IsNull(CoordinateInput.Parse("100;10"), "latitude out of range");
+        Assert.IsNull(CoordinateInput.Parse("abc"));
+        Assert.IsNull(CoordinateInput.Parse("1;2;3;4"));
+    }
+
+    [TestMethod]
+    public void CtrlNumberPicksATab_AndTheLogSpeedSteps()
+    {
+        var services = FakeUi.Services(out _);
+        var vm = new FlightDataViewModel(services);
+        vm.SelectTabCommand.Execute("3");
+        Assert.AreEqual((int)FlightDataTab.Messages, vm.SelectedTabIndex);
+        vm.SelectTabCommand.Execute("0");
+        Assert.AreEqual(9, vm.SelectedTabIndex, "Ctrl+0 is the tenth tab");
+
+        Assert.AreEqual(0.1, vm.Tlogs.Speeds[0].Value, "0.1x as Mission Planner");
+        Assert.AreEqual(1, vm.Tlogs.SelectedSpeed.Value);
+        vm.Tlogs.FasterCommand.Execute(null);
+        Assert.AreEqual(2, vm.Tlogs.SelectedSpeed.Value);
+        vm.Tlogs.SlowerCommand.Execute(null);
+        vm.Tlogs.SlowerCommand.Execute(null);
+        Assert.AreEqual(0.5, vm.Tlogs.SelectedSpeed.Value);
+        for (var i = 0; i < 10; i++)
+            vm.Tlogs.SlowerCommand.Execute(null);
+        Assert.AreEqual(0.1, vm.Tlogs.SelectedSpeed.Value, "stops at the slowest");
+    }
+
+    [TestMethod]
+    public void QuickViewCountChangesTheTiles_AndIsRemembered()
+    {
+        var services = FakeUi.Services(out _);
+        var vm = new FlightDataViewModel(services);
+        try
+        {
+            Assert.HasCount(6, vm.QuickTiles);
+            vm.SetQuickLayoutCommand.Execute("3x4");
+            Assert.AreEqual((3, 4), (vm.QuickColumns, vm.QuickRows));
+            Assert.HasCount(12, vm.QuickTiles);
+            Assert.AreEqual("alt", vm.QuickTiles[0].Field.Name, "the first six keep Mission Planner's defaults");
+            Assert.AreEqual("battery_voltage", vm.QuickTiles[6].Field.Name);
+
+            var again = new FlightDataViewModel(services);
+            Assert.HasCount(12, again.QuickTiles, "remembered");
+
+            vm.SetQuickLayoutCommand.Execute("9x9");
+            Assert.AreEqual((4, 6), (vm.QuickColumns, vm.QuickRows), "clamped");
+            vm.SetQuickLayoutCommand.Execute("nonsense");
+            Assert.AreEqual((4, 6), (vm.QuickColumns, vm.QuickRows));
+        }
+        finally
+        {
+            vm.SetQuickLayoutCommand.Execute("2x3");
+        }
+
+        Assert.HasCount(6, vm.QuickTiles);
+    }
+
+    [TestMethod]
+    public void MissionProgressFollowsTheRoute()
+    {
+        // home, then 3 waypoints ~111 m apart northwards, with a DO item between
+        var items = new List<(double, double, bool)>
+        {
+            (-35.000, 149, true), (-34.999, 149, true), (0, 0, false), (-34.998, 149, true),
+        };
+        var cum = MissionProgress.Cumulative(-35.001, 149, items);
+        Assert.HasCount(5, cum);
+        Assert.AreEqual(111.2, cum[1], 1);
+        Assert.AreEqual(cum[2], cum[3], 1e-9, "an item without a location adds nothing");
+        Assert.AreEqual(333.6, cum[4], 2);
+
+        var (flown, total) = MissionProgress.At(cum, 2, 50);
+        Assert.AreEqual(cum[2] - 50, flown, 1e-9, "on the way to WP 2, 50 m short");
+        Assert.AreEqual(cum[4], total, 1e-9);
+        Assert.AreEqual(0, MissionProgress.At(cum, 1, 500).Flown, "never negative");
+        Assert.AreEqual((0.0, 0.0), MissionProgress.At([0], 1, 0));
+    }
+
+    [TestMethod]
+    public void TabsCanBeHidden_ButNotQuick_AndAreRemembered()
+    {
+        var services = FakeUi.Services(out _);
+        var vm = new FlightDataViewModel(services);
+        try
+        {
+            vm.SelectedTabIndex = (int)FlightDataTab.Transponder;
+            vm.SetTabVisible(FlightDataTab.Transponder, false);
+            Assert.IsFalse(vm.TabVisible[(int)FlightDataTab.Transponder]);
+            Assert.AreEqual((int)FlightDataTab.Quick, vm.SelectedTabIndex, "a hidden tab is not left selected");
+            vm.SetTabVisible(FlightDataTab.Quick, false);
+            Assert.IsTrue(vm.TabVisible[(int)FlightDataTab.Quick], "Quick always shows");
+
+            var again = new FlightDataViewModel(services);
+            Assert.IsFalse(again.TabVisible[(int)FlightDataTab.Transponder], "remembered");
+            again.SelectTabCommand.Execute("6");
+            Assert.AreEqual((int)FlightDataTab.Quick, again.SelectedTabIndex, "Ctrl+6 does not open a hidden tab");
+        }
+        finally
+        {
+            vm.SetTabVisible(FlightDataTab.Transponder, true);
+        }
+    }
+
+    [TestMethod]
+    public void RawSensorWindowListsImusInputsAndOutputs()
+    {
+        var services = FakeUi.Services(out _);
+        var vm = new RawSensorsViewModel(services);
+        Assert.IsNotEmpty(vm.Imus);
+        Assert.AreEqual("IMU 1", vm.Imus[0].Title);
+        Assert.HasCount(9, vm.Imus[0].Values);
+        Assert.HasCount(16, vm.RcIn);
+        Assert.HasCount(16, vm.ServoOut);
+
+        services.Session.Cs.ch3in = 1650;
+        vm.OnShown();
+        Assert.AreEqual("1650", vm.RcIn[2].Text);
+        Assert.AreEqual(1650, vm.RcIn[2].Value);
+    }
+
+    [TestMethod]
+    public void JoystickButtonOpensTheSetupJoystickPage()
+    {
+        var services = FakeUi.Services(out _);
+        var shell = new ShellViewModel(services);
+        var vm = shell.GetPage<FlightDataViewModel>(Screen.Data);
+
+        vm.OpenJoystickCommand.Execute(null);
+
+        Assert.IsTrue(shell.IsSetup, "SETUP opens");
+        var setup = shell.GetPage<MenuScreenViewModel>(Screen.Setup);
+        Assert.AreEqual("Joystick", setup.SelectedItem?.Title, "on its Joystick page (it needs no vehicle)");
+
+        // a page that does not apply is not opened, and the user is told why
+        var notes = new List<string>();
+        services.Notified += (_, n) => notes.Add(n.Text);
+        shell.ShowMenuPage(Screen.Setup, "Battery Monitor");
+        Assert.AreEqual("Joystick", setup.SelectedItem?.Title);
+        Assert.IsTrue(notes.Any(n => n.Contains("Battery Monitor")), string.Join("|", notes));
+    }
+
+    [TestMethod]
+    [Timeout(90000, CooperativeCancellation = true)]
+    public async Task AbortLandingMountModeAndMessageReachTheVehicle()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        var accept = listener.AcceptTcpClientAsync();
+        var services = FakeUi.Services(out var ui);
+        var connecting = services.Session.ConnectAsync(LinkSpec.Tcp("127.0.0.1", port), getParams: false);
+        using var vehicleSide = await accept;
+        listener.Stop();
+        await using var vehicle = new ExtrasFakeVehicle(vehicleSide.GetStream());
+        await connecting;
+        try
+        {
+            var vm = new FlightDataViewModel(services);
+            vm.OnShown();
+            var until = DateTime.UtcNow.AddSeconds(10);
+            while (!vm.IsConnected && DateTime.UtcNow < until)
+            {
+                vm.Tick();
+                await Task.Delay(50);
+            }
+
+            await vm.AbortLandingCommand.ExecuteAsync(null);
+            Assert.IsFalse(vm.ActionStatusIsError, vm.ActionStatus);
+            Assert.IsTrue(vehicle.Commands.Any(c => c.command == (ushort)MAVLink.MAV_CMD.DO_GO_AROUND));
+
+            vm.SelectedMountMode = FlightDataViewModel.MountModes.Single(m => m.Mode == MAVLink.MAV_MOUNT_MODE.NEUTRAL);
+            await vm.SetMountModeCommand.ExecuteAsync(null);
+            var until2 = DateTime.UtcNow.AddSeconds(5);
+            while (!vehicle.Commands.Any(c => c.command == (ushort)MAVLink.MAV_CMD.DO_MOUNT_CONTROL) && DateTime.UtcNow < until2)
+                await Task.Delay(20);
+            Assert.AreEqual((float)MAVLink.MAV_MOUNT_MODE.NEUTRAL,
+                vehicle.Commands.Last(c => c.command == (ushort)MAVLink.MAV_CMD.DO_MOUNT_CONTROL).param7);
+
+            // map labels: GPS and wind (a few times a second)
+            services.Session.Cs.gpsstatus = 3;
+            services.Session.Cs.satcount = 14;
+            services.Session.Cs.gpshdop = 0.7f;
+            services.Session.Cs.wind_dir = 270;
+            services.Session.Cs.wind_vel = 6;
+            for (var i = 0; i < 8; i++)
+            {
+                vm.Tick();
+                await Task.Delay(30);
+            }
+
+            Assert.AreEqual("3D fix · HDOP 0.7 · 14 sats", vm.GpsInfo);
+            Assert.IsTrue(vm.ShowWind);
+            Assert.AreEqual(90, vm.WindArrowAngle, 1e-6, "wind from the west blows east");
+            StringAssert.StartsWith(vm.WindText, "270° 6.0");
+
+            var contact = new AdsbContact(0xABC123, "QFA1", -35, 149, 3000, 90, 200, -2.5, 1200, 0,
+                MAVLink.MAV_COLLISION_THREAT_LEVEL.NONE, TimeSpan.FromSeconds(1), false);
+            vm.ShowAdsbDetails(contact);
+            StringAssert.StartsWith(vm.ToastText, "QFA1 (ICAO ABC123) · 3000 m");
+            StringAssert.Contains(vm.ToastText, "squawk 1200");
+
+            await vm.TriggerCameraAsync();
+            Assert.AreEqual(1f, vehicle.Commands.Last(c => c.command == (ushort)MAVLink.MAV_CMD.DO_DIGICAM_CONTROL).param5);
+
+            ui.PromptAnswer = "7";
+            await vm.JumpToTagAsync();
+            Assert.AreEqual(7f, vehicle.Commands.Last(c => c.command == (ushort)MAVLink.MAV_CMD.DO_JUMP_TAG).param1);
+
+            ui.PromptAnswer = "15";
+            await vm.TakeoffAsync();
+            Assert.AreEqual(15f, vehicle.Commands.Last(c => c.command == (ushort)MAVLink.MAV_CMD.TAKEOFF).param7, 0.01f);
+
+            ui.PromptAnswer = "-35.36;149.16;600";
+            await vm.PointCameraCoordsAsync();
+            var roiUntil = DateTime.UtcNow.AddSeconds(5);
+            MAVLink.mavlink_command_int_t? roi = null;
+            while (roi == null && DateTime.UtcNow < roiUntil)
+            {
+                roi = vehicle.Received.Where(m => m.msgid == (uint)MAVLink.MAVLINK_MSG_ID.COMMAND_INT)
+                    .Select(m => (MAVLink.mavlink_command_int_t?)m.data)
+                    .LastOrDefault(c => c!.Value.command == (ushort)MAVLink.MAV_CMD.DO_SET_ROI);
+                await Task.Delay(20);
+            }
+
+            Assert.IsNotNull(roi);
+            Assert.AreEqual(-353600000, roi.Value.x);
+            Assert.AreEqual(600f, roi.Value.z, 0.01f);
+
+            ui.PromptAnswer = "bird strike at WP 3";
+            await vm.SendLogMessageCommand.ExecuteAsync(null);
+            var until3 = DateTime.UtcNow.AddSeconds(5);
+            string Texts() => string.Join("|", vehicle.Received.Where(m => m.msgid == (uint)MAVLink.MAVLINK_MSG_ID.STATUSTEXT)
+                .Select(m => Encoding.ASCII.GetString(((MAVLink.mavlink_statustext_t)m.data).text).TrimEnd('\0')));
+            while (!Texts().Contains("bird strike") && DateTime.UtcNow < until3)
+                await Task.Delay(20);
+            StringAssert.Contains(Texts(), "bird strike at WP 3");
+        }
+        finally
+        {
+            await services.Session.DisconnectAsync();
+        }
+    }
+}

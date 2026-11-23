@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.DeviceIdDecoderView"
+             x:DataType="vm:DeviceIdDecoderViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1100" HorizontalAlignment="Stretch">
+      <tv:ToolHeader />
+      <Grid ColumnDefinitions="*,16,*" MinHeight="420">
+        <TextBox Text="{Binding Input}" AcceptsReturn="True" TextWrapping="Wrap" Watermark="COMPASS_DEV_ID 97539" FontFamily="Cascadia Mono, Consolas, Menlo, DejaVu Sans Mono, monospace" FontSize="12" />
+        <SelectableTextBlock Grid.Column="2" Text="{Binding Output}" TextWrapping="Wrap" FontFamily="Cascadia Mono, Consolas, Menlo, DejaVu Sans Mono, monospace" FontSize="12" />
+      </Grid>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

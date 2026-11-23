@@ -238,6 +238,7 @@ public sealed partial class SurveyGridViewModel : PageViewModel, IDialogPage
 
     public override void OnShown()
     {
+        LoadCameraSettings();
         if (_started)
             return;
         _ = RegenerateAsync();

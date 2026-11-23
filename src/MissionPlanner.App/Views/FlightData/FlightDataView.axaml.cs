@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using MissionPlanner.App.Core.Localization;
+using Avalonia.VisualTree;
 using GMap.NET;
 using MissionPlanner.App.Controls;
 using MissionPlanner.App.Controls.FlightData;
@@ -22,6 +24,11 @@ public sealed partial class FlightDataView : UserControl
     private readonly MenuItem _flyToAlt;
     private readonly MenuItem _setHome;
     private readonly MenuItem _pointCamera;
+    private readonly MenuItem[] _vehicleItems;
+    private readonly MenuItem _cameraOverlap = new() { Header = "Camera Overlap", ToggleType = MenuItemToggleType.CheckBox };
+    private readonly MenuItem _poiEdit;
+    private readonly MenuItem _poiDelete;
+    private Core.Mission.Poi? _menuPoi;
 
     public FlightDataView()
     {
@@ -31,20 +38,98 @@ public sealed partial class FlightDataView : UserControl
         _flyToAlt = Item("Fly To Here Alt", () => _vm?.FlyToHereAltAsync(_menuAt.Lat, _menuAt.Lng));
         _setHome = Item("Set Home Here", () => _vm?.SetHomeHereAsync(_menuAt.Lat, _menuAt.Lng));
         _pointCamera = Item("Point Camera Here", () => _vm?.PointCameraHereAsync(_menuAt.Lat, _menuAt.Lng));
+        var flyToCoords = Item("Fly To Coords", () => _vm?.FlyToCoordsAsync());
+        var pointCoords = Item("Point Camera Coords", () => _vm?.PointCameraCoordsAsync());
+        var trigger = Item("Trigger Camera Now", () => _vm?.TriggerCameraAsync());
+        var ekf = Item("Set EKF Origin Here", () => _vm?.SetEkfOriginHereAsync(_menuAt.Lat, _menuAt.Lng));
+        var takeoff = Item("Takeoff", () => _vm?.TakeoffAsync());
+        var jumpTag = Item("Jump to Tag", () => _vm?.JumpToTagAsync());
+        _vehicleItems = [_flyTo, _flyToAlt, flyToCoords, _setHome, ekf, _pointCamera, pointCoords, trigger, takeoff, jumpTag];
+        _poiEdit = Item("Edit POI", () =>
+        {
+            if (_vm != null && _menuPoi != null)
+                _ = _vm.Poi.EditAsync(_menuPoi);
+        });
+        _poiDelete = Item("Delete POI", () =>
+        {
+            if (_vm != null && _menuPoi != null)
+                _vm.Poi.Delete(_menuPoi);
+        });
+        _cameraOverlap.Click += (_, _) =>
+        {
+            if (_vm != null)
+                _vm.ShowCameraOverlap = !_vm.ShowCameraOverlap;
+        };
+        var poiMenu = new MenuItem
+        {
+            Header = "POI",
+            ItemsSource = new Control[]
+            {
+                Item("Add POI Here", () => _vm?.Poi.AddHereAsync(_menuAt.Lat, _menuAt.Lng)),
+                Item("Add POI at Coords", () => _vm?.Poi.AddAtCoordsAsync()),
+                _poiEdit,
+                _poiDelete,
+                new Separator(),
+                Item("Save POIs", () => _vm?.Poi.SaveAsync()),
+                Item("Load POIs", () => _vm?.Poi.LoadAsync()),
+            },
+        };
         _menu = new MenuFlyout
         {
             Items =
             {
+                poiMenu,
+                new Separator(),
                 _flyTo,
                 _flyToAlt,
-                _setHome,
+                flyToCoords,
+                new Separator(),
                 _pointCamera,
+                pointCoords,
+                trigger,
+                new Separator(),
+                takeoff,
+                jumpTag,
+                _setHome,
+                ekf,
                 new Separator(),
                 Item("Clear Track", () => _vm?.ClearTrack()),
+                _cameraOverlap,
+                Item("Camera field of view…", () => _vm?.SetCameraFovAsync()),
                 Item("Zoom to vehicle", () => _vm?.ZoomToVehicle()),
             },
         };
 
+        HudControl.ItemClicked += (_, item) => _vm?.OpenHudItem(item);
+
+        // right-click the tab headers: choose which tabs show (Mission Planner's "Customize")
+        // (the headers handle the press themselves, so this listens to handled releases too)
+        DataTabs.AddHandler(PointerReleasedEvent, (_, e) =>
+        {
+            // only a right click on the tab headers: the tabs' content has its own menus
+            if (_vm == null || e.InitialPressMouseButton != MouseButton.Right ||
+                (e.Source as Avalonia.Visual)?.FindAncestorOfType<TabItem>(includeSelf: true) == null)
+                return;
+            var menu = new ContextMenu();
+            var items = new List<Control>();
+            var names = new[] { "Quick", "Actions", "Messages", "PreFlight", "Gauges", "Transponder", "Status", "Servo/Relay",
+                "Aux Function", "Payload", "Telemetry Logs", "DataFlash Logs" };
+            foreach (var tab in Enum.GetValues<FlightDataTab>())
+            {
+                var t = tab;
+                var item = new MenuItem
+                {
+                    Header = L.Tr(names[(int)t]), ToggleType = MenuItemToggleType.CheckBox,
+                    IsChecked = _vm.TabVisible[(int)t], IsEnabled = t != FlightDataTab.Quick,
+                };
+                item.Click += (_, _) => _vm.SetTabVisible(t, !_vm.TabVisible[(int)t]);
+                items.Add(item);
+            }
+
+            menu.ItemsSource = items;
+            menu.Open(DataTabs);
+            e.Handled = true;
+        }, Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
         Map.UserPanned += (_, _) => _vm?.OnUserPanned();
         Map.PointerPositionChanged += (_, p) => _vm?.OnPointerMoved(p.Lat, p.Lng);
         Map.MapContextRequested += OnMapContext;
@@ -56,6 +141,8 @@ public sealed partial class FlightDataView : UserControl
             if (_vm == null)
                 return;
             items.Add(new Separator());
+            items.Add(HudVideoMenu.Item("HUD options…", () => _ = _vm.OpenHudOptionsAsync()));
+            items.Add(HudVideoMenu.Item("Swap with map", () => _vm.SwapHudCommand.Execute(null)));
             items.Add(HudVideoMenu.Item("Detach HUD (own window)", () => _vm.IsHudDetached = true));
         });
 
@@ -63,6 +150,9 @@ public sealed partial class FlightDataView : UserControl
         LeftColumn.SizeChanged += (_, e) => SizeHud(e.NewSize);
 
         DataContextChanged += (_, _) => Attach(DataContext as FlightDataViewModel);
+
+        // while a telemetry log plays: Space pauses, + / - change the speed (not while typing)
+        AddHandler(KeyDownEvent, OnPlaybackKey, Avalonia.Interactivity.RoutingStrategies.Bubble);
     }
 
     private void Attach(FlightDataViewModel? vm)
@@ -86,18 +176,54 @@ public sealed partial class FlightDataView : UserControl
         HudStreamPump.Track(vm);
         SizeHud(LeftColumn.Bounds.Size);
         LayoutMapArea();
+        ApplySwap();
         Map.Layers.Add(new MissionLayer(vm.MapModel));
+        Map.Layers.Add(new PhotoLayer(vm.MapModel));
         Map.Layers.Add(new TrackLayer(vm.MapModel));
         Map.Layers.Add(new AdsbLayer(vm.MapModel));
         Map.Layers.Add(new VehicleLayer(vm.MapModel));
+        Map.Layers.Add(new PoiLayer(vm.Services.Pois));
+        vm.Services.Pois.Changed -= OnPoisChanged;
+        vm.Services.Pois.Changed += OnPoisChanged;
     }
+
+    private void OnPoisChanged(object? sender, EventArgs e) => Map.InvalidateVisual();
 
     private void OnVmChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(FlightDataViewModel.IsHudDetached))
             SizeHud(LeftColumn.Bounds.Size);
+        else if (e.PropertyName == nameof(FlightDataViewModel.IsHudSwapped))
+            ApplySwap();
         else if (e.PropertyName == nameof(FlightDataViewModel.MapView))
             LayoutMapArea();
+    }
+
+    /// <summary>Moves the HUD onto the map side and the map into the HUD's corner, or back.</summary>
+    private void ApplySwap()
+    {
+        var swapped = _vm?.IsHudSwapped == true;
+        var hudSwapped = HudControl.Parent == SwapHost;
+        if (swapped == hudSwapped)
+            return;
+        if (swapped)
+        {
+            HudPanel.Children.Remove(HudControl);
+            Map2DPanel.Children.Remove(Map);
+            SwapHost.Children.Insert(0, HudControl);
+            HudPanel.Children.Insert(0, Map);
+        }
+        else
+        {
+            SwapHost.Children.Remove(HudControl);
+            HudPanel.Children.Remove(Map);
+            HudPanel.Children.Insert(0, HudControl);
+            Map2DPanel.Children.Insert(0, Map);
+        }
+
+        SwapHost.IsVisible = swapped;
+        HudControl.Refresh();
+        Map.InvalidateVisual();
     }
 
     /// <summary>Rows of the map side: 2D only, 3D only, or 2D on top of 3D with a splitter.</summary>
@@ -147,18 +273,44 @@ public sealed partial class FlightDataView : UserControl
             return;
         _menuAt = e.Position;
         var connected = _vm.CanCommand;
-        _flyTo.IsEnabled = connected;
-        _flyToAlt.IsEnabled = connected;
-        _setHome.IsEnabled = connected;
-        _pointCamera.IsEnabled = connected;
+        foreach (var item in _vehicleItems)
+            item.IsEnabled = connected;
+        _menuPoi = e.Hit as Core.Mission.Poi;
+        _cameraOverlap.IsChecked = _vm.ShowCameraOverlap;
+        _poiEdit.IsEnabled = _poiDelete.IsEnabled = _menuPoi != null;
         _menu.ShowAt(Map, showAtPointer: true);
     }
 
     private void OnMapClick(object? sender, MapPointerEventArgs e)
     {
+        // a click on an ADS-B aircraft shows what it is
+        if (_vm != null && e.Hit is AdsbContact contact)
+        {
+            _vm.ShowAdsbDetails(contact);
+            return;
+        }
+
         // Ctrl+click flies there, as in Mission Planner
         if (_vm != null && e.Modifiers.HasFlag(KeyModifiers.Control) && _vm.CanCommand)
             _ = _vm.FlyToHereAsync(e.Position.Lat, e.Position.Lng);
+    }
+
+    private void OnPlaybackKey(object? sender, KeyEventArgs e)
+    {
+        if (e.Handled || _vm == null || e.KeyModifiers != KeyModifiers.None || e.Source is TextBox ||
+            !_vm.Tlogs.PlayPauseCommand.CanExecute(null))
+            return;
+        var command = e.Key switch
+        {
+            Key.Space => _vm.Tlogs.PlayPauseCommand,
+            Key.OemPlus or Key.Add => _vm.Tlogs.FasterCommand,
+            Key.OemMinus or Key.Subtract => _vm.Tlogs.SlowerCommand,
+            _ => null,
+        };
+        if (command == null)
+            return;
+        command.Execute(null);
+        e.Handled = true;
     }
 
     private static MenuItem Item(string header, Action action)

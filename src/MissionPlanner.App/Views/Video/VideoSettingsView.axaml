@@ -98,6 +98,19 @@
                 </StackPanel>
               </StackPanel>
 
+              <StackPanel IsVisible="{Binding ShowDevice}">
+                <TextBlock Classes="label" Text="Device" />
+                <Grid ColumnDefinitions="*,8,Auto">
+                  <ComboBox HorizontalAlignment="Stretch" IsEditable="True" Text="{Binding Device}"
+                            PlaceholderText="the first capture device found"
+                            ItemsSource="{Binding $parent[UserControl].((vm:VideoSettingsViewModel)DataContext).CaptureDeviceIds}" />
+                  <Button Grid.Column="2" Content="Refresh"
+                          Command="{Binding $parent[UserControl].((vm:VideoSettingsViewModel)DataContext).RefreshDevicesCommand}" />
+                </Grid>
+                <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"
+                           Text="{Binding $parent[UserControl].((vm:VideoSettingsViewModel)DataContext).CaptureDevicesText}" />
+              </StackPanel>
+
               <StackPanel IsVisible="{Binding ShowPipeline}">
                 <TextBlock Classes="label" Text="GStreamer pipeline (gst-launch syntax)" />
                 <TextBox Classes="mono" Text="{Binding Pipeline}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="96"

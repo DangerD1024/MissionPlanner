@@ -1,0 +1,126 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:o="using:MissionPlanner.App.Core.Outputs"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.OutputsView"
+             x:DataType="vm:OutputsViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.label">
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Margin" Value="0,8,0,3" />
+    </Style>
+    <Style Selector="TextBlock.err">
+      <Setter Property="Foreground" Value="{DynamicResource Danger}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*" Margin="24,20">
+    <tv:ToolHeader Margin="0,0,0,14" />
+
+    <Grid Grid.Row="1" ColumnDefinitions="340,16,*">
+      <!-- the outputs -->
+      <Border Classes="card" Padding="0">
+        <DockPanel>
+          <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,8,Auto,8,Auto" Margin="10">
+            <ComboBox ItemsSource="{x:Static vm:OutputsViewModel.Kinds}" SelectedItem="{Binding NewKind}" HorizontalAlignment="Stretch" />
+            <Button Grid.Column="2" Content="{l:Tr 'Add'}" Command="{Binding AddCommand}" />
+            <Button Grid.Column="4" Command="{Binding RemoveCommand}" IsEnabled="{Binding HasSelection}" AutomationProperties.Name="{l:Tr 'Delete output'}"
+                    ToolTip.Tip="{l:Tr 'Delete the selected output'}" Padding="8,4">
+              <Path Classes="icon" Data="{StaticResource IconDelete}" Width="18" Height="18" Stretch="Uniform" />
+            </Button>
+          </Grid>
+          <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" Background="Transparent">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="o:OutputItem">
+                <Grid ColumnDefinitions="Auto,*,Auto" Margin="2">
+                  <Ellipse Width="9" Height="9" VerticalAlignment="Center" Margin="0,0,8,0"
+                           Fill="{DynamicResource Accent}" IsVisible="{Binding IsRunning}" />
+                  <Ellipse Width="9" Height="9" VerticalAlignment="Center" Margin="0,0,8,0"
+                           Fill="{DynamicResource Line}" IsVisible="{Binding !IsRunning}" />
+                  <StackPanel Grid.Column="1" Spacing="1">
+                    <TextBlock Text="{l:TrBind {Binding KindName}}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding Summary}" Classes="muted" FontSize="11.5" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{l:TrBind {Binding Status}}" FontSize="11.5" TextTrimming="CharacterEllipsis"
+                               Classes="muted" Classes.err="{Binding IsError}" />
+                  </StackPanel>
+                  <Button Grid.Column="2" Content="{l:TrBind {Binding StartStopText}}" VerticalAlignment="Center" Margin="6,0,0,0"
+                          Command="{Binding $parent[UserControl].((vm:OutputsViewModel)DataContext).StartStopCommand}"
+                          CommandParameter="{Binding}" />
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+      </Border>
+
+      <!-- the selected output -->
+      <Border Grid.Column="2" Classes="card">
+        <Panel>
+          <TextBlock Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"
+                     Text="{l:Tr 'Pick what to send and press Add.'}" IsVisible="{Binding !HasSelection}" />
+          <ScrollViewer IsVisible="{Binding HasSelection}">
+            <StackPanel MaxWidth="640" HorizontalAlignment="Left">
+              <TextBlock Classes="h2" Text="{l:TrBind {Binding Selected.KindName, FallbackValue=''}}" />
+              <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"
+                         Text="{l:Tr 'Stop the output to change its settings.'}" IsVisible="{Binding !CanEdit}" />
+
+              <StackPanel IsEnabled="{Binding CanEdit}">
+                <TextBlock Classes="label" Text="{l:Tr 'Send over'}" />
+                <ComboBox ItemsSource="{x:Static vm:OutputsViewModel.Transports}" SelectedItem="{Binding Transport}" HorizontalAlignment="Stretch" />
+
+                <StackPanel IsVisible="{Binding IsSerial}">
+                  <TextBlock Classes="label" Text="{l:Tr 'Serial port'}" />
+                  <Grid ColumnDefinitions="*,8,Auto">
+                    <ComboBox ItemsSource="{Binding SerialPorts}" SelectedItem="{Binding Address}" HorizontalAlignment="Stretch" />
+                    <Button Grid.Column="2" Command="{Binding RefreshPortsCommand}" ToolTip.Tip="{l:Tr 'Refresh ports'}" Padding="6,4">
+                      <Path Classes="icon" Data="{StaticResource IconRefresh}" />
+                    </Button>
+                  </Grid>
+                  <TextBlock Classes="label" Text="{l:Tr 'Baud rate'}" />
+                  <ComboBox ItemsSource="{x:Static vm:OutputsViewModel.Bauds}" SelectedItem="{Binding Baud}" HorizontalAlignment="Stretch" />
+                </StackPanel>
+
+                <StackPanel IsVisible="{Binding ShowAddress}">
+                  <TextBlock Classes="label" Text="{l:TrBind {Binding AddressLabel}}" />
+                  <TextBox Text="{Binding Address}" />
+                </StackPanel>
+                <StackPanel IsVisible="{Binding !IsSerial}">
+                  <TextBlock Classes="label" Text="{l:Tr 'Port'}" />
+                  <NumericUpDown Value="{Binding Port}" Minimum="1" Maximum="65535" Increment="1" FormatString="0" Width="170" HorizontalAlignment="Left" />
+                </StackPanel>
+
+                <StackPanel IsVisible="{Binding HasRate}">
+                  <TextBlock Classes="label" Text="{l:Tr 'Updates per second'}" />
+                  <NumericUpDown Value="{Binding RateHz}" Minimum="0.1" Maximum="50" Increment="1" FormatString="0.##" Width="170" HorizontalAlignment="Left" />
+                </StackPanel>
+
+                <StackPanel IsVisible="{Binding IsMirror}">
+                  <CheckBox Margin="0,12,0,0" IsChecked="{Binding AllowWrite}" Content="{l:Tr 'Let the other side control the vehicle (forward what it sends)'}" />
+                  <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"
+                             Text="{l:Tr 'Another ground station (QGroundControl, a second Mission Planner) receives every packet from the vehicle. With control on, its commands reach the vehicle too.'}" />
+                </StackPanel>
+
+                <StackPanel IsVisible="{Binding IsCot}">
+                  <TextBlock Classes="label" Text="{l:Tr 'CoT type'}" />
+                  <TextBox Text="{Binding CotType}" Watermark="a-f-A-M-F-Q" />
+                  <TextBlock Classes="label" Text="{l:Tr 'Callsign (empty: none)'}" />
+                  <TextBox Text="{Binding CotCallsign}" />
+                  <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"
+                             Text="{l:Tr 'TAK (ATAK, WinTAK, iTAK) listens on the SA multicast group 239.2.3.1 port 6969; a TAK server takes TCP on 8087. Each vehicle is a track named MP-sysid and its system ID.'}" />
+                </StackPanel>
+              </StackPanel>
+
+              <Button Classes="accent" Margin="0,16,0,0" HorizontalAlignment="Left"
+                      Content="{l:TrBind {Binding Selected.StartStopText, FallbackValue='Start'}}"
+                      Command="{Binding StartStopCommand}" CommandParameter="{x:Null}" />
+            </StackPanel>
+          </ScrollViewer>
+        </Panel>
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>

@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:hwc="using:MissionPlanner.App.Controls.SetupScreens.Hardware"
+             xmlns:sv="using:MissionPlanner.Mobile.Views.Setup"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.Mobile.Views.Setup.FramePage"
+             x:DataType="vm:FrameTypeViewModel">
+  <UserControl.DataTemplates>
+    <!-- a frame choice: its motor layout and name; the selected one outlined -->
+    <DataTemplate x:DataType="vm:FrameTile">
+      <Button Margin="4" Padding="6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinHeight="64"
+              BorderThickness="2" BorderBrush="{Binding IsSelected, Converter={x:Static sv:SetupBrushes.AccentOrNone}}"
+              Command="{Binding SelectCommand}">
+        <StackPanel Spacing="4">
+          <hwc:MotorLayoutView Layout="{Binding Layout}" Width="72" Height="72" IsVisible="{Binding HasLayout}" />
+          <TextBlock Text="{l:TrBind {Binding Label}}" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" />
+        </StackPanel>
+      </Button>
+    </DataTemplate>
+  </UserControl.DataTemplates>
+  <ScrollViewer>
+    <StackPanel Margin="12" Spacing="12" MaxWidth="760">
+      <Border Classes="card">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Classes="label" Text="{l:Tr 'CURRENT FRAME'}" />
+            <TextBlock Text="{Binding CurrentText}" FontSize="17" FontWeight="Bold" TextWrapping="Wrap" />
+          </StackPanel>
+          <hwc:MotorLayoutView Grid.Column="1" Layout="{Binding CurrentLayout}" ShowLabels="True" Width="110" Height="110"
+                               IsVisible="{Binding HasCurrentLayout}" />
+        </Grid>
+      </Border>
+      <Border Classes="card" IsVisible="{Binding IsClassType}">
+        <StackPanel Spacing="6">
+          <TextBlock Classes="label" Text="{l:Tr 'FRAME CLASS'}" />
+          <ItemsControl ItemsSource="{Binding Classes}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid Columns="3" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+      <Border Classes="card" IsVisible="{Binding IsClassType}">
+        <StackPanel Spacing="6">
+          <TextBlock Classes="label" Text="{l:Tr 'FRAME TYPE'}" />
+          <TextBlock Classes="muted" FontSize="13" Text="{Binding TypesNote}" TextWrapping="Wrap" IsVisible="{Binding !HasTypes}" />
+          <ItemsControl ItemsSource="{Binding Types}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid Columns="3" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+      <Border Classes="card" IsVisible="{Binding IsLegacy}">
+        <StackPanel Spacing="6">
+          <TextBlock Classes="label" Text="{l:Tr 'FRAME'}" />
+          <ItemsControl ItemsSource="{Binding LegacyFrames}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid Columns="3" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

@@ -83,6 +83,27 @@ public sealed class AppServices
     /// <summary>Planned mission, fence and rally points, shared by Flight Data and Flight Plan.</summary>
     public Mission.MissionStore Mission { get; }
 
+    private Mission.PoiStore? _pois;
+
+    /// <summary>Points of interest of the DATA and PLAN maps (poi.txt, shared with Mission Planner).</summary>
+    public Mission.PoiStore Pois => _pois ??= new Mission.PoiStore();
+
+    /// <summary>Replaces the POI store (tests).</summary>
+    internal void UsePois(Mission.PoiStore store) => _pois = store;
+
+    private Outputs.OutputManager? _outputs;
+
+    /// <summary>The MAVLink mirror and position outputs (TOOLS > Outputs); created on first use.</summary>
+    public Outputs.OutputManager Outputs => _outputs ??= new Outputs.OutputManager(this);
+
+    private Updates.UpdateViewModel? _updates;
+
+    /// <summary>The update check (startup banner, SETTINGS > About); created on first use.</summary>
+    public Updates.UpdateViewModel Updates => _updates ??= new Updates.UpdateViewModel(this);
+
+    /// <summary>The outputs, when they have been created (null before first use).</summary>
+    public Outputs.OutputManager? OutputsIfCreated => _outputs;
+
     /// <summary>The UI language: <c>Localizer.Tr("English text")</c>; see also <c>L.Tr</c>.</summary>
     public Localization.Localizer Localizer { get; } = Localization.Localizer.Current;
 
@@ -94,6 +115,12 @@ public sealed class AppServices
 
     /// <summary>Switches the main window to a screen (call on the UI thread).</summary>
     public void ShowScreen(ViewModels.Screen screen) => ScreenRequested?.Invoke(this, screen);
+
+    /// <summary>Raised to open a page of a menu screen (SETUP > Joystick) by its title.</summary>
+    public event EventHandler<(ViewModels.Screen Screen, string Title)>? MenuPageRequested;
+
+    /// <summary>Shows the screen and opens the page with this menu title on it.</summary>
+    public void RequestMenuPage(ViewModels.Screen screen, string title) => MenuPageRequested?.Invoke(this, (screen, title));
 
     /// <summary>Raised by <see cref="Notify"/>; the shell shows it as a toast.</summary>
     public event EventHandler<Notification>? Notified;

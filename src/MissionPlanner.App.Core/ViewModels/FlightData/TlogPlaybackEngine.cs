@@ -118,7 +118,7 @@ public sealed class TlogPlaybackEngine : IDisposable
     }
 
     /// <summary>The speeds offered, as in Mission Planner (x0.25 … x10).</summary>
-    public static IReadOnlyList<double> Speeds { get; } = [0.25, 0.5, 1, 2, 5, 10];
+    public static IReadOnlyList<double> Speeds { get; } = [0.1, 0.25, 0.5, 1, 2, 5, 10];
 
     public TlogPlaybackState State => _state;
 

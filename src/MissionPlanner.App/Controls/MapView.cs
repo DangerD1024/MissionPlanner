@@ -118,6 +118,12 @@ public sealed class MapView : Control
     private GPoint _dragCenterPx;
     private MapViewport? _lastViewport;
 
+    // two-finger pinch on a touch screen: the fingers down, and the spread and zoom when it began
+    private readonly Dictionary<long, Point> _touches = new();
+    private bool _pinching;
+    private double _pinchStartSpread;
+    private int _pinchStartZoom;
+
     static MapView()
     {
         AffectsRender<MapView>(ProviderProperty, CenterLatProperty, CenterLngProperty, ZoomProperty);
@@ -293,6 +299,19 @@ public sealed class MapView : Control
         var point = e.GetCurrentPoint(this);
         var pos = point.Position;
 
+        if (e.Pointer.Type == PointerType.Touch)
+        {
+            _touches[e.Pointer.Id] = pos;
+            if (_touches.Count >= 2)
+            {
+                // a second finger: stop panning or dragging and zoom with the spread instead
+                StartPinch();
+                e.Pointer.Capture(this);
+                e.Handled = true;
+                return;
+            }
+        }
+
         if (point.Properties.IsRightButtonPressed)
         {
             MapContextRequested?.Invoke(this, new MapPointerEventArgs(vp.ToLatLng(pos), pos, HitTestLayers(pos, vp), e.KeyModifiers));
@@ -330,6 +349,17 @@ public sealed class MapView : Control
             return;
 
         var pos = e.GetPosition(this);
+        if (e.Pointer.Type == PointerType.Touch && _touches.ContainsKey(e.Pointer.Id))
+        {
+            _touches[e.Pointer.Id] = pos;
+            if (_pinching)
+            {
+                Pinch();
+                e.Handled = true;
+                return;
+            }
+        }
+
         PointerPositionChanged?.Invoke(this, vp.ToLatLng(pos));
 
         if (_pressAt is not { } start)
@@ -358,6 +388,16 @@ public sealed class MapView : Control
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
+        if (e.Pointer.Type == PointerType.Touch && _touches.Remove(e.Pointer.Id) && _pinching)
+        {
+            // the pinch ends with its fingers; a finger left down neither pans nor clicks
+            if (_touches.Count < 2)
+                _pinching = false;
+            e.Pointer.Capture(null);
+            e.Handled = true;
+            return;
+        }
+
         if (_pressAt == null)
             return;
 
@@ -378,6 +418,14 @@ public sealed class MapView : Control
         e.Handled = true;
     }
 
+    protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
+    {
+        base.OnPointerCaptureLost(e);
+        // a touch cancelled by the system (a gesture, the app going to the background)
+        if (_touches.Remove(e.Pointer.Id) && _touches.Count < 2)
+            _pinching = false;
+    }
+
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
         base.OnPointerWheelChanged(e);
@@ -385,14 +433,24 @@ public sealed class MapView : Control
         if (provider == null || e.Delta.Y == 0)
             return;
 
+        if (ZoomAbout(e.GetPosition(this), Zoom + Math.Sign(e.Delta.Y)))
+            e.Handled = true;
+    }
+
+    /// <summary>Changes the zoom keeping the map point under <paramref name="at"/> where it is.</summary>
+    private bool ZoomAbout(Point at, int zoom)
+    {
+        var provider = Provider;
+        if (provider == null)
+            return false;
         var oldZoom = Zoom;
-        var newZoom = ClampZoom(oldZoom + Math.Sign(e.Delta.Y));
+        var newZoom = ClampZoom(zoom);
         if (newZoom == oldZoom)
-            return;
+            return false;
 
         // keep the point under the cursor fixed while zooming
         var proj = provider.Projection;
-        var offset = e.GetPosition(this) - new Point(Bounds.Width / 2, Bounds.Height / 2);
+        var offset = at - new Point(Bounds.Width / 2, Bounds.Height / 2);
         var centerPx = proj.FromLatLngToPixel(CenterLat, CenterLng, oldZoom);
         var cursor = proj.FromPixelToLatLng(new GPoint(centerPx.X + (long)offset.X, centerPx.Y + (long)offset.Y), oldZoom);
         var cursorPx = proj.FromLatLngToPixel(cursor, newZoom);
@@ -400,7 +458,39 @@ public sealed class MapView : Control
 
         SetCurrentValue(ZoomProperty, newZoom);
         SetCenter(newCenter);
-        e.Handled = true;
+        return true;
+    }
+
+    private (Point Mid, double Spread) TouchSpread()
+    {
+        var pts = _touches.Values.Take(2).ToArray();
+        var mid = new Point((pts[0].X + pts[1].X) / 2, (pts[0].Y + pts[1].Y) / 2);
+        var d = pts[0] - pts[1];
+        return (mid, Math.Sqrt(d.X * d.X + d.Y * d.Y));
+    }
+
+    private void StartPinch()
+    {
+        _pinching = true;
+        _pressAt = null;
+        _dragItem = null;
+        _panning = false;
+        _pinchStartSpread = Math.Max(1, TouchSpread().Spread);
+        _pinchStartZoom = Zoom;
+    }
+
+    /// <summary>One zoom level for each doubling (or halving) of the distance between the fingers.</summary>
+    private void Pinch()
+    {
+        if (_touches.Count < 2)
+            return;
+        var (mid, spread) = TouchSpread();
+        var target = _pinchStartZoom + (int)Math.Round(Math.Log2(Math.Max(1, spread) / _pinchStartSpread));
+        if (target != Zoom)
+        {
+            ZoomAbout(mid, target);
+            UserPanned?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)

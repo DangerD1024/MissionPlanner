@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The phone app in a phone-sized desktop window, for developing and screenshotting the mobile UI. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>MissionPlanner.Mobile.Desktop</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MissionPlanner.Mobile\MissionPlanner.Mobile.csproj" />
+  </ItemGroup>
+
+  <!-- data files the shared libraries look for next to the executable -->
+  <ItemGroup>
+    <Content Include="..\..\ParameterMetaDataBackup.xml" Link="ParameterMetaDataBackup.xml" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\mavcmd.xml" Link="mavcmd.xml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

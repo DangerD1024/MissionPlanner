@@ -1,3 +1,4 @@
+﻿using MissionPlanner.App.Core.Links.Usb;
 using MissionPlanner.Comms;
 
 namespace MissionPlanner.App.Core.Links;
@@ -10,12 +11,27 @@ namespace MissionPlanner.App.Core.Links;
 /// </summary>
 public static class LinkFactory
 {
+    /// <summary>
+    /// The phone's USB host when the app runs on Android; serial links named "usb:..." open
+    /// through it (<see cref="UsbSerialLink"/>). Null on the desktop.
+    /// </summary>
+    public static IUsbHost? UsbHost { get; set; }
+
+    /// <summary>
+    /// The phone's Bluetooth (Android, iOS); serial links named "bt:..." or "ble:..." open
+    /// through it (<see cref="Bluetooth.BluetoothLink"/>). Null on the desktop, where paired
+    /// Bluetooth serial devices are ordinary serial ports.
+    /// </summary>
+    public static Bluetooth.IBluetoothHost? BluetoothHost { get; set; }
+
     public static ICommsSerial Create(LinkSpec spec)
     {
         ArgumentNullException.ThrowIfNull(spec);
 
         return spec.Kind switch
         {
+            LinkKind.Serial when UsbHost != null && UsbSerialAddress.IsUsb(spec.Address) => new UsbSerialLink(UsbHost, spec.Address, spec.Value),
+            LinkKind.Serial when BluetoothHost != null && Bluetooth.BluetoothAddress.IsBluetooth(spec.Address) => new Bluetooth.BluetoothLink(BluetoothHost, spec.Address, spec.Value),
             LinkKind.Serial => new SerialLink(spec.Address, spec.Value),
             LinkKind.Tcp => new FixedTcp(spec.Address, spec.Value),
             LinkKind.UdpListen => new FixedUdpListen(spec.Value),

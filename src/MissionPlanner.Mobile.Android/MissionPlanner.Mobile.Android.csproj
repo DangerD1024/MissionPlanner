@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The Android app (portrait). Build on a machine with the .NET Android workload and an Android SDK:
+      dotnet publish src/MissionPlanner.Mobile.Android -c Release
+    (installer/android/build-apk.sh does that and copies the .apk to bin/). Not in MissionPlanner.Next.sln,
+    so the desktop solution builds without the workload.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>26</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>MissionPlanner.Mobile.Android</RootNamespace>
+    <ApplicationId>org.missionplanner.mp3</ApplicationId>
+    <ApplicationTitle>Mission Planner</ApplicationTitle>
+    <!-- 3.0.4b -> display 3.0.4b, version code 30004 -->
+    <ApplicationDisplayVersion>$(MissionPlannerVersion)</ApplicationDisplayVersion>
+    <ApplicationVersion>$([MSBuild]::Add($([MSBuild]::Add($([MSBuild]::Multiply($(Version.Split('.')[0]), 10000)), $([MSBuild]::Multiply($(Version.Split('.')[1]), 100)))), $(Version.Split('.')[2])))</ApplicationVersion>
+    <!-- 64-bit ARM phones and tablets (practically every device since 2017) -->
+    <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- the shared libraries use reflection (settings, MAVLink message types): keep them whole -->
+    <AndroidLinkMode>SdkOnly</AndroidLinkMode>
+    <TrimMode>partial</TrimMode>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Android" Version="12.1.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MissionPlanner.Mobile\MissionPlanner.Mobile.csproj" />
+  </ItemGroup>
+
+  <!-- data files the shared libraries read by path: copied out of the package on first start -->
+  <ItemGroup>
+    <AndroidAsset Include="..\..\mavcmd.xml" Link="Assets\mavcmd.xml" />
+    <AndroidAsset Include="..\..\ParameterMetaDataBackup.xml" Link="Assets\ParameterMetaDataBackup.xml" />
+  </ItemGroup>
+
+</Project>

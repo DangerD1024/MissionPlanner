@@ -67,12 +67,9 @@ public sealed partial class FlightDataViewModel : PageViewModel
         Tlogs = new TlogPlayerViewModel(services);
         Tuning = new TuningGraphViewModel(services);
 
-        QuickTiles = QuickDefault.All.Select((d, i) => new QuickTile(i, d)).ToArray();
-        foreach (var tile in QuickTiles)
-        {
-            if (Settings.Instance["next_quick" + tile.Index] is { Length: > 0 } name)
-                tile.Show(name);
-        }
+        _quickColumns = Math.Clamp(Settings.Instance.GetInt32(QuickColumnsKey, 2), 1, 4);
+        _quickRows = Math.Clamp(Settings.Instance.GetInt32(QuickRowsKey, 3), 1, 6);
+        BuildQuickTiles();
 
         MaxZoom = SelectedMapProvider.Provider.MaxZoom ?? 20;
         RestoreMapPosition();
@@ -123,8 +120,52 @@ public sealed partial class FlightDataViewModel : PageViewModel
 
     // ---- Quick tab ---------------------------------------------------------------------------
 
-    /// <summary>The six readouts, two columns by three rows.</summary>
-    public IReadOnlyList<QuickTile> QuickTiles { get; }
+    /// <summary>The readouts: two columns by three rows by default (Mission Planner's "Set View Count" changes it).</summary>
+    public System.Collections.ObjectModel.ObservableCollection<QuickTile> QuickTiles { get; } = new();
+
+    internal const string QuickColumnsKey = "next_quick_cols";
+    internal const string QuickRowsKey = "next_quick_rows";
+
+    private int _quickColumns;
+    private int _quickRows;
+
+    public int QuickColumns => _quickColumns;
+
+    public int QuickRows => _quickRows;
+
+    /// <summary>Layouts offered on the Quick tab's right-click menu ("columns x rows").</summary>
+    public static IReadOnlyList<string> QuickLayouts { get; } = ["1x2", "1x3", "2x2", "2x3", "2x4", "3x3", "3x4", "4x4", "4x6"];
+
+    /// <summary>Sets the Quick tab to <paramref name="layout"/> ("3x4": three columns, four rows); remembered.</summary>
+    [RelayCommand]
+    private void SetQuickLayout(string? layout)
+    {
+        var parts = layout?.Split('x');
+        if (parts is not { Length: 2 } || !int.TryParse(parts[0], out var cols) || !int.TryParse(parts[1], out var rows))
+            return;
+        _quickColumns = Math.Clamp(cols, 1, 4);
+        _quickRows = Math.Clamp(rows, 1, 6);
+        Settings.Instance[QuickColumnsKey] = _quickColumns.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        Settings.Instance[QuickRowsKey] = _quickRows.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        BuildQuickTiles();
+        OnPropertyChanged(nameof(QuickColumns));
+        OnPropertyChanged(nameof(QuickRows));
+    }
+
+    /// <summary>One tile per cell, each showing what was chosen for it (next_quickN) or its default.</summary>
+    private void BuildQuickTiles()
+    {
+        var count = _quickColumns * _quickRows;
+        while (QuickTiles.Count > count)
+            QuickTiles.RemoveAt(QuickTiles.Count - 1);
+        for (var i = QuickTiles.Count; i < count; i++)
+        {
+            var tile = new QuickTile(i, QuickDefault.For(i));
+            if (Settings.Instance["next_quick" + i] is { Length: > 0 } name)
+                tile.Show(name);
+            QuickTiles.Add(tile);
+        }
+    }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsQuickPickerOpen))]
@@ -221,6 +262,42 @@ public sealed partial class FlightDataViewModel : PageViewModel
             return;
         StatusEntries = _statusAll.Where(e => StatusCatalog.Matches(e, value)).ToArray();
         RefreshStatus();
+    }
+
+    internal const string HiddenTabsKey = "next_data_tabs_hidden";
+
+    private System.Collections.ObjectModel.ObservableCollection<bool>? _tabVisible;
+
+    /// <summary>Which DATA tabs show (Mission Planner's tab "Customize"); index = <see cref="FlightDataTab"/>.</summary>
+    public System.Collections.ObjectModel.ObservableCollection<bool> TabVisible => _tabVisible ??= LoadTabVisibility();
+
+    private static System.Collections.ObjectModel.ObservableCollection<bool> LoadTabVisibility()
+    {
+        var hidden = (Settings.Instance[HiddenTabsKey] ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return new(Enum.GetValues<FlightDataTab>().Select(t => t == FlightDataTab.Quick || !hidden.Contains(t.ToString())));
+    }
+
+    /// <summary>Shows or hides a tab (Quick always shows); remembered.</summary>
+    public void SetTabVisible(FlightDataTab tab, bool visible)
+    {
+        if (tab == FlightDataTab.Quick)
+            return;
+        TabVisible[(int)tab] = visible;
+        Settings.Instance[HiddenTabsKey] = string.Join(',',
+            Enum.GetValues<FlightDataTab>().Where(t => !TabVisible[(int)t]).Select(t => t.ToString()));
+        if (!visible && SelectedTabIndex == (int)tab)
+            SelectedTabIndex = (int)FlightDataTab.Quick;
+    }
+
+    /// <summary>Ctrl+1 … Ctrl+0: tab 1 … 10, as Mission Planner.</summary>
+    [RelayCommand]
+    private void SelectTab(string? key)
+    {
+        if (!int.TryParse(key, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var number))
+            return;
+        var index = (number == 0 ? 10 : number) - 1;
+        if (index >= 0 && index < Enum.GetValues<FlightDataTab>().Length && TabVisible[index])
+            SelectedTabIndex = index;
     }
 
     partial void OnSelectedTabIndexChanged(int value)
@@ -403,10 +480,76 @@ public sealed partial class FlightDataViewModel : PageViewModel
         c |= Set(ref h.Message, cs.messageHigh ?? "");
         c |= Set(ref h.SpeedUnit, Units.Speed);
         c |= Set(ref h.AltUnit, Units.Altitude);
+        c |= UpdateHudOptions(h, cs);
 
         if (c)
             h.Version++;
     }
+
+    private int _hudOptionsVersion = -1;
+    private static int _hudOptionsChanges;
+    private string[] _hudItemNames = [];
+    private Func<CurrentState, double>?[] _hudItemGetters = [];
+    private QuickField[] _hudItemFields = [];
+
+    static FlightDataViewModel() => HudOptions.Changed += (_, _) => Interlocked.Increment(ref _hudOptionsChanges);
+
+    /// <summary>Ground colour, volts per cell and user items from the HUD options.</summary>
+    private bool UpdateHudOptions(HudModel h, CurrentState cs)
+    {
+        var c = false;
+        if (_hudOptionsVersion != _hudOptionsChanges)
+        {
+            _hudOptionsVersion = _hudOptionsChanges;
+            _hudItemNames = HudOptions.UserItems.ToArray();
+            _hudItemGetters = _hudItemNames.Select(QuickValueCatalog.GetGetter).ToArray();
+            _hudItemFields = _hudItemNames.Select(QuickValueCatalog.Describe).ToArray();
+            c |= Set(ref h.GroundColor, HudOptions.GroundColor);
+            _hudCells = HudOptions.CellCount;
+            c = true;
+        }
+
+        var perCell = HudOptions.PerCell(cs.battery_voltage, _hudCells);
+        if (perCell != h.CellVoltage)
+        {
+            h.CellVoltage = perCell;
+            c = true;
+        }
+
+        if (_hudItemNames.Length > 0 || h.UserLines.Length > 0)
+        {
+            var lines = new string[_hudItemNames.Length];
+            for (var i = 0; i < lines.Length; i++)
+            {
+                double v;
+                try
+                {
+                    v = _hudItemGetters[i]?.Invoke(cs) ?? double.NaN;
+                }
+                catch (Exception)
+                {
+                    v = double.NaN;
+                }
+
+                var f = _hudItemFields[i];
+                lines[i] = $"{f.Label} {QuickFormat(v)}{(f.Unit.Length > 0 ? " " + f.Unit : "")}";
+            }
+
+            if (!lines.SequenceEqual(h.UserLines))
+            {
+                h.UserLines = lines;
+                c = true;
+            }
+        }
+
+        return c;
+    }
+
+    private int _hudCells;
+
+    private static string QuickFormat(double v) =>
+        double.IsNaN(v) ? "-" : Math.Abs(v) >= 1000 ? v.ToString("0", System.Globalization.CultureInfo.InvariantCulture)
+            : v.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
 
     public static string GpsText(float status, float sats) => status switch
     {

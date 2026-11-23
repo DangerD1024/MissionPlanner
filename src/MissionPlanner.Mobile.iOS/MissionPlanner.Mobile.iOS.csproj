@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The iPhone app: the shared phone UI (MissionPlanner.Mobile) with Bluetooth LE through CoreBluetooth.
+    Build on a Mac with Xcode and the .NET iOS workload (dotnet workload install ios):
+      installer/ios/build-ipa.sh
+    Not in MissionPlanner.Next.sln, so the desktop solution builds without the workload.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-ios</TargetFramework>
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>MissionPlanner.Mobile.iOS</RootNamespace>
+    <ApplicationId>org.missionplanner.mp3</ApplicationId>
+    <ApplicationTitle>Mission Planner</ApplicationTitle>
+    <!-- the store wants a numeric version: 3.0.4b -> 3.0.4; the build number goes up with every upload -->
+    <ApplicationDisplayVersion>$(Version)</ApplicationDisplayVersion>
+    <IosBuildNumber Condition="'$(IosBuildNumber)' == ''">1</IosBuildNumber>
+    <ApplicationVersion>$(IosBuildNumber)</ApplicationVersion>
+    <!-- Assets.xcassets/AppIcon.appiconset: one 1024 px image, Xcode makes the other sizes -->
+    <AppIcon>AppIcon</AppIcon>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">ios-arm64</RuntimeIdentifier>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- the shared libraries use reflection (settings, MAVLink message types): keep them whole, and
+         let the interpreter run what ahead-of-time compilation cannot -->
+    <MtouchLink>SdkOnly</MtouchLink>
+    <UseInterpreter>true</UseInterpreter>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.iOS" Version="12.1.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MissionPlanner.Mobile\MissionPlanner.Mobile.csproj" />
+  </ItemGroup>
+
+  <!-- data files the shared libraries read by path: copied to the data folder on first start -->
+  <ItemGroup>
+    <BundleResource Include="..\..\mavcmd.xml" Link="Resources\mavcmd.xml" LogicalName="mavcmd.xml" />
+    <BundleResource Include="..\..\ParameterMetaDataBackup.xml" Link="Resources\ParameterMetaDataBackup.xml" LogicalName="ParameterMetaDataBackup.xml" />
+    <InterfaceDefinition Include="LaunchScreen.storyboard" />
+  </ItemGroup>
+
+</Project>

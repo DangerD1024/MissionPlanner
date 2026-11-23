@@ -1,0 +1,49 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.VehicleCommandsView"
+             x:DataType="vm:VehicleCommandsViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1100" HorizontalAlignment="Stretch">
+      <tv:ToolHeader />
+      <WrapPanel>
+        <Border Classes="card" Width="520" Margin="0,0,16,16" VerticalAlignment="Top">
+          <StackPanel Spacing="8">
+            <TextBlock Classes="h2" Text="{l:Tr 'Calibration flags'}" />
+            <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{l:Tr 'After restoring a parameter backup onto the same board the calibration values are back, but the autopilot still asks for a calibration. These mark it done without calibrating again.'}" />
+            <Button Content="{l:Tr 'Force accel calibrated'}" Command="{Binding ForceAccelCalibratedCommand}" IsEnabled="{Binding CanCommand}" HorizontalAlignment="Left" />
+            <Button Content="{l:Tr 'Force compass calibrated'}" Command="{Binding ForceCompassCalibratedCommand}" IsEnabled="{Binding CanCommand}" HorizontalAlignment="Left" />
+          </StackPanel>
+        </Border>
+        <Border Classes="card" Width="520" Margin="0,0,16,16" VerticalAlignment="Top">
+          <StackPanel Spacing="8">
+            <TextBlock Classes="h2" Text="{l:Tr 'Arm and take off'}" />
+            <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{l:Tr 'Switches to GUIDED, arms and climbs to the altitude below (Copter, QuadPlane). The vehicle needs a GPS position.'}" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <NumericUpDown Value="{Binding TakeoffAltitude}" Minimum="1" Maximum="500" Increment="1" FormatString="0" Width="130" />
+              <TextBlock Text="m" VerticalAlignment="Center" />
+              <Button Classes="accent" Content="{l:Tr 'Arm and take off'}" Command="{Binding ArmAndTakeoffCommand}" IsEnabled="{Binding CanCommand}" HorizontalAlignment="Left" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+        <Border Classes="card" Width="520" Margin="0,0,16,16" VerticalAlignment="Top">
+          <StackPanel Spacing="8">
+            <TextBlock Classes="h2" Text="{l:Tr 'Bootloader'}" />
+            <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{l:Tr 'Update writes the bootloader carried by the running firmware (ChibiOS boards). DFU reboots into the STM32 ROM bootloader for dfu-util or STM32CubeProgrammer.'}" />
+            <Button Content="{l:Tr 'Update bootloader…'}" Command="{Binding UpdateBootloaderCommand}" IsEnabled="{Binding CanCommand}" HorizontalAlignment="Left" />
+            <Button Content="{l:Tr 'Reboot to DFU…'}" Command="{Binding RebootToDfuCommand}" IsEnabled="{Binding CanCommand}" HorizontalAlignment="Left" />
+          </StackPanel>
+        </Border>
+        <Border Classes="card" Width="520" Margin="0,0,16,16" VerticalAlignment="Top">
+          <StackPanel Spacing="8">
+            <TextBlock Classes="h2" Text="{l:Tr 'Watchdog test'}" />
+            <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{l:Tr 'Deliberately hangs the autopilot so its watchdog resets it. Bench only: a flying vehicle will crash.'}" />
+            <Button Classes="danger" Content="{l:Tr 'Lock up the autopilot…'}" Command="{Binding LockupCommand}" IsEnabled="{Binding CanCommand}" HorizontalAlignment="Left" />
+          </StackPanel>
+        </Border>
+      </WrapPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

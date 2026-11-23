@@ -167,8 +167,11 @@ public sealed partial class FlightDataViewModel
         {
             _missionDirty = false;
             m.Mission = MissionOverlay.Build(Services.Mission, m.HasHome ? new TrackPoint(m.HomeLat, m.HomeLng) : null);
+            RebuildMissionProgress();
             c = true;
         }
+
+        UpdateMapInfo(cs);
 
         if (c)
             m.Version++;
@@ -392,6 +395,7 @@ public sealed partial class FlightDataViewModel
 
     public void ClearTrack()
     {
+        Photos.Clear();
         MapModel.Track.Clear();
         MapModel.Version++;
     }

@@ -95,6 +95,16 @@ public abstract partial class MenuScreenViewModel : PageViewModel
 
     protected void Add(MenuItemViewModel item) => Items.Add(item);
 
+    /// <summary>Opens a page by its menu title, when it applies to the vehicle; returns whether it did.</summary>
+    public bool Show(string title)
+    {
+        UpdateVisibility();
+        if (Items.FirstOrDefault(i => i.IsPage && i.IsVisible && i.Title == title) is not { } item)
+            return false;
+        SelectedItem = item;
+        return true;
+    }
+
     protected void UpdateVisibility()
     {
         foreach (var item in Items.Where(i => i.IsPage))

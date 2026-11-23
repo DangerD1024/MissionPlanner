@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The phone app's UI (portrait): shared by the Android head (MissionPlanner.Mobile.Android) and a
+    phone-sized desktop window for development (MissionPlanner.Mobile.Desktop). The vehicle logic is
+    MissionPlanner.App.Core; the HUD, map and its layers are the desktop app's, linked in.
+  -->
+  <PropertyGroup>
+    <RootNamespace>MissionPlanner.Mobile</RootNamespace>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.6" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MissionPlanner.App.Core\MissionPlanner.App.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <!-- drawn controls and localization from the desktop app, compiled into this assembly -->
+  <ItemGroup>
+    <Compile Include="..\MissionPlanner.App\Controls\Hud.cs" Link="Shared\Hud.cs" />
+    <Compile Include="..\MissionPlanner.App\Controls\MapView.cs" Link="Shared\MapView.cs" />
+    <Compile Include="..\MissionPlanner.App\Controls\PoiLayer.cs" Link="Shared\PoiLayer.cs" />
+    <Compile Include="..\MissionPlanner.App\Controls\FlightData\FlightMapLayers.cs" Link="Shared\FlightMapLayers.cs" />
+    <Compile Include="..\MissionPlanner.App\Controls\FlightPlan\PlanLayers.cs" Link="Shared\PlanLayers.cs" />
+    <Compile Include="..\MissionPlanner.App\Controls\SetupScreens\RcBar.cs" Link="Shared\RcBar.cs" />
+    <Compile Include="..\MissionPlanner.App\Controls\SetupScreens\VehicleOrientationGlyph.cs" Link="Shared\VehicleOrientationGlyph.cs" />
+    <Compile Include="..\MissionPlanner.App\Controls\SetupScreens\Hardware\MotorLayoutView.cs" Link="Shared\MotorLayoutView.cs" />
+    <Compile Include="..\MissionPlanner.App\Localization\TrExtension.cs" Link="Shared\TrExtension.cs" />
+    <Compile Include="..\MissionPlanner.App\Localization\LocalizationSetup.cs" Link="Shared\LocalizationSetup.cs" />
+    <EmbeddedResource Include="..\MissionPlanner.App\Localization\*.json" Link="Shared\Localization\%(Filename).json"
+                      LogicalName="MissionPlanner.App.Localization.%(Filename).json" />
+  </ItemGroup>
+
+</Project>

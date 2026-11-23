@@ -1,0 +1,78 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:cc="using:MissionPlanner.App.Controls.SetupScreens"
+             xmlns:sv="using:MissionPlanner.Mobile.Views.Setup"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.Mobile.Views.Setup.AccelPage"
+             x:DataType="vm:AccelCalibrationViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="12" Spacing="12" MaxWidth="760">
+
+      <!-- 6-position calibration: the vehicle drawing shows how to hold it -->
+      <Border Classes="card">
+        <StackPanel Spacing="12">
+          <TextBlock Classes="label" Text="{l:Tr 'ACCELEROMETER · 6 POSITIONS'}" />
+          <Border Background="{StaticResource Bg}" CornerRadius="12" Padding="8">
+            <cc:VehicleOrientationGlyph Position="{Binding Position}" Height="180" />
+          </Border>
+          <TextBlock Text="{l:TrBind {Binding Instruction}}" FontSize="22" FontWeight="Bold" TextWrapping="Wrap"
+                     Foreground="{Binding Succeeded, Converter={x:Static sv:SetupBrushes.OkOrText}}" />
+          <TextBlock Classes="muted" Text="{Binding Detail}" TextWrapping="Wrap" />
+          <ItemsControl ItemsSource="{Binding Steps}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:AccelStepViewModel">
+                <Border Classes="chip" Margin="0,0,6,6" Classes.cur="{Binding IsCurrent}" Classes.done="{Binding IsDone}">
+                  <TextBlock Text="{l:TrBind {Binding Name}}" FontSize="12" />
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <Button Classes="primary" HorizontalAlignment="Stretch" Height="54" Content="{l:TrBind {Binding AccelButtonText}}" Command="{Binding AccelCommand}" />
+          <Button HorizontalAlignment="Stretch" Content="{l:Tr 'Cancel'}" Command="{Binding CancelCommand}" IsVisible="{Binding IsCalibrating}" />
+          <sv:StatusBanner DataContext="{Binding AccelStatus}" />
+        </StackPanel>
+      </Border>
+
+      <!-- level -->
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="h2" Text="{l:Tr 'Calibrate Level'}" />
+          <TextBlock Classes="muted" TextWrapping="Wrap" FontSize="13"
+                     Text="{l:Tr 'Place the vehicle flat and level to set the accelerometer offsets (AHRS trims).'}" />
+          <Button HorizontalAlignment="Stretch" Content="{l:TrBind {Binding LevelButtonText}}" Command="{Binding CalibrateLevelCommand}" />
+          <sv:StatusBanner DataContext="{Binding LevelStatus}" />
+        </StackPanel>
+      </Border>
+
+      <!-- simple -->
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="h2" Text="{l:Tr 'Simple Accel Calibration'}" />
+          <TextBlock Classes="muted" TextWrapping="Wrap" FontSize="13"
+                     Text="{l:Tr 'For vehicles too large to turn over: sets the scale factors for level flight only.'}" />
+          <Button HorizontalAlignment="Stretch" Content="{l:TrBind {Binding SimpleButtonText}}" Command="{Binding SimpleAccelCommand}" />
+          <sv:StatusBanner DataContext="{Binding SimpleStatus}" />
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card" IsVisible="{Binding HasMessages}">
+        <StackPanel Spacing="6">
+          <TextBlock Classes="label" Text="{l:Tr 'AUTOPILOT MESSAGES'}" />
+          <ItemsControl ItemsSource="{Binding Messages}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="x:String">
+                <TextBlock Text="{Binding}" FontSize="12" FontFamily="monospace" TextWrapping="Wrap" Margin="0,1" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

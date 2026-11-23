@@ -8,7 +8,7 @@ interface for [Mission Planner](https://ardupilot.org/planner/), built on .NET 1
 that runs natively on **Linux, Windows and macOS** while reusing Mission Planner's proven MAVLink
 and vehicle libraries.
 
-> **Status: preview (3.0.3b).** The main screens of the classic Mission Planner are in place and
+> **Status: preview (3.0.4b).** The main screens of the classic Mission Planner are in place and
 > tested against ArduPilot SITL, and the setup screens were checked read-only on a real flight
 > controller. It has not yet been flown with real aircraft — try it on the simulator or a bench
 > vehicle with the propellers removed.

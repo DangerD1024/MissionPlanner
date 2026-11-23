@@ -1,0 +1,111 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightPlan"
+             xmlns:m="using:MissionPlanner.App.Core.Mission"
+             xmlns:c="using:MissionPlanner.App.Controls"
+             xmlns:mc="using:MissionPlanner.Mobile.Controls"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.Mobile.Views.PlanView"
+             x:DataType="vm:FlightPlanViewModel">
+
+  <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*" x:Name="Root">
+
+    <!-- toolbar: read / write the vehicle's mission, clear, fit -->
+    <Border Grid.Row="0" x:Name="Toolbar" Background="{StaticResource Surface}" Padding="8,6">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Button Padding="12,0" Command="{Binding ReadCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <mc:Icon Data="{StaticResource IcDownload}" Width="18" Height="18" />
+              <TextBlock Text="{l:Tr 'Read'}" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+          <Button Padding="12,0" Classes="primary" Command="{Binding WriteCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <mc:Icon Data="{StaticResource IcUpload}" Width="18" Height="18" Stroke="#06121F" />
+              <TextBlock Text="{l:Tr 'Write'}" VerticalAlignment="Center" Foreground="#06121F" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+          <Button Classes="fab" Background="{StaticResource Surface2}" Command="{Binding ZoomToMissionCommand}">
+            <mc:Icon Data="{StaticResource IcCenter}" />
+          </Button>
+          <Button Classes="fab" Background="{StaticResource Surface2}" Command="{Binding ClearListCommand}">
+            <mc:Icon Data="{StaticResource IcDelete}" />
+          </Button>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- map: tap adds a waypoint, drag one to move it -->
+    <Panel Grid.Row="1" x:Name="MapPanel" ClipToBounds="True">
+      <c:MapView x:Name="Map"
+                 Provider="{Binding SelectedMapProvider.Provider}"
+                 CenterLat="{Binding CenterLat}"
+                 CenterLng="{Binding CenterLng}"
+                 Zoom="{Binding Zoom}" />
+      <Border Classes="glass" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10" Padding="10,6">
+        <TextBlock x:Name="SummaryText" FontSize="13" FontWeight="SemiBold" />
+      </Border>
+      <Border Classes="glass" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10" Padding="12,6">
+        <TextBlock Text="{l:Tr 'Tap the map to add a waypoint · drag one to move it'}" FontSize="12" Classes="muted" />
+      </Border>
+    </Panel>
+
+    <!-- waypoints: the list, and the selected one's altitude -->
+    <Border Grid.Row="2" x:Name="ListPanel" Background="{StaticResource Surface}" CornerRadius="18,18,0,0" Padding="0,6,0,4">
+      <StackPanel>
+        <Button Classes="flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Height="40" MinHeight="40" Padding="20,0" Click="OnToggleList">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock x:Name="ListHeader" FontWeight="Bold" FontSize="15" VerticalAlignment="Center" />
+            <mc:Icon Grid.Column="1" x:Name="ListChevron" Data="{StaticResource IcChevronDown}" Width="16" Height="16" />
+          </Grid>
+        </Button>
+
+        <!-- selected item: altitude and delete -->
+        <Border Margin="12,0,12,6" Padding="12,8" CornerRadius="12" Background="{StaticResource Surface2}"
+                IsVisible="{Binding SelectedItem, Converter={x:Static ObjectConverters.IsNotNull}}">
+          <Grid ColumnDefinitions="Auto,*,Auto" x:DataType="vm:FlightPlanViewModel">
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="{Binding SelectedItem.CommandName}" FontWeight="Bold" />
+              <TextBlock Classes="muted" FontSize="12">
+                <Run Text="{l:Tr '#'}" /><Run Text="{Binding SelectedItem.Seq}" />
+              </TextBlock>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6">
+              <Button Width="44" Padding="0" Click="OnAltDown">
+                <mc:Icon Data="{StaticResource IcMinus}" Width="16" Height="16" />
+              </Button>
+              <TextBox Width="84" HorizontalContentAlignment="Center" Text="{Binding SelectedItem.Alt}" />
+              <Button Width="44" Padding="0" Click="OnAltUp">
+                <mc:Icon Data="{StaticResource IcPlus}" Width="16" Height="16" />
+              </Button>
+            </StackPanel>
+            <Button Grid.Column="2" Width="48" Padding="0" Click="OnDeleteSelected" Background="{StaticResource BadDim}">
+              <mc:Icon Data="{StaticResource IcDelete}" Stroke="{StaticResource Bad}" />
+            </Button>
+          </Grid>
+        </Border>
+
+        <ListBox x:Name="Items" MaxHeight="220" Background="Transparent" ItemsSource="{Binding Store.Mission}"
+                 SelectedItem="{Binding SelectedItem}">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="m:MissionItem">
+              <Grid ColumnDefinitions="Auto,*,Auto" Margin="12,6">
+                <Border Width="30" Height="30" CornerRadius="15" Background="{StaticResource AccentDim}" Margin="0,0,12,0">
+                  <TextBlock Text="{Binding Seq}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" FontSize="13" />
+                </Border>
+                <TextBlock Grid.Column="1" Text="{Binding CommandName}" VerticalAlignment="Center" FontSize="15" />
+                <TextBlock Grid.Column="2" VerticalAlignment="Center" Classes="muted" FontSize="13"
+                           IsVisible="{Binding HasLocation}">
+                  <Run Text="{Binding Alt, StringFormat='{}{0:0.#}'}" /><Run Text=" m" />
+                </TextBlock>
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </StackPanel>
+    </Border>
+  </Grid>
+</UserControl>

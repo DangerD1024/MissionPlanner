@@ -1,0 +1,113 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:cal="using:MissionPlanner.App.Core.ViewModels.SetupScreens.Calibration"
+             xmlns:sv="using:MissionPlanner.Mobile.Views.Setup"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.Mobile.Views.Setup.CompassPage"
+             x:DataType="vm:CompassViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="12" Spacing="12" MaxWidth="760">
+
+      <!-- the reboot the autopilot asks for after a calibration or a new order -->
+      <Border Classes="card" Background="{StaticResource WarnDim}" IsVisible="{Binding RebootRequired}">
+        <StackPanel Spacing="8">
+          <TextBlock Text="{l:Tr 'Reboot the autopilot to use the new compass settings.'}" TextWrapping="Wrap" FontWeight="SemiBold" />
+          <Button HorizontalAlignment="Stretch" Content="{l:Tr 'Reboot'}" Command="{Binding RebootCommand}" />
+        </StackPanel>
+      </Border>
+
+      <!-- onboard calibration -->
+      <Border Classes="card">
+        <StackPanel Spacing="12">
+          <TextBlock Classes="label" Text="{l:Tr 'ONBOARD CALIBRATION'}" />
+          <TextBlock Classes="muted" TextWrapping="Wrap" FontSize="13" IsVisible="{Binding !HasOnboardCalibration}"
+                     Text="{l:Tr 'This autopilot has no onboard compass calibration.'}" />
+          <StackPanel Spacing="12" IsVisible="{Binding HasOnboardCalibration}">
+            <TextBlock TextWrapping="Wrap" FontSize="14"
+                       Text="{l:Tr 'Press Start, then turn the vehicle slowly so each side points down in turn (nose, tail, left, right, top, bottom) until every bar is full.'}" />
+            <Grid ColumnDefinitions="*,8,*,8,*">
+              <Button Classes="primary" HorizontalAlignment="Stretch" Content="{l:Tr 'Start'}" Command="{Binding StartMagCalCommand}" />
+              <Button Grid.Column="2" HorizontalAlignment="Stretch" Content="{l:Tr 'Accept'}" Command="{Binding AcceptMagCalCommand}" />
+              <Button Grid.Column="4" HorizontalAlignment="Stretch" Content="{l:Tr 'Cancel'}" Command="{Binding CancelMagCalCommand}" />
+            </Grid>
+            <TextBlock Classes="muted" IsVisible="{Binding ShowMagWaiting}" Text="{l:Tr 'Waiting for the autopilot…'}" />
+            <ItemsControl ItemsSource="{Binding MagBars}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:MagCalBarViewModel">
+                  <StackPanel Spacing="4" Margin="0,0,0,10">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                      <TextBlock Grid.Column="1" Text="{Binding Percent, StringFormat='{}{0}%'}" Classes="muted" />
+                    </Grid>
+                    <ProgressBar Minimum="0" Maximum="100" Value="{Binding Percent}" Height="12" MinHeight="12" CornerRadius="6"
+                                 Foreground="{Binding IsFailed, Converter={x:Static sv:SetupBrushes.BadOrAccent}}" />
+                    <TextBlock Text="{Binding Result}" Classes="muted" FontSize="12" FontFamily="monospace" TextWrapping="Wrap" />
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+          <sv:StatusBanner DataContext="{Binding MagStatus}" />
+          <Button HorizontalAlignment="Stretch" Content="{l:Tr 'Large Vehicle MagCal'}" Command="{Binding LargeVehicleMagCalCommand}" />
+          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                     Text="{l:Tr 'Large Vehicle MagCal: point the vehicle north and level; it uses the GPS position and the world magnetic model, no turning needed.'}" />
+        </StackPanel>
+      </Border>
+
+      <!-- which compasses are used -->
+      <Border Classes="card">
+        <StackPanel Spacing="8">
+          <TextBlock Classes="label" Text="{l:Tr 'COMPASSES'}" />
+          <ItemsControl ItemsSource="{Binding UseCompass}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="cal:ParamToggleViewModel">
+                <ToggleSwitch Content="{l:TrBind {Binding Label}}" IsChecked="{Binding IsChecked}" IsEnabled="{Binding CanEdit}"
+                              IsVisible="{Binding IsAvailable}" OnContent="" OffContent="" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <ToggleSwitch Content="{l:TrBind {Binding Learn.Label}}" IsChecked="{Binding Learn.IsChecked}" IsEnabled="{Binding Learn.CanEdit}"
+                        OnContent="" OffContent="" />
+          <ToggleSwitch Content="{l:TrBind {Binding AutoDeclination.Label}}" IsChecked="{Binding AutoDeclination.IsChecked}"
+                        IsEnabled="{Binding AutoDeclination.CanEdit}" IsVisible="{Binding AutoDeclination.IsAvailable}" OnContent="" OffContent="" />
+          <sv:StatusBanner DataContext="{Binding Status}" />
+        </StackPanel>
+      </Border>
+
+      <!-- priority -->
+      <Border Classes="card" IsVisible="{Binding IsPriorityLayout}">
+        <StackPanel Spacing="8">
+          <TextBlock Classes="label" Text="{l:Tr 'PRIORITY (FIRST IS USED)'}" />
+          <ItemsControl ItemsSource="{Binding Rows}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:CompassRowViewModel">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,4">
+                  <Border Width="28" Height="28" CornerRadius="14" Background="{StaticResource AccentDim}" Margin="0,0,10,0">
+                    <TextBlock Text="{Binding Priority}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" />
+                  </Border>
+                  <StackPanel Grid.Column="1">
+                    <TextBlock FontWeight="SemiBold">
+                      <Run Text="{Binding DevType}" /><Run Text=" · " /><Run Text="{Binding BusType}" />
+                    </TextBlock>
+                    <TextBlock Classes="muted" FontSize="12">
+                      <Run Text="{l:Tr 'External'}" /><Run Text=": " /><Run Text="{Binding External, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding Orientation}" />
+                    </TextBlock>
+                  </StackPanel>
+                  <Button Grid.Column="2" Width="44" Padding="0" Content="▲" Command="{Binding MoveUpCommand}" Margin="4,0" />
+                  <Button Grid.Column="3" Width="44" Padding="0" Content="▼" Command="{Binding MoveDownCommand}" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <Grid ColumnDefinitions="*,8,*" IsVisible="{Binding HasPendingOrder}">
+            <Button Classes="primary" HorizontalAlignment="Stretch" Content="{l:Tr 'Save order'}" Command="{Binding SavePriorityCommand}" />
+            <Button Grid.Column="2" HorizontalAlignment="Stretch" Content="{l:Tr 'Undo'}" Command="{Binding UndoPriorityCommand}" />
+          </Grid>
+          <Button HorizontalAlignment="Stretch" Content="{l:Tr 'Remove missing compasses'}" Command="{Binding RemoveMissingCommand}"
+                  IsVisible="{Binding AnyMissing}" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

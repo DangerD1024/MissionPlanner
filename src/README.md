@@ -16,7 +16,8 @@ left menus on SETUP and CONFIG (pages appear only when they apply to the connect
 | PLAN | Mission / fence / rally editor: map editing (click, drag, insert, polygon tools), waypoint grid with per-command headers from `mavcmd.xml`, home, file load/save (QGC WPL), read/write to the vehicle, Survey (Grid) dialog |
 | SETUP | Install Firmware (manifest, board detection, bootloader upload), Frame Type, Accel / Compass / Radio calibration (optional QGroundControl-style channel mapping), Servo Output (with a Motor layout tab: frame type, motor order wizard, motor direction, reversed-direction switch), Serial Ports, ESC Calibration, Flight Modes, FailSafe, Battery Monitor, Motor Test, Rangefinder, Airspeed, Optical Flow, OSD, Mount, Parachute, CompassMot, ADSB, HW ID, Initial Parameters, RTK/GPS Inject, Joystick, SiK Radio, DroneCAN, Terminal |
 | CONFIG | Basic / Extended Tuning (Mission Planner layouts per vehicle), Standard / Advanced Params, Full Parameter List (value lists, bitmask editor, compare, file load/save, reboot), Full Parameter Tree, User Params, MAVFtp browser, MAVLink Inspector |
-| SETTINGS | App Settings: theme (Dark, Mission Planner, Light, High Contrast, Midnight), map, logs, parameter docs, telemetry rates, units; About (version, data folders, Linux menu entry) |
+| SETTINGS | App Settings: theme (Dark, Mission Planner, Light, High Contrast, Midnight), map, logs, parameter docs, telemetry rates, units |
+| HELP | Version, check for updates (also at startup: a banner offers the new installer, downloads it and starts it), data and log folders, Discuss forum thread, documentation, bug reports; on Linux: Allow USB access (serial group, DFU and ModemManager udev rules, through the password prompt) and Add to applications menu |
 | SIMULATION | Download and run ArduPilot SITL (Plane, Copter, Rover, Heli) and connect to it |
 
 ## Projects
@@ -26,6 +27,9 @@ left menus on SETUP and CONFIG (pages appear only when they apply to the connect
 | `MissionPlanner.App.Core` | Services (session, parameters, mission, map tiles) and view-models. No UI framework types. |
 | `MissionPlanner.App` | Avalonia views, controls (map, HUD, layers) and the desktop entry point. |
 | `MissionPlanner.App.Tests` | MSTest: protocol flows against scripted fake vehicles (TCP/UDP/serial pty), page logic, parsers. |
+| `MissionPlanner.Mobile` | The phone app's UI (portrait): Fly, Plan, Setup, Messages, Link. Reuses Core's view-models and links the desktop HUD, map and layers. |
+| `MissionPlanner.Mobile.Desktop` | The phone app in a phone-sized window, for developing the mobile UI on a computer. |
+| `MissionPlanner.Mobile.Android` | The Android app (not in the solution: it needs the .NET Android workload). |
 
 ## Build, run, test (any OS with the .NET 10 SDK)
 
@@ -42,6 +46,45 @@ MP_TEST_SERIAL_PORT=/dev/serial/by-id/usb-ArduPilot_...-if00 dotnet test src/Mis
 ```
 
 `MP_LOG_TILES=1` prints map tile request failures to the console.
+
+### Phone app
+
+```sh
+dotnet run --project src/MissionPlanner.Mobile.Desktop          # phone-sized preview window
+MP_CONNECT=tcp:127.0.0.1:5760 dotnet run --project src/MissionPlanner.Mobile.Desktop   # connected to SITL at start
+```
+
+The phone app turns with the phone (or is held one way: Link tab › Screen). Portrait has the tabs at
+the bottom; landscape puts them in a rail on the left, and Fly shows one view full screen with the other
+as a small picture in the corner (tap it to swap), the action buttons in a column on the right.
+`--landscape` starts the preview wide. Both have a status bar (mode, GPS, battery, link) and a readiness strip;
+**Fly** (HUD, telemetry strip, map with tap-to-go-here, Arm / Takeoff / Land / RTL / Pause, every one
+confirmed by a slide), **Plan** (tap to add waypoints, read / write), **Setup** (accelerometer and level,
+compass, radio, sensors, flight modes, failsafe, battery, frame, motor test, all parameters),
+**Messages** and **Link** (USB on Android, UDP for Wi-Fi telemetry bridges, TCP, recent links). The preview keeps its own
+settings (`%LOCALAPPDATA%/MissionPlannerPhonePreview`).
+
+Android: `dotnet workload install android`, a JDK 17+ and an Android SDK (platform 36), then
+`JAVA_HOME=... ANDROID_HOME=... installer/android/build-apk.sh` builds `bin/MissionPlanner-<version>-android-arm64.apk`
+(signed with the build machine's debug key, for installing by hand).
+
+iPhone (`MissionPlanner.Mobile.iOS`): on a Mac with Xcode and `dotnet workload install ios` (the workload
+version must match the installed Xcode, e.g. 27.0.10722 for Xcode 27.0),
+`BUILD_NUMBER=n installer/ios/build-ipa.sh` builds an Xcode archive; `xcodebuild -exportArchive` with
+`-allowProvisioningUpdates` then signs and uploads it to App Store Connect using the Apple account signed in to
+Xcode (or `installer/ios/build-ipa.sh upload` with an App Store Connect API key). iOS gives apps Bluetooth LE
+only (no classic serial, no USB serial), so the iPhone links are Bluetooth LE, UDP and TCP. `MP_START_TAB=Plan`
+(`SIMCTL_CHILD_MP_START_TAB` for `simctl launch`) opens a tab at start, for screenshots. Privacy policy:
+`src/PRIVACY.md`.
+
+USB on Android (`App.Core/Links/Usb`): the phone's USB host opens serial ports through drivers written in C#
+for USB CDC-ACM (flight controllers on their own USB port), FTDI, CP210x and CH340 (telemetry radios); a
+link is saved as `serial:usb:<vid>:<pid>:<port>:<baud>`, so a replugged device is found again. Plugging in
+a known radio or board offers to open the app (`Resources/xml/device_filter.xml`). To try it in the
+emulator, give it QEMU's FTDI chip wired to SITL's serial0:
+`-qemu -chardev socket,id=s,host=127.0.0.1,port=5760,reconnect=2 -device qemu-xhci,id=x -device usb-serial,bus=x.0,chardev=s`
+(started with `-writable-system`, after pushing a `android.hardware.usb.host` feature file to
+`/system/etc/permissions`, since the emulator image has no USB host service otherwise).
 
 ## Data and settings
 

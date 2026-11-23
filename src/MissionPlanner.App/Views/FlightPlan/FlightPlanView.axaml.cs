@@ -33,6 +33,7 @@ public sealed partial class FlightPlanView : UserControl
         Map.ItemDragCompleted += (_, e) => _vm?.ItemDragCompleted(e.Item, e.Position);
         Map.PointerPositionChanged += (_, p) => _vm?.PointerMoved(p);
         Map.MapContextRequested += OnMapContextRequested;
+        MapHost.SizeChanged += (_, _) => ApplyBearing();
 
         // a click anywhere in a row (its combo boxes and buttons too) selects the row
         Rows.AddHandler(PointerPressedEvent, OnGridPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
@@ -75,6 +76,7 @@ public sealed partial class FlightPlanView : UserControl
         if (vm == null)
             return;
 
+        Map.Layers.Add(new KmlOverlayLayer(vm));
         Map.Layers.Add(new FenceShapesLayer(vm));
         Map.Layers.Add(new MissionRouteLayer(vm));
         Map.Layers.Add(new PlanMarkerLayer(vm, MAVLink.MAV_MISSION_TYPE.RALLY));
@@ -83,6 +85,9 @@ public sealed partial class FlightPlanView : UserControl
         Map.Layers.Add(new HomeLayer(vm));
         Map.Layers.Add(new DrawPolygonLayer(vm));
         Map.Layers.Add(new PlanVehicleLayer(vm));
+        Map.Layers.Add(new PoiLayer(vm.Services.Pois));
+        vm.Services.Pois.Changed -= OnPoisChanged;
+        vm.Services.Pois.Changed += OnPoisChanged;
 
         vm.MapChanged += OnMapChanged;
         vm.ZoomRequested += OnZoomRequested;
@@ -90,6 +95,7 @@ public sealed partial class FlightPlanView : UserControl
 
         UpdateHeaders();
         UpdateTexts();
+        ApplyBearing();
 
         if (vm.TakePendingZoom() is { } pending)
             ZoomWhenLaidOut(pending);
@@ -133,6 +139,9 @@ public sealed partial class FlightPlanView : UserControl
             case nameof(FlightPlanViewModel.SelectedItem):
                 if (_vm?.SelectedItem is { } item)
                     Dispatcher.UIThread.Post(() => Rows.ScrollIntoView(item, null), DispatcherPriority.Background);
+                break;
+            case nameof(FlightPlanViewModel.MapBearing):
+                ApplyBearing();
                 break;
             case nameof(FlightPlanViewModel.SelectedMissionType):
             case nameof(FlightPlanViewModel.PolygonMode):
@@ -241,6 +250,8 @@ public sealed partial class FlightPlanView : UserControl
 
     // ---- map context menu ----------------------------------------------------------------------
 
+    private void OnPoisChanged(object? sender, EventArgs e) => Map.InvalidateVisual();
+
     private void OnMapContextRequested(object? sender, MapPointerEventArgs e)
     {
         var vm = _vm;
@@ -265,7 +276,9 @@ public sealed partial class FlightPlanView : UserControl
                 break;
         }
 
-        items.Add(Item("Insert WP", () => _ = vm.InsertWaypointAsync(at, spline: false)));
+        items.Add(Sub("Insert WP",
+            Item("Here", () => _ = vm.InsertWaypointAsync(at, spline: false)),
+            Item("At Current Position", () => _ = vm.InsertWaypointAtVehicleAsync(), vm.VehiclePosition != null)));
         items.Add(Item("Insert Spline WP", () => _ = vm.InsertWaypointAsync(at, spline: true)));
         items.Add(Sub("Loiter",
             Item("Forever", () => vm.AddLoiterUnlimited(at)),
@@ -274,15 +287,26 @@ public sealed partial class FlightPlanView : UserControl
         items.Add(Item("Takeoff", () => _ = vm.AddTakeoffAsync()));
         items.Add(Item("Land", () => vm.AddLand(at)));
         items.Add(Item("RTL", vm.AddReturnToLaunch));
+        items.Add(Sub("Jump",
+            Item("Start", () => _ = vm.AddJumpAsync(toStart: true)),
+            Item("WP #", () => _ = vm.AddJumpAsync(toStart: false))));
+        items.Add(Item("DO_SET_ROI", () => vm.AddRoiHere(at)));
         items.Add(new Separator());
         items.Add(Item("Set Home Here", () => _ = vm.SetHomeHereAsync(at)));
         items.Add(Sub("Draw Polygon",
             Item("Add Polygon Point", () => vm.AddPolygonPoint(at)),
             Item("Clear Polygon", () => vm.ClearPolygonCommand.Execute(null), vm.HasPolygon),
             new Separator(),
+            Item("From Current Waypoints", vm.PolygonFromWaypoints, vm.Store.Mission.Count >= 3),
+            Item("From SHP", () => _ = vm.PolygonFromShapefileAsync()),
+            Item("Offset Polygon", () => _ = vm.OffsetPolygonAsync(), vm.Polygon.Count >= 3),
+            new Separator(),
             Item("Save Polygon", () => vm.SavePolygonCommand.Execute(null), vm.HasPolygon),
             Item("Load Polygon", () => vm.LoadPolygonCommand.Execute(null))));
         items.Add(Sub("Auto WP",
+            Item("Create WP Circle", () => _ = vm.CreateWaypointCircleAsync(at)),
+            Item("Create Spline Circle", () => _ = vm.CreateSplineCircleAsync(at)),
+            Item("Create Circle Survey", () => _ = vm.CreateCircleSurveyAsync(at)),
             Item("Survey (Grid)", () => vm.SurveyGridCommand.Execute(null), vm.Polygon.Count >= 3)));
         items.Add(Sub("Fence",
             Item("Inclusion from Polygon", () => _ = vm.FenceFromPolygonAsync(inclusion: true), vm.Polygon.Count >= 3),
@@ -291,11 +315,47 @@ public sealed partial class FlightPlanView : UserControl
             Item("Inclusion Circle Here", () => _ = vm.FenceCircleAsync(at, inclusion: true)),
             Item("Exclusion Circle Here", () => _ = vm.FenceCircleAsync(at, inclusion: false)),
             Item("Circle Around Home", () => _ = vm.FenceHomeCircleAsync(), vm.Home != null),
-            Item("Return Point Here", () => vm.FenceReturnPointHere(at))));
-        items.Add(Item("Rally Point Here", () => vm.AddRallyPointHere(at)));
+            Item("Return Point Here", () => vm.FenceReturnPointHere(at)),
+            new Separator(),
+            Item("Load from File (.fen)", () => _ = vm.LoadFenceFileAsync()),
+            Item("Save to File (.fen)", () => _ = vm.SaveFenceFileAsync(), vm.Store.Fence.Count > 0)));
+        items.Add(Sub("Rally Points",
+            Item("Rally Point Here", () => vm.AddRallyPointHere(at)),
+            Item("Load from File (.ral)", () => _ = vm.LoadRallyFileAsync()),
+            Item("Save to File (.ral)", () => _ = vm.SaveRallyFileAsync(), vm.Store.Rally.Count > 0)));
+        items.Add(Sub("File Load/Save",
+            Item("Load WP File (waypoints, plan, mission, KML, SHP)", () => _ = vm.LoadAnyFileAsync(append: false)),
+            Item("Load and Append", () => _ = vm.LoadAnyFileAsync(append: true)),
+            Item("Save as Plan / Mission", () => _ = vm.SaveAnyFileAsync(), vm.Store.Mission.Count > 0)));
+        var poi = hit as Core.Mission.Poi;
+        items.Add(Sub("POI",
+            Item("Add POI Here", () => _ = vm.Poi.AddHereAsync(at.Lat, at.Lng)),
+            Item("Add POI at Coords", () => _ = vm.Poi.AddAtCoordsAsync()),
+            Item("Edit POI", () => _ = vm.Poi.EditAsync(poi!), poi != null),
+            Item("Delete POI", () => vm.Poi.Delete(poi!), poi != null),
+            new Separator(),
+            Item("Save POIs", () => _ = vm.Poi.SaveAsync()),
+            Item("Load POIs", () => _ = vm.Poi.LoadAsync())));
         items.Add(new Separator());
         items.Add(Item(vm.ClearListText, () => vm.ClearListCommand.Execute(null), vm.CurrentList.Count > 0));
-        items.Add(Item("Zoom to Mission", () => vm.ZoomToMissionCommand.Execute(null)));
+        items.Add(Sub("Map Tool",
+            Item(vm.IsMeasuring ? "Measure Distance (second point)" : "Measure Distance", () => _ = vm.MeasureDistanceAsync(at)),
+            Item("Reverse WPs", vm.ReverseWaypoints, vm.Store.Mission.Count > 1),
+            Item("Modify Alt", () => _ = vm.ModifyAltitudesAsync(), vm.Store.Mission.Count > 0),
+            Item("Enter UTM Coord", () => _ = vm.AddUtmWaypointAsync()),
+            new Separator(),
+            Item("Rotate Map", () => _ = vm.RotateMapAsync()),
+            Item("Prefetch", () => _ = PrefetchAreaAsync(vm)),
+            Item("Prefetch WP Path", () => _ = vm.PrefetchPathAsync(), vm.Store.Mission.Count > 0),
+            Item("KML Overlay", () => _ = vm.LoadKmlOverlayAsync()),
+            Item("Clear KML Overlay", vm.ClearKmlOverlay, vm.KmlOverlay.Count > 0),
+            Item("Elevation Graph", () => _ = vm.ShowElevationGraphAsync(), vm.Store.Mission.Count > 0)));
+        items.Add(Sub("Zoom",
+            Item("Zoom to Mission", () => vm.ZoomToMissionCommand.Execute(null)),
+            Item("Zoom to Vehicle", vm.ZoomToVehicle, vm.VehiclePosition != null),
+            Item("Zoom to Home", vm.ZoomToHome, vm.Home != null),
+            Item("Zoom to Place", () => _ = vm.ZoomToPlaceAsync()),
+            Item("Zoom to Coordinates", () => _ = vm.ZoomToCoordsAsync())));
 
         menu.ItemsSource = items;
         menu.Closed += (_, _) => menu.ItemsSource = null;
@@ -303,6 +363,36 @@ public sealed partial class FlightPlanView : UserControl
         // opened once the press is over, so focus moving off a grid cell cannot close it again
         Map.Focus();
         Dispatcher.UIThread.Post(() => menu.Open(Map), DispatcherPriority.Input);
+    }
+
+    /// <summary>Prefetch with the map on screen as the area (when no polygon is drawn): its visible corners.</summary>
+    private Task PrefetchAreaAsync(FlightPlanViewModel vm)
+    {
+        var host = MapHost.Bounds.Size;
+        var corners = new[] { new Point(0, 0), new Point(host.Width, 0), new Point(0, host.Height), new Point(host.Width, host.Height) }
+            .Select(p => MapHost.TranslatePoint(p, Map) ?? p)
+            .Select(p => Map.Viewport?.ToLatLng(p) ?? new PointLatLng(vm.CenterLat, vm.CenterLng))
+            .ToList();
+        var nw = new PointLatLng(corners.Max(c => c.Lat), corners.Min(c => c.Lng));
+        var se = new PointLatLng(corners.Min(c => c.Lat), corners.Max(c => c.Lng));
+        return vm.PrefetchAreaAsync(nw, se);
+    }
+
+    /// <summary>Rotate Map: the map is made big enough to cover its host at any angle and turned about its centre.</summary>
+    private void ApplyBearing()
+    {
+        var bearing = _vm?.MapBearing ?? 0;
+        if (Math.Abs(bearing % 360) < 0.01)
+        {
+            Map.RenderTransform = null;
+            Map.Margin = default;
+            return;
+        }
+
+        var size = MapHost.Bounds.Size;
+        var diag = Math.Sqrt(size.Width * size.Width + size.Height * size.Height);
+        Map.Margin = new Thickness(-(diag - size.Width) / 2, -(diag - size.Height) / 2);
+        Map.RenderTransform = new Avalonia.Media.RotateTransform(-bearing);
     }
 
     private static MenuItem Item(string header, Action action, bool enabled = true)

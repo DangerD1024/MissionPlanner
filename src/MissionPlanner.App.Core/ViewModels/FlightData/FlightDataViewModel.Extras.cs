@@ -32,6 +32,53 @@ public sealed partial class FlightDataViewModel : IFlightCommands
     /// <summary>ADS-B traffic heard on the link (ADSB_VEHICLE).</summary>
     public AdsbTrafficStore Traffic { get; } = new();
 
+    /// <summary>Photos the vehicle took this flight (Mission Planner's camera overlap).</summary>
+    public PhotoStore Photos { get; } = new();
+
+    private long _photosVersion = -1;
+
+    /// <summary>Map right-click > Camera Overlap: draws what each photo covers (remembered).</summary>
+    public bool ShowCameraOverlap
+    {
+        get => MapModel.ShowPhotos;
+        set
+        {
+            MapModel.ShowPhotos = value;
+            Settings.Instance["next_cam_overlap"] = value.ToString();
+            MapModel.Version++;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Asks for the camera's field of view (horizontal;vertical degrees); new photos use it.</summary>
+    public async Task SetCameraFovAsync()
+    {
+        var current = string.Create(System.Globalization.CultureInfo.InvariantCulture,
+            $"{CameraFootprints.HorizontalFov:0.#};{CameraFootprints.VerticalFov:0.#}");
+        var answer = await Services.Dialogs.PromptAsync("Camera field of view",
+            "Horizontal;vertical field of view in degrees (e.g. 62.2;48.8). New photos use it.", current);
+        if (answer == null)
+            return;
+        var parts = answer.Split(';', ',');
+        if (parts.Length != 2 || !TryParseNumber(parts[0], out var h) || !TryParseNumber(parts[1], out var v) || h is <= 1 or >= 179 || v is <= 1 or >= 179)
+        {
+            Report("Enter two angles between 1 and 179 degrees, as horizontal;vertical", true);
+            return;
+        }
+
+        CameraFootprints.HorizontalFov = h;
+        CameraFootprints.VerticalFov = v;
+    }
+
+    private void UpdatePhotos()
+    {
+        if (Photos.Version == _photosVersion)
+            return;
+        _photosVersion = Photos.Version;
+        MapModel.Photos = Photos.Snapshot();
+        MapModel.Version++;
+    }
+
     private void InitExtras()
     {
         PreFlight = new PreFlightViewModel(Services);
@@ -42,7 +89,12 @@ public sealed partial class FlightDataViewModel : IFlightCommands
         Payload = new PayloadViewModel(Services, this);
 
         // reader thread: only a dictionary update under a short lock
-        Services.Session.Mav.OnPacketReceived += (_, msg) => Traffic.OnPacket(msg, DateTime.UtcNow);
+        MapModel.ShowPhotos = Settings.Instance.GetBoolean("next_cam_overlap", false);
+        Services.Session.Mav.OnPacketReceived += (_, msg) =>
+        {
+            Traffic.OnPacket(msg, DateTime.UtcNow);
+            Photos.OnPacket(msg);
+        };
 
         AppSpeech.Install(Services.Session);
         _speechEnabled = SpeechOptions.Enabled;
@@ -90,6 +142,7 @@ public sealed partial class FlightDataViewModel : IFlightCommands
     /// <summary>Copies the traffic into the map model when it changed (positions, ageing, removal).</summary>
     private void UpdateTraffic()
     {
+        UpdatePhotos();
         var version = Traffic.Version;
         var any = Traffic.Count > 0;
         if (!any && !_hadTraffic && version == _trafficVersion)

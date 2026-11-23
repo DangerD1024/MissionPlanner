@@ -1,0 +1,93 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.SetupScreens"
+             xmlns:cc="using:MissionPlanner.App.Controls.SetupScreens"
+             xmlns:sv="using:MissionPlanner.Mobile.Views.Setup"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.Mobile.Views.Setup.RadioPage"
+             x:DataType="vm:RadioCalibrationViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="12" Spacing="12" MaxWidth="760">
+
+      <!-- the sticks -->
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="label" Text="{l:Tr 'STICKS'}" />
+          <TextBlock Text="{l:TrBind {Binding Roll.Label}}" FontSize="13" />
+          <cc:RcBar Height="30" Value="{Binding Roll.Value}" MinLine="{Binding Roll.MinLine}" MaxLine="{Binding Roll.MaxLine}"
+                    ShowRange="{Binding Roll.ShowRange}" Reversed="{Binding Roll.Reversed}" />
+          <TextBlock Text="{l:TrBind {Binding Pitch.Label}}" FontSize="13" />
+          <cc:RcBar Height="30" Value="{Binding Pitch.Value}" MinLine="{Binding Pitch.MinLine}" MaxLine="{Binding Pitch.MaxLine}"
+                    ShowRange="{Binding Pitch.ShowRange}" Reversed="{Binding Pitch.Reversed}" />
+          <TextBlock Text="{l:TrBind {Binding Throttle.Label}}" FontSize="13" />
+          <cc:RcBar Height="30" Value="{Binding Throttle.Value}" MinLine="{Binding Throttle.MinLine}" MaxLine="{Binding Throttle.MaxLine}"
+                    ShowRange="{Binding Throttle.ShowRange}" Reversed="{Binding Throttle.Reversed}" />
+          <TextBlock Text="{l:TrBind {Binding Yaw.Label}}" FontSize="13" />
+          <cc:RcBar Height="30" Value="{Binding Yaw.Value}" MinLine="{Binding Yaw.MinLine}" MaxLine="{Binding Yaw.MaxLine}"
+                    ShowRange="{Binding Yaw.ShowRange}" Reversed="{Binding Yaw.Reversed}" />
+
+          <WrapPanel IsVisible="{Binding ShowReverse}">
+            <CheckBox Margin="0,0,14,0" Content="{l:Tr 'Reverse roll'}" IsChecked="{Binding ReverseRoll.IsChecked}" IsEnabled="{Binding ReverseRoll.CanEdit}" />
+            <CheckBox Margin="0,0,14,0" Content="{l:Tr 'Reverse pitch'}" IsChecked="{Binding ReversePitch.IsChecked}" IsEnabled="{Binding ReversePitch.CanEdit}" />
+            <CheckBox Margin="0,0,14,0" Content="{l:Tr 'Reverse throttle'}" IsChecked="{Binding ReverseThrottle.IsChecked}" IsEnabled="{Binding ReverseThrottle.CanEdit}" />
+            <CheckBox Content="{l:Tr 'Reverse yaw'}" IsChecked="{Binding ReverseYaw.IsChecked}" IsEnabled="{Binding ReverseYaw.CanEdit}" />
+          </WrapPanel>
+
+          <TextBlock Text="{l:TrBind {Binding Instruction}}" TextWrapping="Wrap" FontSize="15" FontWeight="SemiBold" IsVisible="{Binding IsCapturing}" />
+          <Button Classes="primary" HorizontalAlignment="Stretch" Height="54" Content="{l:TrBind {Binding CalibrateButtonText}}" Command="{Binding CalibrateCommand}" />
+          <Button HorizontalAlignment="Stretch" Content="{l:Tr 'Cancel'}" Command="{Binding CancelCalibrationCommand}" IsVisible="{Binding IsCapturing}" />
+          <sv:StatusBanner DataContext="{Binding Status}" />
+        </StackPanel>
+      </Border>
+
+      <!-- every channel -->
+      <Border Classes="card">
+        <StackPanel Spacing="6">
+          <TextBlock Classes="label" Text="{l:Tr 'ALL CHANNELS'}" />
+          <ItemsControl ItemsSource="{Binding Channels}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:RcChannelViewModel">
+                <cc:RcBar Height="26" Margin="0,0,0,6" Label="{Binding Label}" Value="{Binding Value}"
+                          MinLine="{Binding MinLine}" MaxLine="{Binding MaxLine}" ShowRange="{Binding ShowRange}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <!-- results of the last calibration -->
+      <Border Classes="card" IsVisible="{Binding HasResults}">
+        <StackPanel Spacing="6">
+          <TextBlock Classes="label" Text="{l:Tr 'RESULTS'}" />
+          <ItemsControl ItemsSource="{Binding Results}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:RadioResultRow">
+                <Grid ColumnDefinitions="56,*,Auto" Margin="0,3">
+                  <TextBlock Text="{Binding Channel, StringFormat='CH{0}'}" FontWeight="SemiBold" />
+                  <TextBlock Grid.Column="1" FontFamily="monospace" FontSize="13">
+                    <Run Text="{Binding Min}" /><Run Text=" · " /><Run Text="{Binding Trim}" /><Run Text=" · " /><Run Text="{Binding Max}" />
+                  </TextBlock>
+                  <TextBlock Grid.Column="2" Text="{l:TrBind {Binding Outcome}}" FontSize="12"
+                             Foreground="{Binding Failed, Converter={x:Static sv:SetupBrushes.BadOrMuted}}" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <!-- Spektrum satellite binding -->
+      <Border Classes="card">
+        <StackPanel Spacing="8">
+          <TextBlock Classes="label" Text="{l:Tr 'SPEKTRUM BIND'}" />
+          <Grid ColumnDefinitions="*,8,*,8,*">
+            <Button HorizontalAlignment="Stretch" Content="DSM2" Command="{Binding BindDsm2Command}" />
+            <Button Grid.Column="2" HorizontalAlignment="Stretch" Content="DSMX" Command="{Binding BindDsmxCommand}" />
+            <Button Grid.Column="4" HorizontalAlignment="Stretch" Content="DSM8" Command="{Binding BindDsm8Command}" />
+          </Grid>
+          <sv:StatusBanner DataContext="{Binding BindStatus}" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

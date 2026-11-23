@@ -73,6 +73,30 @@
                   IsEnabled="{Binding CanCommand}" />
         </Grid>
 
+        <Grid ColumnDefinitions="*,120" ColumnSpacing="6" RowDefinitions="Auto,Auto" IsVisible="{Binding HasLoiterRadius}">
+          <TextBlock Classes="caption" Text="{Binding DistanceUnit, StringFormat='Loiter radius ({0})'}" />
+          <NumericUpDown Grid.Row="1" Value="{Binding NewLoiterRadius}" Minimum="-32767" Maximum="32767" Increment="5" FormatString="0" />
+          <Button Grid.Row="1" Grid.Column="1" Content="{l:Tr 'Set Radius'}" Classes="accent" Command="{Binding ChangeLoiterRadiusCommand}"
+                  IsEnabled="{Binding CanCommand}" ToolTip.Tip="{l:Tr 'Loiter radius (LOITER_RAD or WP_LOITER_RAD); negative circles anticlockwise'}" />
+        </Grid>
+
+        <Grid ColumnDefinitions="*,120" ColumnSpacing="6" RowDefinitions="Auto,Auto">
+          <TextBlock Classes="caption" Text="{l:Tr 'Mount mode'}" />
+          <ComboBox Grid.Row="1" ItemsSource="{x:Static vm:FlightDataViewModel.MountModes}" SelectedItem="{Binding SelectedMountMode}"
+                    HorizontalAlignment="Stretch" />
+          <Button Grid.Row="1" Grid.Column="1" Content="{l:Tr 'Set Mount'}" Classes="accent" Command="{Binding SetMountModeCommand}"
+                  IsEnabled="{Binding CanCommand}" ToolTip.Tip="{l:Tr 'How the gimbal is pointed'}" />
+        </Grid>
+
+        <UniformGrid Columns="3" ColumnSpacing="6" RowSpacing="6">
+          <Button Content="{l:Tr 'Resume Mission'}" Command="{Binding ResumeMissionCommand}" IsEnabled="{Binding CanCommand}"
+                  ToolTip.Tip="{l:Tr 'Carry on the mission from a waypoint (rewrites the mission on the vehicle)'}" />
+          <Button Content="{l:Tr 'Abort Landing'}" Command="{Binding AbortLandingCommand}" IsEnabled="{Binding CanCommand}"
+                  ToolTip.Tip="{l:Tr 'Go around: climb away from the landing'}" />
+          <Button Content="{l:Tr 'Message'}" Command="{Binding SendLogMessageCommand}" IsEnabled="{Binding CanCommand}"
+                  ToolTip.Tip="{l:Tr 'Send a text for the vehicle to write into its log'}" />
+        </UniformGrid>
+
         <UniformGrid Columns="3" ColumnSpacing="6">
           <Button Content="{l:Tr 'Reboot'}" Command="{Binding RebootCommand}" IsEnabled="{Binding CanCommand}"
                   ToolTip.Tip="{l:Tr 'Restart the autopilot'}" />
@@ -92,6 +116,11 @@
         <Button Grid.Column="1" Content="{l:Tr 'Speech...'}" Command="{Binding OpenSpeechSettingsCommand}"
                 ToolTip.Tip="{l:Tr 'Choose what is announced'}" />
       </Grid>
+      <UniformGrid Columns="2" ColumnSpacing="6" Margin="8,0,8,8">
+        <Button Content="{l:Tr 'Raw Sensor View'}" Command="{Binding OpenRawSensorsCommand}"
+                ToolTip.Tip="{l:Tr 'Accelerometers, gyros, compasses, RC inputs and servo outputs'}" />
+        <Button Content="{l:Tr 'Joystick'}" Command="{Binding OpenJoystickCommand}" ToolTip.Tip="{l:Tr 'SETUP > Joystick'}" />
+      </UniformGrid>
       </StackPanel>
     </ScrollViewer>
 

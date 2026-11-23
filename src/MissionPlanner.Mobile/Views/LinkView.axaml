@@ -1,0 +1,167 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Mobile"
+             xmlns:lk="using:MissionPlanner.App.Core.Links"
+             xmlns:usb="using:MissionPlanner.App.Core.Links.Usb"
+             xmlns:bt="using:MissionPlanner.App.Core.Links.Bluetooth"
+             xmlns:mc="using:MissionPlanner.Mobile.Controls"
+             xmlns:v="using:MissionPlanner.Mobile.Views"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.Mobile.Views.LinkView"
+             x:DataType="vm:MobileLinkViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="14" Spacing="14" MaxWidth="720">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <Image Source="avares://MissionPlanner.Mobile/Assets/mission-planner-128.png" Width="44" Height="44" />
+        <StackPanel VerticalAlignment="Center">
+          <TextBlock Classes="h1" Text="Mission Planner" />
+          <TextBlock Classes="muted" FontSize="12" Text="{l:Tr 'Connect to your vehicle'}" />
+        </StackPanel>
+      </StackPanel>
+
+      <!-- connected -->
+      <Border Classes="card" IsVisible="{Binding IsConnected}" Background="{StaticResource OkDim}">
+        <StackPanel Spacing="10">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Ellipse Width="10" Height="10" Fill="{StaticResource Ok}" VerticalAlignment="Center" />
+            <TextBlock Classes="h2" Text="{l:Tr 'Connected'}" />
+          </StackPanel>
+          <TextBlock Text="{Binding ConnectedText}" TextWrapping="Wrap" />
+          <Button Classes="danger" HorizontalAlignment="Stretch" Content="{l:Tr 'Disconnect'}" Command="{Binding ToggleCommand}" />
+        </StackPanel>
+      </Border>
+
+      <!-- choose a link -->
+      <Border Classes="card" IsVisible="{Binding !IsConnected}">
+        <StackPanel Spacing="12">
+          <TextBlock Classes="label" Text="{l:Tr 'CONNECTION'}" />
+          <ListBox ItemsSource="{Binding Kinds}" SelectedItem="{Binding SelectedKind}" Background="Transparent">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:MobileLinkChoice">
+                <TextBlock Text="{l:TrBind {Binding Title}}" FontSize="15" Margin="12,12" />
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{l:TrBind {Binding KindHint}}" />
+          <StackPanel Spacing="8" IsVisible="{Binding IsUsb}">
+            <TextBlock Classes="label" Text="{l:Tr 'DEVICE'}" />
+            <ListBox ItemsSource="{Binding UsbPorts}" SelectedItem="{Binding SelectedUsbPort}" Background="Transparent"
+                     IsVisible="{Binding HasUsbPorts}">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="usb:UsbSerialPortInfo">
+                  <StackPanel Orientation="Horizontal" Spacing="10" Margin="10,10">
+                    <mc:Icon Data="{StaticResource IcUsb}" Width="20" Height="20" />
+                    <TextBlock Text="{Binding Title}" FontSize="15" VerticalAlignment="Center" TextWrapping="Wrap" />
+                  </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <TextBlock IsVisible="{Binding ShowNoUsb}" TextWrapping="Wrap" FontSize="14"
+                       Text="{l:Tr 'No USB device found. Plug in the telemetry radio or the flight controller; most phones need a USB OTG adapter.'}" />
+            <TextBlock Classes="label" Text="{l:Tr 'BAUD RATE'}" />
+            <ComboBox ItemsSource="{x:Static vm:MobileLinkViewModel.BaudOptions}" SelectedItem="{Binding Baud}" HorizontalAlignment="Stretch" />
+          </StackPanel>
+          <StackPanel Spacing="8" IsVisible="{Binding IsBluetooth}">
+            <TextBlock Classes="label" Text="{l:Tr 'DEVICE'}" />
+            <ListBox ItemsSource="{Binding BluetoothDevices}" SelectedItem="{Binding SelectedBluetoothDevice}" Background="Transparent"
+                     IsVisible="{Binding HasBluetoothDevices}">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="bt:BluetoothDeviceInfo">
+                  <StackPanel Orientation="Horizontal" Spacing="10" Margin="10,10">
+                    <mc:Icon Data="{StaticResource IcBluetooth}" Width="20" Height="20" />
+                    <TextBlock Text="{Binding Title}" FontSize="15" VerticalAlignment="Center" TextWrapping="Wrap" />
+                  </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <TextBlock IsVisible="{Binding ShowNoBluetooth}" TextWrapping="Wrap" FontSize="14"
+                       Text="{l:TrBind {Binding NoBluetoothText}}" />
+            <Button HorizontalAlignment="Stretch" Command="{Binding ToggleScanCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                <mc:Icon Data="{StaticResource IcSearch}" Width="18" Height="18" />
+                <TextBlock Text="{l:TrBind {Binding ScanButtonText}}" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsScanning}" Height="3" MinHeight="3" />
+          </StackPanel>
+          <Grid ColumnDefinitions="*,10,110" IsVisible="{Binding NeedsPort}">
+            <StackPanel IsVisible="{Binding NeedsHost}" Spacing="4">
+              <TextBlock Classes="label" Text="{l:Tr 'HOST'}" />
+              <TextBox Text="{Binding Host}" TextInputOptions.ContentType="Url" />
+            </StackPanel>
+            <StackPanel Grid.Column="2" Spacing="4">
+              <TextBlock Classes="label" Text="{l:Tr 'PORT'}" />
+              <TextBox Text="{Binding Port}" TextInputOptions.ContentType="Number" />
+            </StackPanel>
+          </Grid>
+          <TextBlock Text="{Binding Error}" Foreground="{StaticResource Bad}" TextWrapping="Wrap"
+                     IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          <TextBlock Text="{Binding ProgressText}" Classes="muted" TextWrapping="Wrap" IsVisible="{Binding IsConnecting}" />
+          <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsConnecting}" Height="4" MinHeight="4" />
+          <Button Classes="primary" HorizontalAlignment="Stretch" Height="54" FontSize="17"
+                  Content="{l:TrBind {Binding ButtonText}}" Command="{Binding ToggleCommand}" />
+          <CheckBox IsChecked="{Binding AutoConnect}" Content="{l:Tr 'Connect to the last link when the app starts'}" FontSize="14" />
+        </StackPanel>
+      </Border>
+
+      <!-- recent -->
+      <Border Classes="card" IsVisible="{Binding Recent.Count, Converter={x:Static mc:Positive.Instance}}">
+        <StackPanel Spacing="8">
+          <TextBlock Classes="label" Text="{l:Tr 'RECENT'}" />
+          <ItemsControl ItemsSource="{Binding Recent}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="lk:LinkSpec">
+                <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Margin="0,3"
+                        Command="{Binding $parent[UserControl].((vm:MobileLinkViewModel)DataContext).ConnectRecentCommand}" CommandParameter="{Binding}">
+                  <StackPanel Orientation="Horizontal" Spacing="10">
+                    <mc:Icon Data="{StaticResource IcLink}" Width="18" Height="18" />
+                    <TextBlock VerticalAlignment="Center" TextWrapping="Wrap">
+                      <TextBlock.Text>
+                        <MultiBinding Converter="{x:Static mc:LinkText.Instance}">
+                          <Binding />
+                          <Binding Path="$parent[UserControl].DataContext" />
+                        </MultiBinding>
+                      </TextBlock.Text>
+                    </TextBlock>
+                  </StackPanel>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card" x:DataType="vm:MobileShellViewModel" DataContext="{Binding $parent[v:MobileShellView].((vm:MobileShellViewModel)DataContext)}">
+        <StackPanel Spacing="8">
+          <TextBlock Classes="label" Text="{l:Tr 'SCREEN'}" />
+          <ListBox ItemsSource="{Binding Orientations}" SelectedItem="{Binding Orientation}" Background="Transparent">
+            <ListBox.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid Columns="3" />
+              </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:ScreenOrientationMode">
+                <TextBlock Text="{l:TrBind {Binding}}" HorizontalAlignment="Center" Margin="4,10" FontSize="14" />
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                     Text="{l:Tr 'Auto follows the phone; Portrait or Landscape keeps the screen one way.'}" />
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel Spacing="6">
+          <TextBlock Classes="label" Text="{l:Tr 'TIPS'}" />
+          <TextBlock Classes="muted" FontSize="13" TextWrapping="Wrap"
+                     Text="{l:Tr 'Wi-Fi telemetry (ESP8266/ESP32 MAVLink bridge, ELRS backpack, Herelink): join its Wi-Fi network, then connect with UDP 14550. SITL on a computer: TCP to its address, port 5760.'}" />
+          <TextBlock Classes="muted" FontSize="13" TextWrapping="Wrap" IsVisible="{Binding HasBluetooth}"
+                     Text="{l:TrBind {Binding BluetoothTip}}" />
+          <TextBlock Classes="muted" FontSize="13" TextWrapping="Wrap" IsVisible="{Binding HasUsb}"
+                     Text="{l:Tr 'USB: SiK/RFD telemetry radios (FTDI, CP210x, CH340) at 57600, or the USB port of the flight controller. Android asks once whether Mission Planner may use the device.'}" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
