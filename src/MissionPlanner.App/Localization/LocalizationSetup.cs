@@ -5,8 +5,11 @@ using MissionPlanner.App.Core.Localization;
 
 namespace MissionPlanner.App.Localization;
 
-/// <summary>The translation tables built into the app (Localization/&lt;culture&gt;.json, embedded).</summary>
-public sealed class EmbeddedTranslationSource : ITranslationSource
+/// <summary>
+/// The translation tables built into the app (Localization/&lt;culture&gt;.json, embedded), and the
+/// string list of untranslated.txt for the translation editor.
+/// </summary>
+public sealed class EmbeddedTranslationSource : ITranslationSource, IEnglishStringSource
 {
     private const string Prefix = "MissionPlanner.App.Localization.";
     private static readonly Assembly Assembly = typeof(EmbeddedTranslationSource).Assembly;
@@ -17,6 +20,19 @@ public sealed class EmbeddedTranslationSource : ITranslationSource
             .Select(n => n[Prefix.Length..^".json".Length]);
 
     public Stream? Open(string culture) => Assembly.GetManifestResourceStream(Prefix + culture + ".json");
+
+    /// <summary>The English column of untranslated.txt (every app string that some language lacks).</summary>
+    public IEnumerable<string> EnglishStrings
+    {
+        get
+        {
+            using var stream = Assembly.GetManifestResourceStream(Prefix + "untranslated.txt");
+            if (stream == null)
+                return [];
+            using var reader = new StreamReader(stream);
+            return StringList.Parse(reader.ReadToEnd());
+        }
+    }
 }
 
 /// <summary>

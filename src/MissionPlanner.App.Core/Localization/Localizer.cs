@@ -14,6 +14,13 @@ public interface ITranslationSource
     Stream? Open(string culture);
 }
 
+/// <summary>A source that also knows the app's English UI strings (for the translation editor).</summary>
+public interface IEnglishStringSource
+{
+    /// <summary>English texts the app shows, as written in the code.</summary>
+    IEnumerable<string> EnglishStrings { get; }
+}
+
 /// <summary>Tables as &lt;culture&gt;.json files in a folder.</summary>
 public sealed class DirectoryTranslationSource(string directory) : ITranslationSource
 {
@@ -70,6 +77,52 @@ public sealed class Localizer : INotifyPropertyChanged
     public void AddSource(ITranslationSource source)
     {
         _sources.Add(source);
+    }
+
+    /// <summary>The sources in the order they are applied.</summary>
+    public IReadOnlyList<ITranslationSource> Sources => _sources;
+
+    /// <summary>The English UI strings the sources know (the translation editor's list).</summary>
+    public IReadOnlyList<string> EnglishStrings()
+    {
+        var list = new List<string>();
+        foreach (var source in _sources.OfType<IEnglishStringSource>())
+        {
+            try
+            {
+                list.AddRange(source.EnglishStrings);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("string list", ex);
+            }
+        }
+
+        return list;
+    }
+
+    /// <summary>
+    /// Reads the current language's tables again (after a user's corrections were saved) and refreshes
+    /// every translated text.
+    /// </summary>
+    public void Reload()
+    {
+        var language = Language;
+        if (language.Code == LanguageCatalog.English)
+            return;
+        var table = LoadTable(language.Code);
+        if (table == null)
+            return;
+
+        // the views follow Culture: show English for a moment so the same language reads as a change
+        _table = null;
+        Language = LanguageCatalog.Languages[0];
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Culture)));
+        _table = table;
+        Language = language;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Language)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Culture)));
+        LanguageChanged?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>English first, then Mission Planner's languages that have a table, then any other table found.</summary>
@@ -214,11 +267,14 @@ public sealed class Localizer : INotifyPropertyChanged
         return list;
     }
 
-    private TranslationTable? LoadTable(string code)
+    /// <summary>A language's table merged from the sources (all, or those <paramref name="include"/> accepts).</summary>
+    public TranslationTable? LoadTable(string code, Func<ITranslationSource, bool>? include = null)
     {
         TranslationTable? table = null;
         foreach (var source in _sources)
         {
+            if (include != null && !include(source))
+                continue;
             try
             {
                 using var stream = source.Open(code);

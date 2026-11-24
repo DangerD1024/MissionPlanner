@@ -27,6 +27,8 @@
   <ItemGroup>
     <!-- translation tables harvested from Mission Planner's .resx files (src/tools/LocalizationHarvest) -->
     <EmbeddedResource Include="Localization\*.json" LogicalName="MissionPlanner.App.Localization.%(Filename).json" />
+    <!-- the app's English strings, for the translation editor (TOOLS) -->
+    <EmbeddedResource Include="Localization\untranslated.txt" LogicalName="MissionPlanner.App.Localization.untranslated.txt" />
   </ItemGroup>
 
   <ItemGroup>
