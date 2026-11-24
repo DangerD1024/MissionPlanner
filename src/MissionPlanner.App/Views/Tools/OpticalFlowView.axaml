@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.OpticalFlowView"
+             x:DataType="vm:OpticalFlowViewModel">
+  <Grid RowDefinitions="Auto,Auto,*" Margin="24,20">
+    <tv:ToolHeader />
+    <Border Grid.Row="1" Classes="card" Margin="0,16,0,12" HorizontalAlignment="Left" MaxWidth="720">
+      <StackPanel Spacing="10">
+        <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                   Text="{l:Tr 'Sets VIDEO_ONLY to 1 so the sensor sends its camera image instead of flow data. Turn the lens until the picture is sharp; stopping (or leaving this page) sets VIDEO_ONLY back to 0.'}" />
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <Button Classes="accent" Content="{l:TrBind {Binding StartStopText}}" Command="{Binding StartStopCommand}"
+                  IsEnabled="{Binding !IsBusy}" />
+          <TextBlock Classes="muted" VerticalAlignment="Center" IsVisible="{Binding IsRunning}">
+            <Run Text="{l:Tr 'Images received:'}" />
+            <Run Text="{Binding Images}" />
+          </TextBlock>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+    <Border Grid.Row="2" Classes="card" Padding="4">
+      <Image x:Name="Picture" Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None" />
+    </Border>
+  </Grid>
+</UserControl>
