@@ -102,10 +102,12 @@ public class ConnectionBarTests
         Assert.IsTrue(tools.ShowButtonWall);
         Assert.IsNull(tools.Content, "no page behind the buttons");
         var titles = tools.ClassicButtons.Select(b => b.Title).ToList();
-        CollectionAssert.IsSubsetOf(new[] { "Force accel calibrated", "Arm and take off", "Outputs", "Map cache", "APJ tool" }, titles);
-        Assert.IsFalse(titles.Contains(ToolsViewModel.VehicleCommandsTitle), "its commands are buttons of their own");
+        CollectionAssert.IsSubsetOf(new[] { "Force Accel Cal", "arm and takeoff", "NMEA", "Age Map Data", "APJ Tool", "reboot pixhawk" }, titles,
+            "Mission Planner's own button names");
+        Assert.IsTrue(tools.ClassicButtons.All(b => b.Description.Length > 0), "every button says what it does");
+        Assert.AreEqual(titles.Count, titles.Distinct().Count());
 
-        var outputs = tools.ClassicButtons.Single(b => b.Title == ToolsViewModel.OutputsTitle);
+        var outputs = tools.ClassicButtons.Single(b => b.Title == "NMEA");
         outputs.Command.Execute(outputs.Parameter);
         Assert.IsTrue(tools.ShowClassicPage);
         Assert.AreEqual(ToolsViewModel.OutputsTitle, tools.Content!.Title);

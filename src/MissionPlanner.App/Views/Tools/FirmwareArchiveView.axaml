@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.FirmwareArchiveView"
+             x:DataType="vm:FirmwareArchiveViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1100" HorizontalAlignment="Stretch">
+      <tv:ToolHeader />
+      <Border Classes="card" Width="620" HorizontalAlignment="Left">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="muted" FontSize="12" Text="{l:Tr 'Folder'}" />
+          <SelectableTextBlock Text="{Binding Folder}" TextWrapping="Wrap" />
+          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                     Text="{l:Tr 'This is several gigabytes and takes a long time.'}" />
+          <ProgressBar Value="{Binding Percent}" Maximum="100" Height="6" MinHeight="6" />
+          <TextBlock Text="{Binding Current}" Classes="muted" FontSize="12" />
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Classes="accent" Content="{l:Tr 'Download all'}" Command="{Binding StartCommand}" IsEnabled="{Binding !IsBusy}" />
+            <Button Content="{l:Tr 'Stop'}" Command="{Binding StopCommand}" IsEnabled="{Binding IsBusy}" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

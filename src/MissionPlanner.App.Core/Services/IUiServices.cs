@@ -116,6 +116,16 @@ public sealed class AppServices
     /// <summary>Switches the main window to a screen (call on the UI thread).</summary>
     public void ShowScreen(ViewModels.Screen screen) => ScreenRequested?.Invoke(this, screen);
 
+    /// <summary>Raised to switch the DATA map between 2D, 3D and split (TOOLS > 3D Map).</summary>
+    public event EventHandler<ViewModels.FlightData.MapViewMode>? MapViewRequested;
+
+    /// <summary>Shows the DATA map as 2D, 3D or split; the setting applies when DATA is first shown too.</summary>
+    public void RequestMapView(ViewModels.FlightData.MapViewMode mode)
+    {
+        MissionPlanner.Utilities.Settings.Instance[ViewModels.FlightData.FlightDataViewModel.MapViewKey] = mode.ToString();
+        MapViewRequested?.Invoke(this, mode);
+    }
+
     /// <summary>Raised to open a page of a menu screen (SETUP > Joystick) by its title.</summary>
     public event EventHandler<(ViewModels.Screen Screen, string Title)>? MenuPageRequested;
 

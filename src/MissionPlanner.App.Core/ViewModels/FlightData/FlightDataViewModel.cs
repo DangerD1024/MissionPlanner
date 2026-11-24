@@ -60,6 +60,7 @@ public sealed partial class FlightDataViewModel : PageViewModel
         : base("Flight Data")
     {
         Services = services;
+        services.MapViewRequested += (_, mode) => services.Dispatcher.Post(() => MapView = mode);
         MapProviders = MapTiles.CommonProviders.Select(p => new MapProviderOption(p.Name, p)).ToArray();
         _selectedMapProvider = MapProviders.FirstOrDefault(p => p.Name == Settings.Instance["MapType"])
                                ?? MapProviders.FirstOrDefault(p => p.Name == Settings.Instance[ConfigScreens.PlannerSettingsViewModel.MapProviderKey])

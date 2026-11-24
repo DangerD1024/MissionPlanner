@@ -5,6 +5,73 @@
              xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.Tools.ToolsView"
              x:DataType="tvm:ToolsViewModel">
+  <UserControl.Resources>
+    <!-- one row of the classic screen: the old green button and its description -->
+    <DataTemplate x:Key="ClassicRow" x:DataType="tvm:ClassicToolButton">
+      <Grid ColumnDefinitions="140,*" Height="23">
+        <Button Classes="classic" Classes.danger="{Binding IsDanger}" Command="{Binding Command}" CommandParameter="{Binding Parameter}"
+                Content="{l:TrBind {Binding Title}}" ToolTip.Tip="{l:TrBind {Binding Description}}" />
+        <TextBlock Grid.Column="1" Margin="8,0,0,0" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                   Text="{l:TrBind {Binding Description}}" ToolTip.Tip="{l:TrBind {Binding Description}}" />
+      </Grid>
+    </DataTemplate>
+  </UserControl.Resources>
+  <UserControl.Styles>
+    <Style Selector="Button.classic">
+      <Setter Property="Height" Value="19" />
+      <Setter Property="MinHeight" Value="19" />
+      <Setter Property="Padding" Value="4,0" />
+      <Setter Property="FontSize" Value="11.5" />
+      <Setter Property="CornerRadius" Value="1" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="#3A4A12" />
+      <Setter Property="BorderBrush" Value="#6E8C1E" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Background">
+        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+          <GradientStop Offset="0" Color="#D8EF8A" />
+          <GradientStop Offset="1" Color="#94BC2E" />
+        </LinearGradientBrush>
+      </Setter>
+    </Style>
+    <Style Selector="Button.classic:pointerover /template/ ContentPresenter">
+      <Setter Property="Background">
+        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+          <GradientStop Offset="0" Color="#E6F7A8" />
+          <GradientStop Offset="1" Color="#A8CF40" />
+        </LinearGradientBrush>
+      </Setter>
+      <Setter Property="Foreground" Value="#2A3608" />
+    </Style>
+    <Style Selector="Button.classic:pressed /template/ ContentPresenter">
+      <Setter Property="Background" Value="#86A92A" />
+    </Style>
+    <Style Selector="Button.classic.danger">
+      <Setter Property="Foreground" Value="#5A1010" />
+      <Setter Property="BorderBrush" Value="#A83030" />
+      <Setter Property="Background">
+        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+          <GradientStop Offset="0" Color="#F4A3A3" />
+          <GradientStop Offset="1" Color="#D65A5A" />
+        </LinearGradientBrush>
+      </Setter>
+    </Style>
+    <Style Selector="Border.sensor">
+      <Setter Property="Background" Value="#E00000" />
+      <Setter Property="Margin" Value="1,1" />
+    </Style>
+    <Style Selector="Border.sensor.ok">
+      <Setter Property="Background" Value="#1E9B3A" />
+    </Style>
+    <Style Selector="Border.sensor > TextBlock">
+      <Setter Property="FontSize" Value="8.5" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Margin" Value="3,0" />
+    </Style>
+  </UserControl.Styles>
 
   <!-- structured (default): left menu with the layout switch under it, page on the right.
        classic: a bar with the switch over a wall of buttons; a page opened from one replaces them until Back.
@@ -45,24 +112,30 @@
         </Grid>
       </Border>
       <Panel>
-        <ScrollViewer IsVisible="{Binding ShowButtonWall}">
-          <ItemsControl ItemsSource="{Binding ClassicButtons}" Margin="10">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate>
-                <WrapPanel />
-              </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-              <DataTemplate x:DataType="tvm:ClassicToolButton">
-                <Button Width="170" Height="44" Margin="4" Padding="6,2" FontSize="12"
-                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                        Classes.danger="{Binding IsDanger}"
-                        Command="{Binding Command}" CommandParameter="{Binding Parameter}">
-                  <TextBlock Text="{l:TrBind {Binding Title}}" TextWrapping="Wrap" TextAlignment="Center" />
-                </Button>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
+        <!-- Mission Planner's Ctrl+F form: two columns of [button] what it does, and the sensor grid -->
+        <ScrollViewer IsVisible="{Binding ShowButtonWall}" HorizontalScrollBarVisibility="Auto">
+          <Grid ColumnDefinitions="Auto,Auto,Auto" Margin="12,8">
+            <ItemsControl ItemsSource="{Binding ClassicLeft}" Width="400" Margin="0,0,20,0" ItemTemplate="{StaticResource ClassicRow}" />
+            <ItemsControl Grid.Column="1" ItemsSource="{Binding ClassicRight}" Width="400" Margin="0,0,20,0" ItemTemplate="{StaticResource ClassicRow}" />
+            <ItemsControl Grid.Column="2" ItemsSource="{Binding Sensors}" Width="210" VerticalAlignment="Top">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="tvm:SensorStatusRow">
+                  <Grid ColumnDefinitions="105,35,35,35" Height="23">
+                    <TextBlock Text="{Binding Name}" FontSize="8.5" VerticalAlignment="Center" TextWrapping="Wrap" />
+                    <Border Grid.Column="1" Classes="sensor" Classes.ok="{Binding Enabled}">
+                      <TextBlock Text="{Binding EnabledText}" />
+                    </Border>
+                    <Border Grid.Column="2" Classes="sensor" Classes.ok="{Binding Present}">
+                      <TextBlock Text="{Binding PresentText}" />
+                    </Border>
+                    <Border Grid.Column="3" Classes="sensor" Classes.ok="{Binding Healthy}">
+                      <TextBlock Text="{Binding HealthText}" />
+                    </Border>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </Grid>
         </ScrollViewer>
         <ContentControl Content="{Binding Content}" IsVisible="{Binding !ShowButtonWall}" />
       </Panel>

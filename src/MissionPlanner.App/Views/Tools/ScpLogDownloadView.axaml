@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.ScpLogDownloadView"
+             x:DataType="vm:ScpLogDownloadViewModel">
+  <Grid RowDefinitions="Auto,*" Margin="24,20">
+    <StackPanel Spacing="16" MaxWidth="1100" HorizontalAlignment="Stretch">
+      <tv:ToolHeader />
+      <Border Classes="card" HorizontalAlignment="Left">
+        <Grid ColumnDefinitions="110,260,24,110,200" RowDefinitions="Auto,Auto,Auto">
+          <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Host'}" />
+          <TextBox Grid.Column="1" Text="{Binding Host}" />
+          <TextBlock Grid.Column="3" Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'User'}" />
+          <TextBox Grid.Column="4" Text="{Binding User}" />
+          <TextBlock Grid.Row="1" Classes="muted" VerticalAlignment="Center" Margin="0,8,0,0" Text="{l:Tr 'Folder'}" />
+          <TextBox Grid.Row="1" Grid.Column="1" Margin="0,8,0,0" Text="{Binding RemotePath}" />
+          <TextBlock Grid.Row="1" Grid.Column="3" Classes="muted" VerticalAlignment="Center" Margin="0,8,0,0" Text="{l:Tr 'Password'}" />
+          <TextBox Grid.Row="1" Grid.Column="4" Margin="0,8,0,0" PasswordChar="●" Text="{Binding Password}" />
+          <StackPanel Grid.Row="2" Grid.ColumnSpan="5" Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
+            <Button Classes="accent" Content="{l:Tr 'List logs'}" Command="{Binding ListCommand}" IsEnabled="{Binding !IsBusy}" />
+            <Button Content="{l:Tr 'Select all'}" Command="{Binding SelectAllCommand}" />
+            <Button Content="{l:Tr 'Download selected'}" Command="{Binding DownloadCommand}" IsEnabled="{Binding !IsBusy}" />
+          </StackPanel>
+        </Grid>
+      </Border>
+      <ProgressBar Value="{Binding Percent}" Maximum="100" Height="6" MinHeight="6" />
+      <TextBlock Classes="muted" FontSize="12">
+        <Run Text="{l:Tr 'Saved to'}" />
+        <Run Text="{Binding Destination}" />
+      </TextBlock>
+    </StackPanel>
+    <ListBox Grid.Row="1" Margin="0,12,0,0" ItemsSource="{Binding Files}" Background="Transparent">
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:RemoteLogFile">
+          <CheckBox IsChecked="{Binding IsChecked}" Content="{Binding Text}" FontFamily="Consolas,Menlo,monospace" />
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+  </Grid>
+</UserControl>
