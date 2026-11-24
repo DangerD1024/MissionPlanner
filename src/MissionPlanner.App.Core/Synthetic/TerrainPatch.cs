@@ -17,6 +17,14 @@ public sealed record PatchSpec(double Half, int GridSize, int DemZoom, int Image
         Half = half,
         DemZoom = Far.DemZoom - Math.Max(0, (int)Math.Ceiling(Math.Log2(half / Far.Half))),
     };
+
+    /// <summary>Hi-res preload radius: grows the sharp-imagery patch and budgets more tiles so
+    /// the imagery zoom is retained (hi-res map tiles preloaded) out to <paramref name="half"/> m.</summary>
+    public static PatchSpec NearFor(double half) => Near with
+    {
+        Half = half,
+        MaxImageryTiles = Math.Clamp((int)Math.Ceiling(Near.MaxImageryTiles * half / Near.Half), Near.MaxImageryTiles, 48),
+    };
 }
 
 /// <summary>

@@ -116,6 +116,9 @@ public sealed class SyntheticScene
     public const double DefaultDrawDistance = 8000;
     public const double MinDrawDistance = 2000;
     public const double MaxDrawDistance = 32000;
+    public const double DefaultHighres = 1200;
+    public const double MinHighres = 500;
+    public const double MaxHighres = 8000;
     private const double NearRebuild = 400; // m from the near patch's centre
     private const double ImageryRetry = 5; // seconds between retries, including while stationary
 
@@ -143,6 +146,17 @@ public sealed class SyntheticScene
         get => Volatile.Read(ref _drawDistance);
         set => Volatile.Write(ref _drawDistance, double.IsFinite(value)
             ? Math.Clamp(value, MinDrawDistance, MaxDrawDistance) : DefaultDrawDistance);
+    }
+
+    private double _highres = DefaultHighres;
+
+    /// <summary>Hi-res preload radius in metres: the sharp-imagery patch grows to this half-size
+    /// so hi-res map tiles are preloaded around the vehicle out to this distance.</summary>
+    public double HighresDistance
+    {
+        get => Volatile.Read(ref _highres);
+        set => Volatile.Write(ref _highres, double.IsFinite(value)
+            ? Math.Clamp(value, MinHighres, MaxHighres) : DefaultHighres);
     }
 
     /// <summary>Which map tiles to drape (the map's provider); null draws plain ground.</summary>
@@ -440,8 +454,9 @@ public sealed class SyntheticScene
         var drawDistance = DrawDistance;
         if (_farBuild == null && (NeedsRebuild(_far, p, drawDistance * 0.375, now >= _farRetryAt) || _far?.Patch.Spec.Half != drawDistance))
             _farBuild = Build(p, PatchSpec.FarFor(drawDistance), fallback);
-        if (_nearBuild == null && NeedsRebuild(_near, p, NearRebuild, now >= _nearRetryAt))
-            _nearBuild = Build(p, PatchSpec.Near, fallback);
+        var highres = HighresDistance;
+        if (_nearBuild == null && (NeedsRebuild(_near, p, NearRebuild, now >= _nearRetryAt) || _near?.Patch.Spec.Half != highres))
+            _nearBuild = Build(p, PatchSpec.NearFor(highres), fallback);
     }
 
     private static bool NeedsRebuild(SceneRenderer.GpuPatch? g, VehiclePose p, double distance, bool retryImagery)

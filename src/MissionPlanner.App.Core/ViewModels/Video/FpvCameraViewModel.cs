@@ -13,6 +13,7 @@ public sealed partial class FpvCameraViewModel : PageViewModel, IDialogPage
     private readonly double? _originalFov;
     private readonly double _originalTilt;
     private readonly double _originalDrawDistance;
+    private readonly double _originalHighres;
 
     public FpvCameraViewModel(HudVideoViewModel owner)
         : base("3D view settings")
@@ -24,6 +25,7 @@ public sealed partial class FpvCameraViewModel : PageViewModel, IDialogPage
         _fov = _originalFov ?? HudVideoViewModel.DefaultFov;
         _tilt = _originalTilt;
         _drawDistanceKm = _originalDrawDistance = owner.DrawDistanceKm;
+        _highresKm = _originalHighres = owner.HighresKm;
     }
 
     public event EventHandler<bool>? CloseRequested;
@@ -43,11 +45,24 @@ public sealed partial class FpvCameraViewModel : PageViewModel, IDialogPage
     [ObservableProperty]
     private double _drawDistanceKm;
 
+    /// <summary>Hi-res preload radius, kilometres.</summary>
+    [ObservableProperty]
+    private double _highresKm;
+
     public string FovText => CustomFov ? $"{Fov:0}°" : "";
+
+    /// <summary>Diagonal-FOV hint for a 16:9 frame, derived from the horizontal FOV
+    /// (same focal length across axes): dFOV = 2·atan(tan(hFOV/2)·√(16²+9²)/16).</summary>
+    public string DiagonalFovText => CustomFov ? $"≈ {DiagonalFov:0}° diagonal (16:9)" : "";
+
+    private double DiagonalFov =>
+        2 * Math.Atan(Math.Tan(Fov * Math.PI / 360) * Math.Sqrt(337) / 16) * 180 / Math.PI;
 
     public string TiltText => $"{Tilt:0}°";
 
     public string DrawDistanceText => $"{DrawDistanceKm:0} km";
+
+    public string HighresText => $"{HighresKm:0.#} km";
 
     partial void OnCustomFovChanged(bool value) => Apply();
 
@@ -57,14 +72,19 @@ public sealed partial class FpvCameraViewModel : PageViewModel, IDialogPage
 
     partial void OnDrawDistanceKmChanged(double value) => Apply();
 
+    partial void OnHighresKmChanged(double value) => Apply();
+
     private void Apply()
     {
         _owner.FpvFov = CustomFov ? Math.Round(Fov) : null;
         _owner.FpvTilt = Math.Round(Tilt);
         _owner.DrawDistanceKm = Math.Round(DrawDistanceKm);
+        _owner.HighresKm = HighresKm;
         OnPropertyChanged(nameof(FovText));
+        OnPropertyChanged(nameof(DiagonalFovText));
         OnPropertyChanged(nameof(TiltText));
         OnPropertyChanged(nameof(DrawDistanceText));
+        OnPropertyChanged(nameof(HighresText));
     }
 
     [RelayCommand]
@@ -74,6 +94,7 @@ public sealed partial class FpvCameraViewModel : PageViewModel, IDialogPage
         Fov = HudVideoViewModel.DefaultFov;
         Tilt = 0;
         DrawDistanceKm = Synthetic.SyntheticScene.DefaultDrawDistance / 1000;
+        HighresKm = Synthetic.SyntheticScene.DefaultHighres / 1000;
     }
 
     [RelayCommand]
@@ -85,6 +106,7 @@ public sealed partial class FpvCameraViewModel : PageViewModel, IDialogPage
         _owner.FpvFov = _originalFov;
         _owner.FpvTilt = _originalTilt;
         _owner.DrawDistanceKm = _originalDrawDistance;
+        _owner.HighresKm = _originalHighres;
         CloseRequested?.Invoke(this, false);
     }
 }
