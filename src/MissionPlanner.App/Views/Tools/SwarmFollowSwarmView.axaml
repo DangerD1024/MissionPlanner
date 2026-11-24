@@ -1,0 +1,69 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.SwarmFollowSwarmView"
+             x:DataType="vm:SwarmFollowSwarmViewModel">
+  <UserControl.Styles>
+    <Style Selector="TextBlock.label">
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+  </UserControl.Styles>
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1100" HorizontalAlignment="Stretch">
+      <tv:ToolHeader />
+
+      <Grid ColumnDefinitions="*,16,*">
+        <Border Classes="card">
+          <StackPanel Spacing="10">
+            <WrapPanel ItemSpacing="8" LineSpacing="8">
+              <Button Content="{l:Tr 'Set ground master'}" Command="{Binding SetGroundMasterCommand}" IsEnabled="{Binding HasSelection}" />
+              <Button Content="{l:Tr 'Set air master'}" Command="{Binding SetAirMasterCommand}" IsEnabled="{Binding HasSelection}" />
+              <Button Content="{l:Tr 'Read path'}" Command="{Binding ReadPathCommand}" IsEnabled="{Binding CanCommand}" />
+            </WrapPanel>
+            <TextBlock FontSize="12" TextWrapping="Wrap" Text="{l:TrBind {Binding PathText}}" />
+            <WrapPanel ItemSpacing="8" LineSpacing="8">
+              <Button Classes="accent" Content="{l:TrBind {Binding StartText}}" Command="{Binding StartStopCommand}" IsEnabled="{Binding CanCommand}" />
+              <Button Content="{l:Tr 'Reset mode'}" Command="{Binding ResetModeCommand}" />
+              <Button Content="{l:Tr 'Return along the path'}" Command="{Binding ReturnHomeCommand}" />
+              <Button Classes="danger" Content="{l:Tr 'RTL (abandon mission)'}" Command="{Binding RtlCommand}" />
+            </WrapPanel>
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Classes="label" Text="{l:Tr 'Mode'}" />
+              <TextBlock FontWeight="SemiBold" Text="{Binding ModeText}" />
+            </StackPanel>
+
+            <Grid ColumnDefinitions="Auto,8,140" RowDefinitions="Auto,6,Auto,6,Auto,6,Auto,6,Auto">
+              <TextBlock Classes="label" Text="{l:Tr 'Line separation (m)'}" />
+              <NumericUpDown Grid.Column="2" Value="{Binding Separation}" Minimum="0" Maximum="100" Increment="0.5" FormatString="0.0" />
+              <TextBlock Grid.Row="2" Classes="label" Text="{l:Tr 'Lead (m)'}" />
+              <NumericUpDown Grid.Row="2" Grid.Column="2" Value="{Binding Lead}" Minimum="-100" Maximum="100" Increment="1" FormatString="0.0" />
+              <TextBlock Grid.Row="4" Classes="label" Text="{l:Tr 'User off the path trigger (m)'}" />
+              <NumericUpDown Grid.Row="4" Grid.Column="2" Value="{Binding OffPathTrigger}" Minimum="-100" Maximum="100" Increment="1" FormatString="0.0" />
+              <TextBlock Grid.Row="6" Classes="label" Text="{l:Tr 'Altitude separation (m)'}" />
+              <NumericUpDown Grid.Row="6" Grid.Column="2" Value="{Binding AltSeparation}" Minimum="1" Maximum="100" Increment="0.5" FormatString="0.0" />
+              <TextBlock Grid.Row="8" Classes="label" Text="{l:Tr 'WPNAV_ACCEL while following (m/s/s)'}" />
+              <NumericUpDown Grid.Row="8" Grid.Column="2" Value="{Binding WpNavAccel}" Minimum="1" Maximum="100" Increment="0.5" FormatString="0.0" />
+            </Grid>
+            <WrapPanel ItemSpacing="12">
+              <CheckBox IsChecked="{Binding V}" Content="{l:Tr 'Fly in a V'}" />
+              <CheckBox IsChecked="{Binding AltInterleave}" Content="{l:Tr 'Alternate altitudes'}" />
+            </WrapPanel>
+          </StackPanel>
+        </Border>
+
+        <Border Grid.Column="2" Classes="card">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="h2" Text="{l:Tr 'How to use'}" />
+            <TextBlock TextWrapping="Wrap" FontSize="12.5" LineHeight="20" Text="{l:TrBind {Binding HowTo}}" />
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <tv:SwarmVehicleList />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

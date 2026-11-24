@@ -1,0 +1,61 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.SwarmVehicleList"
+             x:DataType="vm:SwarmPageViewModel">
+  <!-- the vehicles on the link with their status (Mission Planner's swarm Status panels); pick one to act on -->
+  <Border Classes="card" Padding="0">
+    <StackPanel>
+      <TextBlock Classes="h2" Margin="14,12,14,4" Text="{l:Tr 'Vehicles'}" />
+      <TextBlock Classes="muted" Margin="14,0,14,12" TextWrapping="Wrap" IsVisible="{Binding !HasVehicles}"
+                 Text="{l:Tr 'No vehicles yet. Connect a link that carries every vehicle of the swarm (a SITL swarm, a telemetry radio network or a MAVLink router).'}" />
+      <ListBox ItemsSource="{Binding Vehicles}" SelectedItem="{Binding Selected}" Background="Transparent" IsVisible="{Binding HasVehicles}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:SwarmVehicleRow">
+            <Grid ColumnDefinitions="150,90,90,110,*" RowDefinitions="Auto,Auto,Auto" Margin="2">
+              <StackPanel Spacing="2">
+                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                <Border Background="{DynamicResource Accent}" CornerRadius="3" Padding="5,1" HorizontalAlignment="Left" IsVisible="{Binding HasRole}">
+                  <TextBlock Text="{l:TrBind {Binding Role}}" FontSize="11" Foreground="White" />
+                </Border>
+              </StackPanel>
+              <StackPanel Grid.Column="1" Spacing="1">
+                <TextBlock Classes="muted" FontSize="11" Text="{l:Tr 'GPS'}" />
+                <TextBlock Text="{Binding Gps}" />
+              </StackPanel>
+              <StackPanel Grid.Column="2" Spacing="1">
+                <TextBlock Classes="muted" FontSize="11" Text="{l:Tr 'State'}" />
+                <TextBlock Text="{l:TrBind {Binding Armed}}" />
+              </StackPanel>
+              <StackPanel Grid.Column="3" Spacing="1">
+                <TextBlock Classes="muted" FontSize="11" Text="{l:Tr 'Mode'}" />
+                <TextBlock Text="{Binding Mode}" />
+              </StackPanel>
+              <StackPanel Grid.Column="4" Spacing="1">
+                <TextBlock Classes="muted" FontSize="11" Text="{l:Tr 'Ground speed'}" />
+                <TextBlock Text="{Binding Speed}" />
+              </StackPanel>
+              <StackPanel Grid.Row="1" Grid.ColumnSpan="5" Orientation="Horizontal" Spacing="6" Margin="0,4,0,0">
+                <TextBlock Classes="muted" FontSize="12" Text="{l:Tr 'Position'}" />
+                <TextBlock FontSize="12" Text="{Binding Location}" />
+                <TextBlock Classes="muted" FontSize="12" Margin="10,0,0,0" Text="{l:Tr 'Target'}" />
+                <TextBlock FontSize="12" Text="{Binding Guided}" />
+                <TextBlock FontSize="12" Margin="10,0,0,0" Text="{Binding Extra}" />
+              </StackPanel>
+              <StackPanel Grid.Row="2" Grid.ColumnSpan="5" Orientation="Horizontal" Spacing="6" Margin="0,6,0,2"
+                          IsVisible="{Binding $parent[UserControl].((vm:SwarmPageViewModel)DataContext).ShowOffsets, FallbackValue=False}">
+                <TextBlock VerticalAlignment="Center" Classes="muted" FontSize="12" Text="{l:Tr 'Offset (m): right'}" />
+                <NumericUpDown Value="{Binding OffsetX}" Increment="1" FormatString="0.##" Width="120" Minimum="-1000" Maximum="1000" IsEnabled="{Binding CanEditOffset}" />
+                <TextBlock VerticalAlignment="Center" Classes="muted" FontSize="12" Text="{l:Tr 'ahead'}" />
+                <NumericUpDown Value="{Binding OffsetY}" Increment="1" FormatString="0.##" Width="120" Minimum="-1000" Maximum="1000" IsEnabled="{Binding CanEditOffset}" />
+                <TextBlock VerticalAlignment="Center" Classes="muted" FontSize="12" Text="{l:Tr 'up'}" />
+                <NumericUpDown Value="{Binding OffsetZ}" Increment="1" FormatString="0.##" Width="120" Minimum="-500" Maximum="500" IsEnabled="{Binding CanEditOffset}" />
+              </StackPanel>
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </StackPanel>
+  </Border>
+</UserControl>

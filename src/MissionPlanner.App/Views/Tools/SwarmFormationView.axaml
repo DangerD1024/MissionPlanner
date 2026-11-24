@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.SwarmFormationView"
+             x:DataType="vm:SwarmFormationViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1100" HorizontalAlignment="Stretch">
+      <tv:ToolHeader />
+
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                     Text="{l:Tr 'Pick the leader in the list and press Set leader. Type each offset, or fly the vehicles into place and press Update positions to take the offsets from where they are.'}" />
+          <WrapPanel ItemSpacing="8" LineSpacing="8">
+            <Button Content="{l:Tr 'Set leader'}" Command="{Binding SetLeaderCommand}" IsEnabled="{Binding HasSelection}" />
+            <Button Content="{l:Tr 'Update positions'}" Command="{Binding UpdatePositionsCommand}" IsEnabled="{Binding HasLeader}" />
+            <Button Classes="accent" Content="{l:TrBind {Binding StartText}}" Command="{Binding StartStopCommand}" IsEnabled="{Binding HasLeader}" />
+            <CheckBox IsChecked="{Binding Gimbal}" Content="{l:Tr 'Point the gimbal instead of yawing'}" />
+          </WrapPanel>
+          <WrapPanel ItemSpacing="8" LineSpacing="8">
+            <Button Content="{l:Tr 'Arm (excluding leader)'}" Command="{Binding ArmCommand}" IsEnabled="{Binding CanCommand}" />
+            <Button Content="{l:Tr 'Disarm (excluding leader)'}" Command="{Binding DisarmCommand}" IsEnabled="{Binding CanCommand}" />
+            <Button Content="{l:Tr 'Takeoff'}" Command="{Binding TakeoffCommand}" IsEnabled="{Binding CanCommand}" />
+            <Button Classes="danger" Content="{l:Tr 'Land (all)'}" Command="{Binding LandCommand}" IsEnabled="{Binding CanCommand}" />
+            <Button Content="{l:Tr 'Guided mode (excluding leader)'}" Command="{Binding GuidedCommand}" IsEnabled="{Binding CanCommand}" />
+            <Button Content="{l:Tr 'Auto mode (excluding leader)'}" Command="{Binding AutoCommand}" IsEnabled="{Binding CanCommand}" />
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+
+      <tv:SwarmVehicleList />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

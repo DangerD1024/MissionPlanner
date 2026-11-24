@@ -1,0 +1,83 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:sw="using:MissionPlanner.App.Core.Swarm"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.SwarmSequenceView"
+             x:DataType="vm:SwarmSequenceViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1100" HorizontalAlignment="Stretch">
+      <tv:ToolHeader />
+
+      <Border Classes="card">
+        <WrapPanel ItemSpacing="8" LineSpacing="8">
+          <Button Content="{l:Tr 'Load...'}" Command="{Binding LoadCommand}" />
+          <Button Content="{l:Tr 'Save...'}" Command="{Binding SaveCommand}" />
+          <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" Text="{l:Tr 'Vehicles'}" />
+          <NumericUpDown Value="{Binding DroneCount}" Minimum="1" Maximum="1000" Increment="1" FormatString="0" Width="110" />
+          <Button Content="{l:Tr 'New layout...'}" Command="{Binding NewLayoutCommand}" />
+        </WrapPanel>
+      </Border>
+
+      <Grid ColumnDefinitions="*,16,300">
+        <!-- the layout being edited -->
+        <Border Classes="card">
+          <StackPanel Spacing="10">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Classes="h2" VerticalAlignment="Center" Text="{l:Tr 'Layout'}" />
+              <ComboBox ItemsSource="{Binding Layouts}" SelectedItem="{Binding SelectedLayout}" MinWidth="200">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="sw:SwarmLayout">
+                    <TextBlock Text="{Binding Id}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+              <Button Content="{l:Tr 'Add as step'}" Command="{Binding AddStepCommand}" IsEnabled="{Binding HasLayout}" />
+            </StackPanel>
+            <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding !HasLayout}"
+                       Text="{l:Tr 'Set the number of vehicles, then New layout. A new layout starts as a copy of the one shown.'}" />
+            <ItemsControl ItemsSource="{Binding LayoutRows}" IsVisible="{Binding HasLayout}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:SwarmLayoutRow">
+                  <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2">
+                    <TextBlock Text="{Binding Name}" Width="80" VerticalAlignment="Center" FontWeight="SemiBold" />
+                    <TextBlock Classes="muted" FontSize="12" VerticalAlignment="Center" Text="{l:Tr 'East (m)'}" />
+                    <NumericUpDown Value="{Binding East}" Increment="1" FormatString="0.##" Width="120" Minimum="-10000" Maximum="10000" />
+                    <TextBlock Classes="muted" FontSize="12" VerticalAlignment="Center" Text="{l:Tr 'North (m)'}" />
+                    <NumericUpDown Value="{Binding North}" Increment="1" FormatString="0.##" Width="120" Minimum="-10000" Maximum="10000" />
+                    <TextBlock Classes="muted" FontSize="12" VerticalAlignment="Center" Text="{l:Tr 'Altitude (m)'}" />
+                    <NumericUpDown Value="{Binding Alt}" Increment="1" FormatString="0.##" Width="120" Minimum="-500" Maximum="5000" />
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <!-- the steps -->
+        <Border Grid.Column="2" Classes="card">
+          <StackPanel Spacing="8">
+            <TextBlock Classes="h2" Text="{l:Tr 'Steps'}" />
+            <ListBox ItemsSource="{Binding Steps}" SelectedIndex="{Binding SelectedStepIndex}" MinHeight="120" MaxHeight="320" />
+            <WrapPanel ItemSpacing="6" LineSpacing="6">
+              <Button Content="{l:Tr 'Up'}" Command="{Binding MoveStepUpCommand}" />
+              <Button Content="{l:Tr 'Down'}" Command="{Binding MoveStepDownCommand}" />
+              <Button Content="{l:Tr 'Remove'}" Command="{Binding RemoveStepCommand}" />
+            </WrapPanel>
+            <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{l:TrBind {Binding NextStepText}}" />
+            <TextBlock FontSize="12" Text="{Binding StepText}" />
+            <WrapPanel ItemSpacing="6" LineSpacing="6">
+              <Button Content="{l:Tr 'Takeoff'}" Command="{Binding TakeoffCommand}" IsEnabled="{Binding CanCommand}" />
+              <Button Classes="accent" Content="{l:Tr 'Run step'}" Command="{Binding RunStepCommand}" IsEnabled="{Binding CanCommand}" />
+              <Button Content="{l:Tr 'Reset'}" Command="{Binding ResetStepCommand}" />
+              <Button Content="{l:Tr 'New start point'}" Command="{Binding ResetStartCommand}" />
+            </WrapPanel>
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <tv:SwarmVehicleList />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
