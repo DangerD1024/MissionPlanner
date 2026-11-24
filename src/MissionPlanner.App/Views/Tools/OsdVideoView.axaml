@@ -1,0 +1,83 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.OsdVideoView"
+             x:DataType="vm:OsdVideoViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1200" HorizontalAlignment="Stretch">
+      <tv:ToolHeader />
+      <Border Classes="card">
+        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
+          <TextBlock Classes="muted" Text="{l:Tr 'Video'}" VerticalAlignment="Center" Margin="0,0,12,6" />
+          <TextBox Grid.Column="1" Text="{Binding VideoPath}" Margin="0,0,8,6" />
+          <Button Grid.Column="2" Content="{l:Tr 'Browse…'}" Command="{Binding PickVideoCommand}" IsEnabled="{Binding !IsRendering}" Margin="0,0,0,6" />
+          <TextBlock Grid.Row="1" Grid.Column="1" Classes="muted" FontSize="12" Text="{Binding VideoInfoText}" Margin="0,0,0,10" />
+
+          <TextBlock Grid.Row="2" Classes="muted" Text="{l:Tr 'Telemetry log'}" VerticalAlignment="Center" Margin="0,0,12,6" />
+          <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding TlogPath}" Margin="0,0,8,6" />
+          <Button Grid.Row="2" Grid.Column="2" Content="{l:Tr 'Browse…'}" Command="{Binding PickTlogCommand}" IsEnabled="{Binding !IsRendering}" Margin="0,0,0,6" />
+          <TextBlock Grid.Row="3" Grid.Column="1" Classes="muted" FontSize="12" Text="{Binding LogInfoText}" />
+        </Grid>
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="h2" Text="{l:Tr 'Line up the log with the video'}" />
+          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                     Text="{l:Tr 'The time offset is added to the time in the video to find the time in the log. Pick a moment you can recognise (take-off, a turn), preview it and move the offset until the HUD matches.'}" />
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <TextBlock Classes="muted" Text="{l:Tr 'Time offset (s)'}" VerticalAlignment="Center" Margin="0,0,12,0" />
+            <Slider Grid.Column="1" Minimum="-900" Maximum="900" Value="{Binding OffsetSeconds}" TickFrequency="50" />
+            <NumericUpDown Grid.Column="2" Value="{Binding OffsetSeconds}" Minimum="-900" Maximum="900" Increment="0.1" FormatString="0.0"
+                           Width="150" Margin="12,0,0,0" />
+          </Grid>
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Button Content="−10 s" Command="{Binding NudgeCommand}" CommandParameter="-10" />
+            <Button Content="−1 s" Command="{Binding NudgeCommand}" CommandParameter="-1" />
+            <Button Content="−0.1 s" Command="{Binding NudgeCommand}" CommandParameter="-0.1" />
+            <Button Content="+0.1 s" Command="{Binding NudgeCommand}" CommandParameter="0.1" />
+            <Button Content="+1 s" Command="{Binding NudgeCommand}" CommandParameter="1" />
+            <Button Content="+10 s" Command="{Binding NudgeCommand}" CommandParameter="10" />
+          </StackPanel>
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <TextBlock Classes="muted" Text="{l:Tr 'Preview at (s)'}" VerticalAlignment="Center" Margin="0,0,12,0" />
+            <Slider Grid.Column="1" Minimum="0" Maximum="{Binding VideoDuration}" Value="{Binding PreviewSeconds}" />
+            <Button Grid.Column="2" Classes="accent" Content="{l:Tr 'Preview'}" Command="{Binding PreviewCommand}" Margin="12,0,0,0"
+                    IsEnabled="{Binding !IsRendering}" />
+          </Grid>
+          <TextBlock Text="{Binding PreviewText}" TextWrapping="Wrap" FontSize="12"
+                     FontFamily="Cascadia Mono, Consolas, Menlo, DejaVu Sans Mono, monospace" />
+          <Image x:Name="Preview" Stretch="Uniform" MaxHeight="540" HorizontalAlignment="Left" />
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="h2" Text="{l:Tr 'Write the video'}" />
+          <WrapPanel>
+            <CheckBox Content="{l:Tr 'Full resolution'}" IsChecked="{Binding FullResolution}" Margin="0,0,20,6"
+                      ToolTip.Tip="{l:Tr 'Off: videos wider than 1280 pixels are scaled down, which is quicker.'}" />
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,6">
+              <TextBlock Classes="muted" Text="{l:Tr 'Encoder'}" VerticalAlignment="Center" />
+              <ComboBox ItemsSource="{Binding Encoders}" SelectedItem="{Binding Encoder}" MinWidth="140" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,6">
+              <TextBlock Classes="muted" Text="{l:Tr 'Bitrate'}" VerticalAlignment="Center" />
+              <NumericUpDown Value="{Binding BitrateKbps}" Minimum="500" Maximum="100000" Increment="500" FormatString="0" Width="140" />
+              <TextBlock Classes="muted" Text="kbit/s" VerticalAlignment="Center" />
+            </StackPanel>
+          </WrapPanel>
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Classes="accent" Content="{l:Tr 'Write video with HUD…'}" Command="{Binding RenderCommand}" IsEnabled="{Binding CanRender}" />
+            <Button Content="{l:Tr 'Cancel'}" Command="{Binding CancelCommand}" IsVisible="{Binding IsRendering}" />
+          </StackPanel>
+          <ProgressBar Minimum="0" Maximum="1" Value="{Binding Progress}" IsIndeterminate="{Binding ProgressIndeterminate}"
+                       IsVisible="{Binding IsRendering}" />
+          <TextBlock Classes="muted" FontSize="12" Text="{Binding ProgressText}" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
