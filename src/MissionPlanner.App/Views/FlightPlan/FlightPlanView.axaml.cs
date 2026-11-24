@@ -86,8 +86,11 @@ public sealed partial class FlightPlanView : UserControl
         Map.Layers.Add(new DrawPolygonLayer(vm));
         Map.Layers.Add(new PlanVehicleLayer(vm));
         Map.Layers.Add(new PoiLayer(vm.Services.Pois));
+        Map.Layers.Add(new GcsLocationLayer(vm.Services.GcsLocation));
         vm.Services.Pois.Changed -= OnPoisChanged;
         vm.Services.Pois.Changed += OnPoisChanged;
+        vm.Services.GcsLocation.Changed -= OnGcsLocationChanged;
+        vm.Services.GcsLocation.Changed += OnGcsLocationChanged;
 
         vm.MapChanged += OnMapChanged;
         vm.ZoomRequested += OnZoomRequested;
@@ -251,6 +254,9 @@ public sealed partial class FlightPlanView : UserControl
     // ---- map context menu ----------------------------------------------------------------------
 
     private void OnPoisChanged(object? sender, EventArgs e) => Map.InvalidateVisual();
+
+    // the moving base reports from its reader thread
+    private void OnGcsLocationChanged(object? sender, EventArgs e) => Dispatcher.UIThread.Post(Map.InvalidateVisual);
 
     private void OnMapContextRequested(object? sender, MapPointerEventArgs e)
     {

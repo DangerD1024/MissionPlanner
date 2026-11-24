@@ -195,11 +195,17 @@ public sealed partial class FlightDataView : UserControl
         Map.Layers.Add(new AdsbLayer(vm.MapModel));
         Map.Layers.Add(new VehicleLayer(vm.MapModel));
         Map.Layers.Add(new PoiLayer(vm.Services.Pois));
+        Map.Layers.Add(new GcsLocationLayer(vm.Services.GcsLocation));
         vm.Services.Pois.Changed -= OnPoisChanged;
         vm.Services.Pois.Changed += OnPoisChanged;
+        vm.Services.GcsLocation.Changed -= OnGcsLocationChanged;
+        vm.Services.GcsLocation.Changed += OnGcsLocationChanged;
     }
 
     private void OnPoisChanged(object? sender, EventArgs e) => Map.InvalidateVisual();
+
+    // the moving base reports from its reader thread
+    private void OnGcsLocationChanged(object? sender, EventArgs e) => Avalonia.Threading.Dispatcher.UIThread.Post(Map.InvalidateVisual);
 
     private void OnVmChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
