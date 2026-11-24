@@ -32,6 +32,26 @@ internal static class GstNative
     public const int MessageEos = 1 << 0;
     public const int MessageError = 1 << 1;
 
+    /// <summary>struct GstMiniObject, which heads every GstMessage (its type field follows).</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MiniObjectHead
+    {
+        public IntPtr Type;
+        public int RefCount;
+        public int LockState;
+        public uint Flags;
+        public IntPtr Copy;
+        public IntPtr Dispose;
+        public IntPtr Free;
+        public uint PrivUint;
+        public IntPtr PrivPointer;
+    }
+
+    private static readonly int MessageTypeOffset = Marshal.SizeOf<MiniObjectHead>();
+
+    /// <summary>GST_MESSAGE_TYPE: a popped message's type (MessageEos, MessageError...).</summary>
+    public static int MessageType(IntPtr message) => Marshal.ReadInt32(message, MessageTypeOffset);
+
     public const int MapRead = 1;
 
     [StructLayout(LayoutKind.Sequential)]
@@ -83,6 +103,9 @@ internal static class GstNative
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void SetBoolFn(IntPtr appsink, int value);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate int IsEosFn(IntPtr appsink);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate IntPtr CapsGetStructureFn(IntPtr caps, uint index);
@@ -138,6 +161,9 @@ internal static class GstNative
     public static PullSampleFn AppSinkTryPullSample = null!;
     public static SetUIntFn AppSinkSetMaxBuffers = null!;
     public static SetBoolFn AppSinkSetDrop = null!;
+
+    /// <summary>gst_app_sink_is_eos: the sink has had end-of-stream and nothing is left to pull.</summary>
+    public static IsEosFn AppSinkIsEos = null!;
     public static PtrFn SampleGetCaps = null!;
     public static PtrFn SampleGetBuffer = null!;
     public static CapsGetStructureFn CapsGetStructure = null!;
@@ -235,6 +261,7 @@ internal static class GstNative
         AppSinkTryPullSample = Bind<PullSampleFn>(app, "gst_app_sink_try_pull_sample");
         AppSinkSetMaxBuffers = Bind<SetUIntFn>(app, "gst_app_sink_set_max_buffers");
         AppSinkSetDrop = Bind<SetBoolFn>(app, "gst_app_sink_set_drop");
+        AppSinkIsEos = Bind<IsEosFn>(app, "gst_app_sink_is_eos");
         BufferNewAllocate = Bind<BufferNewAllocateFn>(core, "gst_buffer_new_allocate");
         BufferFill = Bind<BufferFillFn>(core, "gst_buffer_fill");
         ElementFactoryFind = Bind<FactoryFindFn>(core, "gst_element_factory_find");

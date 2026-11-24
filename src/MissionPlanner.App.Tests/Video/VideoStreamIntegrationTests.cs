@@ -57,6 +57,21 @@ public sealed class VideoStreamIntegrationTests
         return port;
     }
 
+    [TestMethod]
+    [Timeout(20000, CooperativeCancellation = true)]
+    public void AStreamThatEndsIsNoticedAndRetried()
+    {
+        // a filtered bus pop throws away what it does not match: asking for errors alone lost the
+        // end-of-stream message, and a finished source then sat in "Playing" with no frames for ever
+        RequireGStreamer();
+        using var stream = new VideoStream { MinRetryDelay = TimeSpan.FromSeconds(5), MaxRetryDelay = TimeSpan.FromSeconds(5) };
+        stream.Start("videotestsrc num-buffers=10 ! video/x-raw,width=160,height=120,framerate=30/1 ! " + VideoPipelineBuilder.SinkTail);
+        InconclusiveIfMissingElement(stream);
+        Assert.IsTrue(WaitFor(() => stream.Error == "The stream ended", TimeSpan.FromSeconds(10)),
+            $"state {stream.State}, error {stream.Error}");
+        Assert.AreEqual(VideoStreamState.Reconnecting, stream.State);
+    }
+
     /// <summary>A 320×240 test pattern, encoded by <paramref name="encode"/> (its own appsink only keeps the engine happy).</summary>
     private static string Sender(string encode) =>
         "videotestsrc is-live=true ! video/x-raw,width=320,height=240,framerate=30/1 ! tee name=t " +

@@ -347,16 +347,17 @@ public sealed class VideoStream : IVideoStream
                     }
                 }
 
-                if (PopError(bus) is { } busError)
+                // one pop for both: a filtered pop throws away what it does not match, so asking for
+                // errors alone would discard the end-of-stream message
+                if (PopError(bus, out var ended) is { } busError)
                 {
                     error = busError;
                     return Outcome.Retry;
                 }
 
-                var eos = GstNative.BusTimedPopFiltered(bus, 0, GstNative.MessageEos);
-                if (eos != IntPtr.Zero)
+                // the sink knows for certain; the bus message can be missed (seen with GStreamer 1.24 on Linux)
+                if (ended || (sample == IntPtr.Zero && GstNative.AppSinkIsEos(sink) != 0))
                 {
-                    GstNative.MiniObjectUnref(eos);
                     error = "The stream ended";
                     return Outcome.Retry;
                 }
@@ -408,15 +409,25 @@ public sealed class VideoStream : IVideoStream
         return null;
     }
 
-    private static string? PopError(IntPtr bus)
+    private static string? PopError(IntPtr bus) => PopError(bus, out _);
+
+    /// <summary>The next error or end-of-stream on the bus: the error's text, or null with <paramref name="ended"/> set.</summary>
+    private static string? PopError(IntPtr bus, out bool ended)
     {
+        ended = false;
         if (bus == IntPtr.Zero)
             return null;
-        var msg = GstNative.BusTimedPopFiltered(bus, 0, GstNative.MessageError);
+        var msg = GstNative.BusTimedPopFiltered(bus, 0, GstNative.MessageError | GstNative.MessageEos);
         if (msg == IntPtr.Zero)
             return null;
         try
         {
+            if (GstNative.MessageType(msg) == GstNative.MessageEos)
+            {
+                ended = true;
+                return null;
+            }
+
             GstNative.MessageParseError(msg, out var gerror, out var debug);
             var text = GstNative.TakeErrorMessage(gerror);
             var detail = Marshal.PtrToStringUTF8(debug);
