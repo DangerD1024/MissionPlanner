@@ -32,7 +32,8 @@ public class MapProviderNetworkTests
         };
 
         var failed = new List<string>();
-        foreach (var provider in MapTiles.CommonProviders)
+        // the local maps (injected tiles, GeoTIFF overlay) have no server
+        foreach (var provider in MapTiles.CommonProviders.Except(MapTiles.LocalProviders))
         {
             // CMAC, Canberra, zoom 15
             var px = provider.Projection.FromLatLngToPixel(-35.363261, 149.165230, 15);

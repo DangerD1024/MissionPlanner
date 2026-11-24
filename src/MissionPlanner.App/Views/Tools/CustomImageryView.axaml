@@ -1,0 +1,40 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.CustomImageryView"
+             x:DataType="vm:CustomImageryViewModel">
+  <UserControl.Styles>
+    <Style Selector="Border.tool">
+      <Setter Property="Width" Value="340" />
+      <Setter Property="Margin" Value="0,0,14,14" />
+    </Style>
+    <Style Selector="Border.tool Button">
+      <Setter Property="IsEnabled" Value="{Binding !IsBusy}" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+  </UserControl.Styles>
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="16">
+      <tv:ToolHeader />
+      <WrapPanel>
+        <Border Classes="card tool">
+          <StackPanel Spacing="8">
+            <TextBlock Classes="h2" Text="{l:Tr 'Inject GE'}" />
+            <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{l:Tr 'add custom imagery to mp'}" />
+            <Button Classes="accent" Content="{l:Tr 'Add tiles from a folder…'}" Command="{Binding InjectCommand}" />
+          </StackPanel>
+        </Border>
+        <Border Classes="card tool">
+          <StackPanel Spacing="8">
+            <TextBlock Classes="h2" Text="{l:Tr 'Clear Custom Maps'}" />
+            <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{l:Tr 'wipe custom imagery'}" />
+            <Button Content="{l:Tr 'Remove custom tiles…'}" Command="{Binding ClearCommand}" />
+          </StackPanel>
+        </Border>
+      </WrapPanel>
+      <TextBlock Text="{Binding CurrentFile}" Classes="muted" TextTrimming="CharacterEllipsis" FontSize="12" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

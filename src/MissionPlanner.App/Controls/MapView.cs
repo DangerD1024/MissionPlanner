@@ -496,6 +496,18 @@ public sealed class MapView : Control
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnDetachedFromVisualTree(e);
+        DropTiles();
+    }
+
+    /// <summary>Forgets the tiles shown so far and fetches them again (the provider's imagery changed).</summary>
+    public void ReloadTiles()
+    {
+        DropTiles();
+        InvalidateVisual();
+    }
+
+    private void DropTiles()
+    {
         CancelPendingLoads();
         foreach (var entry in _tiles.Values)
             entry.DisposeLayers();

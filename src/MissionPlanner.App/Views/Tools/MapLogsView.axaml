@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:mp="using:GMap.NET.MapProviders"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.MapLogsView"
+             x:DataType="vm:MapLogsViewModel">
+  <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="24,20">
+    <tv:ToolHeader Margin="0,0,0,12" />
+    <WrapPanel Grid.Row="1" Margin="0,0,0,10">
+      <TextBlock Text="{l:Tr 'Map type'}" VerticalAlignment="Center" Margin="0,0,8,0" />
+      <ComboBox ItemsSource="{Binding Providers}" SelectedItem="{Binding Provider}" MinWidth="220" IsEnabled="{Binding !IsBusy}" Margin="0,0,16,0">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:DataType="mp:GMapProvider">
+            <TextBlock Text="{Binding Name}" />
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+      <Button Classes="accent" Content="{l:Tr 'Map a folder of logs…'}" Command="{Binding MapFolderCommand}" IsEnabled="{Binding !IsBusy}" Margin="0,0,8,0" />
+      <Button Content="{l:Tr 'Map the log folder'}" Command="{Binding MapLogFolderCommand}" IsEnabled="{Binding !IsBusy}"
+              ToolTip.Tip="{Binding LogFolder}" />
+    </WrapPanel>
+    <ProgressBar Grid.Row="2" Minimum="0" Maximum="1" Value="{Binding Progress}" Height="6" Margin="0,0,0,10" />
+    <TextBox Grid.Row="3" Text="{Binding Log}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="120"
+             FontFamily="Cascadia Mono, Consolas, Menlo, DejaVu Sans Mono, monospace" FontSize="12" />
+  </Grid>
+</UserControl>
