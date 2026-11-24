@@ -20,7 +20,10 @@ public class ShmFrameWriterTests
             for (var i = 0; i < f1.Length; i++) f1[i] = (byte)(i % 251);
             writer.Write(f1, w, h);
 
-            using var file = MemoryMappedFile.CreateFromFile(path, FileMode.Open, null, total);
+            // as another process would: the writer keeps the file open
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete);
+            using var file = MemoryMappedFile.CreateFromFile(stream, null, total, MemoryMappedFileAccess.ReadWrite,
+                HandleInheritability.None, leaveOpen: false);
             using var a = file.CreateViewAccessor(0, total);
             Assert.AreEqual(ShmFrameWriter.Magic, a.ReadUInt32(0));
             Assert.AreEqual(1u, a.ReadUInt32(4));

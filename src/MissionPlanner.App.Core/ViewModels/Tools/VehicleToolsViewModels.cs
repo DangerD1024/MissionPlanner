@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MissionPlanner.App.Core.ViewModels.FlightData;
 using MissionPlanner.ArduPilot;
+using MissionPlanner.Utilities;
 
 namespace MissionPlanner.App.Core.ViewModels.Tools;
 
@@ -485,8 +486,14 @@ public sealed partial class ApjToolViewModel(AppServices services)
     }
 }
 
-/// <summary>TOOLS: Mission Planner's Ctrl+F screen, with a left menu.</summary>
-public sealed class ToolsViewModel : MenuScreenViewModel
+/// <summary>A button on the classic TOOLS screen: opens a page or runs a vehicle command.</summary>
+public sealed record ClassicToolButton(string Title, System.Windows.Input.ICommand Command, object? Parameter = null, bool IsDanger = false);
+
+/// <summary>
+/// TOOLS: Mission Planner's Ctrl+F screen. Shown with a left menu by default; the classic layout lays every
+/// tool and command out as one wall of buttons, as the WinForms Ctrl+F form does.
+/// </summary>
+public sealed partial class ToolsViewModel : MenuScreenViewModel
 {
     public const string OutputsTitle = "Outputs";
 
@@ -494,12 +501,18 @@ public sealed class ToolsViewModel : MenuScreenViewModel
 
     public const string DeviceOpTitle = "Bus registers";
 
+    public const string VehicleCommandsTitle = "Vehicle commands";
+
+    /// <summary>Setting: the classic wall of buttons instead of the menu.</summary>
+    public const string ClassicKey = "next_tools_classic";
+
+    private IReadOnlyList<ClassicToolButton>? _buttons;
 
     public ToolsViewModel(AppServices s)
         : base("Tools", s)
     {
         Add(MenuItemViewModel.Header("VEHICLE"));
-        Add(MenuItemViewModel.Page("Vehicle commands", () => new VehicleCommandsViewModel(s)));
+        Add(MenuItemViewModel.Page(VehicleCommandsTitle, () => new VehicleCommandsViewModel(s)));
         Add(MenuItemViewModel.Page("Barometer", () => new GroundPressureViewModel(s)));
         Add(MenuItemViewModel.Page("Message interval", () => new MessageIntervalViewModel(s)));
         Add(MenuItemViewModel.Page("Onboard files", () => new OnboardFileViewModel(s)));
@@ -517,5 +530,80 @@ public sealed class ToolsViewModel : MenuScreenViewModel
         Add(MenuItemViewModel.Page("Device ID decoder", () => new DeviceIdDecoderViewModel(s)));
         Add(MenuItemViewModel.Header("FIRMWARE"));
         Add(MenuItemViewModel.Page("APJ tool", () => new ApjToolViewModel(s)));
+
+        _classicLayout = Settings.Instance.GetBoolean(ClassicKey, false);
+    }
+
+    protected override bool AutoSelectFirst => !ClassicLayout;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowMenu), nameof(ShowButtonWall), nameof(ShowClassicPage))]
+    private bool _classicLayout;
+
+    /// <summary>Classic layout: a page opened from its button is shown instead of the buttons.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowButtonWall), nameof(ShowClassicPage))]
+    private bool _classicPageOpen;
+
+    public bool ShowMenu => !ClassicLayout;
+
+    public bool ShowButtonWall => ClassicLayout && !ClassicPageOpen;
+
+    public bool ShowClassicPage => ClassicLayout && ClassicPageOpen;
+
+    /// <summary>Every command and page as a button: the vehicle commands first, then the pages in menu order.</summary>
+    public IReadOnlyList<ClassicToolButton> ClassicButtons => _buttons ??= BuildButtons();
+
+    private IReadOnlyList<ClassicToolButton> BuildButtons()
+    {
+        var list = new List<ClassicToolButton>();
+        if (Items.FirstOrDefault(i => i.Title == VehicleCommandsTitle)?.GetPage() is VehicleCommandsViewModel cmd)
+        {
+            list.Add(new("Force accel calibrated", cmd.ForceAccelCalibratedCommand));
+            list.Add(new("Force compass calibrated", cmd.ForceCompassCalibratedCommand));
+            list.Add(new("Arm and take off", cmd.ArmAndTakeoffCommand));
+            list.Add(new("Update bootloader...", cmd.UpdateBootloaderCommand));
+            list.Add(new("Reboot to DFU...", cmd.RebootToDfuCommand));
+            list.Add(new("Lock up the autopilot...", cmd.LockupCommand, IsDanger: true));
+        }
+
+        foreach (var item in Items.Where(i => i.IsPage && i.Title != VehicleCommandsTitle))
+            list.Add(new(item.Title, OpenClassicPageCommand, item));
+        return list;
+    }
+
+    partial void OnClassicLayoutChanged(bool value)
+    {
+        Settings.Instance[ClassicKey] = value.ToString();
+        Settings.Instance.Save();
+        ClassicPageOpen = false;
+        SelectedItem = value ? null : Items.FirstOrDefault(i => i.IsPage && i.IsVisible);
+    }
+
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void OpenClassicPage(MenuItemViewModel? item)
+    {
+        if (item == null)
+            return;
+        SelectedItem = item;
+        ClassicPageOpen = true;
+    }
+
+    /// <summary>A hotkey opens the page in either layout.</summary>
+    public override bool Show(string title)
+    {
+        if (!base.Show(title))
+            return false;
+        if (ClassicLayout)
+            ClassicPageOpen = true;
+        return true;
+    }
+
+    /// <summary>Classic layout: back from a page to the buttons.</summary>
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void BackToButtons()
+    {
+        ClassicPageOpen = false;
+        SelectedItem = null;
     }
 }

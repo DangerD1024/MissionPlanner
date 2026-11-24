@@ -141,7 +141,7 @@
           <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Margin="2,8,0,0" FontSize="11" Classes="muted"
                      Text="{Binding ProgressText}" IsVisible="{Binding IsBusy}" TextTrimming="CharacterEllipsis" MaxWidth="390" />
           <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="10" Margin="0,6,0,0"
-                      IsVisible="{Binding CanEditLink}">
+                      IsVisible="{Binding ShowAutoConnect}">
             <CheckBox IsChecked="{Binding AutoConnect}" MinHeight="24" FontSize="12" Content="{l:Tr 'Auto-connect'}"
                       ToolTip.Tip="{l:Tr 'Connect automatically to any autopilot plugged in by USB or sending MAVLink on UDP 14550'}" />
             <TextBlock Text="{l:TrBind {Binding AutoConnectStatus}}" FontSize="11" Classes="muted" VerticalAlignment="Center"

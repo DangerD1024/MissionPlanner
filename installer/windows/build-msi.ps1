@@ -135,10 +135,12 @@ the plugins in lib\gstreamer-1.0 and the libraries they need. GStreamer is LGPL-
 # 4. MSI
 $msi = Join-Path $root "bin\MissionPlanner-$display-$Runtime.msi"
 $wixArch = if ($Runtime -eq "win-arm64") { "arm64" } elseif ($Runtime -eq "win-x86") { "x86" } else { "x64" }
-if (-not ((wix extension list -g) -match "WixToolset.UI.wixext")) { wix extension add -g WixToolset.UI.wixext/5.0.2 }
+foreach ($ext in "WixToolset.UI.wixext", "WixToolset.Firewall.wixext") {
+    if (-not ((wix extension list -g) -match $ext)) { wix extension add -g "$ext/5.0.2" }
+}
 Push-Location $PSScriptRoot
 try {
-    wix build Package.wxs -arch $wixArch -ext WixToolset.UI.wixext `
+    wix build Package.wxs -arch $wixArch -ext WixToolset.UI.wixext -ext WixToolset.Firewall.wixext `
         -d "Version=$numeric" -d "DisplayVersion=$display" `
         -bindpath "publish=$publish" -o $msi
     if ($LASTEXITCODE -ne 0) { throw "wix build failed" }

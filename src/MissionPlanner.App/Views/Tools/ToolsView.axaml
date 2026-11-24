@@ -1,0 +1,71 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels"
+             xmlns:tvm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.ToolsView"
+             x:DataType="tvm:ToolsViewModel">
+
+  <!-- structured (default): left menu with the layout switch under it, page on the right.
+       classic: a bar with the switch over a wall of buttons; a page opened from one replaces them until Back.
+       One ContentControl serves both, so a page's view is built once. -->
+  <Grid ColumnDefinitions="Auto,*">
+    <Border Width="220" IsVisible="{Binding ShowMenu}"
+            Background="{DynamicResource Bg1}" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,1,0">
+      <DockPanel>
+        <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0" Padding="12,8">
+          <ToggleSwitch IsChecked="{Binding ClassicLayout}" FontSize="12"
+                        OnContent="{l:Tr 'Classic buttons'}" OffContent="{l:Tr 'Classic buttons'}"
+                        ToolTip.Tip="{l:Tr 'Show every tool as one screen of buttons, as the classic Mission Planner Ctrl+F screen does'}" />
+        </Border>
+        <ListBox Classes="sidemenu" ItemsSource="{Binding VisibleItems}" SelectedItem="{Binding SelectedItem}">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:MenuItemViewModel">
+              <Panel>
+                <TextBlock Text="{l:TrBind {Binding Title}}" IsVisible="{Binding IsPage}" Padding="14,8" FontSize="13.5" />
+                <TextBlock Text="{l:TrBind {Binding Title}}" IsVisible="{Binding IsHeader}" Padding="8,12,8,2"
+                           FontSize="11" FontWeight="Bold" Classes="muted" />
+              </Panel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+    </Border>
+
+    <DockPanel Grid.Column="1">
+      <Border DockPanel.Dock="Top" IsVisible="{Binding ClassicLayout}" Background="{DynamicResource Bg1}"
+              BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1" Padding="12,6">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <Button Content="{l:Tr '◀ All tools'}" Command="{Binding BackToButtonsCommand}" IsVisible="{Binding ClassicPageOpen}"
+                  Padding="10,4" Margin="0,0,12,0" />
+          <TextBlock Grid.Column="1" Classes="h2" VerticalAlignment="Center" Text="{l:Tr 'Tools'}" />
+          <ToggleSwitch Grid.Column="2" IsChecked="{Binding ClassicLayout}" FontSize="12"
+                        OnContent="{l:Tr 'Classic buttons'}" OffContent="{l:Tr 'Classic buttons'}"
+                        ToolTip.Tip="{l:Tr 'Turn off to show the tools in a menu'}" />
+        </Grid>
+      </Border>
+      <Panel>
+        <ScrollViewer IsVisible="{Binding ShowButtonWall}">
+          <ItemsControl ItemsSource="{Binding ClassicButtons}" Margin="10">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="tvm:ClassicToolButton">
+                <Button Width="170" Height="44" Margin="4" Padding="6,2" FontSize="12"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                        Classes.danger="{Binding IsDanger}"
+                        Command="{Binding Command}" CommandParameter="{Binding Parameter}">
+                  <TextBlock Text="{l:TrBind {Binding Title}}" TextWrapping="Wrap" TextAlignment="Center" />
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+        <ContentControl Content="{Binding Content}" IsVisible="{Binding !ShowButtonWall}" />
+      </Panel>
+    </DockPanel>
+  </Grid>
+</UserControl>

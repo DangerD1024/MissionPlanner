@@ -1,5 +1,6 @@
 using log4net;
 using MissionPlanner.App.Core.Links;
+using MissionPlanner.Comms;
 using MissionPlanner.Utilities;
 
 namespace MissionPlanner.App.Core.Session;
@@ -54,6 +55,9 @@ public sealed class VehicleSession : IAsyncDisposable
     public static readonly TimeSpan StaleAfter = TimeSpan.FromSeconds(3);
 
     public MAVLinkInterface Mav { get; } = new();
+
+    /// <summary>A UDP listen link gives up when no packet has arrived for this long.</summary>
+    internal static TimeSpan UdpFirstPacketTimeout { get; set; } = TimeSpan.FromSeconds(60);
 
     /// <summary>Time since the last packet from the link (zero while not connected).</summary>
     public TimeSpan SinceLastPacket => IsConnected
@@ -132,6 +136,26 @@ public sealed class VehicleSession : IAsyncDisposable
             // log the whole session, parameter download included, as the WinForms app does
             StartTlog();
 
+            // a UDP listener waits in Open until the first packet arrives, polling only its own flag:
+            // Cancel sets it, and so does a long silence (with an explanation instead of an endless wait)
+            var udp = Mav.BaseStream as UdpSerial;
+            var udpTimedOut = false;
+            using var stopUdp = cancel.Register(() =>
+            {
+                if (udp != null)
+                    udp.CancelConnect = true;
+            });
+            using var udpTimer = udp == null ? null : new System.Threading.Timer(_ =>
+            {
+                if (!udp.IsOpen)
+                {
+                    udpTimedOut = true;
+                    udp.CancelConnect = true;
+                }
+            }, null, UdpFirstPacketTimeout, Timeout.InfiniteTimeSpan);
+            if (udp != null)
+                progress?.Report(new OperationProgress(-1, $"Waiting for data on UDP port {spec.Value}…"));
+
             await Task.Run(() =>
             {
                 using (BackgroundProgressReporter.Scope.Use(reporter))
@@ -140,6 +164,11 @@ public sealed class VehicleSession : IAsyncDisposable
 
             if (reporter.Cancelled || cancel.IsCancellationRequested)
                 throw new OperationCanceledException(cancel);
+            if (udpTimedOut && udp is { IsOpen: false })
+                throw new ConnectException(
+                    $"Nothing arrived on UDP port {spec.Value} in {UdpFirstPacketTimeout.TotalSeconds:0} s.\n\n" +
+                    "Check that the vehicle, radio or companion computer sends MAVLink to this computer's address and to this port, " +
+                    "and that Windows Firewall allows Mission Planner 3 (Windows asks the first time; on a Public network the answer may have been No).");
             if (reporter.Error != null || !Mav.BaseStream.IsOpen)
                 throw new ConnectException(reporter.ErrorMessage ?? "The link closed while connecting.", reporter.Error);
         }

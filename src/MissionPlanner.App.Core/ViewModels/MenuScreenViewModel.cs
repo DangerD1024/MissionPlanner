@@ -95,8 +95,11 @@ public abstract partial class MenuScreenViewModel : PageViewModel
 
     protected void Add(MenuItemViewModel item) => Items.Add(item);
 
+    /// <summary>Whether the first page opens by itself when nothing is selected (not on a screen of buttons).</summary>
+    protected virtual bool AutoSelectFirst => true;
+
     /// <summary>Opens a page by its menu title, when it applies to the vehicle; returns whether it did.</summary>
-    public bool Show(string title)
+    public virtual bool Show(string title)
     {
         UpdateVisibility();
         if (Items.FirstOrDefault(i => i.IsPage && i.IsVisible && i.Title == title) is not { } item)
@@ -123,7 +126,7 @@ public abstract partial class MenuScreenViewModel : PageViewModel
 
         OnPropertyChanged(nameof(VisibleItems));
         if (SelectedItem is { IsVisible: false })
-            SelectedItem = Items.FirstOrDefault(i => i.IsPage && i.IsVisible);
+            SelectedItem = AutoSelectFirst ? Items.FirstOrDefault(i => i.IsPage && i.IsVisible) : null;
     }
 
     public override void Tick() => Content?.Tick();
@@ -132,7 +135,8 @@ public abstract partial class MenuScreenViewModel : PageViewModel
     {
         _visible = true;
         UpdateVisibility();
-        SelectedItem ??= Items.FirstOrDefault(i => i.IsPage && i.IsVisible);
+        if (AutoSelectFirst)
+            SelectedItem ??= Items.FirstOrDefault(i => i.IsPage && i.IsVisible);
         Activate(Content);
     }
 

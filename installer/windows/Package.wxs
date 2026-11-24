@@ -8,7 +8,8 @@
   Mission Planner, which has its own UpgradeCode and folder.
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
-     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:fw="http://wixtoolset.org/schemas/v4/wxs/firewall">
 
   <Package Name="Mission Planner $(DisplayVersion)"
            Manufacturer="Mission Planner"
@@ -38,7 +39,12 @@
     <!-- the executable gets its own component so the shortcuts can point at it -->
     <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
       <Component Id="MainExecutable">
-        <File Id="MainExe" Source="!(bindpath.publish)\MissionPlanner.App.exe" KeyPath="yes" />
+        <File Id="MainExe" Source="!(bindpath.publish)\MissionPlanner.App.exe" KeyPath="yes">
+          <!-- telemetry arrives as incoming UDP (any port the user picks) and TCP: allow it on every network
+               profile, as the Windows prompt would only cover the network the PC was on at first start -->
+          <fw:FirewallException Id="MainExeFirewall" Name="Mission Planner 3" Scope="any" Profile="all"
+                                Description="MAVLink telemetry over UDP and TCP" />
+        </File>
       </Component>
       <Files Include="!(bindpath.publish)\**">
         <Exclude Files="!(bindpath.publish)\MissionPlanner.App.exe" />

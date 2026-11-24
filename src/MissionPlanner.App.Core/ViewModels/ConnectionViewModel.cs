@@ -120,7 +120,7 @@ public sealed partial class ConnectionViewModel : ObservableObject
     private VehicleOption? _selectedVehicle;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsConnected), nameof(IsBusy), nameof(ConnectText), nameof(CanEditLink), nameof(ShowVehicles))]
+    [NotifyPropertyChangedFor(nameof(IsConnected), nameof(IsBusy), nameof(ConnectText), nameof(CanEditLink), nameof(ShowVehicles), nameof(ShowAutoConnect))]
     private LinkState _state;
 
     /// <summary>Progress text while connecting (heartbeat wait, parameter download).</summary>
@@ -142,12 +142,27 @@ public sealed partial class ConnectionViewModel : ObservableObject
     [ObservableProperty]
     private string _staleText = "";
 
-    public bool ShowVehicles => IsConnected && !IsStale;
+    /// <summary>A telemetry log is loaded for playback (no link): its vehicles are listed as a live link's are.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowVehicles), nameof(ShowAutoConnect))]
+    private bool _isReplaying;
+
+    public bool ShowVehicles => (IsConnected && !IsStale) || IsReplaying;
+
+    /// <summary>The auto-connect line shares the row with the vehicle list.</summary>
+    public bool ShowAutoConnect => CanEditLink && !IsReplaying;
 
     /// <summary>Called by the shell's UI tick.</summary>
     public void Tick()
     {
         var s = _services.Session;
+        var replaying = State == LinkState.Disconnected && s.Mav.logplaybackfile != null;
+        if (replaying != IsReplaying)
+        {
+            IsReplaying = replaying;
+            RefreshVehicles();
+        }
+
         IsStale = s.IsReconnecting || s.IsLinkStale;
         var secs = (int)s.SinceLastPacket.TotalSeconds;
         StaleText = s.IsReconnecting ? $"Reconnecting… no data for {secs} s"
@@ -309,7 +324,7 @@ public sealed partial class ConnectionViewModel : ObservableObject
     /// <summary>Called by the shell's telemetry tick: vehicles appear on the link over time.</summary>
     public void RefreshVehicles()
     {
-        var list = State == LinkState.Connected ? _services.Session.Vehicles : [];
+        var list = State == LinkState.Connected || IsReplaying ? _services.Session.Vehicles : [];
         var options = list
             .Where(m => m.sysid != 0)
             .Select(m => new VehicleOption((byte)m.sysid, (byte)m.compid, $"{m.sysid}-{m.compid} {m.aptype.ToString().Replace('_', ' ')}"))

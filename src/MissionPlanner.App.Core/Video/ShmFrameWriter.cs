@@ -39,8 +39,11 @@ public sealed class ShmFrameWriter : IDisposable
         {
             _view?.Dispose();
             _file?.Dispose();
-            _file = MemoryMappedFile.CreateFromFile(_path, FileMode.OpenOrCreate, null,
-                HeaderBytes + Slots * frameBytes);
+            // shared, so a reader in another process can open the file while it is written (Windows locks it otherwise)
+            var stream = new FileStream(_path, FileMode.OpenOrCreate, FileAccess.ReadWrite,
+                FileShare.ReadWrite | FileShare.Delete);
+            _file = MemoryMappedFile.CreateFromFile(stream, null, HeaderBytes + Slots * frameBytes,
+                MemoryMappedFileAccess.ReadWrite, HandleInheritability.None, leaveOpen: false);
             _view = _file.CreateViewAccessor(0, HeaderBytes + Slots * frameBytes);
             _width = width;
             _height = height;
