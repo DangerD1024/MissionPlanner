@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:controls="using:MissionPlanner.App.Controls"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.DemInfoView"
+             x:DataType="vm:DemInfoViewModel">
+  <Grid RowDefinitions="Auto,Auto,*" Margin="24,20">
+    <tv:ToolHeader Margin="0,0,0,12" />
+    <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10">
+      <TextBlock Text="{Binding Folder}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Classes="muted" />
+      <Button Grid.Column="1" Content="{l:Tr 'Open DEM Dir'}" Command="{Binding OpenFolderCommand}" Margin="8,0,0,0" />
+      <Button Grid.Column="2" Content="{l:Tr 'Refresh'}" Command="{Binding RefreshCommand}" IsEnabled="{Binding !IsBusy}" Margin="8,0,0,0" />
+    </Grid>
+    <Grid Grid.Row="2" ColumnDefinitions="420,12,*">
+      <Border Classes="card" Padding="0">
+        <ListBox ItemsSource="{Binding Entries}" SelectedItem="{Binding Selected}" Background="Transparent">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:DemEntry">
+              <StackPanel Spacing="2" ToolTip.Tip="{Binding Line}">
+                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding AreaText}" Classes="muted" FontSize="12" />
+                <TextBlock Classes="muted" FontSize="12">
+                  <Run Text="{Binding SizeText}" /><Run Text="  " /><Run Text="{Binding Projection}" />
+                </TextBlock>
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </Border>
+      <Border Grid.Column="2" Classes="card" Padding="0" ClipToBounds="True">
+        <controls:MapView x:Name="Map" />
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>

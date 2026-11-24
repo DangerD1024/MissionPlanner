@@ -1,0 +1,114 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:controls="using:MissionPlanner.App.Controls"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.GeoRefImagesView"
+             x:DataType="vm:GeoRefImagesViewModel">
+  <UserControl.Styles>
+    <Style Selector="Grid.form > TextBlock">
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Margin" Value="0,0,10,0" />
+    </Style>
+    <Style Selector="Grid.form > NumericUpDown">
+      <Setter Property="Width" Value="140" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+      <Setter Property="Margin" Value="0,3" />
+    </Style>
+    <Style Selector="Grid.form > TextBox">
+      <Setter Property="Width" Value="140" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+      <Setter Property="Margin" Value="0,3" />
+    </Style>
+  </UserControl.Styles>
+  <Grid RowDefinitions="Auto,*,Auto" Margin="24,20">
+    <tv:ToolHeader Margin="0,0,0,12" />
+    <Grid Grid.Row="1" ColumnDefinitions="430,12,*">
+      <ScrollViewer>
+        <StackPanel Spacing="12" Margin="0,0,8,0">
+          <Border Classes="card">
+            <StackPanel Spacing="8">
+              <TextBlock Classes="h2" Text="{l:Tr 'Files'}" />
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBox Text="{Binding LogFile}" PlaceholderText="{l:Tr 'Flight log (.bin, .log, .tlog)'}" />
+                <Button Grid.Column="1" Content="{l:Tr 'Browse Log'}" Command="{Binding BrowseLogCommand}" Margin="8,0,0,0" />
+              </Grid>
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBox Text="{Binding ImageFolder}" PlaceholderText="{l:Tr 'Folder of photos'}" />
+                <Button Grid.Column="1" Content="{l:Tr 'Browse Pictures'}" Command="{Binding BrowseImagesCommand}" Margin="8,0,0,0" />
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <Border Classes="card">
+            <StackPanel Spacing="8">
+              <TextBlock Classes="h2" Text="{l:Tr 'Matching'}" />
+              <ComboBox ItemsSource="{Binding Modes}" SelectedItem="{Binding SelectedMode}" MinWidth="200">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:GeoRefImagesViewModel+ModeOption">
+                    <TextBlock Text="{l:TrBind {Binding Text}}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+              <Grid Classes="form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                <TextBlock Text="{l:Tr 'Seconds offset'}" IsVisible="{Binding IsTimeOffset}" />
+                <TextBox Grid.Column="1" Text="{Binding OffsetSeconds}" IsVisible="{Binding IsTimeOffset}" />
+                <CheckBox Grid.Row="1" Grid.ColumnSpan="2" Content="{l:Tr 'Use Cam Messages'}" IsChecked="{Binding UseCamMessages}" IsVisible="{Binding IsTimeOffset}" />
+                <TextBlock Grid.Row="2" Text="{l:Tr 'Shutter lag (ms)'}" IsVisible="{Binding UsesShutterLag}" />
+                <NumericUpDown Grid.Row="2" Grid.Column="1" Value="{Binding ShutterLagMs}" Minimum="0" Maximum="10000" Increment="10" FormatString="0" IsVisible="{Binding UsesShutterLag}" />
+                <CheckBox Grid.Row="3" Grid.ColumnSpan="2" Content="{l:Tr 'Use GPSAlt'}" IsChecked="{Binding CamUseGpsAlt}" IsVisible="{Binding IsCam}" />
+                <CheckBox Grid.Row="4" Grid.ColumnSpan="2" Content="{l:Tr 'Use GPSAlt'}" IsChecked="{Binding TrigUseGpsAlt}" IsVisible="{Binding IsTrigger}" />
+                <TextBlock Grid.Row="5" Text="{l:Tr 'Min Shutter (s) (CAM)'}" IsVisible="{Binding IsCam}" />
+                <NumericUpDown Grid.Row="5" Grid.Column="1" Value="{Binding MinShutter}" Minimum="0" Maximum="99" Increment="0.01" FormatString="0.00" IsVisible="{Binding IsCam}" />
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <Border Classes="card">
+            <StackPanel Spacing="8">
+              <TextBlock Classes="h2" Text="{l:Tr 'Options'}" />
+              <Grid Classes="form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                <CheckBox Grid.ColumnSpan="2" Content="{l:Tr 'Use GPS2'}" IsChecked="{Binding UseGps2}" />
+                <CheckBox Grid.Row="1" Grid.ColumnSpan="2" Content="{l:Tr 'Use AMSL Alt'}" IsChecked="{Binding UseAmslAlt}" />
+                <TextBlock Grid.Row="2" Text="{l:Tr 'Rel Alt base'}" />
+                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding BaseAlt}" />
+                <TextBlock Grid.Row="3" Text="{l:Tr 'Drop image at start'}" />
+                <NumericUpDown Grid.Row="3" Grid.Column="1" Value="{Binding DropStart}" Minimum="0" Maximum="900" Increment="1" FormatString="0" />
+                <TextBlock Grid.Row="4" Text="{l:Tr 'Drop image at end'}" />
+                <NumericUpDown Grid.Row="4" Grid.Column="1" Value="{Binding DropEnd}" Minimum="0" Maximum="900" Increment="1" FormatString="0" />
+                <TextBlock Grid.Row="5" Text="{l:Tr 'Rotation'}" />
+                <NumericUpDown Grid.Row="5" Grid.Column="1" Value="{Binding CameraRotation}" Minimum="-180" Maximum="180" Increment="1" FormatString="0" />
+                <TextBlock Grid.Row="6" Text="{l:Tr 'Cross fov'}" />
+                <NumericUpDown Grid.Row="6" Grid.Column="1" Value="{Binding CrossFov}" Minimum="0" Maximum="900" Increment="1" FormatString="0" />
+                <TextBlock Grid.Row="7" Text="{l:Tr 'Dir fov'}" />
+                <NumericUpDown Grid.Row="7" Grid.Column="1" Value="{Binding DirFov}" Minimum="0" Maximum="900" Increment="1" FormatString="0" />
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <WrapPanel>
+            <Button Content="{l:Tr 'Estimate Offset'}" Command="{Binding EstimateOffsetCommand}" IsEnabled="{Binding !IsBusy}" IsVisible="{Binding IsTimeOffset}" Margin="0,0,8,8" />
+            <Button Classes="accent" Content="{l:Tr 'Pre-process'}" Command="{Binding ProcessCommand}" IsEnabled="{Binding !IsBusy}" Margin="0,0,8,8" />
+            <Button Content="{l:Tr 'GeoTag Images'}" Command="{Binding GeoTagCommand}" IsEnabled="{Binding CanGeoTag}" Margin="0,0,8,8" />
+          </WrapPanel>
+
+          <Border Classes="card" Padding="0" MaxHeight="260">
+            <ListBox ItemsSource="{Binding Photos}" SelectedItem="{Binding SelectedPhoto}" Background="Transparent">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:GeoRefPhoto">
+                  <TextBlock Text="{Binding Text}" FontSize="12" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Path}" />
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+      <Border Grid.Column="2" Classes="card" Padding="0" ClipToBounds="True">
+        <controls:MapView x:Name="Map" />
+      </Border>
+    </Grid>
+    <TextBox Grid.Row="2" Text="{Binding Output}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" Height="160" Margin="0,12,0,0"
+             FontFamily="Cascadia Mono, Consolas, Menlo, DejaVu Sans Mono, monospace" FontSize="11" />
+  </Grid>
+</UserControl>

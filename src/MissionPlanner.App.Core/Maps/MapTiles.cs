@@ -89,6 +89,17 @@ public static class MapTiles
         GMapProviders.OpenStreetMap,
         EsriWorldImageryProvider.Instance,
         GMapProviders.ArcGIS_World_Topo_Map,
+        .. LocalProviders,
+    ];
+
+    /// <summary>
+    /// Maps made from the user's own files (TOOLS): "Custom" shows the tiles injected into the cache,
+    /// "GeoTIFF Custom" draws loaded GeoTIFFs over satellite imagery. Last in <see cref="CommonProviders"/>.
+    /// </summary>
+    public static IReadOnlyList<GMapProvider> LocalProviders =>
+    [
+        Custom.Instance,
+        GeoTiffImageryProvider.Instance,
     ];
 
     /// <summary>Raised on a worker thread when a provider request fails (HTTP error, throttling, non-image reply).</summary>
