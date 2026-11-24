@@ -30,8 +30,8 @@ public sealed partial class StreamSettingsViewModel : PageViewModel, IDialogPage
             .Concat(installed.Select(e => new VideoChoice<string>(e, e)))
             .ToList();
         _encoder = Encoders.FirstOrDefault(e => e.Value == s.Encoder) ?? Encoders[0];
-        IsAvailable = HudStreamer.IsAvailable(out var message);
-        Availability = message;
+        _gstAvailable = HudStreamer.IsAvailable(out var message);
+        _gstMessage = message;
     }
 
     public event EventHandler<bool>? CloseRequested;
@@ -41,6 +41,7 @@ public sealed partial class StreamSettingsViewModel : PageViewModel, IDialogPage
         new(StreamMode.RtspServer, "RTSP server (other apps connect to this computer)"),
         new(StreamMode.UdpPush, "Send RTP/H.264 over UDP to one address"),
         new(StreamMode.Both, "Both"),
+        new(StreamMode.Shm, "Shared memory raw frames (same-machine tracker, lowest latency)"),
     ];
 
     public IReadOnlyList<VideoChoice<int>> Resolutions { get; } =
@@ -52,9 +53,20 @@ public sealed partial class StreamSettingsViewModel : PageViewModel, IDialogPage
     public IReadOnlyList<VideoChoice<string>> Encoders { get; }
 
     /// <summary>"GStreamer 1.26.11", or why streaming cannot work here.</summary>
-    public string Availability { get; }
+    public string Availability => Mode.Value == StreamMode.Shm
+        ? "Shared memory raw frames (no GStreamer needed)"
+        : _gstMessage;
 
-    public bool IsAvailable { get; }
+    public bool IsAvailable => Mode.Value == StreamMode.Shm || _gstAvailable;
+
+    private readonly bool _gstAvailable;
+    private readonly string _gstMessage;
+
+    partial void OnModeChanged(VideoChoice<StreamMode> value)
+    {
+        OnPropertyChanged(nameof(IsAvailable));
+        OnPropertyChanged(nameof(Availability));
+    }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowsRtsp), nameof(ShowsUdp), nameof(Error))]

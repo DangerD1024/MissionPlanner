@@ -23,6 +23,9 @@ public enum JoystickInputKind
     /// <summary>Two PWM values switched by a button with the Button_axis0/1 function (Mission Planner's Custom1/2).</summary>
     ButtonAxis,
 
+    /// <summary>A device button held down: 2000 while pressed, 1000 released (Reverse swaps).</summary>
+    Button,
+
     /// <summary>The channel's trim (Mission Planner's "Pass").</summary>
     Trim,
 }
@@ -42,6 +45,7 @@ public readonly record struct JoystickInput(JoystickInputKind Kind, int Index = 
         JoystickInputKind.HatVertical => $"Hat {Index + 1} up/down",
         JoystickInputKind.HatHorizontal => $"Hat {Index + 1} left/right",
         JoystickInputKind.ButtonAxis => $"Button axis {Index + 1}",
+        JoystickInputKind.Button => $"Button {Index + 1} (1000/2000)",
         JoystickInputKind.Trim => "Trim (fixed)",
         _ => Kind.ToString(),
     };
@@ -54,6 +58,7 @@ public readonly record struct JoystickInput(JoystickInputKind Kind, int Index = 
         JoystickInputKind.HatVertical => "hatud:" + Index.ToString(CultureInfo.InvariantCulture),
         JoystickInputKind.HatHorizontal => "hatlr:" + Index.ToString(CultureInfo.InvariantCulture),
         JoystickInputKind.ButtonAxis => "buttonaxis:" + Index.ToString(CultureInfo.InvariantCulture),
+        JoystickInputKind.Button => "button:" + Index.ToString(CultureInfo.InvariantCulture),
         JoystickInputKind.Trim => "trim",
         _ => "none",
     };
@@ -70,6 +75,7 @@ public readonly record struct JoystickInput(JoystickInputKind Kind, int Index = 
             "hatud" => new(JoystickInputKind.HatVertical, index),
             "hatlr" => new(JoystickInputKind.HatHorizontal, index),
             "buttonaxis" => new(JoystickInputKind.ButtonAxis, Math.Min(index, 1)),
+            "button" => new(JoystickInputKind.Button, index),
             "trim" or "pass" => new(JoystickInputKind.Trim),
             _ => None,
         };
@@ -179,6 +185,10 @@ public sealed class JoystickProfile
 
     /// <summary>Send MANUAL_CONTROL (x, y, z, r and buttons) instead of RC_CHANNELS_OVERRIDE.</summary>
     public bool ManualControl { get; set; }
+
+    /// <summary>The sending toggle was on when the page/app was left; resume it on the next
+    /// connect so a bench or pilot setup survives restarts without re-clicking Enable.</summary>
+    public bool Sending { get; set; }
 
     /// <summary>Mix roll and pitch onto channels 1 and 2 for elevon aircraft (Mission Planner's option).</summary>
     public bool Elevons { get; set; }

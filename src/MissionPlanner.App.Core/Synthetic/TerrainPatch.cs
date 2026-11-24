@@ -10,6 +10,21 @@ public sealed record PatchSpec(double Half, int GridSize, int DemZoom, int Image
 
     /// <summary>±1.2 km, 20 m grid, sharp imagery: what is under and near the vehicle.</summary>
     public static readonly PatchSpec Near = new(1200, 121, 13, 17, 12);
+
+    /// <summary>Extends the horizon without increasing the mesh or DEM download budget.</summary>
+    public static PatchSpec FarFor(double half) => Far with
+    {
+        Half = half,
+        DemZoom = Far.DemZoom - Math.Max(0, (int)Math.Ceiling(Math.Log2(half / Far.Half))),
+    };
+
+    /// <summary>Hi-res preload radius: grows the sharp-imagery patch and budgets more tiles so
+    /// the imagery zoom is retained (hi-res map tiles preloaded) out to <paramref name="half"/> m.</summary>
+    public static PatchSpec NearFor(double half) => Near with
+    {
+        Half = half,
+        MaxImageryTiles = Math.Clamp((int)Math.Ceiling(Near.MaxImageryTiles * half / Near.Half), Near.MaxImageryTiles, 48),
+    };
 }
 
 /// <summary>
@@ -26,6 +41,9 @@ public sealed class TerrainPatch
     public required uint[] Indices { get; init; }
     public DrapeImage? Drape { get; init; }
 
+    /// <summary>False if imagery was requested but some tiles failed, including a wholly missing drape.</summary>
+    public bool ImageryComplete { get; private set; } = true;
+
     /// <summary>Whether real heights were found (false: a flat stand-in at the vehicle's ground level).</summary>
     public bool HasHeights { get; init; }
 
@@ -34,16 +52,18 @@ public sealed class TerrainPatch
 
     /// <summary>Builds a patch around a point; missing heights become <paramref name="fallbackHeight"/>.</summary>
     public static async Task<TerrainPatch> BuildAsync(TerrainSource terrain, GMapProvider? provider, double lat, double lng, PatchSpec spec,
-        double fallbackHeight, CancellationToken cancel)
+        double fallbackHeight, CancellationToken cancel, DrapeImage? fallbackImagery = null)
     {
         var frame = new LocalFrame(lat, lng);
         var gridTask = terrain.GridAsync(frame, spec.Half, spec.GridSize, spec.DemZoom, cancel);
         var drapeTask = provider == null
             ? Task.FromResult<DrapeImage?>(null)
-            : Synthetic.Drape.BuildAsync(provider, frame, spec.Half, spec.ImageryZoom, spec.MaxImageryTiles, cancel);
+            : Synthetic.Drape.BuildAsync(provider, frame, spec.Half, spec.ImageryZoom, spec.MaxImageryTiles, cancel, fallback: fallbackImagery);
         var grid = await gridTask.ConfigureAwait(false);
         var drape = await drapeTask.ConfigureAwait(false);
-        return Build(frame, spec, grid, drape, fallbackHeight);
+        var patch = Build(frame, spec, grid, drape, fallbackHeight);
+        patch.ImageryComplete = provider == null || drape is { Complete: true };
+        return patch;
     }
 
     /// <summary>The mesh from a height grid (NaN = unknown) and a drape.</summary>
@@ -121,6 +141,7 @@ public sealed class TerrainPatch
             Vertices = v,
             Indices = idx,
             Drape = drape,
+            ImageryComplete = drape?.Complete ?? true,
             HasHeights = known > 0,
             CentreHeight = heights[(n / 2) * n + n / 2],
         };

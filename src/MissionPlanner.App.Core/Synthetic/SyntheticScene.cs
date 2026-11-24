@@ -113,8 +113,14 @@ public sealed class SyntheticScene
     private const int Fps = 60;
     private const int MaxWidth = 1920;
     private const int MaxHeight = 1080;
-    private const double FarRebuild = 3000; // m from the far patch's centre
+    public const double DefaultDrawDistance = 8000;
+    public const double MinDrawDistance = 2000;
+    public const double MaxDrawDistance = 32000;
+    public const double DefaultHighres = 1200;
+    public const double MinHighres = 500;
+    public const double MaxHighres = 8000;
     private const double NearRebuild = 400; // m from the near patch's centre
+    private const double ImageryRetry = 5; // seconds between retries, including while stationary
 
     private readonly object _gate = new();
     private readonly List<SyntheticView> _views = new();
@@ -131,6 +137,27 @@ public sealed class SyntheticScene
             Path.Combine(MissionPlanner.Utilities.Settings.GetDataDirectory(), "terrain-rgb"))));
 
     public TerrainSource Terrain { get; }
+
+    private double _drawDistance = DefaultDrawDistance;
+
+    /// <summary>Terrain drawing distance in metres, shared by the HUD, chase view and stream.</summary>
+    public double DrawDistance
+    {
+        get => Volatile.Read(ref _drawDistance);
+        set => Volatile.Write(ref _drawDistance, double.IsFinite(value)
+            ? Math.Clamp(value, MinDrawDistance, MaxDrawDistance) : DefaultDrawDistance);
+    }
+
+    private double _highres = DefaultHighres;
+
+    /// <summary>Hi-res preload radius in metres: the sharp-imagery patch grows to this half-size
+    /// so hi-res map tiles are preloaded around the vehicle out to this distance.</summary>
+    public double HighresDistance
+    {
+        get => Volatile.Read(ref _highres);
+        set => Volatile.Write(ref _highres, double.IsFinite(value)
+            ? Math.Clamp(value, MinHighres, MaxHighres) : DefaultHighres);
+    }
 
     /// <summary>Which map tiles to drape (the map's provider); null draws plain ground.</summary>
     public Func<GMapProvider?> Imagery { get; set; } = () => null;
@@ -222,6 +249,7 @@ public sealed class SyntheticScene
 
     private SceneRenderer.GpuPatch? _far, _near;
     private Task<TerrainPatch>? _farBuild, _nearBuild;
+    private double _farRetryAt, _nearRetryAt;
     private CancellationTokenSource _builds = new();
 
     private void Run()
@@ -321,6 +349,9 @@ public sealed class SyntheticScene
         _datum.Update(p, ground, 0.3);
         var alt = p.HasPosition ? _datum.EyeAltitude(p.AltMsl, ground, 0.3) : (ground ?? p.GroundGuessMsl) + 30;
         var vehicle = new Vector3(0, (float)alt, 0);
+        var drawDistance = (float)DrawDistance;
+        var clipDistance = drawDistance * 3;
+        var fogRange = drawDistance * 1.125f;
 
         var patches = new List<(SceneRenderer.GpuPatch, Vector3)>();
         foreach (var g in new[] { _far, _near })
@@ -351,8 +382,8 @@ public sealed class SyntheticScene
                 var vfov = view.HorizontalFov is { } hf ? SceneCamera.VerticalFromHorizontal(hf, (double)w / h) : SceneCamera.HudVerticalFov;
                 setup = new SceneRenderer.FrameSetup(
                     SceneCamera.FirstPerson(eye, p.Roll, p.Pitch, p.Yaw, view.CameraTilt),
-                    SceneCamera.Projection(vfov, (float)w / h, 1f, 24000f, view.CentreDownFraction),
-                    eye, 9000, null, Matrix4x4.Identity);
+                    SceneCamera.Projection(vfov, (float)w / h, 1f, clipDistance, view.CentreDownFraction),
+                    eye, fogRange, null, Matrix4x4.Identity);
             }
             else
             {
@@ -375,8 +406,8 @@ public sealed class SyntheticScene
                     cam.Y = cg + 1.5f;
                 setup = new SceneRenderer.FrameSetup(
                     Matrix4x4.CreateLookAt(cam, vehicle, Vector3.UnitY),
-                    SceneCamera.Projection(60 * MathF.PI / 180, (float)w / h, 0.3f, 24000f),
-                    cam, 9000, p.Shape, model);
+                    SceneCamera.Projection(60 * MathF.PI / 180, (float)w / h, 0.3f, clipDistance),
+                    cam, fogRange, p.Shape, model);
             }
 
             view.Target.Bind();
@@ -411,29 +442,37 @@ public sealed class SyntheticScene
 
     private void UpdateTerrain(SceneRenderer renderer, VehiclePose p)
     {
+        var now = _clock.Elapsed.TotalSeconds;
+        if (_farBuild is { IsCompleted: true })
+            _farRetryAt = now + ImageryRetry;
+        if (_nearBuild is { IsCompleted: true })
+            _nearRetryAt = now + ImageryRetry;
         _far = Swap(renderer, _far, ref _farBuild);
         _near = Swap(renderer, _near, ref _nearBuild);
 
         var fallback = p.HasPosition ? p.GroundGuessMsl : p.AltMsl;
-        if (_farBuild == null && NeedsRebuild(_far, p, FarRebuild))
-            _farBuild = Build(p, PatchSpec.Far, fallback);
-        if (_nearBuild == null && NeedsRebuild(_near, p, NearRebuild))
-            _nearBuild = Build(p, PatchSpec.Near, fallback);
+        var drawDistance = DrawDistance;
+        if (_farBuild == null && (NeedsRebuild(_far, p, drawDistance * 0.375, now >= _farRetryAt) || _far?.Patch.Spec.Half != drawDistance))
+            _farBuild = Build(p, PatchSpec.FarFor(drawDistance), fallback);
+        var highres = HighresDistance;
+        if (_nearBuild == null && (NeedsRebuild(_near, p, NearRebuild, now >= _nearRetryAt) || _near?.Patch.Spec.Half != highres))
+            _nearBuild = Build(p, PatchSpec.NearFor(highres), fallback);
     }
 
-    private static bool NeedsRebuild(SceneRenderer.GpuPatch? g, VehiclePose p, double distance)
+    private static bool NeedsRebuild(SceneRenderer.GpuPatch? g, VehiclePose p, double distance, bool retryImagery)
     {
         if (g == null)
             return true;
         var (e, n) = g.Patch.Frame.ToLocal(p.Lat, p.Lng);
-        return Math.Sqrt(e * e + n * n) > distance;
+        return Math.Sqrt(e * e + n * n) > distance || (retryImagery && !g.Patch.ImageryComplete);
     }
 
     private Task<TerrainPatch> Build(VehiclePose p, PatchSpec spec, double fallback)
     {
         var provider = Imagery();
         var cancel = _builds.Token;
-        return Task.Run(() => TerrainPatch.BuildAsync(Terrain, provider, p.Lat, p.Lng, spec, fallback, cancel), cancel);
+        var imagery = spec == PatchSpec.Near ? _near?.Patch.Drape ?? _far?.Patch.Drape : _far?.Patch.Drape;
+        return Task.Run(() => TerrainPatch.BuildAsync(Terrain, provider, p.Lat, p.Lng, spec, fallback, cancel, imagery), cancel);
     }
 
     private static SceneRenderer.GpuPatch? Swap(SceneRenderer renderer, SceneRenderer.GpuPatch? current, ref Task<TerrainPatch>? build)

@@ -8,6 +8,7 @@ using MissionPlanner.App.Controls;
 using MissionPlanner.App.Controls.FlightData;
 using MissionPlanner.App.Controls.Video;
 using MissionPlanner.App.Core.ViewModels.FlightData;
+using MissionPlanner.App.Core.ViewModels.Video;
 
 namespace MissionPlanner.App.Views.FlightData;
 
@@ -101,6 +102,17 @@ public sealed partial class FlightDataView : UserControl
         };
 
         HudControl.ItemClicked += (_, item) => _vm?.OpenHudItem(item);
+        Chase3D.ContextMenu = new ContextMenu
+        {
+            Items =
+            {
+                HudVideoMenu.Item("3D view settings…", () =>
+                {
+                    if (_vm != null)
+                        _ = HudVideoViewModel.For(_vm.Services).OpenCameraSettingsAsync();
+                }),
+            },
+        };
 
         // right-click the tab headers: choose which tabs show (Mission Planner's "Customize")
         // (the headers handle the press themselves, so this listens to handled releases too)

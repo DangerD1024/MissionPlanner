@@ -6,25 +6,41 @@
              x:DataType="vm:FpvCameraViewModel">
   <Grid RowDefinitions="Auto,*,Auto" Margin="18">
     <StackPanel Spacing="4" Margin="0,0,0,10">
-      <TextBlock Classes="h2" Text="{l:Tr 'FPV camera of the 3D view'}" />
+      <TextBlock Classes="h2" Text="{l:Tr '3D view settings'}" />
       <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
                  Text="{l:Tr 'Changes show at once on the HUD. The pitch ladder follows the camera, so it stays on the 3D horizon.'}" />
     </StackPanel>
 
     <StackPanel Grid.Row="1" Spacing="6">
       <CheckBox IsChecked="{Binding CustomFov}" Content="{l:Tr 'Own field of view (off: match the HUD pitch ladder)'}" />
-      <Grid ColumnDefinitions="150,*,56" IsEnabled="{Binding CustomFov}">
+      <Grid ColumnDefinitions="180,*,56" IsEnabled="{Binding CustomFov}">
         <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Field of view (horizontal)'}" />
-        <Slider Grid.Column="1" Minimum="30" Maximum="160" Value="{Binding Fov}" TickFrequency="5" IsSnapToTickEnabled="True" />
+        <Slider Grid.Column="1" Minimum="30" Maximum="160" Value="{Binding Fov}" TickFrequency="1" IsSnapToTickEnabled="True" />
         <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding FovText}" />
       </Grid>
-      <Grid ColumnDefinitions="150,*,56" Margin="0,6,0,0">
+      <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Margin="180,0,56,0"
+                 IsEnabled="{Binding CustomFov}" Text="{Binding DiagonalFovText}" />
+      <Grid ColumnDefinitions="180,*,56" Margin="0,6,0,0">
         <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Camera tilt (up)'}" />
         <Slider Grid.Column="1" Minimum="-30" Maximum="70" Value="{Binding Tilt}" TickFrequency="1" IsSnapToTickEnabled="True" />
         <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding TiltText}" />
       </Grid>
       <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"
                  Text="{l:Tr 'FPV quads usually fly with the camera tilted up 20–40° and a 110–150° lens.'}" />
+      <Grid ColumnDefinitions="180,*,56" Margin="0,16,0,0">
+        <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Drawing distance'}" />
+        <Slider Grid.Column="1" Minimum="2" Maximum="32" Value="{Binding DrawDistanceKm}" TickFrequency="1" IsSnapToTickEnabled="True" />
+        <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding DrawDistanceText}" />
+      </Grid>
+      <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                 Text="{l:Tr 'Drawing distance applies to the HUD, 3D map and stream.'}" />
+      <Grid ColumnDefinitions="180,*,56" Margin="0,16,0,0">
+        <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Hi-res preload'}" />
+        <Slider Grid.Column="1" Minimum="0.5" Maximum="8" Value="{Binding HighresKm}" TickFrequency="0.5" IsSnapToTickEnabled="True" />
+        <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding HighresText}" />
+      </Grid>
+      <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                 Text="{l:Tr 'Radius around the aircraft preloaded with hi-res map tiles.'}" />
     </StackPanel>
 
     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">

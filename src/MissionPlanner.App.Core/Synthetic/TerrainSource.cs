@@ -187,7 +187,11 @@ public sealed class TerrainSource
 }
 
 /// <summary>An RGBA picture covering a Mercator tile rectangle (the satellite drape).</summary>
-public sealed record DrapeImage(byte[] Rgba, int Width, int Height, int Zoom, int TileX0, int TileY0, int TilesX, int TilesY);
+public sealed record DrapeImage(byte[] Rgba, int Width, int Height, int Zoom, int TileX0, int TileY0, int TilesX, int TilesY)
+{
+    /// <summary>False while any requested tile is missing; the scene retries incomplete imagery.</summary>
+    public bool Complete { get; init; } = true;
+}
 
 /// <summary>Stitches map tiles (the map's provider, through its cache) into one texture.</summary>
 public static class Drape
@@ -196,7 +200,8 @@ public static class Drape
 
     /// <summary>The tiles over ±<paramref name="half"/> m, at most <paramref name="maxTiles"/> per side (the zoom drops to fit).</summary>
     public static async Task<DrapeImage?> BuildAsync(GMapProvider provider, LocalFrame frame, double half, int zoom, int maxTiles,
-        CancellationToken cancel, Func<GMapProvider, long, long, int, CancellationToken, Task<byte[]?>>? fetch = null)
+        CancellationToken cancel, Func<GMapProvider, long, long, int, CancellationToken, Task<byte[]?>>? fetch = null,
+        DrapeImage? fallback = null)
     {
         fetch ??= MapTiles.GetTileAsync;
         var (northLat, westLng) = frame.ToGeo(-half, half);
@@ -216,16 +221,39 @@ public static class Drape
         var w = nx * Tiles.Size;
         var h = ny * Tiles.Size;
         var rgba = new byte[w * h * 4];
-        // unloaded tiles stay a neutral ground colour rather than black
-        for (var i = 0; i < rgba.Length; i += 4)
+        // Missing tiles stay transparent: the renderer keeps the coarser imagery underneath.
+        // Keep already displayed imagery when recentering or changing zoom/drawing distance.
+        var reused = false;
+        if (fallback != null)
         {
-            rgba[i] = 96;
-            rgba[i + 1] = 104;
-            rgba[i + 2] = 80;
-            rgba[i + 3] = 255;
+            var scale = Math.Pow(2, fallback.Zoom - zoom);
+            var originX = (tx0 * scale - fallback.TileX0) * Tiles.Size;
+            var originY = (ty0 * scale - fallback.TileY0) * Tiles.Size;
+            for (var y = 0; y < h; y++)
+            {
+                cancel.ThrowIfCancellationRequested();
+                var sy = (int)Math.Floor(originY + (y + 0.5) * scale);
+                if (sy < 0 || sy >= fallback.Height)
+                    continue;
+                for (var x = 0; x < w; x++)
+                {
+                    var sx = (int)Math.Floor(originX + (x + 0.5) * scale);
+                    if (sx < 0 || sx >= fallback.Width)
+                        continue;
+                    var src = (sy * fallback.Width + sx) * 4;
+                    if (fallback.Rgba[src + 3] == 0)
+                        continue;
+                    var dst = (y * w + x) * 4;
+                    rgba[dst] = fallback.Rgba[src];
+                    rgba[dst + 1] = fallback.Rgba[src + 1];
+                    rgba[dst + 2] = fallback.Rgba[src + 2];
+                    rgba[dst + 3] = fallback.Rgba[src + 3];
+                    reused = true;
+                }
+            }
         }
 
-        var any = false;
+        var loaded = 0;
         var jobs = new List<Task>();
         var gate = new object();
         for (var j = 0; j < ny; j++)
@@ -262,7 +290,7 @@ public static class Drape
                         return;
                     lock (gate)
                     {
-                        any = true;
+                        loaded++;
                         for (var y = 0; y < Tiles.Size; y++)
                             Buffer.BlockCopy(img.Data, y * Tiles.Size * 4, rgba, ((cj * Tiles.Size + y) * w + ci * Tiles.Size) * 4, Tiles.Size * 4);
                     }
@@ -271,7 +299,7 @@ public static class Drape
         }
 
         await Task.WhenAll(jobs).ConfigureAwait(false);
-        return any ? new DrapeImage(rgba, w, h, zoom, tx0, ty0, nx, ny) : null;
+        return loaded > 0 || reused ? new DrapeImage(rgba, w, h, zoom, tx0, ty0, nx, ny) { Complete = loaded == nx * ny } : null;
     }
 
     /// <summary>Texture coordinate of a point on the drape.</summary>

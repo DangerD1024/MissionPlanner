@@ -210,6 +210,8 @@ public sealed partial class StreamingViewModel : ObservableObject, IDisposable
     /// <summary>rtsp://address:port/path for each address (localhost last), then the UDP target.</summary>
     public static IReadOnlyList<string> BuildUrls(StreamSettings s, int rtspPort, IEnumerable<string> addresses)
     {
+        if (s.UsesShm)
+            return [$"shm://{StreamSettings.ShmPath} (raw BGRA, same machine only)"];
         var urls = new List<string>();
         if (s.UsesRtsp)
         {

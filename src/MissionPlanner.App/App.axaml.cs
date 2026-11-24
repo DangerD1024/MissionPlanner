@@ -5,6 +5,7 @@ using Avalonia.Threading;
 using MissionPlanner.App.Core;
 using MissionPlanner.App.Core.Maps;
 using MissionPlanner.App.Core.Services;
+using MissionPlanner.App.Core.Session;
 using MissionPlanner.App.Core.ViewModels;
 using MissionPlanner.App.Localization;
 using MissionPlanner.App.Services;
@@ -39,6 +40,21 @@ public sealed class App : Application
         themes.ApplySaved();
         _services = new AppServices(dispatcher, dialogs, windows) { Themes = themes };
 
+        // Opt-in bench/SITL convenience (MP_AUTO_STREAM=1): start the HUD stream as soon
+        // as the first vehicle link comes up, so a headless run needs no menu click.
+        if (Environment.GetEnvironmentVariable("MP_AUTO_STREAM") == "1")
+        {
+            var services = _services;
+            EventHandler<LinkState>? onLink = null;
+            onLink = (_, state) =>
+            {
+                if (state != LinkState.Connected) return;
+                services.Session.StateChanged -= onLink;
+                dispatcher.Post(() => Core.ViewModels.Video.StreamingViewModel.For(services).Start());
+            };
+            services.Session.StateChanged += onLink;
+        }
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var shell = new ShellViewModel(_services);
@@ -63,6 +79,7 @@ public sealed class App : Application
 
             desktop.ShutdownRequested += (_, _) =>
             {
+                shell.Shutdown();
                 timer.Stop();
                 _services.OutputsIfCreated?.StopAllForExit();
                 _services.Session.DisposeAsync().AsTask().Wait(TimeSpan.FromSeconds(3));

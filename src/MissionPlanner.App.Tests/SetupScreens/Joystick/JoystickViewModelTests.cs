@@ -145,4 +145,38 @@ public class JoystickViewModelTests
         Assert.AreEqual(7, vm.ButtonRows[1].SelectedButton!.Button);
         vm.OnHidden();
     }
+
+    [TestMethod]
+    [Timeout(30000, CooperativeCancellation = true)]
+    public async Task UnsavedMappingSurvivesLeavingPageAndAppExit()
+    {
+        var ui = new SetupTestUi();
+        var backend = new FakeJoystickBackend();
+        backend.Add("Test Pad");
+        var store = new JoystickProfileStore(Path.Combine(TestEnvironment.DataRoot, "joyautosave-" + Guid.NewGuid().ToString("N")));
+        var vm = new JoystickViewModel(ui.CreateServices(), () => backend, new FakeJoystickVehicle(), store);
+        vm.OnShown();
+        await vm.BackendReady;
+        vm.SelectedDevice = vm.Devices.Single(d => d.Name == "Test Pad");
+        vm.Channels[0].SelectedInput = vm.InputOptions.Single(o => o.Input == JoystickInput.Axis(0));
+        vm.ManualControl = true;
+        Assert.IsTrue(vm.IsDirty);
+
+        // leaving the page without pressing Save must persist the mapping
+        vm.OnHidden();
+        Assert.IsFalse(vm.IsDirty);
+        Assert.IsTrue(File.Exists(store.PathFor("Test Pad")));
+        var saved = store.Load("Test Pad");
+        Assert.AreEqual(JoystickInput.Axis(0), saved!.Channel(1).Input);
+        Assert.IsTrue(saved.ManualControl);
+
+        // and so must app exit while the page is still on screen
+        vm.OnShown();
+        await vm.BackendReady;
+        vm.Channels[1].SelectedInput = vm.InputOptions.Single(o => o.Input == JoystickInput.Axis(1));
+        Assert.IsTrue(vm.IsDirty);
+        vm.OnShutdown();
+        Assert.IsFalse(vm.IsDirty);
+        Assert.AreEqual(JoystickInput.Axis(1), store.Load("Test Pad")!.Channel(2).Input);
+    }
 }

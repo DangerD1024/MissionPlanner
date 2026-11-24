@@ -14,6 +14,10 @@ public enum StreamMode
 
     Both,
 
+    /// <summary>Raw BGRA frames in /dev/shm for a tracker on the same machine: no encoder,
+    /// no decoder, no network — one frame of latency. Not usable across machines.</summary>
+    Shm,
+
     /// <summary>Only the frame source runs (recording the HUD to a file without streaming); not offered in the settings.</summary>
     RecordOnly,
 }
@@ -58,6 +62,10 @@ public sealed partial class StreamSettings
 
     public bool UsesRtsp => Mode is StreamMode.RtspServer or StreamMode.Both;
     public bool UsesUdp => Mode is StreamMode.UdpPush or StreamMode.Both;
+    public bool UsesShm => Mode is StreamMode.Shm;
+
+    /// <summary>Where <see cref="StreamMode.Shm"/> publishes raw frames (seqlock header + 3 slots).</summary>
+    public const string ShmPath = "/dev/shm/mp-hud";
 
     public StreamSettings Clone() => (StreamSettings)MemberwiseClone();
 

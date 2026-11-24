@@ -298,6 +298,7 @@ public sealed class JoystickController : IAsyncDisposable
                 JoystickInputKind.ButtonAxis => (ushort)Math.Clamp(
                     (int)Math.Round((double.IsNaN(_buttonAxis[Math.Min(1, map.Input.Index)]) ? ButtonAxisRest(profile, map.Input.Index, range) : _buttonAxis[Math.Min(1, map.Input.Index)]) + map.Trim),
                     range.Min, range.Max),
+                JoystickInputKind.Button => ButtonPwm(map, snap.Button(map.Input.Index), range),
                 JoystickInputKind.Trim => (ushort)Math.Clamp(range.Trim + map.Trim, range.Min, range.Max),
                 _ => 0,
             };
@@ -326,6 +327,16 @@ public sealed class JoystickController : IAsyncDisposable
         var f = index == 0 ? JoystickButtonFunction.Button_axis0 : JoystickButtonFunction.Button_axis1;
         var map = profile.Buttons.FirstOrDefault(b => b.Function == f);
         return map != null && map.P1 > 0 ? map.P1 : range.Trim;
+    }
+
+    /// <summary>Two-value channel from a held button: 2000 pressed / 1000 released.
+    /// Reverse swaps the pair, Trim offsets; clamped to the channel's range.</summary>
+    private static ushort ButtonPwm(ChannelMapping map, bool pressed, RcRange range)
+    {
+        var v = pressed ? 2000 : 1000;
+        if (map.Reverse)
+            v = 3000 - v;
+        return (ushort)Math.Clamp(v + map.Trim, range.Min, range.Max);
     }
 
     private double Hat(JoystickInput input, JoystickSnapshot snap)

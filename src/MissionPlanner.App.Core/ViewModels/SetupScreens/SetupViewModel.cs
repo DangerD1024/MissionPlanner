@@ -12,6 +12,9 @@ public sealed class SetupViewModel : MenuScreenViewModel
     {
         bool Ready() => Connected && s.Params.HasParams;
         bool Multirotor() => Firmware == Firmwares.ArduCopter2 || HasParam("Q_ENABLE") && s.Params.Get("Q_ENABLE") > 0;
+        // Eager: a saved "sending" joystick must resume on connect even if this page
+        // is never opened, so the VM (and its link subscription) exists from startup.
+        var joystick = new JoystickViewModel(s);
 
         Add(Page("Install Firmware", () => new FirmwareViewModel(s), () => !Connected));
         Add(Header("Mandatory Hardware"));
@@ -39,7 +42,7 @@ public sealed class SetupViewModel : MenuScreenViewModel
         Add(Page("HW ID", () => new HardwareIdViewModel(s), Ready));
         Add(Page("Initial Parameters", () => new InitialParamsViewModel(s), () => Ready() && Multirotor()));
         Add(Page("RTK/GPS Inject", () => new GpsInjectViewModel(s), () => Connected));
-        Add(Page("Joystick", () => new JoystickViewModel(s)));
+        Add(Page("Joystick", () => joystick));
         Add(Page("SiK Radio", () => new SikRadioViewModel(s)));
         Add(Page("DroneCAN/UAVCAN", () => new DroneCanViewModel(s), () => Ready() && HasParam("CAN_P1_DRIVER")));
         Add(Header("Advanced"));

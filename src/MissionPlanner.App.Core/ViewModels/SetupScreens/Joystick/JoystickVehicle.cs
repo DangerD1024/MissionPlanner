@@ -34,40 +34,62 @@ public interface IJoystickVehicle
 }
 
 /// <summary>The session's selected vehicle.</summary>
-public sealed class SessionJoystickVehicle(VehicleSession session) : IJoystickVehicle
+public sealed class SessionJoystickVehicle : IJoystickVehicle
 {
-    public bool IsConnected => session.IsConnected && session.Mav.BaseStream?.IsOpen == true;
+    private readonly VehicleSession _session;
+    private long _foreignOverrideTicks;
 
-    public uint SysId => session.Vehicle.sysid;
+    public SessionJoystickVehicle(VehicleSession session)
+    {
+        _session = session;
+        // Our own sends never loop back, so any RC_CHANNELS_OVERRIDE arriving on this
+        // link is another controller (e.g. the VOT_C tracker holding/steering). Yield
+        // while it is active instead of fighting it channel-by-channel (the FC applies
+        // whichever override arrives last, which makes the airframe oscillate).
+        session.Mav.OnPacketReceived += (_, m) =>
+        {
+            if (m.msgid == (uint)MAVLink.MAVLINK_MSG_ID.RC_CHANNELS_OVERRIDE)
+                Interlocked.Exchange(ref _foreignOverrideTicks, Environment.TickCount64);
+        };
+    }
 
-    public byte CompId => session.Vehicle.compid;
+    public bool IsConnected => _session.IsConnected && _session.Mav.BaseStream?.IsOpen == true;
 
-    public bool IsCopter => session.Cs.firmware == Firmwares.ArduCopter2;
+    public uint SysId => _session.Vehicle.sysid;
+
+    public byte CompId => _session.Vehicle.compid;
+
+    public bool IsCopter => _session.Cs.firmware == Firmwares.ArduCopter2;
 
     public double? GetParam(string name)
     {
-        var list = session.Vehicle.param;
+        var list = _session.Vehicle.param;
         return list.ContainsKey(name) ? list[name].Value : null;
     }
 
-    public void SendRcOverride(MAVLink.mavlink_rc_channels_override_t rc) => session.Mav.sendPacket(rc, SysId, CompId);
+    public void SendRcOverride(MAVLink.mavlink_rc_channels_override_t rc)
+    {
+        if (Environment.TickCount64 - Interlocked.Read(ref _foreignOverrideTicks) < 600)
+            return;   // another controller owns the sticks right now
+        _session.Mav.sendPacket(rc, SysId, CompId);
+    }
 
-    public void SendManualControl(MAVLink.mavlink_manual_control_t mc) => session.Mav.sendPacket(mc, SysId, CompId);
+    public void SendManualControl(MAVLink.mavlink_manual_control_t mc) => _session.Mav.sendPacket(mc, SysId, CompId);
 
-    public bool Arm(bool arm) => session.Mav.doARM(SysId, CompId, arm);
+    public bool Arm(bool arm) => _session.Mav.doARM(SysId, CompId, arm);
 
-    public void SetMode(string mode) => session.Mav.setMode(SysId, CompId, mode);
+    public void SetMode(string mode) => _session.Mav.setMode(SysId, CompId, mode);
 
     public bool Command(MAVLink.MAV_CMD cmd, float p1, float p2 = 0, float p3 = 0, float p4 = 0, float p5 = 0, float p6 = 0, float p7 = 0,
         bool requireAck = true) =>
-        session.Mav.doCommand(SysId, CompId, cmd, p1, p2, p3, p4, p5, p6, p7, requireAck);
+        _session.Mav.doCommand(SysId, CompId, cmd, p1, p2, p3, p4, p5, p6, p7, requireAck);
 
-    public bool SetParam(string name, double value) => session.Mav.setParam(SysId, CompId, name, value);
+    public bool SetParam(string name, double value) => _session.Mav.setParam(SysId, CompId, name, value);
 
     public bool PointGimbal()
     {
-        var cs = session.Cs;
-        return session.Mav.doCommandInt(SysId, CompId, MAVLink.MAV_CMD.DO_SET_ROI, 0, 0, 0, 0,
+        var cs = _session.Cs;
+        return _session.Mav.doCommandInt(SysId, CompId, MAVLink.MAV_CMD.DO_SET_ROI, 0, 0, 0, 0,
             (int)(cs.gimballat * 1e7), (int)(cs.gimballng * 1e7), (float)cs.GimbalPoint.Alt);
     }
 }

@@ -30,6 +30,7 @@ public sealed partial class HudVideoViewModel : ObservableObject, IDisposable
         stream.StateChanged += (_, _) => services.Dispatcher.Post(SyncState);
         _threeD = bool.TryParse(store.Get(ThreeDKey), out var on) && on;
         _threeDFallback = bool.TryParse(store.Get(ThreeDFallbackKey), out var fallback) && fallback;
+        Synthetic.SyntheticScene.For(services).DrawDistance = DrawDistanceKm * 1000;
     }
 
     /// <summary>The app's instance, created (and auto-started if so configured) on first use.</summary>

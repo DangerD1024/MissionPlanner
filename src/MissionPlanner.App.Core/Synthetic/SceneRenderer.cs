@@ -35,17 +35,18 @@ internal sealed unsafe class SceneRenderer : IDisposable
         in vec2 v_uv;
         uniform sampler2D u_tex;
         uniform int u_hasTex;
+        uniform int u_skipMissing;
         uniform vec3 u_eye;
         uniform vec3 u_fog;
         uniform float u_fogRange;
         uniform vec3 u_sun;
-        uniform vec3 u_hole; // x, z centre and half size of the near patch (far patch only; 0 = none)
         out vec4 o_color;
         void main() {
-            // the far patch stays out from under the near one (their heights differ by metres)
-            if (u_hole.z > 0.0 && abs(v_world.x - u_hole.x) < u_hole.z && abs(v_world.z - u_hole.y) < u_hole.z)
+            vec4 imagery = u_hasTex == 1 ? texture(u_tex, v_uv) : vec4(0.0);
+            // A failed high-detail tile must not cover imagery already visible in the far patch.
+            if (u_skipMissing == 1 && imagery.a < 0.99)
                 discard;
-            vec3 base = u_hasTex == 1 ? texture(u_tex, v_uv).rgb : vec3(0.43, 0.48, 0.33);
+            vec3 base = mix(vec3(0.43, 0.48, 0.33), imagery.rgb, imagery.a);
             float light = 0.72 + 0.4 * max(dot(normalize(v_normal), u_sun), 0.0);
             float d = length(v_world - u_eye) / u_fogRange;
             float fog = clamp(1.0 - exp(-d * d * 2.2), 0.0, 1.0);
@@ -215,7 +216,9 @@ internal sealed unsafe class SceneRenderer : IDisposable
         _gl.Viewport(0, 0, (uint)width, (uint)height);
         _gl.Disable(EnableCap.CullFace);
         _gl.ClearColor(Fog.X, Fog.Y, Fog.Z, 1);
-        _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        _gl.StencilMask(0xff);
+        _gl.ClearStencil(0);
+        _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
         var vp = f.View * f.Projection;
 
         // sky behind everything
@@ -228,8 +231,11 @@ internal sealed unsafe class SceneRenderer : IDisposable
         _gl.BindVertexArray(_emptyVao);
         _gl.DrawArrays(PrimitiveType.Triangles, 0, 3);
 
-        // terrain: the far patch first, the near one on top of it
+        // Draw detailed terrain first and mark its actual screen coverage. Near and far DEM
+        // heights differ: cutting a geographic square out of the far mesh exposes the sky at
+        // their boundary. Keep coarse terrain in every pixel the detailed mesh did not cover.
         _gl.Enable(EnableCap.DepthTest);
+        _gl.Enable(EnableCap.StencilTest);
         _gl.DepthMask(true);
         _gl.DepthFunc(DepthFunction.Lequal);
         _gl.UseProgram(_terrainProgram);
@@ -239,19 +245,15 @@ internal sealed unsafe class SceneRenderer : IDisposable
         SetVec3(_terrainProgram, "u_sun", Sun);
         _gl.Uniform1(_gl.GetUniformLocation(_terrainProgram, "u_fogRange"), f.FogRange);
         _gl.Uniform1(_gl.GetUniformLocation(_terrainProgram, "u_tex"), 0);
-        var list = patches.ToList();
-        // the near patch (drawn second) cuts its square out of the far one
-        var hole = Vector3.Zero;
-        if (list.Count > 1)
-        {
-            var (near, nearOffset) = list[1];
-            hole = new Vector3(nearOffset.X, nearOffset.Z, (float)(near.Patch.Spec.Half * 0.995));
-        }
-
+        var list = patches.OrderBy(p => p.Patch.Patch.Spec.Half).ToArray();
         var first = true;
         foreach (var (p, offset) in list)
         {
-            SetVec3(_terrainProgram, "u_hole", first ? hole : Vector3.Zero);
+            _gl.StencilMask(first ? 0xffu : 0u);
+            _gl.StencilFunc(first ? StencilFunction.Always : StencilFunction.Equal, first ? 1 : 0, 0xff);
+            _gl.StencilOp(StencilOp.Keep, StencilOp.Keep, first ? StencilOp.Replace : StencilOp.Keep);
+            _gl.Uniform1(_gl.GetUniformLocation(_terrainProgram, "u_skipMissing"),
+                first && list.Length > 1 && !p.Patch.ImageryComplete ? 1 : 0);
             SetVec3(_terrainProgram, "u_offset", offset);
             _gl.Uniform1(_gl.GetUniformLocation(_terrainProgram, "u_hasTex"), p.Texture != 0 ? 1 : 0);
             _gl.ActiveTexture(TextureUnit.Texture0);
@@ -260,6 +262,9 @@ internal sealed unsafe class SceneRenderer : IDisposable
             _gl.DrawElements(PrimitiveType.Triangles, p.IndexCount, DrawElementsType.UnsignedInt, (void*)0);
             first = false;
         }
+
+        _gl.Disable(EnableCap.StencilTest);
+        _gl.StencilMask(0xff);
 
         // the vehicle (chase view)
         if (f.Model is { } shape)
@@ -348,14 +353,14 @@ internal sealed unsafe class SceneRenderer : IDisposable
 }
 
 /// <summary>
-/// An off-screen render target (colour + depth) of one view, read back into BGRA rows top-down
+/// An off-screen render target (colour + depth/stencil) of one view, read back into BGRA rows top-down
 /// through two pixel buffers: a frame's pixels are fetched while the next one renders, so the render
 /// thread never waits for the GPU (one frame of latency, ~16 ms at 60 fps).
 /// </summary>
 internal sealed unsafe class OffscreenTarget : IDisposable
 {
     private readonly GL _gl;
-    private readonly uint _fbo, _color, _depth;
+    private readonly uint _fbo, _color, _depthStencil;
     private readonly uint[] _pbo = new uint[2];
     private int _next;
     private int _filled;
@@ -371,10 +376,10 @@ internal sealed unsafe class OffscreenTarget : IDisposable
         gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, _color);
         gl.RenderbufferStorage(RenderbufferTarget.Renderbuffer, InternalFormat.Rgba8, (uint)width, (uint)height);
         gl.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, RenderbufferTarget.Renderbuffer, _color);
-        _depth = gl.GenRenderbuffer();
-        gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, _depth);
-        gl.RenderbufferStorage(RenderbufferTarget.Renderbuffer, InternalFormat.DepthComponent24, (uint)width, (uint)height);
-        gl.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, RenderbufferTarget.Renderbuffer, _depth);
+        _depthStencil = gl.GenRenderbuffer();
+        gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, _depthStencil);
+        gl.RenderbufferStorage(RenderbufferTarget.Renderbuffer, InternalFormat.Depth24Stencil8, (uint)width, (uint)height);
+        gl.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment, RenderbufferTarget.Renderbuffer, _depthStencil);
         var status = gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
         if (status != GLEnum.FramebufferComplete)
             throw new InvalidOperationException("3D framebuffer: " + status);
@@ -437,6 +442,6 @@ internal sealed unsafe class OffscreenTarget : IDisposable
         _gl.DeleteBuffers(2, _pbo);
         _gl.DeleteFramebuffer(_fbo);
         _gl.DeleteRenderbuffer(_color);
-        _gl.DeleteRenderbuffer(_depth);
+        _gl.DeleteRenderbuffer(_depthStencil);
     }
 }
