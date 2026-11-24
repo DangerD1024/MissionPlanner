@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             xmlns:sys="using:System"
+             x:Class="MissionPlanner.App.Views.Tools.FollowMeView"
+             x:DataType="vm:FollowMeViewModel">
+  <UserControl.Styles>
+    <Style Selector="TextBlock.label">
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Margin" Value="0,8,0,3" />
+    </Style>
+  </UserControl.Styles>
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1100" HorizontalAlignment="Stretch">
+      <tv:ToolHeader />
+      <Border Classes="card" Width="620" HorizontalAlignment="Left">
+        <StackPanel>
+          <StackPanel IsEnabled="{Binding CanEditSettings}">
+            <TextBlock Classes="label" Text="{l:Tr 'Pick the Nmea gps port and baud rate'}" />
+            <Grid ColumnDefinitions="*,8,Auto,8,140">
+              <ComboBox ItemsSource="{Binding SerialPorts}" SelectedItem="{Binding Port}" HorizontalAlignment="Stretch" />
+              <Button Grid.Column="2" Command="{Binding RefreshPortsCommand}" ToolTip.Tip="{l:Tr 'Refresh ports'}" Padding="6,4">
+                <Path Classes="icon" Data="{StaticResource IconRefresh}" />
+              </Button>
+              <ComboBox Grid.Column="4" ItemsSource="{x:Static vm:FollowMeViewModel.Bauds}" SelectedItem="{Binding Baud}" HorizontalAlignment="Stretch" />
+            </Grid>
+
+            <TextBlock Classes="label" Text="{l:Tr 'Altitude above home'}" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <NumericUpDown Value="{Binding Altitude}" Minimum="1" Maximum="10000" Increment="5" FormatString="0.#" Width="170" />
+              <TextBlock Text="{Binding AltitudeUnit}" VerticalAlignment="Center" />
+            </StackPanel>
+          </StackPanel>
+
+          <TextBlock Classes="label" Text="{l:Tr 'Select your update rate'}" />
+          <ComboBox ItemsSource="{x:Static vm:FollowMeViewModel.Rates}" SelectedItem="{Binding RateHz}" Width="170">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="sys:Double">
+                <TextBlock Text="{Binding StringFormat={}{0} Hz}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+
+          <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,16,0,0">
+            <Button Classes="accent" Content="{l:TrBind {Binding StartStopText}}" Command="{Binding StartStopCommand}" />
+            <TextBlock VerticalAlignment="Center" Classes="muted" IsVisible="{Binding IsRunning}"
+                       Text="{Binding SentText}" />
+          </StackPanel>
+
+          <TextBlock Classes="label" Text="{l:Tr 'Location'}" />
+          <SelectableTextBlock Text="{Binding Location}" FontFamily="Cascadia Mono, Consolas, Menlo, DejaVu Sans Mono, monospace" FontSize="12" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

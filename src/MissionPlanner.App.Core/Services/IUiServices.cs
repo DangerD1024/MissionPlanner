@@ -91,6 +91,9 @@ public sealed class AppServices
     /// <summary>Replaces the POI store (tests).</summary>
     internal void UsePois(Mission.PoiStore store) => _pois = store;
 
+    /// <summary>The ground station's own GPS position (TOOLS > Moving Base), drawn on the DATA and PLAN maps.</summary>
+    public GcsLocationService GcsLocation { get; } = new();
+
     private Outputs.OutputManager? _outputs;
 
     /// <summary>The MAVLink mirror and position outputs (TOOLS > Outputs); created on first use.</summary>

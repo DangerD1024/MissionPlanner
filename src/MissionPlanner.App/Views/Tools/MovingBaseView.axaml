@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             xmlns:sys="using:System"
+             x:Class="MissionPlanner.App.Views.Tools.MovingBaseView"
+             x:DataType="vm:MovingBaseViewModel">
+  <UserControl.Styles>
+    <Style Selector="TextBlock.label">
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Margin" Value="0,8,0,3" />
+    </Style>
+  </UserControl.Styles>
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="16" MaxWidth="1100" HorizontalAlignment="Stretch">
+      <tv:ToolHeader />
+      <Border Classes="card" Width="620" HorizontalAlignment="Left">
+        <StackPanel>
+          <StackPanel IsEnabled="{Binding CanEditSettings}">
+            <TextBlock Classes="label" Text="{l:Tr 'Pick the Nmea gps port and baud rate'}" />
+            <Grid ColumnDefinitions="*,8,Auto,8,140">
+              <ComboBox ItemsSource="{Binding Sources}" SelectedItem="{Binding Source}" HorizontalAlignment="Stretch">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:NmeaSourceChoice">
+                    <TextBlock Text="{l:TrBind {Binding Text}}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+              <Button Grid.Column="2" Command="{Binding RefreshSourcesCommand}" ToolTip.Tip="{l:Tr 'Refresh ports'}" Padding="6,4">
+                <Path Classes="icon" Data="{StaticResource IconRefresh}" />
+              </Button>
+              <ComboBox Grid.Column="4" ItemsSource="{x:Static vm:MovingBaseViewModel.Bauds}" SelectedItem="{Binding Baud}"
+                        HorizontalAlignment="Stretch" IsEnabled="{Binding IsSerial}" />
+            </Grid>
+
+            <StackPanel IsVisible="{Binding ShowAddress}">
+              <TextBlock Classes="label" Text="{l:Tr 'Server (host:port)'}" />
+              <TextBox Text="{Binding Address}" PlaceholderText="127.0.0.1:14551" />
+            </StackPanel>
+
+            <CheckBox Margin="0,12,0,0" IsChecked="{Binding UpdateRallyPoint}" Content="{l:Tr 'Update Rally Point 0'}" />
+            <CheckBox IsChecked="{Binding RelativeAlt}" Content="{l:Tr 'RelativeAlt'}" />
+          </StackPanel>
+
+          <TextBlock Classes="label" Text="{l:Tr 'Select your update rate'}" />
+          <ComboBox ItemsSource="{x:Static vm:MovingBaseViewModel.Rates}" SelectedItem="{Binding RateHz}" Width="170">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="sys:Double">
+                <TextBlock Text="{Binding StringFormat={}{0} Hz}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+
+          <Button Classes="accent" Margin="0,16,0,0" Content="{l:TrBind {Binding StartStopText}}" Command="{Binding StartStopCommand}" />
+
+          <TextBlock Classes="label" Text="{l:Tr 'Location'}" />
+          <SelectableTextBlock Text="{Binding Location}" FontFamily="Cascadia Mono, Consolas, Menlo, DejaVu Sans Mono, monospace" FontSize="12" />
+          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Margin="0,10,0,0"
+                     Text="{l:Tr 'While it runs, the DATA and PLAN maps show a blue marker where the GPS is.'}" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
