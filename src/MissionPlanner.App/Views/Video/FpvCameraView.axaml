@@ -25,22 +25,30 @@
         <RadioButton GroupName="tilt" IsChecked="{Binding ServoTilt}" Content="{l:Tr 'Tilt driven by a servo'}" />
       </StackPanel>
       <StackPanel Spacing="6" IsVisible="{Binding ServoTilt}">
-        <WrapPanel>
-          <TextBlock Classes="muted" VerticalAlignment="Center" Width="180" Text="{l:Tr 'Servo output'}" />
-          <ComboBox Width="110" ItemsSource="{Binding ServoNumbers}" SelectedItem="{Binding SelectedServo}" Margin="0,0,16,0">
+        <!-- one row each, labels in the dialog's 180 px column like the sliders -->
+        <Grid ColumnDefinitions="180,140,Auto" RowDefinitions="Auto,Auto,Auto">
+          <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Servo output'}" />
+          <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding ServoNumbers}" SelectedItem="{Binding SelectedServo}">
             <ComboBox.ItemTemplate>
               <DataTemplate>
                 <TextBlock Text="{Binding StringFormat='SERVO{0}'}" />
               </DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>
-          <TextBlock Classes="muted" VerticalAlignment="Center" Margin="0,0,6,0" Text="{l:Tr 'From (1000 µs)'}" />
-          <NumericUpDown Width="110" Minimum="-90" Maximum="90" Increment="1" FormatString="0" Value="{Binding ServoFrom}" Margin="0,0,16,0" />
-          <TextBlock Classes="muted" VerticalAlignment="Center" Margin="0,0,6,0" Text="{l:Tr 'To (2000 µs)'}" />
-          <NumericUpDown Width="110" Minimum="-90" Maximum="90" Increment="1" FormatString="0" Value="{Binding ServoTo}" Margin="0,0,16,0" />
-          <ToggleButton Content="{l:Tr 'Reverse'}" IsChecked="{Binding ServoReverse}"
+          <ToggleButton Grid.Column="2" Margin="12,0,0,0" MinWidth="90" HorizontalContentAlignment="Center"
+                        Content="{l:Tr 'Reverse'}" IsChecked="{Binding ServoReverse}"
                         ToolTip.Tip="{l:Tr 'Swap the ends: 1000 µs gives the To angle and 2000 µs the From angle'}" />
-        </WrapPanel>
+
+          <TextBlock Grid.Row="1" Classes="muted" VerticalAlignment="Center" Margin="0,8,0,0" Text="{l:Tr 'From (1000 µs)'}" />
+          <NumericUpDown Grid.Row="1" Grid.Column="1" Margin="0,8,0,0" HorizontalAlignment="Stretch"
+                         Minimum="-90" Maximum="90" Increment="1" FormatString="0" Value="{Binding ServoFrom}" />
+          <TextBlock Grid.Row="1" Grid.Column="2" Classes="muted" VerticalAlignment="Center" Margin="12,8,0,0" Text="°" />
+
+          <TextBlock Grid.Row="2" Classes="muted" VerticalAlignment="Center" Margin="0,8,0,0" Text="{l:Tr 'To (2000 µs)'}" />
+          <NumericUpDown Grid.Row="2" Grid.Column="1" Margin="0,8,0,0" HorizontalAlignment="Stretch"
+                         Minimum="-90" Maximum="90" Increment="1" FormatString="0" Value="{Binding ServoTo}" />
+          <TextBlock Grid.Row="2" Grid.Column="2" Classes="muted" VerticalAlignment="Center" Margin="12,8,0,0" Text="°" />
+        </Grid>
         <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
                    Text="{l:Tr 'Angles are degrees below the nose line: negative looks up, 0 straight ahead, 90 straight down. In between, the angle follows the servo output linearly.'}" />
         <TextBlock FontSize="12" TextWrapping="Wrap" Text="{Binding ServoNowText}" />

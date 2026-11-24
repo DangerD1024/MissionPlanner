@@ -246,7 +246,7 @@ public sealed partial class HudVideoViewModel
     }
 
     /// <summary>Opens the 3D view settings (applied live).</summary>
-    public Task OpenCameraSettingsAsync() => Services.Windows.ShowDialogAsync(new FpvCameraViewModel(this), 640, 640);
+    public Task OpenCameraSettingsAsync() => Services.Windows.ShowDialogAsync(new FpvCameraViewModel(this), 640, 700);
 
     /// <summary>Whether the HUD shows the 3D view now (rather than video or the plain sky and ground).</summary>
     public bool UsesSynthetic => ThreeD || (ThreeDFallback && State != VideoStreamState.Playing);
