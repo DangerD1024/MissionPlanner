@@ -93,10 +93,14 @@ public sealed partial class MobileApp : Application
                 break;
         }
 
+        // MP_CONNECT works on the phones too (simulator: SIMCTL_CHILD_MP_CONNECT)
+        StartLink ??= Environment.GetEnvironmentVariable("MP_CONNECT");
         view.AttachedToVisualTree += (_, _) =>
         {
             top = TopLevel.GetTopLevel(view);
-            if (StartLink is { Length: > 0 } link)
+            if (Environment.GetEnvironmentVariable("MP_DEMO_TOUR") == "1" && StartLink is { Length: > 0 } tourLink)
+                _ = DemoTourAsync(shell, tourLink);
+            else if (StartLink is { Length: > 0 } link)
                 _ = shell.Link.ConnectAsync(MissionPlanner.App.Core.Links.LinkSpec.Parse(link));
             else
                 _ = shell.Link.ConnectAtStartAsync();
@@ -107,6 +111,51 @@ public sealed partial class MobileApp : Application
         _timer.Start();
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>
+    /// MP_DEMO_TOUR=1 with MP_CONNECT: a hands-free walk through the app for a screen recording (the iOS
+    /// simulator takes no taps from scripts): the Link tab, connecting, then Fly, Plan, Setup and Messages.
+    /// </summary>
+    private static async Task DemoTourAsync(MobileShellViewModel shell, string link)
+    {
+        async Task Show(MobileTab tab, int seconds)
+        {
+            shell.SelectTabCommand.Execute(tab);
+            await Task.Delay(TimeSpan.FromSeconds(seconds));
+        }
+
+        await Show(MobileTab.Link, 4);
+        var connect = shell.Link.ConnectAsync(MissionPlanner.App.Core.Links.LinkSpec.Parse(link));
+        await Task.WhenAny(connect, Task.Delay(TimeSpan.FromSeconds(40)));
+        await Task.Delay(TimeSpan.FromSeconds(3));
+        shell.SelectTabCommand.Execute(MobileTab.Fly);
+        await Task.Delay(TimeSpan.FromSeconds(6));
+        // take off as the slide-to-takeoff control does (Guided, arm, NAV_TAKEOFF), without its prompts
+        var session = AppServices!.Session;
+        if (session.IsConnected)
+        {
+            await Task.Run(() =>
+            {
+                var mav = session.Mav;
+                var v = session.Vehicle;
+                for (var i = 0; i < 15 && !mav.MAV.cs.armed; i++)
+                {
+                    mav.setMode(v.sysid, v.compid, "GUIDED");
+                    if (!mav.doARM(v.sysid, v.compid, true))
+                        Thread.Sleep(2000);
+                }
+
+                mav.doCommand(v.sysid, v.compid, MAVLink.MAV_CMD.TAKEOFF, 0, 0, 0, 0, 0, 0, 20);
+            });
+        }
+
+        await Task.Delay(TimeSpan.FromSeconds(25));
+        await Show(MobileTab.Plan, 12);
+        await Show(MobileTab.Setup, 12);
+        await Show(MobileTab.Messages, 8);
+        await Show(MobileTab.Link, 6);
+        await Show(MobileTab.Fly, 10);
     }
 
     /// <summary>Saves the settings and closes the link (app closing or sent to the background for good).</summary>
