@@ -269,6 +269,17 @@ public static class AppSpeech
                 s.IsConnected ? DateTime.Now - s.ConnectedAt : TimeSpan.Zero), now);
             if (a.LastWarning != null)
                 cs.messageHigh = a.LastWarning;
+
+            // TOOLS > Warning Manager: the user's own warnings (Mission Planner's WarningEngine)
+            if (open)
+            {
+                if (Tools.AppWarnings.Step(cs, Engine, DateTime.Now) is { } warning)
+                    cs.messageHigh = warning;
+            }
+            else
+            {
+                Tools.AppWarnings.Clear();
+            }
         }
         catch (Exception ex)
         {

@@ -171,7 +171,11 @@ public sealed class MavCmdCatalog
     /// <summary>The section for a firmware from mavcmd.xml next to the executable, or a built-in fallback.</summary>
     public static MavCmdCatalog Load(Firmwares firmware) => Load(SectionFor(firmware));
 
-    public static MavCmdCatalog Load(MavCmdSection section, string? path = null)
+    /// <summary>The section from mavcmd.xml (or the built-in fallback), with the user's extra commands (TOOLS > Planner command list).</summary>
+    public static MavCmdCatalog Load(MavCmdSection section, string? path = null) =>
+        LoadFile(section, path).WithExtras(PlannerExtraCommands.Load());
+
+    private static MavCmdCatalog LoadFile(MavCmdSection section, string? path)
     {
         path ??= FindFile();
         if (path != null)
@@ -187,6 +191,30 @@ public sealed class MavCmdCatalog
         }
 
         return Fallback(section);
+    }
+
+    /// <summary>
+    /// Adds commands after the section's own, as Mission Planner merges PlannerExtraCommand: a name the
+    /// section already has keeps the section's labels. An ID the MAVLink library does not know is kept
+    /// as a MAV_CMD value all the same, so it can be planned and written.
+    /// </summary>
+    public MavCmdCatalog WithExtras(IEnumerable<PlannerCommand> extras)
+    {
+        var list = Commands.ToList();
+        var added = false;
+        foreach (var e in extras)
+        {
+            if (_byName.ContainsKey(e.Name) || list.Any(c => c.Name == e.Name))
+                continue;
+            var labels = PlannerExtraCommands.Seven(e.ParamNames).Select(n => n?.Trim() ?? "").ToArray();
+            var units = new string?[ValueCount];
+            if (labels[6] == "Alt")
+                units[6] = "alt";
+            list.Add(new MavCmdInfo(e.Name, (MAVLink.MAV_CMD)e.Id, labels, units));
+            added = true;
+        }
+
+        return added ? new MavCmdCatalog(Section, list, Source) : this;
     }
 
     public static MavCmdCatalog Fallback(MavCmdSection section) =>

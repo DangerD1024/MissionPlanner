@@ -224,6 +224,13 @@ public sealed partial class QuickTile : ObservableObject
     [ObservableProperty]
     private double _value;
 
+    /// <summary>Background colour from a colouring rule of TOOLS > Warning Manager, or null.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasWarningColor))]
+    private string? _warningColor;
+
+    public bool HasWarningColor => WarningColor != null;
+
     public string Label => Field.Label;
 
     public string Unit => Field.Unit;
@@ -244,6 +251,10 @@ public sealed partial class QuickTile : ObservableObject
 
     public void Update(CurrentState cs)
     {
+        var color = Tools.AppWarnings.ColorFor(Field.Name);
+        if (color != WarningColor)
+            WarningColor = color;
+
         double v;
         try
         {

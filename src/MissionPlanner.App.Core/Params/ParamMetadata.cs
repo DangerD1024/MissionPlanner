@@ -150,15 +150,16 @@ public static class ParamMetadata
             }
         }
 
-        var legacy = Path.Combine(Settings.GetRunningDirectory(), "ParameterMetaDataBackup.xml");
-        if (File.Exists(legacy))
+        // the legacy format: TOOLS > Parameter documentation > Generate from source (Mission Planner's
+        // "Param gen") writes ParameterMetaData.xml to the user data folder; the app ships a backup copy
+        foreach (var legacy in LegacyFiles().Where(File.Exists))
         {
             try
             {
-                // the generic file may still arrive; leave no source so the next connect looks again
-                return new Indexed(ParseLegacy(legacy, firmware), null, default) is { Index.Count: > 0 } found
-                    ? found with { Source = Path.Combine(dir, VehicleKey(firmware) + ".apm.pdef.xml") }
-                    : new Indexed(new Dictionary<string, ParamMeta>(StringComparer.Ordinal), null, default);
+                // the generic file may still arrive: its path is the source, so the index is rebuilt when it does
+                var index = ParseLegacy(legacy, firmware);
+                if (index.Count > 0)
+                    return new Indexed(index, Path.Combine(dir, VehicleKey(firmware) + ".apm.pdef.xml"), default);
             }
             catch (Exception ex)
             {
@@ -168,6 +169,16 @@ public static class ParamMetadata
 
         return new Indexed(new Dictionary<string, ParamMeta>(StringComparer.Ordinal), null, default);
     }
+
+    /// <summary>Mission Planner's ParameterMetaData.xml (generated from the ArduPilot sources), then the shipped backup.</summary>
+    public static IEnumerable<string> LegacyFiles() =>
+    [
+        Settings.GetUserDataDirectory() + GeneratedFileName,
+        Path.Combine(Settings.GetRunningDirectory(), "ParameterMetaDataBackup.xml"),
+    ];
+
+    /// <summary>The file Mission Planner's "Param gen" writes in the user data folder.</summary>
+    public const string GeneratedFileName = "ParameterMetaData.xml";
 
     /// <summary>Parses apm.pdef.xml: vehicle and library parameters alike.</summary>
     public static Dictionary<string, ParamMeta> ParsePdef(string file)

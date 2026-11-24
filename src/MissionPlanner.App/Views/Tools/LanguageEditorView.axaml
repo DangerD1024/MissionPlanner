@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Tools"
+             xmlns:loc="using:MissionPlanner.App.Core.Localization"
+             xmlns:tv="using:MissionPlanner.App.Views.Tools"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.Tools.LanguageEditorView"
+             x:DataType="vm:LanguageEditorViewModel">
+  <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="24,20" RowSpacing="12">
+    <tv:ToolHeader />
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10">
+      <TextBlock Text="{l:Tr 'Language'}" VerticalAlignment="Center" />
+      <ComboBox ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage}" MinWidth="200">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:DataType="loc:LanguageInfo">
+            <TextBlock Text="{Binding DisplayName}" />
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+      <TextBox Text="{Binding Filter}" PlaceholderText="{l:Tr 'Search'}" Width="260" />
+      <CheckBox IsChecked="{Binding UntranslatedOnly}" Content="{l:Tr 'Untranslated only'}" />
+      <CheckBox IsChecked="{Binding MineOnly}" Content="{l:Tr 'Only mine'}" />
+    </StackPanel>
+    <TextBlock Grid.Row="2" Text="{Binding CountText}" Classes="muted" FontSize="12" />
+    <DataGrid Grid.Row="3" ItemsSource="{Binding Rows}" AutoGenerateColumns="False" CanUserSortColumns="True"
+              CanUserResizeColumns="True" SelectionMode="Single" HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="{l:Tr 'English'}" Binding="{Binding English}" IsReadOnly="True" Width="3*" />
+        <DataGridTextColumn Header="{l:Tr 'Built-in translation'}" Binding="{Binding BuiltIn}" IsReadOnly="True" Width="3*" />
+        <DataGridTextColumn Header="{l:Tr 'Your translation'}" Binding="{Binding Mine}" Width="3*" />
+        <DataGridTemplateColumn Width="Auto">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate x:DataType="vm:TranslationRow">
+              <StackPanel Orientation="Horizontal" Spacing="4" Margin="4,0">
+                <TextBlock Text="!" Foreground="{DynamicResource Danger}" FontWeight="Bold" VerticalAlignment="Center" IsVisible="{Binding HasProblem}"
+                           ToolTip.Tip="{l:Tr 'The {0} placeholders differ from the English text: this translation would not be used'}" />
+                <Button Content="{l:Tr 'Copy'}" Padding="6,1" FontSize="11" ToolTip.Tip="{l:Tr 'Start from the built-in translation'}"
+                        Command="{Binding $parent[UserControl].((vm:LanguageEditorViewModel)DataContext).CopyBuiltInCommand}" CommandParameter="{Binding}" />
+              </StackPanel>
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+      </DataGrid.Columns>
+    </DataGrid>
+    <Grid Grid.Row="4" ColumnDefinitions="Auto,*">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button Classes="accent" Content="{l:Tr 'Save'}" Command="{Binding SaveCommand}" />
+        <Button Content="{l:Tr 'Export…'}" Command="{Binding ExportCommand}" ToolTip.Tip="{l:Tr 'Write your translations to a file, to share them'}" />
+        <Button Content="{l:Tr 'Reload'}" Command="{Binding ReloadCommand}" ToolTip.Tip="{l:Tr 'Discard unsaved changes'}" />
+      </StackPanel>
+      <SelectableTextBlock Grid.Column="1" Text="{Binding FilePath}" Classes="muted" FontSize="12" VerticalAlignment="Center" Margin="12,0,0,0" />
+    </Grid>
+  </Grid>
+</UserControl>

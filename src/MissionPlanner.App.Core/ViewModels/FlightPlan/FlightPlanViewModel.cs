@@ -91,6 +91,8 @@ public sealed partial class FlightPlanViewModel : PageViewModel
         Store.Changed += (_, _) => OnStoreChanged();
         Store.PropertyChanged += OnStorePropertyChanged;
         Services.Params.ParamsChanged += (_, _) => LoadRadiiFromParams();
+        // TOOLS > Planner command list saved: offer its commands now (Mission Planner's updateCMDParams)
+        PlannerExtraCommands.Changed += (_, _) => Services.Dispatcher.Post(() => Catalog = MavCmdCatalog.Load(Catalog.Section));
 
         RefreshCommandOptions();
         RefreshHeaders();

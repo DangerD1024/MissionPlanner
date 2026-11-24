@@ -55,6 +55,9 @@
                   CommandParameter="{Binding}"
                   ToolTip.Tip="{l:Tr 'Click to choose what this tile shows'}">
             <Grid RowDefinitions="Auto,*">
+              <!-- a colouring rule of TOOLS > Warning Manager holds for this value -->
+              <Border Grid.RowSpan="2" Margin="-6" CornerRadius="4" Opacity="0.45" IsVisible="{Binding HasWarningColor}"
+                      Background="{Binding WarningColor, Converter={x:Static fd:HexBrushConverter.Instance}}" />
               <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Text="{l:TrBind {Binding Label}}" FontSize="12.5" Classes="muted" TextTrimming="CharacterEllipsis" />
                 <TextBlock Grid.Column="1" Text="{Binding Unit}" FontSize="12" Classes="muted" Margin="6,0,0,0" />
