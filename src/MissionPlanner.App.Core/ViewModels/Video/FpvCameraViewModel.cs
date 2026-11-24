@@ -14,6 +14,10 @@ public sealed partial class FpvCameraViewModel : PageViewModel, IDialogPage
     private readonly double _originalTilt;
     private readonly double _originalDrawDistance;
     private readonly double _originalHighres;
+    private readonly int _originalServo;
+    private readonly double _originalServoFrom;
+    private readonly double _originalServoTo;
+    private readonly bool _originalServoReverse;
 
     public FpvCameraViewModel(HudVideoViewModel owner)
         : base("3D view settings")
@@ -26,6 +30,77 @@ public sealed partial class FpvCameraViewModel : PageViewModel, IDialogPage
         _tilt = _originalTilt;
         _drawDistanceKm = _originalDrawDistance = owner.DrawDistanceKm;
         _highresKm = _originalHighres = owner.HighresKm;
+        _originalServo = owner.TiltServo;
+        _servoTilt = _originalServo > 0;
+        _selectedServo = _originalServo > 0 ? _originalServo : 5;
+        _originalServoFrom = owner.TiltServoFrom;
+        _originalServoTo = owner.TiltServoTo;
+        _servoFrom = (decimal)_originalServoFrom;
+        _servoTo = (decimal)_originalServoTo;
+        _servoReverse = _originalServoReverse = owner.TiltServoReverse;
+    }
+
+    /// <summary>Servo outputs the tilt can follow (1–16).</summary>
+    public IReadOnlyList<int> ServoNumbers { get; } = Enumerable.Range(1, HudVideoViewModel.MaxTiltServo).ToArray();
+
+    /// <summary>Off: a fixed tilt (<see cref="Tilt"/>). On: the tilt follows a servo output.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ManualTilt))]
+    private bool _servoTilt;
+
+    /// <summary>The fixed tilt is used (the other radio button).</summary>
+    public bool ManualTilt
+    {
+        get => !ServoTilt;
+        set => ServoTilt = !value;
+    }
+
+    [ObservableProperty]
+    private int _selectedServo;
+
+    /// <summary>Angle below the nose line at 1000 µs (negative: up).</summary>
+    [ObservableProperty]
+    private decimal _servoFrom;
+
+    /// <summary>Angle below the nose line at 2000 µs (90: straight down).</summary>
+    [ObservableProperty]
+    private decimal _servoTo;
+
+    [ObservableProperty]
+    private bool _servoReverse;
+
+    /// <summary>The servo's output now and the angle it gives, refreshed by <see cref="Tick"/>.</summary>
+    [ObservableProperty]
+    private string _servoNowText = "";
+
+    partial void OnServoTiltChanged(bool value) => Apply();
+
+    partial void OnSelectedServoChanged(int value) => Apply();
+
+    partial void OnServoFromChanged(decimal value) => Apply();
+
+    partial void OnServoToChanged(decimal value) => Apply();
+
+    partial void OnServoReverseChanged(bool value) => Apply();
+
+    public override void Tick() => UpdateServoNow();
+
+    private void UpdateServoNow()
+    {
+        if (!ServoTilt)
+        {
+            ServoNowText = "";
+            return;
+        }
+
+        var from = (double)ServoFrom;
+        var to = (double)ServoTo;
+        var pwm = typeof(CurrentState).GetProperty($"ch{SelectedServo}out")?.GetValue(_owner.Services.Session.Cs) is float f ? f : 0;
+        var ends = $"1000 µs: {HudVideoViewModel.ServoTiltAngle(1000, from, to, ServoReverse):0}°, " +
+                   $"2000 µs: {HudVideoViewModel.ServoTiltAngle(2000, from, to, ServoReverse):0}°";
+        ServoNowText = pwm < 500
+            ? $"SERVO{SelectedServo}: no output from the vehicle yet ({ends})."
+            : $"SERVO{SelectedServo} now {pwm:0} µs = {HudVideoViewModel.ServoTiltAngle(pwm, from, to, ServoReverse):0}° below the nose ({ends}).";
     }
 
     public event EventHandler<bool>? CloseRequested;
@@ -78,6 +153,11 @@ public sealed partial class FpvCameraViewModel : PageViewModel, IDialogPage
     {
         _owner.FpvFov = CustomFov ? Math.Round(Fov) : null;
         _owner.FpvTilt = Math.Round(Tilt);
+        _owner.TiltServoFrom = (double)ServoFrom;
+        _owner.TiltServoTo = (double)ServoTo;
+        _owner.TiltServoReverse = ServoReverse;
+        _owner.TiltServo = ServoTilt ? SelectedServo : 0;
+        UpdateServoNow();
         _owner.DrawDistanceKm = Math.Round(DrawDistanceKm);
         _owner.HighresKm = HighresKm;
         OnPropertyChanged(nameof(FovText));
@@ -93,6 +173,10 @@ public sealed partial class FpvCameraViewModel : PageViewModel, IDialogPage
         CustomFov = false;
         Fov = HudVideoViewModel.DefaultFov;
         Tilt = 0;
+        ServoTilt = false;
+        ServoFrom = (decimal)HudVideoViewModel.DefaultTiltServoFrom;
+        ServoTo = (decimal)HudVideoViewModel.DefaultTiltServoTo;
+        ServoReverse = false;
         DrawDistanceKm = Synthetic.SyntheticScene.DefaultDrawDistance / 1000;
         HighresKm = Synthetic.SyntheticScene.DefaultHighres / 1000;
     }
@@ -105,6 +189,10 @@ public sealed partial class FpvCameraViewModel : PageViewModel, IDialogPage
     {
         _owner.FpvFov = _originalFov;
         _owner.FpvTilt = _originalTilt;
+        _owner.TiltServoFrom = _originalServoFrom;
+        _owner.TiltServoTo = _originalServoTo;
+        _owner.TiltServoReverse = _originalServoReverse;
+        _owner.TiltServo = _originalServo;
         _owner.DrawDistanceKm = _originalDrawDistance;
         _owner.HighresKm = _originalHighres;
         CloseRequested?.Invoke(this, false);

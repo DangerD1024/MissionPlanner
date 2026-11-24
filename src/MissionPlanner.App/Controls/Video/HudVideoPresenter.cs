@@ -121,7 +121,11 @@ public sealed class HudVideoPresenter
     private void OnVideoChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is nameof(HudVideoViewModel.State) or nameof(HudVideoViewModel.StatusText) or nameof(HudVideoViewModel.Aspect)
-            or nameof(HudVideoViewModel.UsesSynthetic) or nameof(HudVideoViewModel.FpvFov) or nameof(HudVideoViewModel.FpvTilt))
+            or nameof(HudVideoViewModel.UsesSynthetic) or nameof(HudVideoViewModel.FpvFov) or nameof(HudVideoViewModel.TiltServo))
+            UpdateSource();
+        // a fixed tilt changes from the settings dialog; a servo-driven one is followed per frame (and may be
+        // raised from the stream's thread), so only the fixed one redraws from here
+        else if (e.PropertyName == nameof(HudVideoViewModel.CameraTilt) && sender is HudVideoViewModel { TiltServo: 0 })
             UpdateSource();
     }
 
@@ -225,6 +229,9 @@ public sealed class HudVideoPresenter
         if (!source.Frames.TryRead(ref _sequence, _reader) || _bitmap == null)
             return;
         _hud.AttitudeOverride = (source as SyntheticView)?.FrameAttitude;
+        // a servo-driven camera tilt moves with the vehicle's servo output: follow it every frame
+        if (source is SyntheticView view && _video is { TiltServo: > 0 } video)
+            _hud.Camera = HudGeometry.Camera(video, view, _hud.Bounds.Width, _hud.Bounds.Height);
 
         if (!ReferenceEquals(_hud.VideoFrame, _bitmap))
             _hud.VideoFrame = _bitmap;
@@ -272,13 +279,15 @@ public static class HudGeometry
     /// </summary>
     public static (double VerticalFov, double Tilt)? Camera(HudVideoViewModel video, SyntheticView view, double w, double h)
     {
+        video.UpdateServoTilt();
+        var tilt = video.CameraTilt;
         view.HorizontalFov = video.FpvFov;
-        view.CameraTilt = video.FpvTilt;
-        if (video.FpvFov == null && video.FpvTilt == 0)
+        view.CameraTilt = tilt;
+        if (video.FpvFov == null && tilt == 0)
             return null;
         var vfov = video.FpvFov is { } hf && h > 0
             ? SceneCamera.VerticalFromHorizontal(hf, w / h)
             : SceneCamera.HudVerticalFov;
-        return (vfov * 180 / Math.PI, video.FpvTilt);
+        return (vfov * 180 / Math.PI, tilt);
     }
 }

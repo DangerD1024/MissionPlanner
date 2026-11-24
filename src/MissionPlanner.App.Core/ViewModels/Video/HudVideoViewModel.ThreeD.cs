@@ -16,6 +16,18 @@ public sealed partial class HudVideoViewModel
     public const string TiltKey = "next_3d_tilt";
     public const string DrawDistanceKey = "next_3d_draw_distance_km";
     public const string HighresKey = "next_3d_highres_km";
+    public const string TiltServoKey = "next_3d_tilt_servo";
+    public const string TiltServoFromKey = "next_3d_tilt_servo_from";
+    public const string TiltServoToKey = "next_3d_tilt_servo_to";
+    public const string TiltServoReverseKey = "next_3d_tilt_servo_reverse";
+
+    /// <summary>Servo outputs offered for a servo-driven camera tilt (SERVO_OUTPUT_RAW carries 16).</summary>
+    public const int MaxTiltServo = 16;
+
+    public const double DefaultTiltServoFrom = -15;
+    public const double DefaultTiltServoTo = 90;
+
+    private double _servoTilt = double.NaN;
 
     /// <summary>Default horizontal field of view offered when a custom one is switched on (a typical FPV lens).</summary>
     public const double DefaultFov = 110;
@@ -83,7 +95,115 @@ public sealed partial class HudVideoViewModel
             _store.Set(TiltKey, Math.Clamp(value, -30, 70).ToString(System.Globalization.CultureInfo.InvariantCulture));
             _store.Save();
             OnPropertyChanged();
+            OnPropertyChanged(nameof(CameraTilt));
         }
+    }
+
+    /// <summary>
+    /// Servo output (1–16) that drives the camera tilt, or 0 for the fixed <see cref="FpvTilt"/>.
+    /// The angle then follows that output's PWM between <see cref="TiltServoFrom"/> (1000 µs) and
+    /// <see cref="TiltServoTo"/> (2000 µs).
+    /// </summary>
+    public int TiltServo
+    {
+        get => int.TryParse(_store.Get(TiltServoKey), out var v) ? Math.Clamp(v, 0, MaxTiltServo) : 0;
+        set
+        {
+            _store.Set(TiltServoKey, Math.Clamp(value, 0, MaxTiltServo).ToString(System.Globalization.CultureInfo.InvariantCulture));
+            _store.Save();
+            ServoSettingChanged();
+        }
+    }
+
+    /// <summary>Camera angle below the nose line at 1000 µs, degrees (negative: up).</summary>
+    public double TiltServoFrom
+    {
+        get => ReadAngle(TiltServoFromKey, DefaultTiltServoFrom);
+        set
+        {
+            WriteAngle(TiltServoFromKey, value);
+            ServoSettingChanged();
+        }
+    }
+
+    /// <summary>Camera angle below the nose line at 2000 µs, degrees (90: straight down).</summary>
+    public double TiltServoTo
+    {
+        get => ReadAngle(TiltServoToKey, DefaultTiltServoTo);
+        set
+        {
+            WriteAngle(TiltServoToKey, value);
+            ServoSettingChanged();
+        }
+    }
+
+    /// <summary>Swaps the ends: 1000 µs gives <see cref="TiltServoTo"/> and 2000 µs <see cref="TiltServoFrom"/>.</summary>
+    public bool TiltServoReverse
+    {
+        get => bool.TryParse(_store.Get(TiltServoReverseKey), out var v) && v;
+        set
+        {
+            _store.Set(TiltServoReverseKey, value.ToString());
+            _store.Save();
+            ServoSettingChanged();
+        }
+    }
+
+    /// <summary>The camera's upward tilt now, degrees: the fixed one, or the tilt servo's position.</summary>
+    public double CameraTilt => TiltServo == 0 ? FpvTilt
+        : double.IsNaN(_servoTilt) ? -(TiltServoReverse ? TiltServoTo : TiltServoFrom) : _servoTilt;
+
+    /// <summary>Camera angle below the nose line for a servo PWM, degrees (PWM clamped to 1000–2000 µs).</summary>
+    public static double ServoTiltAngle(double pwm, double from, double to, bool reverse)
+    {
+        var f = Math.Clamp((pwm - 1000) / 1000, 0, 1);
+        if (reverse)
+            f = 1 - f;
+        return from + f * (to - from);
+    }
+
+    private static readonly System.Reflection.PropertyInfo?[] ServoOuts =
+        Enumerable.Range(1, MaxTiltServo).Select(n => typeof(CurrentState).GetProperty($"ch{n}out")).ToArray();
+
+    /// <summary>
+    /// Follows the tilt servo from the vehicle's servo outputs; raises <see cref="CameraTilt"/> when it moved.
+    /// Called per frame by the views that draw the 3D camera. No output yet (0 µs) keeps the last angle.
+    /// </summary>
+    public void UpdateServoTilt(CurrentState? cs = null)
+    {
+        var servo = TiltServo;
+        if (servo == 0)
+            return;
+        cs ??= Services.Session.Cs;
+        if (ServoOuts[servo - 1]?.GetValue(cs) is not float pwm || pwm < 500)
+            return;
+        var up = -ServoTiltAngle(pwm, TiltServoFrom, TiltServoTo, TiltServoReverse);
+        if (!double.IsNaN(_servoTilt) && Math.Abs(up - _servoTilt) < 0.1)
+            return;
+        _servoTilt = up;
+        OnPropertyChanged(nameof(CameraTilt));
+    }
+
+    private void ServoSettingChanged()
+    {
+        _servoTilt = double.NaN;
+        UpdateServoTilt();
+        OnPropertyChanged(nameof(TiltServo));
+        OnPropertyChanged(nameof(TiltServoFrom));
+        OnPropertyChanged(nameof(TiltServoTo));
+        OnPropertyChanged(nameof(TiltServoReverse));
+        OnPropertyChanged(nameof(CameraTilt));
+    }
+
+    private double ReadAngle(string key, double fallback) =>
+        double.TryParse(_store.Get(key), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var v) && double.IsFinite(v)
+            ? Math.Clamp(v, -90, 90)
+            : fallback;
+
+    private void WriteAngle(string key, double value)
+    {
+        _store.Set(key, (double.IsFinite(value) ? Math.Clamp(value, -90, 90) : 0).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        _store.Save();
     }
 
     /// <summary>Drawing distance in kilometres, shared by all 3D views and saved between runs.</summary>
@@ -126,7 +246,7 @@ public sealed partial class HudVideoViewModel
     }
 
     /// <summary>Opens the 3D view settings (applied live).</summary>
-    public Task OpenCameraSettingsAsync() => Services.Windows.ShowDialogAsync(new FpvCameraViewModel(this), 560, 540);
+    public Task OpenCameraSettingsAsync() => Services.Windows.ShowDialogAsync(new FpvCameraViewModel(this), 640, 640);
 
     /// <summary>Whether the HUD shows the 3D view now (rather than video or the plain sky and ground).</summary>
     public bool UsesSynthetic => ThreeD || (ThreeDFallback && State != VideoStreamState.Playing);

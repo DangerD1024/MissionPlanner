@@ -406,6 +406,61 @@ public sealed class FpvCameraTests
     }
 
     [TestMethod]
+    public void ServoAngleFollowsThePwmBetweenTheEnds()
+    {
+        Assert.AreEqual(-15, HudVideoViewModel.ServoTiltAngle(1000, -15, 90, false));
+        Assert.AreEqual(90, HudVideoViewModel.ServoTiltAngle(2000, -15, 90, false));
+        Assert.AreEqual(37.5, HudVideoViewModel.ServoTiltAngle(1500, -15, 90, false), 1e-9);
+        Assert.AreEqual(90, HudVideoViewModel.ServoTiltAngle(1000, -15, 90, true), "reversed: 1000 µs is the To end");
+        Assert.AreEqual(-15, HudVideoViewModel.ServoTiltAngle(2000, -15, 90, true));
+        Assert.AreEqual(-15, HudVideoViewModel.ServoTiltAngle(900, -15, 90, false), "clamped to 1000–2000 µs");
+        Assert.AreEqual(90, HudVideoViewModel.ServoTiltAngle(2200, -15, 90, false));
+    }
+
+    [TestMethod]
+    public void ServoDrivenTiltTracksTheOutputAndCancelRestoresTheFixedTilt()
+    {
+        var vm = Create(out var store);
+        vm.FpvTilt = 20;
+        var cs = vm.Services.Session.Cs;
+
+        var dialog = new FpvCameraViewModel(vm);
+        Assert.IsFalse(dialog.ServoTilt);
+        Assert.AreEqual(20, vm.CameraTilt, "fixed tilt by default");
+
+        dialog.ServoTilt = true;
+        dialog.SelectedServo = 5;
+        Assert.AreEqual(5, vm.TiltServo);
+        Assert.AreEqual("5", store.Get(HudVideoViewModel.TiltServoKey));
+        Assert.AreEqual(15, vm.CameraTilt, "no output yet: the 1000 µs end (-15° below = 15° up)");
+
+        var raised = 0;
+        vm.PropertyChanged += (_, e) => raised += e.PropertyName == nameof(HudVideoViewModel.CameraTilt) ? 1 : 0;
+        cs.ch5out = 2000;
+        vm.UpdateServoTilt();
+        Assert.AreEqual(-90, vm.CameraTilt, "2000 µs: straight down");
+        Assert.AreEqual(1, raised);
+        vm.UpdateServoTilt();
+        Assert.AreEqual(1, raised, "no change, no event");
+
+        dialog.ServoReverse = true;
+        Assert.AreEqual(15, vm.CameraTilt, "reversed: 2000 µs is the From end");
+        dialog.ServoReverse = false;
+        dialog.ServoTo = 45;
+        cs.ch5out = 1500;
+        vm.UpdateServoTilt();
+        Assert.AreEqual(-15, vm.CameraTilt, 1e-9, "halfway between -15 and 45 below");
+
+        dialog.Tick();
+        StringAssert.Contains(dialog.ServoNowText, "SERVO5 now 1500");
+
+        dialog.CancelCommand.Execute(null);
+        Assert.AreEqual(0, vm.TiltServo);
+        Assert.AreEqual(20, vm.CameraTilt);
+        Assert.AreEqual(HudVideoViewModel.DefaultTiltServoTo, vm.TiltServoTo);
+    }
+
+    [TestMethod]
     public void OutOfRangeValuesAreClamped()
     {
         var vm = Create(out _);
