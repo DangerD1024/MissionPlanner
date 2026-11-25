@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using System.Formats.Tar;
 using System.Globalization;
+using System.IO.Compression;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -200,7 +202,7 @@ public sealed partial class UpdateViewModel : ObservableObject
 
     public bool CanDownload => Available?.AssetUrl != null && !IsBusy && DownloadedFile == null;
 
-    public string InstallText => OperatingSystem.IsWindows() ? "Install now" : "Show file";
+    public string InstallText => OperatingSystem.IsWindows() || OperatingSystem.IsLinux() ? "Install now" : "Show file";
 
     public string BannerText => Available is { } r
         ? $"Mission Planner {r.Version} is available (you have {CurrentVersion})."
@@ -335,7 +337,8 @@ public sealed partial class UpdateViewModel : ObservableObject
     [RelayCommand]
     private void CancelDownload() => _downloadCancel?.Cancel();
 
-    /// <summary>Windows: starts the MSI and closes the app so it can be replaced. Linux: opens the folder with the package.</summary>
+    /// <summary>Windows: starts the MSI and closes the app so it can be replaced.
+    /// Linux: unpacks the tar.gz over the current files (via a detached updater) and restarts.</summary>
     [RelayCommand]
     private async Task Install()
     {
@@ -351,6 +354,16 @@ public sealed partial class UpdateViewModel : ObservableObject
                 using var _ = Process.Start(new ProcessStartInfo("msiexec.exe") { ArgumentList = { "/i", file }, UseShellExecute = true });
                 ExitRequested?.Invoke(this, EventArgs.Empty);
             }
+            else if (OperatingSystem.IsLinux() && file.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!await _services.Dialogs.ConfirmAsync("Install update",
+                        "Mission Planner will close, unpack the update over the current files and restart. Settings and logs are kept.", "Install"))
+                    return;
+                var target = Path.GetDirectoryName(Environment.ProcessPath)!.TrimEnd(Path.DirectorySeparatorChar);
+                var script = StageLinuxUpdate(file, target);
+                using var _ = Process.Start(new ProcessStartInfo("/bin/sh") { ArgumentList = { script }, UseShellExecute = false });
+                ExitRequested?.Invoke(this, EventArgs.Empty);
+            }
             else
             {
                 using var _ = Process.Start(new ProcessStartInfo { FileName = Path.GetDirectoryName(file)!, UseShellExecute = true });
@@ -361,6 +374,43 @@ public sealed partial class UpdateViewModel : ObservableObject
         {
             await _services.Dialogs.ShowMessageAsync("Install update", "Could not start it: " + ex.Message + "\n\n" + file, MessageKind.Error);
         }
+    }
+
+    /// <summary>Linux: extract the tar.gz to a staging dir and write an updater script that waits
+    /// for this process to exit, copies the new files over <paramref name="targetDir"/>, and relaunches.
+    /// Returns the script path. Public/static so it can be tested without launching anything.</summary>
+    public static string StageLinuxUpdate(string tarGz, string targetDir)
+    {
+        targetDir = targetDir.TrimEnd(Path.DirectorySeparatorChar);
+        var staging = Path.Combine(Path.GetDirectoryName(targetDir)!, ".mp-update-staged");
+        if (Directory.Exists(staging))
+            Directory.Delete(staging, true);
+        Directory.CreateDirectory(staging);
+        using (var fs = File.OpenRead(tarGz))
+        using (var gz = new GZipStream(fs, CompressionMode.Decompress))
+            TarFile.ExtractToDirectory(gz, staging, overwriteFiles: true);
+        var src = FindAppRoot(staging);
+        var exeName = Path.GetFileName(Environment.ProcessPath ?? "MissionPlanner.App");
+        var exe = Path.Combine(targetDir, exeName);
+        var script = Path.Combine(Path.GetTempPath(), "mp-update-" + Guid.NewGuid().ToString("N") + ".sh");
+        File.WriteAllText(script,
+            "#!/bin/sh\n" +
+            "sleep 2\n" +
+            $"cp -a '{src}/.' '{targetDir}/'\n" +
+            $"chmod +x '{exe}' 2>/dev/null\n" +
+            $"nohup '{exe}' >/dev/null 2>&1 &\n");
+        return script;
+    }
+
+    /// <summary>The extracted dir that actually holds the app (tarballs may wrap it in one or more folders).</summary>
+    private static string FindAppRoot(string dir)
+    {
+        if (File.Exists(Path.Combine(dir, "MissionPlanner.App.dll")))
+            return dir;
+        foreach (var sub in Directory.EnumerateDirectories(dir, "*", SearchOption.AllDirectories))
+            if (File.Exists(Path.Combine(sub, "MissionPlanner.App.dll")))
+                return sub;
+        return dir;
     }
 
     [RelayCommand]
