@@ -25,7 +25,7 @@
                   DowngradeErrorMessage="A newer version of Mission Planner 3 is already installed." />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
-    <Icon Id="AppIcon" SourceFile="..\..\mpdesktop.ico" />
+    <Icon Id="AppIcon" SourceFile="..\..\src\MissionPlanner.App\Assets\mpdesktop.ico" />
     <Property Id="ARPPRODUCTICON" Value="AppIcon" />
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/DangerD1024/MissionPlanner" />
     <Property Id="ARPHELPLINK" Value="https://discuss.ardupilot.org/c/ground-control-software/mission-planner" />

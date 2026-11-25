@@ -34,13 +34,13 @@ public static class DesktopEntry
         $"""
          [Desktop Entry]
          Type=Application
-         Name=Mission Planner
+         Name=Mission Planner 3
          GenericName=Ground Control Station
          Comment=ArduPilot ground control station ({AppVersion.Display})
          Exec={exec}
          Icon={iconPath}
          Terminal=false
-         Categories=Utility;Science;
+         Categories=Utility;
          Keywords=ArduPilot;drone;UAV;MAVLink;GCS;
          StartupWMClass={WindowClass}
 
