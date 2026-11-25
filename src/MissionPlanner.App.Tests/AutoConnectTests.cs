@@ -49,6 +49,8 @@ public class AutoConnectTests
         var probed = new List<(string, int)>();
         using var svc = new AutoConnectService(() => true)
         {
+            ProbeUdp = () => false,
+            ProbeTcp = (_, _) => false,
             ListPorts = () => ["/dev/ttyACM5", "/dev/ttyACM6"],
             ProbeSerial = (port, baud, _, _) =>
             {
@@ -65,6 +67,137 @@ public class AutoConnectTests
         Assert.AreEqual(LinkSpec.Serial("/dev/ttyACM6", 115200), spec);
         lock (probed)
             CollectionAssert.Contains(probed, ("/dev/ttyACM5", 115200));
+    }
+
+    [TestMethod]
+    public void AHoldMatchesTheSameDeviceUnderAnyName()
+    {
+        using var svc = new AutoConnectService(() => true)
+        {
+            ResolvePort = p => p == "/dev/serial/by-id/usb-ArduPilot_MatekH743_3B00-if00" ? "/dev/ttyACM0" : p,
+        };
+        svc.HoldOff(LinkSpec.Serial("/dev/serial/by-id/usb-ArduPilot_MatekH743_3B00-if00", 115200));
+        Assert.IsTrue(svc.IsHeld(LinkSpec.Serial("/dev/ttyACM0", 57600)));
+        Assert.IsFalse(svc.IsHeld(LinkSpec.Serial("/dev/ttyACM1")));
+        svc.Release(LinkSpec.Serial("/dev/ttyACM0"));
+        Assert.IsFalse(svc.IsHeld(LinkSpec.Serial("/dev/serial/by-id/usb-ArduPilot_MatekH743_3B00-if00")));
+
+        svc.HoldOff(LinkSpec.Tcp("localhost", 5760));
+        Assert.IsTrue(svc.IsHeld(LinkSpec.Tcp("127.0.0.1", 5760)));
+        Assert.IsFalse(svc.IsHeld(LinkSpec.Tcp("127.0.0.1", 5770)));
+        svc.ReleaseAll();
+        Assert.IsFalse(svc.IsHeld(LinkSpec.Tcp("127.0.0.1", 5760)));
+    }
+
+    [TestMethod]
+    [Timeout(40000, CooperativeCancellation = true)]
+    public async Task AUsbVehicleDisconnectedByTheUserIsReconnectedOnlyAfterReplugging()
+    {
+        var ports = new List<string> { "/dev/ttyACM5" };
+        var scans = 0;
+        var probed = 0;
+        using var svc = new AutoConnectService(() => true)
+        {
+            ProbeUdp = () => false,
+            ProbeTcp = (_, _) => false,
+            ResolvePort = p => p,
+            ListPorts = () =>
+            {
+                Interlocked.Increment(ref scans);
+                lock (ports)
+                    return ports.ToList();
+            },
+            ProbeSerial = (_, _, _, _) =>
+            {
+                Interlocked.Increment(ref probed);
+                return true;
+            },
+        };
+        var found = new TaskCompletionSource<LinkSpec>();
+        svc.Found += (spec, _) => found.TrySetResult(spec);
+        svc.HoldOff(LinkSpec.Serial("/dev/ttyACM5", 115200));
+        svc.Start();
+
+        await WaitScans(() => scans, 3);
+        Assert.IsFalse(found.Task.IsCompleted, "the vehicle the user disconnected is left alone");
+        Assert.AreEqual(0, probed, "a held port is not even opened");
+
+        lock (ports)
+            ports.Clear(); // unplugged
+        await WaitScans(() => scans, 2);
+        Assert.IsFalse(svc.IsHeld(LinkSpec.Serial("/dev/ttyACM5")));
+        lock (ports)
+            ports.Add("/dev/ttyACM5"); // plugged in again
+
+        var spec = await found.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        Assert.AreEqual(LinkSpec.Serial("/dev/ttyACM5", 115200), spec);
+    }
+
+    [TestMethod]
+    [Timeout(40000, CooperativeCancellation = true)]
+    public async Task ANetworkVehicleDisconnectedByTheUserIsReconnectedOnlyAfterItWentQuiet()
+    {
+        var sending = true;
+        var scans = 0;
+        using var svc = new AutoConnectService(() => true)
+        {
+            ProbeUdp = () => Volatile.Read(ref sending),
+            ProbeTcp = (_, _) => false,
+            ListPorts = () =>
+            {
+                Interlocked.Increment(ref scans);
+                return [];
+            },
+            GoneAfter = TimeSpan.FromSeconds(2),
+        };
+        var found = new TaskCompletionSource<LinkSpec>();
+        svc.Found += (spec, _) => found.TrySetResult(spec);
+        var status = "";
+        svc.StatusChanged += s => status = s;
+        svc.HoldOff(LinkSpec.UdpListen(14550));
+        svc.Start();
+
+        await WaitScans(() => scans, 3);
+        Assert.IsFalse(found.Task.IsCompleted, "still sending: the user's disconnect stands");
+        StringAssert.Contains(status, "UDP 14550");
+
+        Volatile.Write(ref sending, false); // vehicle powered off
+        await WaitScans(() => scans, 3);
+        Assert.IsFalse(svc.IsHeld(LinkSpec.UdpListen(14550)));
+        Volatile.Write(ref sending, true); // and on again
+
+        var spec = await found.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        Assert.AreEqual(LinkSpec.UdpListen(14550), spec);
+    }
+
+    [TestMethod]
+    [Timeout(20000, CooperativeCancellation = true)]
+    public async Task AHeldPortDoesNotStopTheScanFindingAnotherVehicle()
+    {
+        using var svc = new AutoConnectService(() => true)
+        {
+            ProbeUdp = () => true,
+            ProbeTcp = (_, _) => false,
+            ResolvePort = p => p,
+            ListPorts = () => ["/dev/ttyACM5", "/dev/ttyACM6"],
+            ProbeSerial = (_, _, _, _) => true,
+        };
+        var found = new TaskCompletionSource<LinkSpec>();
+        svc.Found += (spec, _) => found.TrySetResult(spec);
+        svc.HoldOff(LinkSpec.UdpListen(14550));
+        svc.HoldOff(LinkSpec.Serial("/dev/ttyACM5"));
+        svc.Start();
+
+        Assert.AreEqual(LinkSpec.Serial("/dev/ttyACM6", 115200), await found.Task.WaitAsync(TimeSpan.FromSeconds(15)));
+    }
+
+    private static async Task WaitScans(Func<int> scans, int count)
+    {
+        var target = scans() + count;
+        var sw = Stopwatch.StartNew();
+        while (scans() < target && sw.Elapsed < TimeSpan.FromSeconds(15))
+            await Task.Delay(50);
+        Assert.IsGreaterThanOrEqualTo(target, scans(), "the scan stalled");
     }
 
     [TestMethod]

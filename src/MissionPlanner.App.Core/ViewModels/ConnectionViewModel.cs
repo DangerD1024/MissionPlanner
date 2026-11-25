@@ -61,6 +61,9 @@ public sealed partial class ConnectionViewModel : ObservableObject
 
     private readonly AutoConnectService _auto;
 
+    /// <summary>The link being connected, held off auto-connect if the user cancels.</summary>
+    private LinkSpec? _connecting;
+
     /// <summary>Connect by itself to any vehicle found on USB serial or UDP 14550.</summary>
     [ObservableProperty]
     private bool _autoConnect;
@@ -73,7 +76,11 @@ public sealed partial class ConnectionViewModel : ObservableObject
         Settings.Instance[AutoConnectKey] = value.ToString();
         Settings.Instance.Save();
         if (value)
+        {
+            // switched on: connect to whatever is there, also links disconnected earlier
+            _auto.ReleaseAll();
             _auto.Start();
+        }
         else
             _auto.Stop();
     }
@@ -209,10 +216,16 @@ public sealed partial class ConnectionViewModel : ObservableObject
     {
         switch (State)
         {
+            // the user's Disconnect / Cancel: auto-connect leaves this vehicle alone until it is
+            // unplugged (USB) or stops sending (UDP/TCP), instead of connecting straight back
             case LinkState.Connecting:
+                if (_connecting != null)
+                    _auto.HoldOff(_connecting);
                 _connectCancel?.Cancel();
                 return;
             case LinkState.Connected:
+                if (_services.Session.Link is { } link)
+                    _auto.HoldOff(link);
                 await _services.Session.DisconnectAsync();
                 return;
         }
@@ -220,6 +233,7 @@ public sealed partial class ConnectionViewModel : ObservableObject
         var spec = await BuildSpecAsync();
         if (spec == null)
             return;
+        _auto.Release(spec);
 
         Settings.Instance["comport"] = SelectedPort;
         Settings.Instance["baudrate"] = SelectedBaud.ToString();
@@ -231,6 +245,7 @@ public sealed partial class ConnectionViewModel : ObservableObject
     /// <summary>Connects to a link; <paramref name="quiet"/> (auto-connect) reports failures in the status line only.</summary>
     private async Task<bool> ConnectSpecAsync(LinkSpec spec, bool quiet)
     {
+        _connecting = spec;
         _connectCancel = new CancellationTokenSource();
         var progress = new Progress<OperationProgress>(p =>
         {
@@ -259,6 +274,7 @@ public sealed partial class ConnectionViewModel : ObservableObject
         }
         finally
         {
+            _connecting = null;
             _connectCancel.Dispose();
             _connectCancel = null;
             ProgressText = "";

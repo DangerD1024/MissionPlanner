@@ -9,6 +9,9 @@ namespace MissionPlanner.App.Core.Session;
 /// connected it listens on UDP 14550 and probes serial ports for a MAVLink heartbeat (read only,
 /// nothing is written), then reports the first link that has one. Ports that stay silent are
 /// probed again after a pause, so a board plugged in later is found within a few seconds.
+/// A link the user disconnected is held (<see cref="HoldOff"/>): it is not connected again by
+/// itself until its vehicle has gone away — the USB device unplugged, or a UDP/TCP vehicle silent
+/// for <see cref="GoneAfter"/> — or the user connects to it.
 /// </summary>
 public sealed class AutoConnectService : IDisposable
 {
@@ -25,7 +28,11 @@ public sealed class AutoConnectService : IDisposable
     private UdpClient? _udp;
 
     /// <param name="canConnect">True while nothing is connected or connecting.</param>
-    public AutoConnectService(Func<bool> canConnect) => _canConnect = canConnect;
+    public AutoConnectService(Func<bool> canConnect)
+    {
+        _canConnect = canConnect;
+        ProbeUdp = UdpHasVehicle;
+    }
 
     /// <summary>A link with a vehicle on it (raised on a worker thread); the scan pauses until <see cref="Resume"/>.</summary>
     public event Action<LinkSpec, string>? Found;
@@ -40,6 +47,128 @@ public sealed class AutoConnectService : IDisposable
 
     /// <summary>Replaceable for tests: true if a heartbeat from a vehicle arrives on the port within the time.</summary>
     public Func<string, int, TimeSpan, CancellationToken, bool> ProbeSerial { get; set; } = SerialProbe.HasVehicleHeartbeat;
+
+    /// <summary>Replaceable for tests: true if a vehicle's heartbeat came in on UDP <see cref="UdpPort"/> since the last call.</summary>
+    public Func<bool> ProbeUdp { get; set; }
+
+    /// <summary>Replaceable for tests: true if SITL's TCP port 5760 has a vehicle on it.</summary>
+    public Func<TimeSpan, CancellationToken, bool> ProbeTcp { get; set; } =
+        (time, cancel) => TcpProbe.HasVehicleHeartbeat("127.0.0.1", 5760, time, cancel);
+
+    /// <summary>Replaceable for tests: the device a serial port name stands for (by-id links resolved).</summary>
+    public Func<string, string> ResolvePort { get; set; } = RealPath;
+
+    /// <summary>How long a held UDP/TCP vehicle must stay silent to count as gone.</summary>
+    public TimeSpan GoneAfter { get; set; } = TimeSpan.FromSeconds(10);
+
+    private sealed class Hold(string key, string label, bool network)
+    {
+        public string Key { get; } = key;
+        public string Label { get; } = label;
+        public bool Network { get; } = network;
+        public DateTime LastHeard { get; set; } = DateTime.UtcNow;
+    }
+
+    private readonly List<Hold> _holds = new();
+
+    /// <summary>
+    /// The user disconnected from, or cancelled connecting to, this link: do not connect to it by
+    /// itself until its vehicle has gone (USB unplugged, UDP/TCP silent) or <see cref="Release"/>.
+    /// </summary>
+    public void HoldOff(LinkSpec spec)
+    {
+        var key = Key(spec);
+        var label = spec.Kind switch
+        {
+            LinkKind.Serial => Path.GetFileName(key.Substring("serial:".Length)),
+            LinkKind.UdpListen => "UDP " + spec.Value,
+            _ => "TCP " + spec.Value,
+        };
+        lock (_holds)
+        {
+            _holds.RemoveAll(h => h.Key == key);
+            _holds.Add(new Hold(key, label, spec.Kind != LinkKind.Serial));
+        }
+    }
+
+    /// <summary>The user connects to this link: it is no longer held.</summary>
+    public void Release(LinkSpec spec)
+    {
+        var key = Key(spec);
+        lock (_holds)
+            _holds.RemoveAll(h => h.Key == key);
+    }
+
+    public void ReleaseAll()
+    {
+        lock (_holds)
+            _holds.Clear();
+    }
+
+    public bool IsHeld(LinkSpec spec)
+    {
+        var key = Key(spec);
+        lock (_holds)
+            return _holds.Any(h => h.Key == key);
+    }
+
+    private string Key(LinkSpec spec) => spec.Kind switch
+    {
+        LinkKind.Serial => "serial:" + ResolvePort(spec.Address),
+        LinkKind.UdpListen => "udp:" + spec.Value,
+        LinkKind.Tcp => "tcp:" + (spec.Address is "localhost" or "" ? "127.0.0.1" : spec.Address) + ":" + spec.Value,
+        _ => spec.ToString(),
+    };
+
+    /// <summary>
+    /// A vehicle was heard on a network link: true if that link is held (its silence clock restarts),
+    /// false if it may be connected.
+    /// </summary>
+    private bool HeardWhileHeld(LinkSpec spec)
+    {
+        var key = Key(spec);
+        lock (_holds)
+        {
+            var hold = _holds.FirstOrDefault(h => h.Key == key);
+            if (hold == null)
+                return false;
+            hold.LastHeard = DateTime.UtcNow;
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Ends the holds whose vehicle has gone: a serial device no longer listed (unplugged), a
+    /// network link silent for <see cref="GoneAfter"/>. While nothing can be scanned (connected to
+    /// something else) the network clocks are restarted instead: silence there was not observed.
+    /// </summary>
+    private void ExpireHolds(IReadOnlyList<string> ports, bool scanning)
+    {
+        lock (_holds)
+        {
+            if (_holds.Count == 0)
+                return;
+            var present = new HashSet<string>(ports.Select(p => "serial:" + ResolvePort(p)), StringComparer.Ordinal);
+            var now = DateTime.UtcNow;
+            _holds.RemoveAll(h => h.Network ? scanning && now - h.LastHeard > GoneAfter : !present.Contains(h.Key));
+            if (!scanning)
+            {
+                foreach (var h in _holds.Where(h => h.Network))
+                    h.LastHeard = now;
+            }
+        }
+    }
+
+    private string SearchingText()
+    {
+        lock (_holds)
+        {
+            if (_holds.Count == 0)
+                return "Searching for a vehicle…";
+            var parts = _holds.Select(h => h.Network ? h.Label + " until the vehicle stops sending" : h.Label + " until it is unplugged");
+            return "Searching for a vehicle… (skipping " + string.Join(", ", parts) + ")";
+        }
+    }
 
     private volatile bool _paused;
 
@@ -77,32 +206,39 @@ public sealed class AutoConnectService : IDisposable
                 if (_paused || !_canConnect())
                 {
                     CloseUdp();
+                    ExpireHolds(ListPorts(), scanning: false);
                     await Task.Delay(ScanEvery, stop).ConfigureAwait(false);
                     continue;
                 }
 
-                StatusChanged?.Invoke("Searching for a vehicle…");
+                var ports = ListPorts();
+                ExpireHolds(ports, scanning: true);
+                StatusChanged?.Invoke(SearchingText());
 
-                if (UdpHasVehicle())
+                var udp = LinkSpec.UdpListen(UdpPort);
+                if (ProbeUdp() && !HeardWhileHeld(udp))
                 {
-                    Report(LinkSpec.UdpListen(UdpPort), "UDP");
+                    Report(udp, "UDP");
                     continue;
                 }
 
                 // SITL bench: ArduPlane's serial0 TCP server. Read-only probe, and only
                 // 5760 -- the spare SITL ports belong to the tracker / test scripts and
                 // a probe would steal their single-client TCP slot.
-                if (TcpProbe.HasVehicleHeartbeat("127.0.0.1", 5760, ProbeTime, stop))
+                var tcp = LinkSpec.Tcp("127.0.0.1", 5760);
+                if (ProbeTcp(ProbeTime, stop) && !HeardWhileHeld(tcp))
                 {
-                    Report(LinkSpec.Tcp("127.0.0.1", 5760), "TCP 5760");
+                    Report(tcp, "TCP 5760");
                     continue;
                 }
 
-                foreach (var (port, bauds) in Candidates(ListPorts()))
+                foreach (var (port, bauds) in Candidates(ports, ResolvePort))
                 {
                     if (stop.IsCancellationRequested || _paused || !_canConnect())
                         break;
                     if (_retryAt.TryGetValue(port, out var at) && DateTime.UtcNow < at)
+                        continue;
+                    if (IsHeld(LinkSpec.Serial(port)))
                         continue;
 
                     StatusChanged?.Invoke("Checking " + Path.GetFileName(port) + "…");
@@ -123,7 +259,7 @@ public sealed class AutoConnectService : IDisposable
                 }
 
                 if (!_paused)
-                    StatusChanged?.Invoke("Searching for a vehicle…");
+                    StatusChanged?.Invoke(SearchingText());
                 await Task.Delay(ScanEvery, stop).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
