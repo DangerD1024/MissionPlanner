@@ -57,7 +57,7 @@ public sealed partial class FlightDataViewModel
         if (!scene.IsActive)
             return;
         RequestFastAttitude(s);
-        var hasPosition = s.IsConnected && (cs.lat != 0 || cs.lng != 0);
+        var hasPosition = s.IsConnected && Session.VehicleLocation.IsKnown(cs);
         var shape = s.Vehicle.aptype switch
         {
             MAVLink.MAV_TYPE.FIXED_WING or MAVLink.MAV_TYPE.VTOL_DUOROTOR or MAVLink.MAV_TYPE.VTOL_QUADROTOR
@@ -124,7 +124,7 @@ public sealed partial class FlightDataViewModel
             else if (m.msgid == (uint)MAVLink.MAVLINK_MSG_ID.GLOBAL_POSITION_INT)
             {
                 var g = m.ToStructure<MAVLink.mavlink_global_position_int_t>();
-                if (g.lat == 0 && g.lon == 0)
+                if (!Session.VehicleLocation.IsKnown(g.lat / 1e7, g.lon / 1e7, Session.VehicleLocation.HasGpsFix(mav.MAV.cs)))
                     return;
                 Interlocked.Exchange(ref _lastPositionPacket, Environment.TickCount64);
                 scene.UpdatePosition(new VehiclePose(g.lat / 1e7, g.lon / 1e7, g.alt / 1000.0, 0, 0, 0,

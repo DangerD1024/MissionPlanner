@@ -1255,7 +1255,7 @@ public sealed partial class FlightPlanViewModel : PageViewModel
         var s = Services.Session;
         PointLatLng? pos = null;
         double heading = 0;
-        if (s.IsConnected && (s.Cs.lat != 0 || s.Cs.lng != 0))
+        if (s.IsConnected && Session.VehicleLocation.IsKnown(s.Cs))
         {
             pos = new PointLatLng(s.Cs.lat, s.Cs.lng);
             heading = s.Cs.yaw;

@@ -87,7 +87,15 @@ public sealed class TerrainSource
         }
     }
 
-    /// <summary>Decodes a Terrarium PNG into 256×256 heights.</summary>
+    /// <summary>
+    /// Lowest height kept, in metres. No dry land is lower (the Dead Sea shore is at -430 m); deeper
+    /// values are sea floor, where the sea surface is what the view should show, or faults in the
+    /// data: over the sea the tiles have an 8-pixel V up to 12.7 km deep along the prime meridian.
+    /// They become unknown (NaN), and the patch fills them from the heights around.
+    /// </summary>
+    public const float LowestHeight = -450;
+
+    /// <summary>Decodes a Terrarium PNG into 256×256 heights (NaN below <see cref="LowestHeight"/>).</summary>
     public static float[]? Decode(byte[] png)
     {
         try
@@ -98,7 +106,10 @@ public sealed class TerrainSource
             var h = new float[Tiles.Size * Tiles.Size];
             var d = img.Data;
             for (var i = 0; i < h.Length; i++)
-                h[i] = Tiles.Terrarium(d[i * 3], d[i * 3 + 1], d[i * 3 + 2]);
+            {
+                var m = Tiles.Terrarium(d[i * 3], d[i * 3 + 1], d[i * 3 + 2]);
+                h[i] = m < LowestHeight ? float.NaN : m;
+            }
             return h;
         }
         catch (Exception ex)
@@ -117,7 +128,8 @@ public sealed class TerrainSource
         var ty = (int)Math.Floor(fy);
         if (!_tiles.TryGetValue((zoom, tx, ty), out var tile) || tile == null)
             return null;
-        return Sample(tile, (fx - tx) * Tiles.Size, (fy - ty) * Tiles.Size);
+        var h = Sample(tile, (fx - tx) * Tiles.Size, (fy - ty) * Tiles.Size);
+        return float.IsNaN(h) ? null : h;
     }
 
     private static float Sample(float[] tile, double px, double py)

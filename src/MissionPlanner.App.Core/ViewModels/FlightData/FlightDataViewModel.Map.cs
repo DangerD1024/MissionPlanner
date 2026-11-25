@@ -109,8 +109,8 @@ public sealed partial class FlightDataViewModel
 
         var lat = cs.lat;
         var lng = cs.lng;
-        // without GPS the EKF dead-reckons a few metres around 0,0: treat "null island" as no position
-        var has = (Math.Abs(lat) > 1e-3 || Math.Abs(lng) > 1e-3) && !double.IsNaN(lat) && !double.IsNaN(lng);
+        // without GPS the autopilot dead-reckons from 0,0: "null island" is no position
+        var has = Session.VehicleLocation.IsKnown(cs);
         c |= Set(ref m.HasPosition, has);
         if (has)
         {
