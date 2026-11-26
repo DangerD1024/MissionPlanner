@@ -34,7 +34,7 @@ public sealed partial class VehicleCommandsViewModel(AppServices services)
             return;
 
         // MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN p1=1; the link usually drops before an ACK comes back
-        await RunAsync("Reboot", (mav, _, _) => mav.doReboot(false, true),
+        await RunAsync("Reboot", (mav, _, _) => Session.VehicleReboot.Send(mav),
             "Reboot sent. The link may drop until the autopilot is back.", "The autopilot did not accept the reboot command.");
     }
 

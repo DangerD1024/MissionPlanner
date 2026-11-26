@@ -344,7 +344,7 @@ public sealed partial class RadioMappingViewModel : ObservableObject
         bool ok;
         try
         {
-            ok = await Task.Run(() => mav.doReboot(false, true));
+            ok = await Task.Run(() => Session.VehicleReboot.Send(mav));
         }
         catch (Exception ex)
         {

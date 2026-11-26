@@ -117,7 +117,7 @@ public static class FlightActions
             case FlightAction.Parachute_Release:
                 return mav.doCommand(sysid, compid, MAVLink.MAV_CMD.DO_PARACHUTE, (float)MAVLink.PARACHUTE_ACTION.PARACHUTE_RELEASE, 0, 0, 0, 0, 0, 0);
             case FlightAction.Preflight_Reboot_Shutdown:
-                return mav.doReboot();
+                return Session.VehicleReboot.Send(mav);
             case FlightAction.Reboot_Mass_Storage:
                 // ArduPilot's REBOOT_TO_MASS_STORAGE action
                 return mav.doCommand(sysid, compid, MAVLink.MAV_CMD.PREFLIGHT_REBOOT_SHUTDOWN, 5, 0, 0, 0, 0, 0, 0);

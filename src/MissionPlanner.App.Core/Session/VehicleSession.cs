@@ -34,6 +34,7 @@ public sealed class VehicleSession : IAsyncDisposable
     private Task _monitor = Task.CompletedTask;
     private int _losing;
     private volatile bool _transportDown;
+    private long _restartSentAt;
 
     public VehicleSession()
     {
@@ -42,6 +43,11 @@ public sealed class VehicleSession : IAsyncDisposable
             Interlocked.Exchange(ref _lastPacketTicks, Environment.TickCount64);
             // before the library adds the text to cs.messages, so the Messages tab finds it
             Severities.Record(message);
+        };
+        Mav.OnPacketSent += (_, message) =>
+        {
+            if (VehicleReboot.IsRestart(message))
+                Interlocked.Exchange(ref _restartSentAt, Environment.TickCount64);
         };
     }
 
@@ -95,6 +101,15 @@ public sealed class VehicleSession : IAsyncDisposable
 
     /// <summary>Raised when a serial link is gone for good (USB device unplugged), not on Disconnect.</summary>
     public event EventHandler<string>? LinkLost;
+
+    /// <summary>A USB link lost this long after a reboot command went out was lost to the reboot.</summary>
+    public static readonly TimeSpan RebootDropWindow = TimeSpan.FromSeconds(20);
+
+    /// <summary>
+    /// The last <see cref="LinkLost"/> came shortly after the app asked the autopilot to restart: the board
+    /// left USB to reboot and will be back, so the app connects again instead of reporting a lost link.
+    /// </summary>
+    public bool LostByReboot { get; private set; }
 
     /// <summary>The vehicle the screens show; switchable when several share the link.</summary>
     public MAVState Vehicle => Mav.MAV;
@@ -185,6 +200,7 @@ public sealed class VehicleSession : IAsyncDisposable
 
         Link = spec;
         ConnectedAt = DateTime.Now;
+        Interlocked.Exchange(ref _restartSentAt, 0);
         Interlocked.Exchange(ref _lastPacketTicks, Environment.TickCount64);
         _ioErrors = 0;
         _losing = 0;
@@ -497,6 +513,8 @@ public sealed class VehicleSession : IAsyncDisposable
         var stop = _stop;
         _stop = null;
         stop?.Cancel();
+        var restart = Interlocked.Exchange(ref _restartSentAt, 0);
+        LostByReboot = restart != 0 && Environment.TickCount64 - restart < RebootDropWindow.TotalMilliseconds;
         // closing a vanished serial device is bounded (LinkFactory.SerialLink), so this cannot hang
         CloseQuietly();
         SetState(LinkState.Disconnected);

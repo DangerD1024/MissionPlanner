@@ -297,7 +297,7 @@ public abstract partial class ParamPageViewModel : PageViewModel, IParamRowHost
         {
             // MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN p1=1, sent twice without waiting for an ACK
             var mav = Services.Session.Mav;
-            sent = await Task.Run(() => mav.doReboot(false, true));
+            sent = await Task.Run(() => Session.VehicleReboot.Send(mav));
         }
         catch (Exception ex)
         {

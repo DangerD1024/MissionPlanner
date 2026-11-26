@@ -202,9 +202,9 @@ public sealed partial class FlightDataViewModel
         try
         {
             Report("Reboot...", false);
-            // MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN p1=1, sent twice without waiting for an ACK
+            // MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN p1=1; the connection bar connects again when a USB board is back
             var mav = s.Mav;
-            var sent = await Task.Run(() => mav.doReboot(false, true));
+            var sent = await Task.Run(() => Session.VehicleReboot.Send(mav));
             Report(sent
                 ? "Reboot command sent. The link may drop until the autopilot is back."
                 : "The autopilot did not accept the reboot command.", !sent);

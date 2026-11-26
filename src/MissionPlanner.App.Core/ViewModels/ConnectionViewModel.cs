@@ -38,19 +38,12 @@ public sealed partial class ConnectionViewModel : ObservableObject
         _auto.Found += (spec, label) => services.Dispatcher.Post(() => _ = AutoConnectToAsync(spec, label));
 
         services.Session.StateChanged += (_, _) => services.Dispatcher.Post(OnStateChanged);
-        services.Session.LinkLost += (_, reason) => services.Dispatcher.Post(() =>
+        services.Session.LinkLost += (_, reason) =>
         {
-            if (AutoConnect)
-            {
-                // a pulled cable is expected with auto-connect: keep looking instead of a dialog
-                AutoConnectStatus = "Link lost: " + reason;
-                _auto.Resume();
-            }
-            else
-            {
-                _ = services.Dialogs.ShowMessageAsync("Connection lost", reason, MessageKind.Warning);
-            }
-        });
+            // read now: a new connection may begin before the posted handler runs
+            var rebooted = services.Session.LostByReboot ? services.Session.Link : null;
+            services.Dispatcher.Post(() => OnLinkLost(reason, rebooted));
+        };
 
         _autoConnect = Settings.Instance.GetBoolean(AutoConnectKey, false);
         if (_autoConnect)
@@ -60,6 +53,67 @@ public sealed partial class ConnectionViewModel : ObservableObject
     public const string AutoConnectKey = "next_autoconnect";
 
     private readonly AutoConnectService _auto;
+
+    private readonly RebootReconnect _rebootReconnect = new();
+
+    /// <summary>Waiting for a rebooting board to come back (auto-connect off).</summary>
+    private CancellationTokenSource? _rebootWait;
+
+    private void OnLinkLost(string reason, LinkSpec? rebooted)
+    {
+        if (rebooted is { Kind: LinkKind.Serial })
+        {
+            // the board left USB to restart: connect again once, when it is back (one connect, not a dialog)
+            AutoConnectStatus = "Autopilot restarting: connecting again when it is back…";
+            if (AutoConnect)
+                _auto.Resume();
+            else
+                _ = ReconnectAfterRebootAsync(rebooted);
+            return;
+        }
+
+        if (AutoConnect)
+        {
+            // a pulled cable is expected with auto-connect: keep looking instead of a dialog
+            AutoConnectStatus = "Link lost: " + reason;
+            _auto.Resume();
+        }
+        else
+        {
+            _ = _services.Dialogs.ShowMessageAsync("Connection lost", reason, MessageKind.Warning);
+        }
+    }
+
+    private async Task ReconnectAfterRebootAsync(LinkSpec link)
+    {
+        StopRebootWait();
+        var wait = _rebootWait = new CancellationTokenSource();
+        try
+        {
+            var ok = await _rebootReconnect.RunAsync(link, () => State == LinkState.Disconnected,
+                () => ConnectSpecAsync(link, quiet: true), wait.Token);
+            if (ok)
+                AutoConnectStatus = "";
+            else if (State == LinkState.Disconnected && !wait.IsCancellationRequested)
+                AutoConnectStatus = "The autopilot did not come back after the reboot: connect when it is ready.";
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        finally
+        {
+            if (_rebootWait == wait)
+                _rebootWait = null;
+            wait.Dispose();
+        }
+    }
+
+    /// <summary>The user took over (Connect, Cancel, auto-connect switched on): stop waiting for the rebooted board.</summary>
+    private void StopRebootWait()
+    {
+        _rebootWait?.Cancel();
+        _rebootWait = null;
+    }
 
     /// <summary>The link being connected, held off auto-connect if the user cancels.</summary>
     private LinkSpec? _connecting;
@@ -78,6 +132,7 @@ public sealed partial class ConnectionViewModel : ObservableObject
         if (value)
         {
             // switched on: connect to whatever is there, also links disconnected earlier
+            StopRebootWait();
             _auto.ReleaseAll();
             _auto.Start();
         }
@@ -219,6 +274,7 @@ public sealed partial class ConnectionViewModel : ObservableObject
             // the user's Disconnect / Cancel: auto-connect leaves this vehicle alone until it is
             // unplugged (USB) or stops sending (UDP/TCP), instead of connecting straight back
             case LinkState.Connecting:
+                StopRebootWait();
                 if (_connecting != null)
                     _auto.HoldOff(_connecting);
                 _connectCancel?.Cancel();
@@ -230,6 +286,7 @@ public sealed partial class ConnectionViewModel : ObservableObject
                 return;
         }
 
+        StopRebootWait();
         var spec = await BuildSpecAsync();
         if (spec == null)
             return;

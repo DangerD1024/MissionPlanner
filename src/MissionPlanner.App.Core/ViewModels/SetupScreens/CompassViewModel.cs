@@ -619,7 +619,7 @@ public sealed partial class CompassViewModel : PageViewModel
         try
         {
             var mav = Services.Session.Mav;
-            var ok = await Task.Run(() => mav.doReboot(false, true));
+            var ok = await Task.Run(() => Session.VehicleReboot.Send(mav));
             if (ok)
             {
                 RebootRequired = false;
