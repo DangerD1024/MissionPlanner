@@ -189,8 +189,15 @@ public sealed partial class ConnectionViewModel : ObservableObject
     [ObservableProperty]
     private string _progressText = "";
 
+    /// <summary>Percent done of the current connect step, or -1 when unknown (waiting for heartbeats).</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasProgress), nameof(ProgressValue))]
     private int _progressPercent = -1;
+
+    /// <summary>The step reports how far it is (MAVFTP, parameter download): the top line fills instead of sweeping.</summary>
+    public bool HasProgress => ProgressPercent >= 0;
+
+    public double ProgressValue => Math.Clamp(ProgressPercent, 0, 100);
 
     public bool IsSerial => SelectedPort is not (Tcp or Udp or UdpClient);
 

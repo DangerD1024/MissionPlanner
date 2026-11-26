@@ -177,7 +177,8 @@
     <!-- connect progress -->
     <ProgressBar Grid.Row="1" x:DataType="vm:ConnectionViewModel" DataContext="{Binding Connection}"
                  Height="3" MinHeight="3" CornerRadius="0" IsVisible="{Binding IsBusy}"
-                 IsIndeterminate="True" Foreground="{DynamicResource Accent}" Background="Transparent" />
+                 Minimum="0" Maximum="100" Value="{Binding ProgressValue}" IsIndeterminate="{Binding !HasProgress}"
+                 Foreground="{DynamicResource Accent}" Background="Transparent" />
 
     <ContentControl Grid.Row="2" Content="{Binding CurrentPage}" />
 

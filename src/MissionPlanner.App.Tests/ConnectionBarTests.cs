@@ -19,6 +19,23 @@ public class ConnectionBarTests
     public void Cleanup() => Settings.Instance.Remove(ToolsViewModel.ClassicKey);
 
     [TestMethod]
+    public void TheTopLineFillsWhenTheStepKnowsHowFarItIs()
+    {
+        var vm = new ConnectionViewModel(FakeUi.Services(out _));
+        Assert.IsFalse(vm.HasProgress, "waiting for heartbeats: the line sweeps");
+
+        vm.ProgressPercent = 0;
+        Assert.IsTrue(vm.HasProgress, "parameter download started");
+        vm.ProgressPercent = 42;
+        Assert.AreEqual(42.0, vm.ProgressValue);
+        vm.ProgressPercent = 130;
+        Assert.AreEqual(100.0, vm.ProgressValue);
+
+        vm.ProgressPercent = -1;
+        Assert.IsFalse(vm.HasProgress, "back to an unknown step");
+    }
+
+    [TestMethod]
     public void PlaybackListsTheLogsVehicles()
     {
         var services = FakeUi.Services(out _);
