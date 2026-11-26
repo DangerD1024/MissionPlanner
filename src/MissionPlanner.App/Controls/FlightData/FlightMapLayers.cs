@@ -92,7 +92,8 @@ internal static class MapPaint
 /// <summary>
 /// The flown track. The polyline is built in pixel space relative to its first point, once per
 /// track change or zoom, and only translated while the map pans; points closer than a pixel are
-/// skipped.
+/// skipped. The track holds reported positions only; the vehicle, drawn a little ahead of the
+/// newest, is joined to it by a line drawn each frame.
 /// </summary>
 public sealed class TrackLayer(FlightMapModel model) : MapLayer
 {
@@ -108,19 +109,42 @@ public sealed class TrackLayer(FlightMapModel model) : MapLayer
     public override void Render(DrawingContext ctx, MapViewport vp)
     {
         var track = model.Track;
-        if (track.Count < 2)
-            return;
-
-        if (_geometry == null || _version != track.Version || _zoom != vp.Zoom || !ReferenceEquals(_projection, vp.Projection))
-            Build(track, vp);
-        if (_geometry == null)
-            return;
-
-        using (ctx.PushTransform(Matrix.CreateTranslation(_reference.X - vp.OriginX, _reference.Y - vp.OriginY)))
+        StreamGeometry? geometry = null;
+        if (track.Count >= 2)
         {
-            ctx.DrawGeometry(null, Halo, _geometry);
-            ctx.DrawGeometry(null, Line, _geometry);
+            if (_geometry == null || _version != track.Version || _zoom != vp.Zoom || !ReferenceEquals(_projection, vp.Projection))
+                Build(track, vp);
+            geometry = _geometry;
         }
+
+        // from the newest reported position to the vehicle
+        Point tailFrom = default, tailTo = default;
+        var tail = false;
+        if (model.HasPosition && track.Last is { } last)
+        {
+            tailFrom = vp.ToScreen(last.Lat, last.Lng);
+            tailTo = vp.ToScreen(model.Lat, model.Lng);
+            tail = Math.Abs(tailTo.X - tailFrom.X) + Math.Abs(tailTo.Y - tailFrom.Y) >= 1;
+        }
+
+        // halos first, so neither line is dimmed where they meet
+        var shift = Matrix.CreateTranslation(_reference.X - vp.OriginX, _reference.Y - vp.OriginY);
+        if (geometry != null)
+        {
+            using (ctx.PushTransform(shift))
+                ctx.DrawGeometry(null, Halo, geometry);
+        }
+
+        if (tail)
+            ctx.DrawLine(Halo, tailFrom, tailTo);
+        if (geometry != null)
+        {
+            using (ctx.PushTransform(shift))
+                ctx.DrawGeometry(null, Line, geometry);
+        }
+
+        if (tail)
+            ctx.DrawLine(Line, tailFrom, tailTo);
     }
 
     private void Build(TrackBuffer track, MapViewport vp)

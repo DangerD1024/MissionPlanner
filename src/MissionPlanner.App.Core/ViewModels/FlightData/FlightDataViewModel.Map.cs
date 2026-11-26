@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -21,7 +22,7 @@ public sealed partial class FlightDataViewModel
     private bool _mapPositionDirty;
     private int _currentWp = -1;
 
-    /// <summary>What the map layers draw; refreshed at up to 10 Hz.</summary>
+    /// <summary>What the map layers draw; refreshed at up to 10 Hz, the vehicle up to every display frame.</summary>
     public FlightMapModel MapModel { get; } = new();
 
     /// <summary>Keeps the vehicle in the middle of the map. Panning by hand turns it off.</summary>
@@ -107,21 +108,9 @@ public sealed partial class FlightDataViewModel
         var m = MapModel;
         var c = false;
 
-        var lat = cs.lat;
-        var lng = cs.lng;
-        // without GPS the autopilot dead-reckons from 0,0: "null island" is no position
-        var has = Session.VehicleLocation.IsKnown(cs);
-        c |= Set(ref m.HasPosition, has);
-        if (has)
-        {
-            c |= Set(ref m.Lat, lat);
-            c |= Set(ref m.Lng, lng);
-            c |= Set(ref m.Heading, cs.yaw);
-            c |= Set(ref m.GroundCourse, cs.groundcourse);
-            c |= Set(ref m.NavBearing, cs.nav_bearing);
-            c |= Set(ref m.TargetBearing, cs.target_bearing);
-            c |= m.Track.Add(lat, lng);
-        }
+        // the track is made of the reported positions; the vehicle itself moves in AdvanceVehicleMotion
+        if (Session.VehicleLocation.IsKnown(cs))
+            c |= m.Track.Add(cs.lat, cs.lng);
 
         // navigation lines only mean something while the autopilot is navigating
         c |= Set(ref m.ShowNavLines, cs.armed || cs.wp_dist > 0);
@@ -175,17 +164,137 @@ public sealed partial class FlightDataViewModel
 
         if (c)
             m.Version++;
+    }
 
-        if (AutoPan && has)
+    // ---- the vehicle between position reports ------------------------------------------------
+
+    private readonly MapVehicleMotion _motion = new();
+
+    // what was last handed to _motion from CurrentState, so only new values are
+    private double _fedLat = double.NaN, _fedLng = double.NaN, _fedVelNorth, _fedVelEast, _fedHeading = double.NaN;
+
+    // Stopwatch timestamps of the last GLOBAL_POSITION_INT / ATTITUDE handed over straight from the link
+    private long _positionPacketAt, _attitudePacketAt;
+
+    // log time per wall-clock time while a telemetry log plays (its speed), else 1
+    private double _motionTimeScale = 1;
+
+    private static double MotionNow => Stopwatch.GetTimestamp() / (double)Stopwatch.Frequency;
+
+    private static bool IsRecent(long timestamp) =>
+        timestamp != 0 && Stopwatch.GetTimestamp() - timestamp < Stopwatch.Frequency;
+
+    /// <summary>
+    /// Whether the vehicle on the map is moving fast enough to be redrawn every display frame (the
+    /// view then calls <see cref="AdvanceVehicleMotion"/> from its animation frames).
+    /// </summary>
+    public bool IsVehicleMoving => _motion.IsMoving && MapModel.HasPosition;
+
+    /// <summary>
+    /// Moves the vehicle (and with Auto Pan the map) to where it is now, between position reports.
+    /// <see cref="Tick"/> does this 20 times a second; the view adds a call every display frame while
+    /// <see cref="IsVehicleMoving"/>. <see cref="FlightMapModel.Version"/> moves when it is worth a redraw.
+    /// </summary>
+    public void AdvanceVehicleMotion()
+    {
+        var m = MapModel;
+        if (!_motion.Advance(MotionNow, MetresPerPixel(_motion.HasPosition ? _motion.Lat : CenterLat)))
+            return;
+
+        m.HasPosition = _motion.HasPosition;
+        if (m.HasPosition)
+        {
+            m.Lat = _motion.Lat;
+            m.Lng = _motion.Lng;
+            m.Heading = _motion.Heading;
+            m.GroundCourse = _motion.GroundCourse;
+            m.NavBearing = _motion.NavBearing;
+            m.TargetBearing = _motion.TargetBearing;
+        }
+
+        m.Version++;
+        if (AutoPan && m.HasPosition)
             CenterOnVehicle();
     }
+
+    /// <summary>
+    /// Hands the newest position and heading to the map's vehicle. Live (and while a log plays) they
+    /// come straight from the packets as they arrive (exact times, every sample, see
+    /// <see cref="HookPackets"/>); without such packets for a second, from CurrentState, only when
+    /// they changed: this runs at 20 Hz whatever the telemetry rate, and the same values again
+    /// would look like "no movement since now".
+    /// </summary>
+    private void FeedVehicleMotion(Session.VehicleSession s, CurrentState cs)
+    {
+        HookPackets(s.Mav);
+        Volatile.Write(ref _motionTimeScale, Tlogs.IsLoaded ? Tlogs.SelectedSpeed.Value : 1);
+
+        // without GPS the autopilot dead-reckons from 0,0: "null island" is no position
+        if (!Session.VehicleLocation.IsKnown(cs))
+        {
+            ClearVehicleMotion();
+            return;
+        }
+
+        _motion.SetBearings(cs.groundcourse, cs.nav_bearing, cs.target_bearing);
+        var now = MotionNow;
+
+        if (!IsRecent(Interlocked.Read(ref _attitudePacketAt)) && cs.yaw != _fedHeading)
+        {
+            _fedHeading = cs.yaw;
+            _motion.AddHeading(cs.yaw, now);
+        }
+
+        if (IsRecent(Interlocked.Read(ref _positionPacketAt)) && _motion.HasReports)
+            return;
+
+        var (vn, ve) = (cs.vx, cs.vy);
+        if (vn == 0 && ve == 0 && cs.groundspeed > 0.5)
+        {
+            // no GLOBAL_POSITION_INT (GPS_RAW_INT only): its speed and course
+            var course = cs.groundcourse * Math.PI / 180;
+            (vn, ve) = (cs.groundspeed * Math.Cos(course), cs.groundspeed * Math.Sin(course));
+        }
+
+        if (cs.lat == _fedLat && cs.lng == _fedLng && vn == _fedVelNorth && ve == _fedVelEast)
+            return;
+        (_fedLat, _fedLng, _fedVelNorth, _fedVelEast) = (cs.lat, cs.lng, vn, ve);
+        var scale = Volatile.Read(ref _motionTimeScale);
+        _motion.AddPosition(cs.lat, cs.lng, vn * scale, ve * scale, now);
+    }
+
+    private void ClearVehicleMotion()
+    {
+        _motion.Clear();
+        _fedLat = _fedLng = _fedHeading = double.NaN;
+    }
+
+    /// <summary>A GLOBAL_POSITION_INT of the selected vehicle (link thread).</summary>
+    private void OnPositionPacket(in MAVLink.mavlink_global_position_int_t g, bool hasGpsFix)
+    {
+        double lat = g.lat / 1e7, lng = g.lon / 1e7;
+        if (Math.Abs(lat) > 90 || Math.Abs(lng) > 180 || !Session.VehicleLocation.IsKnown(lat, lng, hasGpsFix))
+            return;
+        Interlocked.Exchange(ref _positionPacketAt, Stopwatch.GetTimestamp());
+        var scale = Volatile.Read(ref _motionTimeScale);
+        _motion.AddPosition(lat, lng, g.vx / 100.0 * scale, g.vy / 100.0 * scale, MotionNow);
+    }
+
+    /// <summary>An ATTITUDE yaw of the selected vehicle, degrees (link thread).</summary>
+    private void OnAttitudePacket(double yaw)
+    {
+        Interlocked.Exchange(ref _attitudePacketAt, Stopwatch.GetTimestamp());
+        _motion.AddHeading(yaw, MotionNow);
+    }
+
+    /// <summary>Ground metres per map pixel at a latitude, at the current zoom.</summary>
+    private double MetresPerPixel(double lat) => 156543.03392 * Math.Cos(lat * Math.PI / 180) / Math.Pow(2, Zoom);
 
     private void CenterOnVehicle()
     {
         var m = MapModel;
         // only move for a visible change, so the map is not re-rendered for noise
-        var mpp = 156543.03392 * Math.Cos(m.Lat * Math.PI / 180) / Math.Pow(2, Zoom);
-        if (TrackBuffer.DistanceMetres(CenterLat, CenterLng, m.Lat, m.Lng) < mpp * 0.5)
+        if (TrackBuffer.DistanceMetres(CenterLat, CenterLng, m.Lat, m.Lng) < MetresPerPixel(m.Lat) * 0.5)
             return;
         CenterLat = m.Lat;
         CenterLng = m.Lng;

@@ -242,6 +242,33 @@ public class FlightDataViewModelTests
     }
 
     [TestMethod]
+    public void TheMapVehicleGlidesOnFromCurrentState()
+    {
+        // no packets (a log played into CurrentState, a test): the reported position and velocity
+        var vm = new FlightDataViewModel(FakeUi.Services(out _));
+        var cs = vm.Services.Session.Cs;
+        cs.lat = -35.0;
+        cs.lng = 149.0;
+        cs.vx = 10; // m/s north
+        vm.Tick();
+        vm.Tick();
+        Assert.AreEqual(-35.0, vm.MapModel.Lat, 1e-9);
+        Assert.AreEqual(1, vm.MapModel.Track.Count);
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        while (watch.Elapsed.TotalSeconds < 0.4)
+        {
+            Thread.Sleep(20);
+            vm.Tick();
+        }
+
+        var north = (vm.MapModel.Lat - -35.0) * 111_319.49;
+        Assert.IsTrue(north > 1 && north < 10 * (watch.Elapsed.TotalSeconds + 0.1), $"moved on {north:0.00} m");
+        Assert.AreEqual(north, (vm.CenterLat - -35.0) * 111_319.49, 1, "auto pan follows");
+        Assert.AreEqual(1, vm.MapModel.Track.Count, "the track holds reported positions only");
+    }
+
+    [TestMethod]
     public void VehicleCommandsNeedALink()
     {
         var vm = new FlightDataViewModel(FakeUi.Services(out var ui));

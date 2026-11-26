@@ -104,7 +104,10 @@ public sealed partial class FlightDataViewModel
     private MAVLinkInterface? _hooked;
     private long _lastPositionPacket;
 
-    /// <summary>Feeds ATTITUDE and GLOBAL_POSITION_INT of the selected vehicle to the scene as they arrive.</summary>
+    /// <summary>
+    /// Feeds ATTITUDE and GLOBAL_POSITION_INT of the selected vehicle, as they arrive, to the 2D
+    /// map's vehicle and to the 3D scene while it is open.
+    /// </summary>
     private void HookPackets(MAVLinkInterface mav)
     {
         if (ReferenceEquals(_hooked, mav))
@@ -112,19 +115,26 @@ public sealed partial class FlightDataViewModel
         _hooked = mav;
         mav.OnPacketReceived += (_, m) =>
         {
-            var scene = Scene;
-            if (!scene.IsActive || m.sysid != mav.MAV.sysid || m.compid != mav.MAV.compid)
+            if (m.msgid != (uint)MAVLink.MAVLINK_MSG_ID.ATTITUDE && m.msgid != (uint)MAVLink.MAVLINK_MSG_ID.GLOBAL_POSITION_INT)
                 return;
+            if (m.sysid != mav.MAV.sysid || m.compid != mav.MAV.compid)
+                return;
+            var scene = Scene;
             if (m.msgid == (uint)MAVLink.MAVLINK_MSG_ID.ATTITUDE)
             {
                 var a = m.ToStructure<MAVLink.mavlink_attitude_t>();
                 const double deg = 180 / Math.PI;
-                scene.UpdateAttitude(a.roll * deg, a.pitch * deg, PoseTracker.Norm360(a.yaw * deg));
+                var yaw = PoseTracker.Norm360(a.yaw * deg);
+                OnAttitudePacket(yaw);
+                if (scene.IsActive)
+                    scene.UpdateAttitude(a.roll * deg, a.pitch * deg, yaw);
             }
-            else if (m.msgid == (uint)MAVLink.MAVLINK_MSG_ID.GLOBAL_POSITION_INT)
+            else
             {
                 var g = m.ToStructure<MAVLink.mavlink_global_position_int_t>();
-                if (!Session.VehicleLocation.IsKnown(g.lat / 1e7, g.lon / 1e7, Session.VehicleLocation.HasGpsFix(mav.MAV.cs)))
+                var fix = Session.VehicleLocation.HasGpsFix(mav.MAV.cs);
+                OnPositionPacket(g, fix);
+                if (!scene.IsActive || !Session.VehicleLocation.IsKnown(g.lat / 1e7, g.lon / 1e7, fix))
                     return;
                 Interlocked.Exchange(ref _lastPositionPacket, Environment.TickCount64);
                 scene.UpdatePosition(new VehiclePose(g.lat / 1e7, g.lon / 1e7, g.alt / 1000.0, 0, 0, 0,

@@ -20,12 +20,14 @@ public sealed partial class FlyView : UserControl
 {
     private MobileShellViewModel? _vm;
     private long _mapVersion = -1;
+    private readonly MapMotionPump _motionPump;
     private bool? _landscape;
     private bool? _mapMain;
 
     public FlyView()
     {
         InitializeComponent();
+        _motionPump = new MapMotionPump(Map, () => _vm?.Fly, RedrawMap);
         Map.UserPanned += (_, _) => _vm?.Fly.OnUserPanned();
         Map.MapClick += (_, e) =>
         {
@@ -218,6 +220,13 @@ public sealed partial class FlyView : UserControl
         if (!IsEffectivelyVisible)
             return;
         HudControl.Refresh();
+        RedrawMap();
+        // a moving vehicle is moved on every display frame from here on, until it stops
+        _motionPump.Kick();
+    }
+
+    private void RedrawMap()
+    {
         var version = _vm?.Fly.MapModel.Version ?? -1;
         if (version != _mapVersion)
         {
