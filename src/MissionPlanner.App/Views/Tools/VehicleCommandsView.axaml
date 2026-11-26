@@ -11,6 +11,13 @@
       <WrapPanel>
         <Border Classes="card" Width="520" Margin="0,0,16,16" VerticalAlignment="Top">
           <StackPanel Spacing="8">
+            <TextBlock Classes="h2" Text="{l:Tr 'Reboot'}" />
+            <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{l:Tr 'Restarts the flight controller. The link usually drops while it restarts; connect again once it is back. Rebooting an armed vehicle stops its motors.'}" />
+            <Button Classes="danger" Content="{l:Tr 'Reboot FC'}" Command="{Binding RebootCommand}" IsEnabled="{Binding CanCommand}" HorizontalAlignment="Left" />
+          </StackPanel>
+        </Border>
+        <Border Classes="card" Width="520" Margin="0,0,16,16" VerticalAlignment="Top">
+          <StackPanel Spacing="8">
             <TextBlock Classes="h2" Text="{l:Tr 'Calibration flags'}" />
             <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{l:Tr 'After restoring a parameter backup onto the same board the calibration values are back, but the autopilot still asks for a calibration. These mark it done without calibrating again.'}" />
             <Button Content="{l:Tr 'Force accel calibrated'}" Command="{Binding ForceAccelCalibratedCommand}" IsEnabled="{Binding CanCommand}" HorizontalAlignment="Left" />

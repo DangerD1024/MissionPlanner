@@ -55,25 +55,13 @@ public sealed partial class SensorStatusRow(string name, uint bit) : ObservableO
 }
 
 /// <summary>
-/// The classic Ctrl+F screen's one-click actions that have no page of their own (reboot, safety switch,
+/// The classic Ctrl+F screen's one-click actions that have no page of their own (safety switch,
 /// re-sorting logs, driver clean-up, threads.txt, the struct speed test, a video URL, SITL combiner...).
 /// Reports through toasts; not shown as a page.
 /// </summary>
 public sealed partial class ClassicActionsViewModel(AppServices services)
     : ToolPageViewModel("Classic actions", "One-click actions of the classic Ctrl+F screen.", services)
 {
-    [RelayCommand]
-    private async Task RebootAsync()
-    {
-        if (!await Services.Dialogs.ConfirmAsync("Reboot", "Reboot the autopilot now? The link drops while it restarts.", "Reboot"))
-            return;
-        await RunAsync("Reboot", (mav, _, _) =>
-        {
-            mav.doReboot(false, true);
-            return true;
-        }, "Reboot sent.", "Could not send the reboot.");
-    }
-
     /// <summary>Mission Planner's "Toggle Safety Switch": SET_MODE with SAFETY_ARMED, as a press of the safety button.</summary>
     [RelayCommand]
     private async Task ToggleSafetyAsync()

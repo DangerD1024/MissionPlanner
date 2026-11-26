@@ -8,8 +8,8 @@ using MissionPlanner.Utilities;
 namespace MissionPlanner.App.Core.ViewModels.Tools;
 
 /// <summary>
-/// One-off vehicle commands from Mission Planner's Ctrl+F screen: force calibrated, arm and take off,
-/// bootloader update, DFU, lock-up test.
+/// One-off vehicle commands from Mission Planner's Ctrl+F screen: reboot, force calibrated, arm and take
+/// off, bootloader update, DFU, lock-up test.
 /// </summary>
 public sealed partial class VehicleCommandsViewModel(AppServices services)
     : ToolPageViewModel("Vehicle commands",
@@ -18,6 +18,25 @@ public sealed partial class VehicleCommandsViewModel(AppServices services)
 {
     [ObservableProperty]
     private decimal _takeoffAltitude = 10;
+
+    /// <summary>Reboots the autopilot after confirming (more strongly when armed), as Config's Reboot does.</summary>
+    [RelayCommand]
+    private async Task RebootAsync()
+    {
+        if (!IsConnected)
+        {
+            Report("Connect to a vehicle first.", true);
+            return;
+        }
+
+        var (title, message) = ConfigScreens.ParamPageViewModel.RebootConfirmText(Services.Session.Cs.armed, 0);
+        if (!await Services.Dialogs.ConfirmAsync(title, message, "Reboot"))
+            return;
+
+        // MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN p1=1; the link usually drops before an ACK comes back
+        await RunAsync("Reboot", (mav, _, _) => mav.doReboot(false, true),
+            "Reboot sent. The link may drop until the autopilot is back.", "The autopilot did not accept the reboot command.");
+    }
 
     [RelayCommand]
     private Task ForceAccelCalibratedAsync() =>

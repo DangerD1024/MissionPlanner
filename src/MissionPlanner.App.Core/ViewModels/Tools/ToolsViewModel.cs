@@ -197,7 +197,7 @@ public sealed partial class ToolsViewModel : MenuScreenViewModel
             Open("Param Restore", "restore parameters from a backup onto the same board", "Parameter restore"),
             Open("FFT", "vibration spectrum from a DataFlash log or a wav file", "FFT"),
             Do("grab threads.txt", "fetch @SYS/threads.txt from the autopilot", a.GrabThreadsCommand),
-            Do("reboot pixhawk", "reboot the autopilot", a.RebootCommand),
+            Do("reboot pixhawk", "reboot the autopilot", c.RebootCommand),
             Open("QNH", "adjust the qnh", BarometerTitle),
             Open("Sequence Swarm", "fly a swarm through a sequence of layouts", "Sequence Swarm"),
             Do("vlc", "display video stream (now through GStreamer)", a.PlayUrlCommand),

@@ -173,7 +173,17 @@ public sealed partial class CompassViewModel : PageViewModel
 
         services.Params.ParamsChanged += (_, _) => Rebuild();
         services.Params.MetadataChanged += (_, _) => Rebuild();
-        services.Session.StateChanged += (_, state) => services.Dispatcher.Post(() => OnLinkState(state));
+        services.Session.StateChanged += (_, state) => services.Dispatcher.Post(() =>
+        {
+            // a new connection starts clean: results of the last link ("Command failed", "link lost") no longer apply
+            if (state == LinkState.Connected && !MagCal.IsRunning && !IsBusy)
+            {
+                Status.Clear();
+                MagStatus.Clear();
+            }
+
+            OnLinkState(state);
+        });
     }
 
     public AppServices Services { get; }

@@ -149,6 +149,11 @@ public class ToolsTests
             var mag = vehicle.Commands.Last(c => c.command == (ushort)MAVLink.MAV_CMD.PREFLIGHT_CALIBRATION);
             Assert.AreEqual((76f, 0f), (mag.param2, mag.param5));
 
+            await vm.RebootCommand.ExecuteAsync(null);
+            Assert.IsFalse(vm.StatusIsError, vm.Status);
+            var reboot = vehicle.Commands.Last(c => c.command == (ushort)MAVLink.MAV_CMD.PREFLIGHT_REBOOT_SHUTDOWN);
+            Assert.AreEqual(1f, reboot.param1, "reboot the autopilot, not into its bootloader");
+
             await vm.UpdateBootloaderCommand.ExecuteAsync(null);
             Assert.AreEqual(290876f, vehicle.Commands.Last(c => c.command == (ushort)MAVLink.MAV_CMD.FLASH_BOOTLOADER).param5);
 

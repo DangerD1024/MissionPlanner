@@ -300,8 +300,24 @@ public sealed partial class AccelCalibrationViewModel : PageViewModel
             Process.Cancel();
             AccelStatus.Set(StatusKind.Error, "The link was lost during the calibration.");
         }
+        else if (state == LinkState.Connected && !IsCalibrating && !IsBusy)
+        {
+            ClearResults();
+        }
 
         RefreshCommands();
+    }
+
+    /// <summary>A new connection starts clean: results of the last link ("rejected", "link lost") no longer apply.</summary>
+    private void ClearResults()
+    {
+        LevelButtonText = "Calibrate Level";
+        SimpleButtonText = "Simple Accel Cal";
+        LevelStatus.Clear();
+        SimpleStatus.Clear();
+        if (IsFinished)
+            Process.Cancel();
+        AccelStatus.Clear();
     }
 
     private void RefreshCommands()
