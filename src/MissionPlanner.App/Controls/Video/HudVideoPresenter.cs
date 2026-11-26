@@ -283,6 +283,19 @@ public static class HudGeometry
         var tilt = video.CameraTilt;
         view.HorizontalFov = video.FpvFov;
         view.CameraTilt = tilt;
+        if (video.TiltServo > 0)
+        {
+            // a servo-driven tilt glides between readings, eased per rendered frame: the ladder takes
+            // the tilt the frame on screen was drawn with, so it stays on that frame's horizon
+            view.TiltAt = video.ServoTiltFollower;
+            if (view.FrameCameraTilt is { } shown)
+                tilt = shown;
+        }
+        else
+        {
+            view.TiltAt = null;
+        }
+
         if (video.FpvFov == null && tilt == 0)
             return null;
         var vfov = video.FpvFov is { } hf && h > 0

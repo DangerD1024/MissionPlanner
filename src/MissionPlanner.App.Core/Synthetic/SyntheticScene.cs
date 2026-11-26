@@ -53,6 +53,13 @@ public sealed class SyntheticView : IFrameSource, IDisposable
     public double CameraTilt { get; set; }
 
     /// <summary>
+    /// First person: when set, the camera tilt for a frame rendered at the given time (seconds on the
+    /// scene's clock), asked on the render thread for every frame, so a tilt that follows a servo can
+    /// glide between its readings at frame rate. NaN falls back to <see cref="CameraTilt"/>.
+    /// </summary>
+    public Func<double, double>? TiltAt { get; set; }
+
+    /// <summary>
     /// Chase: compass direction the camera looks along (it sits behind); NaN follows the vehicle's
     /// heading (smoothly), staying behind it as it turns.
     /// </summary>
@@ -75,14 +82,20 @@ public sealed class SyntheticView : IFrameSource, IDisposable
     /// </summary>
     public (double Roll, double Pitch, double Yaw)? FrameAttitude { get; private set; }
 
-    // attitude of the frame being read back (one behind, like the pixels)
-    private (double, double, double)? _pendingAttitude;
+    /// <summary>First person: the camera tilt the newest frame was drawn with, for the HUD's ladder.</summary>
+    public double? FrameCameraTilt { get; private set; }
 
-    internal void Publish(byte[]? bgra, int w, int h, (double, double, double) attitudeOfThisRender)
+    // attitude and tilt of the frame being read back (one behind, like the pixels)
+    private (double, double, double)? _pendingAttitude;
+    private double? _pendingTilt;
+
+    internal void Publish(byte[]? bgra, int w, int h, (double, double, double) attitudeOfThisRender, double tiltOfThisRender = 0)
     {
-        // the pixels are one frame behind the render (asynchronous readback): so is the attitude
+        // the pixels are one frame behind the render (asynchronous readback): so are the attitude and tilt
         FrameAttitude = _pendingAttitude ?? attitudeOfThisRender;
         _pendingAttitude = attitudeOfThisRender;
+        FrameCameraTilt = _pendingTilt ?? tiltOfThisRender;
+        _pendingTilt = tiltOfThisRender;
         if (bgra == null)
             return; // the first frame is still on its way
         Frames.Write(bgra, w, h, w * 4);
@@ -375,13 +388,16 @@ public sealed class SyntheticScene
             }
 
             SceneRenderer.FrameSetup setup;
+            var tilt = 0.0;
             if (view.Kind == SyntheticViewKind.FirstPerson)
             {
                 // never inside the hill: at least 2 m above the ground
                 var eye = ground is { } gr ? vehicle with { Y = Math.Max(vehicle.Y, (float)gr + 2) } : vehicle;
                 var vfov = view.HorizontalFov is { } hf ? SceneCamera.VerticalFromHorizontal(hf, (double)w / h) : SceneCamera.HudVerticalFov;
+                // a servo-driven tilt is eased here, for this frame's time
+                tilt = view.TiltAt?.Invoke(now) is { } eased && double.IsFinite(eased) ? eased : view.CameraTilt;
                 setup = new SceneRenderer.FrameSetup(
-                    SceneCamera.FirstPerson(eye, p.Roll, p.Pitch, p.Yaw, view.CameraTilt),
+                    SceneCamera.FirstPerson(eye, p.Roll, p.Pitch, p.Yaw, tilt),
                     SceneCamera.Projection(vfov, (float)w / h, 1f, clipDistance, view.CentreDownFraction),
                     eye, fogRange, null, Matrix4x4.Identity);
             }
@@ -413,9 +429,9 @@ public sealed class SyntheticScene
             view.Target.Bind();
             renderer.Draw(setup, patches, w, h);
             if (view.Target.Read())
-                view.Publish(view.Target.Pixels, w, h, (p.Roll, p.Pitch, p.Yaw));
+                view.Publish(view.Target.Pixels, w, h, (p.Roll, p.Pitch, p.Yaw), tilt);
             else
-                view.Publish(null, w, h, (p.Roll, p.Pitch, p.Yaw));
+                view.Publish(null, w, h, (p.Roll, p.Pitch, p.Yaw), tilt);
         }
     }
 

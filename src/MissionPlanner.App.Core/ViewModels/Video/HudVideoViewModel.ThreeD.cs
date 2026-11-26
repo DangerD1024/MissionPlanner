@@ -149,9 +149,68 @@ public sealed partial class HudVideoViewModel
         }
     }
 
-    /// <summary>The camera's upward tilt now, degrees: the fixed one, or the tilt servo's position.</summary>
+    /// <summary>
+    /// The camera's upward tilt, degrees: the fixed one, or the tilt servo's newest reading (the 3D view
+    /// glides to it, see <see cref="ServoTiltAt"/>).
+    /// </summary>
     public double CameraTilt => TiltServo == 0 ? FpvTilt
         : double.IsNaN(_servoTilt) ? -(TiltServoReverse ? TiltServoTo : TiltServoFrom) : _servoTilt;
+
+    /// <summary>Seconds between servo readings assumed until some are measured (the default 2 Hz RC rate).</summary>
+    public const double DefaultServoInterval = 0.5;
+
+    private readonly AngleEasing _tiltEasing = new();
+    private Func<double, double>? _servoTiltAt;
+    private double _lastServoPacket = double.NaN;
+    private double _servoInterval = DefaultServoInterval;
+
+    /// <summary>
+    /// Seconds between the selected vehicle's SERVO_OUTPUT_RAW messages, measured as they arrive (set by
+    /// the RC telemetry rate); a servo-driven tilt glides to each reading over about this long.
+    /// </summary>
+    public double ServoReadingInterval => Volatile.Read(ref _servoInterval);
+
+    /// <summary>
+    /// The servo-driven tilt to draw in a frame rendered at <paramref name="now"/> (seconds on a steady
+    /// clock; any thread, called per frame by the 3D view): eases from the reading on screen to the newest
+    /// one over about <see cref="ServoReadingInterval"/>, never past it. NaN before the first reading.
+    /// </summary>
+    public double ServoTiltAt(double now)
+    {
+        lock (_tiltEasing)
+            return _tiltEasing.At(now, ServoReadingInterval);
+    }
+
+    /// <summary><see cref="ServoTiltAt"/> as one reused delegate, for <see cref="SyntheticView.TiltAt"/>.</summary>
+    public Func<double, double> ServoTiltFollower => _servoTiltAt ??= ServoTiltAt;
+
+    /// <summary>Times the servo readings from the selected vehicle's SERVO_OUTPUT_RAW (reader thread).</summary>
+    private void InitServoTilt()
+    {
+        var mav = Services.Session.Mav;
+        mav.OnPacketReceived += (_, m) =>
+        {
+            if (m.msgid != (uint)MAVLink.MAVLINK_MSG_ID.SERVO_OUTPUT_RAW || m.sysid != mav.MAV.sysid || m.compid != mav.MAV.compid)
+                return;
+            // port 1 carries outputs 17–32, in its own message at the same rate
+            if (m.ToStructure<MAVLink.mavlink_servo_output_raw_t>().port != 0)
+                return;
+            ServoPacketArrived(System.Diagnostics.Stopwatch.GetTimestamp() / (double)System.Diagnostics.Stopwatch.Frequency);
+        };
+    }
+
+    /// <summary>A servo output message arrived at <paramref name="now"/> (seconds): updates <see cref="ServoReadingInterval"/>.</summary>
+    internal void ServoPacketArrived(double now)
+    {
+        var last = _lastServoPacket;
+        _lastServoPacket = now;
+        var dt = now - last;
+        // a gap (link lost, stream off) or a duplicate says nothing about the rate
+        if (double.IsNaN(dt) || dt < 0.001 || dt > 2.5)
+            return;
+        var interval = Volatile.Read(ref _servoInterval);
+        Volatile.Write(ref _servoInterval, interval + (dt - interval) * 0.3);
+    }
 
     /// <summary>Camera angle below the nose line for a servo PWM, degrees (PWM clamped to 1000–2000 µs).</summary>
     public static double ServoTiltAngle(double pwm, double from, double to, bool reverse)
@@ -166,8 +225,9 @@ public sealed partial class HudVideoViewModel
         Enumerable.Range(1, MaxTiltServo).Select(n => typeof(CurrentState).GetProperty($"ch{n}out")).ToArray();
 
     /// <summary>
-    /// Follows the tilt servo from the vehicle's servo outputs; raises <see cref="CameraTilt"/> when it moved.
-    /// Called per frame by the views that draw the 3D camera. No output yet (0 µs) keeps the last angle.
+    /// Follows the tilt servo from the vehicle's servo outputs; raises <see cref="CameraTilt"/> when it moved
+    /// and hands the reading to <see cref="ServoTiltAt"/> to glide to. Called per frame by the views that
+    /// draw the 3D camera. No output yet (0 µs) keeps the last angle.
     /// </summary>
     public void UpdateServoTilt(CurrentState? cs = null)
     {
@@ -181,6 +241,8 @@ public sealed partial class HudVideoViewModel
         if (!double.IsNaN(_servoTilt) && Math.Abs(up - _servoTilt) < 0.1)
             return;
         _servoTilt = up;
+        lock (_tiltEasing)
+            _tiltEasing.SetTarget(up);
         OnPropertyChanged(nameof(CameraTilt));
     }
 
@@ -188,6 +250,9 @@ public sealed partial class HudVideoViewModel
     {
         _servoTilt = double.NaN;
         UpdateServoTilt();
+        // another servo, other ends: shown at once, not glided to (no reading yet: the first one is)
+        lock (_tiltEasing)
+            _tiltEasing.Jump(_servoTilt);
         OnPropertyChanged(nameof(TiltServo));
         OnPropertyChanged(nameof(TiltServoFrom));
         OnPropertyChanged(nameof(TiltServoTo));
@@ -246,7 +311,7 @@ public sealed partial class HudVideoViewModel
     }
 
     /// <summary>Opens the 3D view settings (applied live).</summary>
-    public Task OpenCameraSettingsAsync() => Services.Windows.ShowDialogAsync(new FpvCameraViewModel(this), 640, 700);
+    public Task OpenCameraSettingsAsync() => Services.Windows.ShowDialogAsync(new FpvCameraViewModel(this), 640, 760);
 
     /// <summary>Whether the HUD shows the 3D view now (rather than video or the plain sky and ground).</summary>
     public bool UsesSynthetic => ThreeD || (ThreeDFallback && State != VideoStreamState.Playing);

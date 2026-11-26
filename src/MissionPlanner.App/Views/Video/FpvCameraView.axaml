@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.Video"
+             xmlns:cvm="using:MissionPlanner.App.Core.ViewModels.ConfigScreens"
              xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.Video.FpvCameraView"
              x:DataType="vm:FpvCameraViewModel">
@@ -11,70 +12,87 @@
                  Text="{l:Tr 'Changes show at once on the HUD. The pitch ladder follows the camera, so it stays on the 3D horizon.'}" />
     </StackPanel>
 
-    <StackPanel Grid.Row="1" Spacing="6">
-      <CheckBox IsChecked="{Binding CustomFov}" Content="{l:Tr 'Own field of view (off: match the HUD pitch ladder)'}" />
-      <Grid ColumnDefinitions="180,*,56" IsEnabled="{Binding CustomFov}">
-        <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Field of view (horizontal)'}" />
-        <Slider Grid.Column="1" Minimum="30" Maximum="160" Value="{Binding Fov}" TickFrequency="1" IsSnapToTickEnabled="True" />
-        <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding FovText}" />
-      </Grid>
-      <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Margin="180,0,56,0"
-                 IsEnabled="{Binding CustomFov}" Text="{Binding DiagonalFovText}" />
-      <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,10,0,0">
-        <RadioButton GroupName="tilt" IsChecked="{Binding ManualTilt}" Content="{l:Tr 'Fixed camera tilt'}" />
-        <RadioButton GroupName="tilt" IsChecked="{Binding ServoTilt}" Content="{l:Tr 'Tilt driven by a servo'}" />
-      </StackPanel>
-      <StackPanel Spacing="6" IsVisible="{Binding ServoTilt}">
-        <!-- one row each, labels in the dialog's 180 px column like the sliders -->
-        <Grid ColumnDefinitions="180,140,Auto" RowDefinitions="Auto,Auto,Auto">
-          <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Servo output'}" />
-          <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding ServoNumbers}" SelectedItem="{Binding SelectedServo}">
-            <ComboBox.ItemTemplate>
-              <DataTemplate>
-                <TextBlock Text="{Binding StringFormat='SERVO{0}'}" />
-              </DataTemplate>
-            </ComboBox.ItemTemplate>
-          </ComboBox>
-          <ToggleButton Grid.Column="2" Margin="12,0,0,0" MinWidth="90" HorizontalContentAlignment="Center"
-                        Content="{l:Tr 'Reverse'}" IsChecked="{Binding ServoReverse}"
-                        ToolTip.Tip="{l:Tr 'Swap the ends: 1000 µs gives the To angle and 2000 µs the From angle'}" />
-
-          <TextBlock Grid.Row="1" Classes="muted" VerticalAlignment="Center" Margin="0,8,0,0" Text="{l:Tr 'From (1000 µs)'}" />
-          <NumericUpDown Grid.Row="1" Grid.Column="1" Margin="0,8,0,0" HorizontalAlignment="Stretch"
-                         Minimum="-90" Maximum="90" Increment="1" FormatString="0" Value="{Binding ServoFrom}" />
-          <TextBlock Grid.Row="1" Grid.Column="2" Classes="muted" VerticalAlignment="Center" Margin="12,8,0,0" Text="°" />
-
-          <TextBlock Grid.Row="2" Classes="muted" VerticalAlignment="Center" Margin="0,8,0,0" Text="{l:Tr 'To (2000 µs)'}" />
-          <NumericUpDown Grid.Row="2" Grid.Column="1" Margin="0,8,0,0" HorizontalAlignment="Stretch"
-                         Minimum="-90" Maximum="90" Increment="1" FormatString="0" Value="{Binding ServoTo}" />
-          <TextBlock Grid.Row="2" Grid.Column="2" Classes="muted" VerticalAlignment="Center" Margin="12,8,0,0" Text="°" />
+    <!-- scrolls on a short screen rather than running under the buttons -->
+    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Spacing="6">
+        <CheckBox IsChecked="{Binding CustomFov}" Content="{l:Tr 'Own field of view (off: match the HUD pitch ladder)'}" />
+        <Grid ColumnDefinitions="180,*,56" IsEnabled="{Binding CustomFov}">
+          <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Field of view (horizontal)'}" />
+          <Slider Grid.Column="1" Minimum="30" Maximum="160" Value="{Binding Fov}" TickFrequency="1" IsSnapToTickEnabled="True" />
+          <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding FovText}" />
+        </Grid>
+        <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Margin="180,0,56,0"
+                   IsEnabled="{Binding CustomFov}" Text="{Binding DiagonalFovText}" />
+        <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,10,0,0">
+          <RadioButton GroupName="tilt" IsChecked="{Binding ManualTilt}" Content="{l:Tr 'Fixed camera tilt'}" />
+          <RadioButton GroupName="tilt" IsChecked="{Binding ServoTilt}" Content="{l:Tr 'Tilt driven by a servo'}" />
+        </StackPanel>
+        <StackPanel Spacing="6" IsVisible="{Binding ServoTilt}">
+          <!-- one row each, labels in the dialog's 180 px column like the sliders -->
+          <Grid ColumnDefinitions="180,140,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
+            <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Servo output'}" />
+            <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding ServoNumbers}" SelectedItem="{Binding SelectedServo}">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding StringFormat='SERVO{0}'}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+            <ToggleButton Grid.Column="2" Margin="12,0,0,0" MinWidth="90" HorizontalContentAlignment="Center"
+                          Content="{l:Tr 'Reverse'}" IsChecked="{Binding ServoReverse}"
+                          ToolTip.Tip="{l:Tr 'Swap the ends: 1000 µs gives the To angle and 2000 µs the From angle'}" />
+  
+            <!-- the RC telemetry rate: the same setting as SETTINGS › App Settings › Telemetry rates › RC -->
+            <TextBlock Grid.Row="1" Classes="muted" VerticalAlignment="Center" Margin="0,8,0,0" Text="{l:Tr 'Request rate'}" />
+            <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,8,0,0" HorizontalAlignment="Stretch"
+                      ItemsSource="{Binding ServoRateChoices}" SelectedItem="{Binding ServoRate}"
+                      ToolTip.Tip="{l:Tr 'How often the vehicle sends its servo outputs (SERVO_OUTPUT_RAW, in the RC stream). The camera glides from one reading to the next.'}">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="cvm:RateChoice">
+                  <TextBlock Text="{l:TrBind {Binding Label}}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+  
+            <TextBlock Grid.Row="2" Classes="muted" VerticalAlignment="Center" Margin="0,8,0,0" Text="{l:Tr 'From (1000 µs)'}" />
+            <NumericUpDown Grid.Row="2" Grid.Column="1" Margin="0,8,0,0" HorizontalAlignment="Stretch"
+                           Minimum="-90" Maximum="90" Increment="1" FormatString="0" Value="{Binding ServoFrom}" />
+            <TextBlock Grid.Row="2" Grid.Column="2" Classes="muted" VerticalAlignment="Center" Margin="12,8,0,0" Text="°" />
+  
+            <TextBlock Grid.Row="3" Classes="muted" VerticalAlignment="Center" Margin="0,8,0,0" Text="{l:Tr 'To (2000 µs)'}" />
+            <NumericUpDown Grid.Row="3" Grid.Column="1" Margin="0,8,0,0" HorizontalAlignment="Stretch"
+                           Minimum="-90" Maximum="90" Increment="1" FormatString="0" Value="{Binding ServoTo}" />
+            <TextBlock Grid.Row="3" Grid.Column="2" Classes="muted" VerticalAlignment="Center" Margin="12,8,0,0" Text="°" />
+          </Grid>
+          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                     Text="{l:Tr 'Angles are degrees below the nose line: negative looks up, 0 straight ahead, 90 straight down. In between, the angle follows the servo output linearly.'}" />
+          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                     Text="{l:Tr 'Request rate is the RC row of SETTINGS › App Settings › Telemetry rates.'}" />
+          <TextBlock FontSize="12" TextWrapping="Wrap" Text="{Binding ServoNowText}" />
+        </StackPanel>
+        <Grid ColumnDefinitions="180,*,56" IsVisible="{Binding ManualTilt}">
+          <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Camera tilt (up)'}" />
+          <Slider Grid.Column="1" Minimum="-30" Maximum="70" Value="{Binding Tilt}" TickFrequency="1" IsSnapToTickEnabled="True" />
+          <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding TiltText}" />
+        </Grid>
+        <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"
+                   Text="{l:Tr 'FPV quads usually fly with the camera tilted up 20–40° and a 110–150° lens.'}" />
+        <Grid ColumnDefinitions="180,*,56" Margin="0,16,0,0">
+          <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Drawing distance'}" />
+          <Slider Grid.Column="1" Minimum="2" Maximum="32" Value="{Binding DrawDistanceKm}" TickFrequency="1" IsSnapToTickEnabled="True" />
+          <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding DrawDistanceText}" />
         </Grid>
         <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                   Text="{l:Tr 'Angles are degrees below the nose line: negative looks up, 0 straight ahead, 90 straight down. In between, the angle follows the servo output linearly.'}" />
-        <TextBlock FontSize="12" TextWrapping="Wrap" Text="{Binding ServoNowText}" />
+                   Text="{l:Tr 'Drawing distance applies to the HUD, 3D map and stream.'}" />
+        <Grid ColumnDefinitions="180,*,56" Margin="0,16,0,0">
+          <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Hi-res preload'}" />
+          <Slider Grid.Column="1" Minimum="0.5" Maximum="8" Value="{Binding HighresKm}" TickFrequency="0.5" IsSnapToTickEnabled="True" />
+          <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding HighresText}" />
+        </Grid>
+        <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                   Text="{l:Tr 'Radius around the aircraft preloaded with hi-res map tiles.'}" />
       </StackPanel>
-      <Grid ColumnDefinitions="180,*,56" IsVisible="{Binding ManualTilt}">
-        <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Camera tilt (up)'}" />
-        <Slider Grid.Column="1" Minimum="-30" Maximum="70" Value="{Binding Tilt}" TickFrequency="1" IsSnapToTickEnabled="True" />
-        <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding TiltText}" />
-      </Grid>
-      <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"
-                 Text="{l:Tr 'FPV quads usually fly with the camera tilted up 20–40° and a 110–150° lens.'}" />
-      <Grid ColumnDefinitions="180,*,56" Margin="0,16,0,0">
-        <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Drawing distance'}" />
-        <Slider Grid.Column="1" Minimum="2" Maximum="32" Value="{Binding DrawDistanceKm}" TickFrequency="1" IsSnapToTickEnabled="True" />
-        <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding DrawDistanceText}" />
-      </Grid>
-      <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                 Text="{l:Tr 'Drawing distance applies to the HUD, 3D map and stream.'}" />
-      <Grid ColumnDefinitions="180,*,56" Margin="0,16,0,0">
-        <TextBlock Classes="muted" VerticalAlignment="Center" Text="{l:Tr 'Hi-res preload'}" />
-        <Slider Grid.Column="1" Minimum="0.5" Maximum="8" Value="{Binding HighresKm}" TickFrequency="0.5" IsSnapToTickEnabled="True" />
-        <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding HighresText}" />
-      </Grid>
-      <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                 Text="{l:Tr 'Radius around the aircraft preloaded with hi-res map tiles.'}" />
-    </StackPanel>
+    </ScrollViewer>
 
     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
       <Button Content="{l:Tr 'Reset'}" Command="{Binding ResetCommand}" />

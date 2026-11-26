@@ -39,7 +39,7 @@ public sealed partial class StreamRateSetting : ObservableObject
         Group = group;
         Label = label;
         Detail = detail;
-        _selected = PlannerSettingsViewModel.RateChoices.FirstOrDefault(c => c.Hz == hz) ?? new RateChoice(hz);
+        _selected = PlannerSettings.Choice(hz);
     }
 
     public PlannerSettings.StreamGroup Group { get; }
@@ -103,6 +103,67 @@ public static class PlannerSettings
             default: CurrentState.ratesensorsbackup = hz; break;
         }
     }
+
+    /// <summary>A connected vehicle's rate for the group (what its streams are kept at).</summary>
+    public static int Rate(CurrentState cs, StreamGroup g) => g switch
+    {
+        StreamGroup.Attitude => cs.rateattitude,
+        StreamGroup.Position => cs.rateposition,
+        StreamGroup.Status => cs.ratestatus,
+        StreamGroup.Rc => cs.raterc,
+        _ => cs.ratesensors,
+    };
+
+    /// <summary>The rate shown for the group: the connected vehicle's, else the one new connections start with.</summary>
+    public static int CurrentRate(Session.VehicleSession session, StreamGroup g) =>
+        session.IsConnected ? Rate(session.Cs, g) : StoredRate(g);
+
+    /// <summary>The offered choice for a rate (one of the list when it is there, so a ComboBox selects it).</summary>
+    public static RateChoice Choice(int hz) =>
+        PlannerSettingsViewModel.RateChoices.FirstOrDefault(c => c.Hz == hz) ?? new RateChoice(hz);
+
+    /// <summary>
+    /// Sets a telemetry rate the way SETTINGS › App Settings › Telemetry rates does: saved (with the
+    /// WinForms app's key) as the rate new connections start with, applied to the connected vehicle and
+    /// its streams requested at it, then <see cref="AppServices.StreamRateChanged"/> so every place that
+    /// shows the rate follows. The one path for changing a rate, wherever the control is.
+    /// </summary>
+    public static void SetRate(AppServices services, StreamGroup g, int hz)
+    {
+        Settings.Instance[Key(g)] = hz.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        SetStoredRate(g, hz);
+        try
+        {
+            Settings.Instance.Save();
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("settings save", ex);
+        }
+
+        var session = services.Session;
+        if (session.IsConnected)
+        {
+            var streams = Apply(session.Cs, g, hz);
+            var v = session.Vehicle;
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    foreach (var s in streams)
+                        session.Mav.requestDatastream(s, hz, v.sysid, v.compid);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn("request stream", ex);
+                }
+            });
+        }
+
+        services.OnStreamRateChanged(g);
+    }
+
+    private static readonly ILog Log = LogManager.GetLogger(typeof(PlannerSettings));
 
     /// <summary>Applies the rate to a connected vehicle's state and returns the streams to request.</summary>
     public static MAVLink.MAV_DATA_STREAM[] Apply(CurrentState cs, StreamGroup g, int hz)
@@ -247,15 +308,17 @@ public sealed partial class PlannerSettingsViewModel : PageViewModel
 
         _logDirectory = Settings.Instance.LogDir;
 
-        var cs = services.Session.IsConnected ? services.Session.Cs : null;
+        int Rate(PlannerSettings.StreamGroup g) => PlannerSettings.CurrentRate(services.Session, g);
         Rates =
         [
-            new(this, PlannerSettings.StreamGroup.Attitude, L.N("Attitude"), "ATTITUDE, VFR_HUD (EXTRA1, EXTRA2)", cs?.rateattitude ?? CurrentState.rateattitudebackup),
-            new(this, PlannerSettings.StreamGroup.Position, L.N("Position"), "GLOBAL_POSITION_INT, GPS (POSITION)", cs?.rateposition ?? CurrentState.ratepositionbackup),
-            new(this, PlannerSettings.StreamGroup.Status, L.N("Mode / Status"), "SYS_STATUS, mission (EXTENDED_STATUS)", cs?.ratestatus ?? CurrentState.ratestatusbackup),
-            new(this, PlannerSettings.StreamGroup.Rc, L.N("RC"), "RC_CHANNELS, SERVO_OUTPUT_RAW (RC_CHANNELS)", cs?.raterc ?? CurrentState.ratercbackup),
-            new(this, PlannerSettings.StreamGroup.Sensors, L.N("Sensors"), "raw IMU, extra (EXTRA3, RAW_SENSORS)", cs?.ratesensors ?? CurrentState.ratesensorsbackup),
+            new(this, PlannerSettings.StreamGroup.Attitude, L.N("Attitude"), "ATTITUDE, VFR_HUD (EXTRA1, EXTRA2)", Rate(PlannerSettings.StreamGroup.Attitude)),
+            new(this, PlannerSettings.StreamGroup.Position, L.N("Position"), "GLOBAL_POSITION_INT, GPS (POSITION)", Rate(PlannerSettings.StreamGroup.Position)),
+            new(this, PlannerSettings.StreamGroup.Status, L.N("Mode / Status"), "SYS_STATUS, mission (EXTENDED_STATUS)", Rate(PlannerSettings.StreamGroup.Status)),
+            new(this, PlannerSettings.StreamGroup.Rc, L.N("RC"), "RC_CHANNELS, SERVO_OUTPUT_RAW (RC_CHANNELS)", Rate(PlannerSettings.StreamGroup.Rc)),
+            new(this, PlannerSettings.StreamGroup.Sensors, L.N("Sensors"), "raw IMU, extra (EXTRA3, RAW_SENSORS)", Rate(PlannerSettings.StreamGroup.Sensors)),
         ];
+        // the same rates are offered elsewhere (the 3D view's servo tilt sets the RC one): follow them
+        services.StreamRateChanged += (_, g) => ShowRate(g);
 
         _distanceUnit = Choose(DistanceChoices, Settings.Instance[PlannerSettings.DistanceKey]);
         _altitudeUnit = Choose(DistanceChoices, Settings.Instance[PlannerSettings.AltitudeKey]);
@@ -434,31 +497,30 @@ public sealed partial class PlannerSettingsViewModel : PageViewModel
 
     public IReadOnlyList<StreamRateSetting> Rates { get; }
 
+    private bool _showingRate;
+
     internal void OnRateChanged(StreamRateSetting setting, int hz)
     {
-        if (_loading)
+        if (_loading || _showingRate)
             return;
-        Settings.Instance[PlannerSettings.Key(setting.Group)] = hz.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        PlannerSettings.SetStoredRate(setting.Group, hz);
-        Save();
+        PlannerSettings.SetRate(Services, setting.Group, hz);
+    }
 
-        var session = Services.Session;
-        if (!session.IsConnected)
+    /// <summary>Shows a rate set from elsewhere, without setting it again.</summary>
+    private void ShowRate(PlannerSettings.StreamGroup group)
+    {
+        var row = Rates.FirstOrDefault(r => r.Group == group);
+        if (row == null)
             return;
-        var streams = PlannerSettings.Apply(session.Cs, setting.Group, hz);
-        var v = session.Vehicle;
-        _ = Task.Run(() =>
+        _showingRate = true;
+        try
         {
-            try
-            {
-                foreach (var s in streams)
-                    session.Mav.requestDatastream(s, hz, v.sysid, v.compid);
-            }
-            catch (Exception ex)
-            {
-                Log.Warn("request stream", ex);
-            }
-        });
+            row.Selected = PlannerSettings.Choice(PlannerSettings.CurrentRate(Services.Session, group));
+        }
+        finally
+        {
+            _showingRate = false;
+        }
     }
 
     // ---- units

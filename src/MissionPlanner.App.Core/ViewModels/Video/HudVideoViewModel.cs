@@ -31,6 +31,7 @@ public sealed partial class HudVideoViewModel : ObservableObject, IDisposable
         _threeD = bool.TryParse(store.Get(ThreeDKey), out var on) && on;
         _threeDFallback = bool.TryParse(store.Get(ThreeDFallbackKey), out var fallback) && fallback;
         Synthetic.SyntheticScene.For(services).DrawDistance = DrawDistanceKm * 1000;
+        InitServoTilt();
     }
 
     /// <summary>The app's instance, created (and auto-started if so configured) on first use.</summary>

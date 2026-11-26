@@ -43,6 +43,39 @@ public sealed partial class FpvCameraViewModel : PageViewModel, IDialogPage
     /// <summary>Servo outputs the tilt can follow (1–16).</summary>
     public IReadOnlyList<int> ServoNumbers { get; } = Enumerable.Range(1, HudVideoViewModel.MaxTiltServo).ToArray();
 
+    /// <summary>The rates offered for <see cref="ServoRate"/>: those of SETTINGS › Telemetry rates.</summary>
+    public IReadOnlyList<ConfigScreens.RateChoice> ServoRateChoices => ConfigScreens.PlannerSettingsViewModel.RateChoices;
+
+    private int? _originalServoRate;
+
+    /// <summary>
+    /// How often the vehicle sends its servo outputs: the RC telemetry rate (SERVO_OUTPUT_RAW is in the
+    /// RC_CHANNELS stream), the same setting as SETTINGS › App Settings › Telemetry rates › RC, stored and
+    /// applied to the vehicle the same way.
+    /// </summary>
+    public ConfigScreens.RateChoice ServoRate
+    {
+        get => ConfigScreens.PlannerSettings.Choice(ConfigScreens.PlannerSettings.CurrentRate(_owner.Services.Session, ConfigScreens.PlannerSettings.StreamGroup.Rc));
+        set
+        {
+            if (value == null || value.Hz == ServoRate.Hz)
+                return;
+            _originalServoRate ??= ServoRate.Hz;
+            ConfigScreens.PlannerSettings.SetRate(_owner.Services, ConfigScreens.PlannerSettings.StreamGroup.Rc, value.Hz);
+            OnPropertyChanged();
+        }
+    }
+
+    public override void OnShown() => _owner.Services.StreamRateChanged += OnStreamRateChanged;
+
+    public override void OnHidden() => _owner.Services.StreamRateChanged -= OnStreamRateChanged;
+
+    private void OnStreamRateChanged(object? sender, ConfigScreens.PlannerSettings.StreamGroup group)
+    {
+        if (group == ConfigScreens.PlannerSettings.StreamGroup.Rc)
+            OnPropertyChanged(nameof(ServoRate));
+    }
+
     /// <summary>Off: a fixed tilt (<see cref="Tilt"/>). On: the tilt follows a servo output.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ManualTilt))]
@@ -193,6 +226,8 @@ public sealed partial class FpvCameraViewModel : PageViewModel, IDialogPage
         _owner.TiltServoTo = _originalServoTo;
         _owner.TiltServoReverse = _originalServoReverse;
         _owner.TiltServo = _originalServo;
+        if (_originalServoRate is { } rate)
+            ServoRate = ConfigScreens.PlannerSettings.Choice(rate);
         _owner.DrawDistanceKm = _originalDrawDistance;
         _owner.HighresKm = _originalHighres;
         CloseRequested?.Invoke(this, false);
