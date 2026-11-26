@@ -29,6 +29,7 @@
     <Compile Include="..\MissionPlanner.App\Controls\MapView.cs" Link="Shared\MapView.cs" />
     <Compile Include="..\MissionPlanner.App\Controls\PoiLayer.cs" Link="Shared\PoiLayer.cs" />
     <Compile Include="..\MissionPlanner.App\Controls\FlightData\FlightMapLayers.cs" Link="Shared\FlightMapLayers.cs" />
+    <Compile Include="..\MissionPlanner.App\Controls\FlightData\MapMotionPump.cs" Link="Shared\MapMotionPump.cs" />
     <Compile Include="..\MissionPlanner.App\Controls\FlightPlan\PlanLayers.cs" Link="Shared\PlanLayers.cs" />
     <Compile Include="..\MissionPlanner.App\Controls\SetupScreens\RcBar.cs" Link="Shared\RcBar.cs" />
     <Compile Include="..\MissionPlanner.App\Controls\SetupScreens\VehicleOrientationGlyph.cs" Link="Shared\VehicleOrientationGlyph.cs" />

@@ -393,6 +393,8 @@ public sealed partial class FlightDataViewModel : PageViewModel
                 tile.Update(cs);
         }
 
+        FeedVehicleMotion(s, cs);
+        AdvanceVehicleMotion();
         if (tick % MapEvery == 1)
             UpdateMap(s.Vehicle, cs);
 
@@ -423,6 +425,8 @@ public sealed partial class FlightDataViewModel : PageViewModel
     {
         _cs = cs;
         MapModel.Track.Clear();
+        // another vehicle: no gliding over from where the last one was
+        ClearVehicleMotion();
         _lastGpsStatus = -1;
         RefreshModes(cs);
     }

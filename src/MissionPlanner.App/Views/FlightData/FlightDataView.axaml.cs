@@ -19,6 +19,7 @@ public sealed partial class FlightDataView : UserControl
 
     private FlightDataViewModel? _vm;
     private long _mapVersion = -1;
+    private readonly MapMotionPump _motionPump;
     private PointLatLng _menuAt;
     private readonly MenuFlyout _menu;
     private readonly MenuItem _flyTo;
@@ -34,6 +35,7 @@ public sealed partial class FlightDataView : UserControl
     public FlightDataView()
     {
         InitializeComponent();
+        _motionPump = new MapMotionPump(Map, () => _vm, RedrawMap);
 
         _flyTo = Item("Fly To Here", () => _vm?.FlyToHereAsync(_menuAt.Lat, _menuAt.Lng));
         _flyToAlt = Item("Fly To Here Alt", () => _vm?.FlyToHereAltAsync(_menuAt.Lat, _menuAt.Lng));
@@ -276,7 +278,14 @@ public sealed partial class FlightDataView : UserControl
         if (HudControl.IsVisible)
             HudControl.Refresh();
 
-        // the view-model moves the version at most 10 times a second
+        RedrawMap();
+        // a moving vehicle is moved on every display frame from here on, until it stops
+        _motionPump.Kick();
+    }
+
+    /// <summary>Redraws the map if the view-model changed what it shows.</summary>
+    private void RedrawMap()
+    {
         var version = _vm?.MapModel.Version ?? -1;
         if (version != _mapVersion)
         {

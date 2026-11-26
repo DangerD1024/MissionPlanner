@@ -29,20 +29,48 @@ public readonly record struct VehiclePose(
     public double GroundSpeed => Math.Sqrt(VelNorth * VelNorth + VelEast * VelEast);
 }
 
+/// <summary>How a <see cref="PoseTracker"/> predicts and eases; the defaults are the 3D view's.</summary>
+public sealed record PoseSmoothing
+{
+    /// <summary>Time constant of the ease from what was shown to the prediction, position (s).</summary>
+    public double PositionBlend { get; init; } = 0.12;
+
+    /// <summary>Time constant of the attitude ease (s).</summary>
+    public double AttitudeBlend { get; init; } = 0.05;
+
+    /// <summary>A new position further than this from the last one is a jump: shown at once, not glided to (m).</summary>
+    public double ResetDistance { get; init; } = 250;
+
+    /// <summary>
+    /// Measures <see cref="ResetDistance"/> from where the last position was predicted to be by now
+    /// rather than from the last position itself, so a fast vehicle after a short gap is no jump.
+    /// </summary>
+    public bool ResetFromPrediction { get; init; }
+
+    /// <summary>Longest extrapolation of a position by its velocity (s).</summary>
+    public double MaxPredictPosition { get; init; } = 0.5;
+
+    /// <summary>Longest extrapolation of the attitude by its rate (s).</summary>
+    public double MaxPredictAttitude { get; init; } = 0.12;
+
+    /// <summary>
+    /// After this long without a new sample the stream has stopped (link lost, log paused): the last
+    /// sample is shown where it was, not moved on (s). Infinity keeps the extrapolated pose.
+    /// </summary>
+    public double StaleAfter { get; init; } = double.PositiveInfinity;
+}
+
 /// <summary>
 /// Smooths telemetry for a 60 fps view (as ArduDeck's synthetic vision does). Attitude and position
 /// arrive as separate messages at their own rates, so each is tracked on its own: the newest sample
 /// is extrapolated forward (position by velocity, attitude by its last rate of change, for at most
 /// 0.12 s) and what is shown eases towards it over a short time, so the picture neither jumps nor
-/// lags. A jump of more than 250 m (a new vehicle, a GPS glitch) starts over.
+/// lags. A jump of more than 250 m (a new vehicle, a GPS glitch) starts over. Those times and
+/// distances are the default <see cref="PoseSmoothing"/>; the 2D map uses its own.
 /// </summary>
-public sealed class PoseTracker
+public sealed class PoseTracker(PoseSmoothing? smoothing = null)
 {
-    private const double PositionBlend = 0.12; // s
-    private const double AttitudeBlend = 0.05; // s
-    private const double ResetDistance = 250; // m
-    private const double MaxPredictPosition = 0.5; // s
-    private const double MaxPredictAttitude = 0.12; // s
+    private readonly PoseSmoothing _o = smoothing ?? new PoseSmoothing();
 
     private readonly object _gate = new();
 
@@ -131,7 +159,14 @@ public sealed class PoseTracker
         if (_last is { HasPosition: true } prev && pose.HasPosition)
         {
             var (e, n) = new LocalFrame(prev.Lat, prev.Lng).ToLocal(pose.Lat, pose.Lng);
-            if (Math.Sqrt(e * e + n * n) > ResetDistance)
+            if (_o.ResetFromPrediction && !double.IsNaN(_posTime))
+            {
+                var ahead = Math.Clamp(time - _posTime, 0, _o.MaxPredictPosition);
+                e -= prev.VelEast * ahead;
+                n -= prev.VelNorth * ahead;
+            }
+
+            if (Math.Sqrt(e * e + n * n) > _o.ResetDistance)
                 _shown = null; // somewhere else: no gliding across
         }
         else if (_last?.HasPosition != pose.HasPosition)
@@ -160,8 +195,8 @@ public sealed class PoseTracker
             if (_last is not { } last)
                 return null;
 
-            var aheadPos = double.IsNaN(_posTime) ? 0 : Math.Clamp(time - _posTime, 0, MaxPredictPosition);
-            var aheadAtt = double.IsNaN(_attTime) ? 0 : Math.Clamp(time - _attTime, 0, MaxPredictAttitude);
+            var aheadPos = Ahead(time, _posTime, _o.MaxPredictPosition);
+            var aheadAtt = Ahead(time, _attTime, _o.MaxPredictAttitude);
             var (lat, lng) = new LocalFrame(last.Lat, last.Lng).ToGeo(last.VelEast * aheadPos, last.VelNorth * aheadPos);
             var predicted = last with
             {
@@ -176,8 +211,8 @@ public sealed class PoseTracker
             if (_shown is { } shown && time > _shownTime)
             {
                 var dt = time - _shownTime;
-                var p = 1 - Math.Exp(-dt / PositionBlend);
-                var a = 1 - Math.Exp(-dt / AttitudeBlend);
+                var p = 1 - Math.Exp(-dt / _o.PositionBlend);
+                var a = 1 - Math.Exp(-dt / _o.AttitudeBlend);
                 predicted = predicted with
                 {
                     Lat = shown.Lat + (predicted.Lat - shown.Lat) * p,
@@ -193,6 +228,14 @@ public sealed class PoseTracker
             _shownTime = time;
             return predicted;
         }
+    }
+
+    /// <summary>How far ahead of a sample taken at <paramref name="sampleTime"/> to extrapolate (s).</summary>
+    private double Ahead(double time, double sampleTime, double max)
+    {
+        if (double.IsNaN(sampleTime) || time - sampleTime > _o.StaleAfter)
+            return 0;
+        return Math.Clamp(time - sampleTime, 0, max);
     }
 
     public void Reset()

@@ -235,13 +235,15 @@ public sealed class MissionOverlay
 public readonly record struct PlanItem(MAVLink.MAV_CMD Command, float P1, double Lat, double Lng);
 
 /// <summary>
-/// Everything the Flight Data map layers draw, refreshed by the view-model at up to 10 Hz.
+/// Everything the Flight Data map layers draw, refreshed by the view-model at up to 10 Hz, the
+/// vehicle itself up to every display frame while it moves (<see cref="MapVehicleMotion"/>).
 /// Plain fields (UI thread only); <see cref="Version"/> moves when anything changed.
 /// </summary>
 public sealed class FlightMapModel
 {
     public long Version;
 
+    /// <summary>Where the vehicle is drawn: between reports, moved on by its velocity and eased.</summary>
     public bool HasPosition;
     public double Lat;
     public double Lng;
@@ -264,6 +266,7 @@ public sealed class FlightMapModel
     public double GuidedLng;
     public double GuidedAlt;
 
+    /// <summary>The reported positions only (the drawn vehicle runs a little ahead of the newest).</summary>
     public TrackBuffer Track { get; } = new();
 
     public MissionOverlay Mission = MissionOverlay.Empty;
