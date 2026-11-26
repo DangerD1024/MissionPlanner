@@ -1,0 +1,26 @@
+<Project>
+  <!--
+    dfu-util for STM32 DFU flashing (SETUP > Install Firmware > Install via DFU): the build for the
+    target runtime goes to Tools/dfu-util/ in the output and publish folders, with its licences.
+    `dotnet publish -r <rid>` takes that runtime's folder; a build without a runtime takes this
+    machine's. Imported by MissionPlanner.App and by MissionPlanner.App.Tests. See README.txt.
+  -->
+  <PropertyGroup>
+    <MpDfuUtilRid>$(RuntimeIdentifier)</MpDfuUtilRid>
+    <MpDfuUtilRid Condition="'$(MpDfuUtilRid)' == ''">$(NETCoreSdkPortableRuntimeIdentifier)</MpDfuUtilRid>
+    <MpDfuUtilFolder Condition="'$(MpDfuUtilRid)' == 'linux-x64'">linux-x64</MpDfuUtilFolder>
+    <MpDfuUtilFolder Condition="'$(MpDfuUtilRid)' == 'linux-arm64'">linux-arm64</MpDfuUtilFolder>
+    <!-- Windows on Arm runs the x64 build emulated -->
+    <MpDfuUtilFolder Condition="'$(MpDfuUtilRid)' == 'win-x64' or '$(MpDfuUtilRid)' == 'win-arm64'">win-x64</MpDfuUtilFolder>
+    <MpDfuUtilFolder Condition="'$(MpDfuUtilRid)' == 'win-x86'">win-x86</MpDfuUtilFolder>
+    <!-- one Intel build for both Macs; Apple Silicon runs it under Rosetta 2 (a native dfu-util on PATH is preferred there) -->
+    <MpDfuUtilFolder Condition="'$(MpDfuUtilRid)' == 'osx-x64' or '$(MpDfuUtilRid)' == 'osx-arm64'">osx-x64</MpDfuUtilFolder>
+    <MpDfuUtilSource>$(MSBuildThisFileDirectory)</MpDfuUtilSource>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(MpDfuUtilFolder)' != ''">
+    <Content Include="$(MpDfuUtilSource)$(MpDfuUtilFolder)\*;$(MpDfuUtilSource)README.txt;$(MpDfuUtilSource)COPYING;$(MpDfuUtilSource)COPYING.libusb"
+             Link="Tools\dfu-util\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+</Project>

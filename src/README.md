@@ -14,7 +14,7 @@ left menus on SETUP and CONFIG (pages appear only when they apply to the connect
 |---|---|
 | DATA | HUD with video (right-click: RTSP, UDP H.264/H.265, MPEG-TS, MJPEG or a GStreamer pipeline); tabs Quick (6 configurable values), PreFlight, Gauges, Servo/Relay, Aux Function, Payload, Transponder, Actions (mode, arm/disarm, Auto/Loiter/RTL, set WP, change alt/speed, Do Action), Messages, Status, Telemetry Logs (tlog playback), DataFlash Logs (download window, log browser with graphs and GPS track); map with vehicle, track, mission/fence/rally, heading lines, Fly To Here, Set Home Here; live tuning graph |
 | PLAN | Mission / fence / rally editor: map editing (click, drag, insert, polygon tools), waypoint grid with per-command headers from `mavcmd.xml`, home, file load/save (QGC WPL), read/write to the vehicle, Survey (Grid) dialog |
-| SETUP | Install Firmware (manifest, board detection, bootloader upload), Frame Type, Accel / Compass / Radio calibration (optional QGroundControl-style channel mapping), Servo Output (with a Motor layout tab: frame type, motor order wizard, motor direction, reversed-direction switch), Serial Ports, ESC Calibration, Flight Modes, FailSafe, Battery Monitor, Motor Test, Rangefinder, Airspeed, Optical Flow, OSD, Mount, Parachute, CompassMot, ADSB, HW ID, Initial Parameters, RTK/GPS Inject, Joystick, SiK Radio, DroneCAN, Terminal |
+| SETUP | Install Firmware (manifest, board detection, bootloader upload; STM32 DFU flashing of the bootloader + firmware .hex with the bundled dfu-util for boards running iNav, Betaflight or nothing), Frame Type, Accel / Compass / Radio calibration (optional QGroundControl-style channel mapping), Servo Output (with a Motor layout tab: frame type, motor order wizard, motor direction, reversed-direction switch), Serial Ports, ESC Calibration, Flight Modes, FailSafe, Battery Monitor, Motor Test, Rangefinder, Airspeed, Optical Flow, OSD, Mount, Parachute, CompassMot, ADSB, HW ID, Initial Parameters, RTK/GPS Inject, Joystick, SiK Radio, DroneCAN, Terminal |
 | CONFIG | Basic / Extended Tuning (Mission Planner layouts per vehicle), Standard / Advanced Params, Full Parameter List (value lists, bitmask editor, compare, file load/save, reboot), Full Parameter Tree, User Params, MAVFtp browser, MAVLink Inspector |
 | SETTINGS | App Settings: theme (Dark, Mission Planner, Light, High Contrast, Midnight), map, logs, parameter docs, telemetry rates, units |
 | HELP | Version, check for updates (also at startup: a banner offers the new installer, downloads it and starts it), data and log folders, Discuss forum thread, documentation, bug reports; on Linux: Allow USB access (serial group, DFU and ModemManager udev rules, through the password prompt) and Add to applications menu |
@@ -85,6 +85,17 @@ emulator, give it QEMU's FTDI chip wired to SITL's serial0:
 `-qemu -chardev socket,id=s,host=127.0.0.1,port=5760,reconnect=2 -device qemu-xhci,id=x -device usb-serial,bus=x.0,chardev=s`
 (started with `-writable-system`, after pushing a `android.hardware.usb.host` feature file to
 `/system/etc/permissions`, since the emulator image has no USB host service otherwise).
+
+## Bundled tools
+
+`src/MissionPlanner.App/Tools/dfu-util/` holds dfu-util 0.11 (GPL-2.0-or-later) with libusb
+(LGPL-2.1-or-later) for linux-x64, linux-arm64, win-x64, win-x86 and macOS (Intel build, Rosetta 2 on
+Apple Silicon). `Tools/dfu-util/dfu-util.targets` copies the build for the target runtime
+(`dotnet publish -r <rid>`, or this machine's for a plain build) to `Tools/dfu-util/` in the output, with its
+licences; `README.txt` there lists where each binary comes from and its checksum. Install Firmware runs it
+to flash boards in STM32 DFU mode (bundled copy first, then PATH; on Apple Silicon a native one from PATH or
+Homebrew first). Windows needs the WinUSB driver for "STM32 BOOTLOADER" (Zadig); Linux needs the udev rule from
+HELP › Allow USB access.
 
 ## Data and settings
 

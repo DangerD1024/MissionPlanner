@@ -24,4 +24,7 @@
     <ProjectReference Include="..\MissionPlanner.App.Core\MissionPlanner.App.Core.csproj" />
   </ItemGroup>
 
+  <!-- the bundled dfu-util, as the app ships it, so a test can check it lands in an output folder and runs -->
+  <Import Project="..\MissionPlanner.App\Tools\dfu-util\dfu-util.targets" />
+
 </Project>

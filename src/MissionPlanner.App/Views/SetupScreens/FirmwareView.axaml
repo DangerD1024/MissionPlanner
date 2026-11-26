@@ -189,11 +189,14 @@
               </DataGrid>
             </Border>
 
-            <Grid ColumnDefinitions="*,Auto,Auto">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto">
               <TextBlock Classes="muted" FontSize="12" Text="{l:TrBind {Binding ResultText}}" VerticalAlignment="Center" TextWrapping="Wrap" />
               <Button Grid.Column="1" Content="{l:Tr 'Clear filters'}" Margin="8,0,0,0"
                       Command="{Binding $parent[UserControl].((vm:FirmwareViewModel)DataContext).ClearOptionFiltersCommand}" />
-              <Button Grid.Column="2" Classes="accent" Content="{l:Tr 'Install selected'}" Margin="8,0,0,0"
+              <Button Grid.Column="2" Content="{l:Tr 'Install via DFU (hex)'}" Margin="8,0,0,0"
+                      Command="{Binding $parent[UserControl].((vm:FirmwareViewModel)DataContext).InstallSelectedViaDfuCommand}"
+                      ToolTip.Tip="{l:Tr 'For a board without ArduPilot\'s bootloader (iNav, Betaflight, blank): downloads the bootloader + firmware .hex of the selected row and flashes it to the board in STM32 DFU mode.'}" />
+              <Button Grid.Column="3" Classes="accent" Content="{l:Tr 'Install selected'}" Margin="8,0,0,0"
                       Command="{Binding $parent[UserControl].((vm:FirmwareViewModel)DataContext).InstallSelectedOptionCommand}" />
             </Grid>
           </StackPanel>
@@ -202,7 +205,7 @@
     </ScrollViewer>
 
     <!-- right: boards and progress -->
-    <Grid Grid.Column="1" Margin="20,0,0,0" RowDefinitions="Auto,14,*">
+    <Grid Grid.Column="1" Margin="20,0,0,0" RowDefinitions="Auto,14,Auto,14,*">
       <Border Classes="card">
         <StackPanel Spacing="8">
           <Grid ColumnDefinitions="*,Auto">
@@ -242,7 +245,33 @@
         </StackPanel>
       </Border>
 
+      <!-- boards in STM32 DFU mode (iNav, Betaflight, blank boards), flashed with dfu-util -->
       <Border Grid.Row="2" Classes="card">
+        <StackPanel Spacing="6">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Classes="caption" Text="{l:Tr 'STM32 DFU MODE'}" VerticalAlignment="Center" />
+            <Button Grid.Column="1" Padding="8,4" Content="{l:Tr 'Check'}" Command="{Binding CheckDfuCommand}"
+                    ToolTip.Tip="{l:Tr 'Look for a board in DFU mode (on Windows and macOS this runs dfu-util -l)'}" />
+          </Grid>
+          <TextBlock Text="{l:TrBind {Binding DfuStatusText}}" TextWrapping="Wrap" FontSize="12" FontWeight="SemiBold"
+                     Foreground="{DynamicResource Accent}" IsVisible="{Binding HasDfuDevice}" />
+          <TextBlock Text="{l:TrBind {Binding DfuStatusText}}" TextWrapping="Wrap" FontSize="12" Classes="muted"
+                     IsVisible="{Binding !HasDfuDevice}" />
+          <TextBlock FontSize="12" TextWrapping="Wrap"
+                     Text="{l:Tr 'A board without ArduPilot\'s bootloader (iNav, Betaflight, blank) is flashed in DFU mode: All options › Install via DFU (hex), or a .hex / .bin in Load custom firmware.'}" />
+          <StackPanel Spacing="1">
+            <TextBlock Classes="muted" FontSize="11" FontWeight="SemiBold" Text="{l:Tr 'To enter DFU mode:'}" />
+            <TextBlock Classes="muted" FontSize="11" TextWrapping="Wrap" Margin="8,0,0,0" Text="{l:Tr 'Hold the BOOT button while plugging in USB'}" />
+            <TextBlock Classes="muted" FontSize="11" TextWrapping="Wrap" Margin="8,0,0,0" Text="{l:Tr 'iNav CLI: dfu'}" />
+            <TextBlock Classes="muted" FontSize="11" TextWrapping="Wrap" Margin="8,0,0,0" Text="{l:Tr 'Betaflight CLI: bl'}" />
+            <TextBlock Classes="muted" FontSize="11" TextWrapping="Wrap" Margin="8,0,0,0" Text="{l:Tr 'ArduPilot: TOOLS › Vehicle commands › Reboot to DFU'}" />
+          </StackPanel>
+          <TextBlock Classes="muted" FontSize="11" Text="{Binding DfuToolText}" TextTrimming="CharacterEllipsis"
+                     ToolTip.Tip="{Binding DfuToolText}" />
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="4" Classes="card">
         <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" >
           <TextBlock Classes="caption" Text="{l:Tr 'PROGRESS'}" />
           <TextBlock Grid.Row="1" Text="{l:TrBind {Binding StatusText}}" TextWrapping="Wrap" Margin="0,8,0,8" />
