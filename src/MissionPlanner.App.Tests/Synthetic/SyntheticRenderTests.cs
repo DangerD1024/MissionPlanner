@@ -115,6 +115,39 @@ public class SyntheticRenderTests
 
     [TestMethod]
     [Timeout(60000, CooperativeCancellation = true)]
+    public void AServoDrivenTiltIsAskedForEveryFrameAndKeptWithTheFrame()
+    {
+        // the tilt comes from TiltAt (eased per frame) rather than CameraTilt; NaN falls back to CameraTilt
+        SyntheticView? seen = null;
+        var asked = 0;
+        var p = Render(Scene(), SyntheticViewKind.FirstPerson, Level(), v =>
+        {
+            seen = v;
+            v.HorizontalFov = 120;
+            v.CameraTilt = -40;
+            v.TiltAt = _ =>
+            {
+                Interlocked.Increment(ref asked);
+                return 20;
+            };
+        });
+        var vfov = SceneCamera.VerticalFromHorizontal(120, (double)W / H);
+        var expected = H / 2.0 + H / 2.0 / Math.Tan(vfov / 2) * Math.Tan(20 * Math.PI / 180);
+        Assert.AreEqual(expected, Horizon(p, W / 2), 4, "drawn at the eased tilt");
+        Assert.IsTrue(asked >= 12, $"asked {asked} times for 12 frames");
+        Assert.AreEqual(20, seen!.FrameCameraTilt, "the frame says which tilt it was drawn with (for the HUD ladder)");
+
+        var fallback = Render(Scene(), SyntheticViewKind.FirstPerson, Level(), v =>
+        {
+            v.HorizontalFov = 120;
+            v.CameraTilt = 20;
+            v.TiltAt = _ => double.NaN;
+        });
+        Assert.AreEqual(expected, Horizon(fallback, W / 2), 4, "no reading yet: CameraTilt");
+    }
+
+    [TestMethod]
+    [Timeout(60000, CooperativeCancellation = true)]
     public void RollTiltsTheHorizon()
     {
         var p = Render(Scene(), SyntheticViewKind.FirstPerson, Level(roll: 30));

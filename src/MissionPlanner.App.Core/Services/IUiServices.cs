@@ -135,6 +135,15 @@ public sealed class AppServices
     /// <summary>Shows the screen and opens the page with this menu title on it.</summary>
     public void RequestMenuPage(ViewModels.Screen screen, string title) => MenuPageRequested?.Invoke(this, (screen, title));
 
+    /// <summary>
+    /// Raised (on the caller's thread) when a telemetry stream rate was set through
+    /// <see cref="ViewModels.ConfigScreens.PlannerSettings.SetRate"/>, so every place that shows it follows.
+    /// </summary>
+    public event EventHandler<ViewModels.ConfigScreens.PlannerSettings.StreamGroup>? StreamRateChanged;
+
+    internal void OnStreamRateChanged(ViewModels.ConfigScreens.PlannerSettings.StreamGroup group) =>
+        StreamRateChanged?.Invoke(this, group);
+
     /// <summary>Raised by <see cref="Notify"/>; the shell shows it as a toast.</summary>
     public event EventHandler<Notification>? Notified;
 
