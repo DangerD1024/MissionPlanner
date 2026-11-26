@@ -65,7 +65,7 @@ public class UpdateTests
     {
         Assert.AreEqual("win-x64.msi", UpdateCheck.AssetSuffix(OSPlatform.Windows, Architecture.X64));
         Assert.AreEqual("linux-arm64.tar.gz", UpdateCheck.AssetSuffix(OSPlatform.Linux, Architecture.Arm64));
-        Assert.IsNull(UpdateCheck.AssetSuffix(OSPlatform.OSX, Architecture.Arm64));
+        Assert.AreEqual("osx-arm64.dmg", UpdateCheck.AssetSuffix(OSPlatform.OSX, Architecture.Arm64));
 
         var win = UpdateCheck.Parse(ReleaseJson, "win-x64.msi")!;
         Assert.AreEqual("3.0.5b", win.Version);

@@ -94,7 +94,7 @@ public sealed class DfuUtilLocator
     /// <summary>The bundled dfu-util, if this build of the app has one.</summary>
     public DfuUtilTool? Bundled()
     {
-        var path = Path.Combine(BundledDirectory, ExecutableName);
+        var path = Join(BundledDirectory, ExecutableName);
         if (!_fileExists(path))
             return null;
         _prepare?.Invoke(path);
@@ -105,7 +105,7 @@ public sealed class DfuUtilLocator
             // the Intel build looks for /usr/local/opt/libusb/lib/libusb-1.0.0.dylib; dyld then tries the fallback path
             env["DYLD_FALLBACK_LIBRARY_PATH"] = Prepend(BundledDirectory, _environment("DYLD_FALLBACK_LIBRARY_PATH") ?? "/usr/local/lib:/usr/lib");
         }
-        else if (Os == HostOs.Linux && _fileExists(Path.Combine(BundledDirectory, "libusb-1.0.so.0")))
+        else if (Os == HostOs.Linux && _fileExists(Join(BundledDirectory, "libusb-1.0.so.0")))
         {
             // the arm64 build from Debian is linked against libusb-1.0.so.0, shipped beside it
             env["LD_LIBRARY_PATH"] = Prepend(BundledDirectory, _environment("LD_LIBRARY_PATH"));
@@ -124,17 +124,25 @@ public sealed class DfuUtilLocator
             dirs.AddRange(["/usr/local/bin", "/usr/bin"]);
 
         var seen = new HashSet<string>(Os == HostOs.Windows ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
-        var bundledDir = Path.TrimEndingDirectorySeparator(BundledDirectory);
+        var bundledDir = TrimEnd(BundledDirectory);
         foreach (var dir in dirs)
         {
             var d = dir.Trim('"');
-            if (d.Length == 0 || string.Equals(Path.TrimEndingDirectorySeparator(d), bundledDir, StringComparison.Ordinal))
+            if (d.Length == 0 || string.Equals(TrimEnd(d), bundledDir, StringComparison.Ordinal))
                 continue;
-            var path = Path.Combine(d, ExecutableName);
+            var path = Join(d, ExecutableName);
             if (seen.Add(path) && _fileExists(path))
                 yield return new DfuUtilTool(path, false, new Dictionary<string, string>());
         }
     }
+
+    // paths of the OS being located for (the same as the host in the app; any in tests), not the host's separator
+    private char Separator => Os == HostOs.Windows ? '\\' : '/';
+
+    private string Join(string dir, string name) =>
+        dir.Length == 0 ? name : dir.TrimEnd('/', Separator) + Separator + name;
+
+    private string TrimEnd(string dir) => dir.Length > 1 ? dir.TrimEnd('/', Separator) : dir;
 
     private static string Prepend(string dir, string? existing) => string.IsNullOrEmpty(existing) ? dir : dir + ":" + existing;
 

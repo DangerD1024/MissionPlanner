@@ -72,6 +72,12 @@ codesign --force --sign - "$dfu/dfu-util"
 codesign --force --deep --sign - "$app"
 codesign --verify --deep "$app"
 
+# the in-place update package (HELP > updates): the signed bundle, zipped with ditto so permissions survive
+upd="bin/MissionPlanner-$version-$rid-update.zip"
+rm -f "$upd"
+ditto -c -k --keepParent "$app" "$upd"
+echo "Built $root/$upd ($(du -h "$upd" | cut -f1))"
+
 # the disk image: the app and a link to drag it onto
 img="$stage/image"
 mkdir -p "$img"

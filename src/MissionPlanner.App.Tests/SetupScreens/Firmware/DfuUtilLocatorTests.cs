@@ -52,8 +52,9 @@ public class DfuUtilLocatorTests
     public void WindowsLooksForDfuUtilExe()
     {
         const string dir = @"C:\Program Files\Mission Planner 3\Tools\dfu-util";
-        var bundled = Path.Combine(dir, "dfu-util.exe");
-        var onPath = Path.Combine(@"D:\tools", "dfu-util.exe");
+        // Windows paths whatever the host: the locator joins with the separator of the OS it locates for
+        var bundled = dir + @"\dfu-util.exe";
+        var onPath = @"D:\tools\dfu-util.exe";
         var l = Locator(HostOs.Windows, Architecture.X64, dir, @"C:\Windows\system32;""D:\tools"";", [bundled, onPath]);
 
         Assert.AreEqual("dfu-util.exe", l.ExecutableName);

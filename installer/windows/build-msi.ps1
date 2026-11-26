@@ -152,6 +152,21 @@ finally { Pop-Location }
 
 Write-Host "Built $msi ($([math]::Round((Get-Item $msi).Length / 1MB, 1)) MB)"
 
+# the in-place update package (HELP > updates copies it over the installed files, no installer): the publish
+# folder as installed, without debug symbols
+$upd = Join-Path $root "bin\MissionPlanner-$display-$Runtime-update.zip"
+if (Test-Path $upd) { Remove-Item -Force $upd }
+Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
+$zip = [System.IO.Compression.ZipFile]::Open($upd, [System.IO.Compression.ZipArchiveMode]::Create)
+try {
+    Get-ChildItem $publish -Recurse -File | Where-Object { $_.Extension -ne ".pdb" } | ForEach-Object {
+        $rel = $_.FullName.Substring($publish.Length).TrimStart([char]92).Replace([string][char]92, '/')
+        [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $_.FullName, $rel, [System.IO.Compression.CompressionLevel]::Optimal) | Out-Null
+    }
+}
+finally { $zip.Dispose() }
+Write-Host "Built $upd ($([math]::Round((Get-Item $upd).Length / 1MB, 1)) MB)"
+
 # the same file without the version, for the fixed .../releases/latest/download/ link: attach both to the release
 $latest = Join-Path $root "bin\latest"
 New-Item -ItemType Directory -Force $latest | Out-Null

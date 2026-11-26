@@ -271,6 +271,8 @@ public class DfuUtilTests
     [TestMethod]
     public void SysfsScanFindsOnlyTheStmBootloader()
     {
+        if (OperatingSystem.IsWindows())
+            Assert.Inconclusive("sysfs is Linux; its device folder names (1-4:1.0) cannot be created on Windows");
         var root = Path.Combine(TestEnvironment.DataRoot, "sysfs-" + Guid.NewGuid().ToString("N"));
         void Device(string name, params (string File, string Value)[] attrs)
         {

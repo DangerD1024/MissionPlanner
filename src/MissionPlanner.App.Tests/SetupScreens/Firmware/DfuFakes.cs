@@ -112,7 +112,7 @@ internal static class DfuTestSupport
 {
     public const string AppDir = "/opt/mp/Tools/dfu-util";
 
-    public static string BundledLinux => Path.Combine(AppDir, "dfu-util");
+    public static string BundledLinux => AppDir + "/dfu-util";
 
     /// <summary>A Linux x64 machine with the bundled dfu-util and nothing on PATH.</summary>
     public static DfuUtilLocator LinuxLocator(params string[] alsoExisting) =>

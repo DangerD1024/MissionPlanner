@@ -252,7 +252,8 @@ public class FlightDataViewModelTests
         cs.vx = 10; // m/s north
         vm.Tick();
         vm.Tick();
-        Assert.AreEqual(-35.0, vm.MapModel.Lat, 1e-9);
+        // it starts at the report; the glide already moves it on by velocity × the milliseconds between the ticks
+        Assert.AreEqual(-35.0, vm.MapModel.Lat, 1e-5);
         Assert.AreEqual(1, vm.MapModel.Track.Count);
 
         var watch = System.Diagnostics.Stopwatch.StartNew();
