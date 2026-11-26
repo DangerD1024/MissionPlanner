@@ -8,6 +8,74 @@ namespace MissionPlanner.App.Tests;
 public class AutoConnectTests
 {
     [TestMethod]
+    public void ListeningPortIsSeenWithoutConnecting()
+    {
+        // the Windows SITL exits when its first client disconnects, so the check must not connect at all
+        var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
+        try
+        {
+            Assert.IsTrue(AutoConnectService.IsListening(port));
+            Assert.IsFalse(listener.Pending(), "nobody connected to look");
+        }
+        finally
+        {
+            listener.Stop();
+        }
+
+        Assert.IsFalse(AutoConnectService.IsListening(port));
+    }
+
+    [TestMethod]
+    [Timeout(60000, CooperativeCancellation = true)]
+    public async Task WindowsSitlSurvivesTheAutoConnectCheckAndConnects()
+    {
+        // the real simulator, when this computer has it (Mission Planner downloads it on first use)
+        var exe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Mission Planner", "sitl", "ArduCopter.exe");
+        if (!OperatingSystem.IsWindows() || !File.Exists(exe) || AutoConnectService.IsListening(5760))
+            Assert.Inconclusive("needs the Windows SITL and a free port 5760");
+
+        var dir = Path.Combine(TestEnvironment.DataRoot, "sitl-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        var defaults = Path.Combine(Path.GetDirectoryName(exe)!, "copter.parm");
+        using var sitl = Process.Start(new ProcessStartInfo(exe,
+            "-M+ -O-35.363261,149.165230,584,353 -s1 --serial0 tcp:0" + (File.Exists(defaults) ? $" --defaults \"{defaults}\"" : ""))
+        {
+            WorkingDirectory = dir,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+        })!;
+        sitl.OutputDataReceived += (_, _) => { };
+        sitl.ErrorDataReceived += (_, _) => { };
+        sitl.BeginOutputReadLine();
+        sitl.BeginErrorReadLine();
+        try
+        {
+            var auto = new AutoConnectService(() => true);
+            var sw = Stopwatch.StartNew();
+            while (!auto.ProbeTcp(TimeSpan.FromSeconds(1), CancellationToken.None) && sw.Elapsed < TimeSpan.FromSeconds(20))
+                await Task.Delay(200);
+            for (var i = 0; i < 5; i++)
+                Assert.IsTrue(auto.ProbeTcp(TimeSpan.FromSeconds(1), CancellationToken.None));
+            await Task.Delay(1000);
+            Assert.IsFalse(sitl.HasExited, "the auto-connect check must not end the simulator");
+
+            await using var session = new VehicleSession();
+            await session.ConnectAsync(LinkSpec.Tcp("127.0.0.1", 5760), getParams: false);
+            Assert.AreEqual(LinkState.Connected, session.State);
+            await session.DisconnectAsync();
+        }
+        finally
+        {
+            if (!sitl.HasExited)
+                sitl.Kill();
+        }
+    }
+
+    [TestMethod]
     public void CandidatesProbeEachDeviceOnceMavlinkInterfaceFirst()
     {
         var links = new Dictionary<string, string>

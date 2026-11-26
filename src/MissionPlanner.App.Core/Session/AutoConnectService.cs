@@ -53,7 +53,26 @@ public sealed class AutoConnectService : IDisposable
 
     /// <summary>Replaceable for tests: true if SITL's TCP port 5760 has a vehicle on it.</summary>
     public Func<TimeSpan, CancellationToken, bool> ProbeTcp { get; set; } =
-        (time, cancel) => TcpProbe.HasVehicleHeartbeat("127.0.0.1", 5760, time, cancel);
+        (time, cancel) => OperatingSystem.IsWindows()
+            // the Windows SITL exits when its first TCP client disconnects: a probe that connects and closes
+            // ends the simulator. Look for the listening port instead (no connection); connecting for real
+            // then tells whether a vehicle is on it.
+            ? IsListening(5760)
+            : TcpProbe.HasVehicleHeartbeat("127.0.0.1", 5760, time, cancel);
+
+    /// <summary>True if something on this computer listens on the TCP port (asks the OS; connects to nothing).</summary>
+    public static bool IsListening(int port)
+    {
+        try
+        {
+            return System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners()
+                .Any(e => e.Port == port && (IPAddress.IsLoopback(e.Address) || e.Address.Equals(IPAddress.Any) || e.Address.Equals(IPAddress.IPv6Any)));
+        }
+        catch (System.Net.NetworkInformation.NetworkInformationException)
+        {
+            return false;
+        }
+    }
 
     /// <summary>Replaceable for tests: the device a serial port name stands for (by-id links resolved).</summary>
     public Func<string, string> ResolvePort { get; set; } = RealPath;

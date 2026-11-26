@@ -525,7 +525,20 @@ public sealed partial class SimulationViewModel : PageViewModel
             }
             catch (InvalidOperationException)
             {
-                // something else connected meanwhile
+                // auto-connect (or the user) got there first: when that is this simulator, carry on with it
+                var until = Environment.TickCount64 + 40_000;
+                while (Services.Session.State == LinkState.Connecting && Environment.TickCount64 < until)
+                    await Task.Delay(250, cancel);
+                if (Services.Session.State == LinkState.Connected && Services.Session.Link == spec)
+                {
+                    SetStatus("Simulator running and connected.", 100);
+                    StartArmingWatch();
+                    Services.ShowScreen(Screen.Data);
+                    return;
+                }
+
+                if (Services.Session.State == LinkState.Disconnected && !process.HasExited)
+                    continue;
                 SetStatus("Simulator running. Another connection is open; disconnect it and connect to TCP 127.0.0.1:" + spec.Value + ".", -1);
                 return;
             }
