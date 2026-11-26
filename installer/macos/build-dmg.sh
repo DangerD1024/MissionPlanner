@@ -61,7 +61,14 @@ cat > "$app/Contents/Info.plist" <<PLIST
 PLIST
 
 chmod 755 "$app/Contents/MacOS/MissionPlanner.App"
+# the bundled dfu-util (STM32 DFU flashing) and its libusb: executable, and signed one by one before the
+# app (not left to --deep), so the bundle seal covers them as signed code
+dfu="$app/Contents/MacOS/Tools/dfu-util"
+[ -f "$dfu/dfu-util" ] || { echo "the bundled dfu-util is missing from the publish ($dfu)" >&2; exit 1; }
+chmod 755 "$dfu/dfu-util"
 xattr -cr "$app"
+codesign --force --sign - "$dfu/libusb-1.0.0.dylib"
+codesign --force --sign - "$dfu/dfu-util"
 codesign --force --deep --sign - "$app"
 codesign --verify --deep "$app"
 

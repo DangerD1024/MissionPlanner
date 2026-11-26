@@ -22,6 +22,10 @@ find "$stage/$name" -name '*.pdb' -delete
 find "$stage/$name" -type d -exec chmod 755 {} +
 find "$stage/$name" -type f -exec chmod 644 {} +
 chmod 755 "$stage/$name/MissionPlanner.App" "$stage/$name/createdump"
+# the bundled dfu-util (STM32 DFU flashing, src/MissionPlanner.App/Tools/dfu-util) runs as a program
+dfu="$stage/$name/Tools/dfu-util/dfu-util"
+[ -f "$dfu" ] || { echo "the bundled dfu-util is missing from the publish ($dfu)" >&2; exit 1; }
+chmod 755 "$dfu"
 
 out="bin/$name-$rid.tar.gz"
 tar -C "$stage" --owner=0 --group=0 -czf "$out" "$name"

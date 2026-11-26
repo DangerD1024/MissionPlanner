@@ -1,6 +1,7 @@
 <#
   Builds the Windows installer for Mission Planner 3 (src/MissionPlanner.App):
-    1. publishes the app self-contained for win-x64 (no .NET install needed on the target PC)
+    1. publishes the app self-contained for win-x64 (no .NET install needed on the target PC), with
+       the bundled dfu-util for STM32 DFU flashing in Tools\dfu-util (src\MissionPlanner.App\Tools\dfu-util)
     2. adds SDL2.dll (joystick support; zlib licence) from libsdl.org's release
     3. adds GStreamer (video behind the HUD, streaming): the official MSVC runtime, unpacked (not
        installed), reduced to the plugins the app uses and exactly the DLLs they load
@@ -37,6 +38,8 @@ $publish = Join-Path $root "bin\next-$Runtime"
 if (Test-Path $publish) { Remove-Item -Recurse -Force $publish }
 dotnet publish src\MissionPlanner.App -c Release -r $Runtime --self-contained true -o $publish
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed" }
+# the MSI takes the whole publish folder, Tools\dfu-util included
+if (-not (Test-Path (Join-Path $publish "Tools\dfu-util\dfu-util.exe"))) { throw "the bundled dfu-util is missing from the publish" }
 
 # 2. SDL2 (cached between runs)
 $cache = Join-Path $root "bin\cache"

@@ -47,4 +47,10 @@
     <Content Include="Assets\mission-planner-128.png" Link="mission-planner-128.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- dfu-util for flashing boards in STM32 DFU mode: this runtime's build to Tools/dfu-util (Tools/dfu-util/README.txt) -->
+  <ItemGroup>
+    <None Remove="Tools\**" />
+  </ItemGroup>
+  <Import Project="Tools\dfu-util\dfu-util.targets" />
+
 </Project>
