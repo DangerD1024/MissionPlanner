@@ -95,7 +95,7 @@
             <Button Grid.Column="1" Margin="4,0,0,0" Padding="8,4" Content="✕" Command="{Binding ClearFilterCommand}"
                     IsVisible="{Binding Filter, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
           </Grid>
-          <TreeView Grid.Row="1" Classes="fields" ItemsSource="{Binding Nodes}" Background="Transparent">
+          <TreeView Grid.Row="1" x:Name="Fields" Classes="fields" ItemsSource="{Binding Nodes}" Background="Transparent">
             <TreeView.ItemTemplate>
               <TreeDataTemplate DataType="vm:LogTreeNode" ItemsSource="{Binding Children}">
                 <Panel>
@@ -126,6 +126,8 @@
             <TextBlock Classes="h2" HorizontalAlignment="Center" Text="{l:Tr 'Tick fields on the left to graph them'}" />
             <TextBlock Classes="muted" HorizontalAlignment="Center"
                        Text="{l:Tr 'Scroll to zoom, drag to pan, right-drag to zoom an axis, double-click to fit.'}" />
+            <TextBlock Classes="muted" HorizontalAlignment="Center"
+                       Text="{l:Tr 'Right-click a field (or R on its chip) to use the right-hand scale.'}" />
           </StackPanel>
           <ItemsControl Grid.Row="1" ItemsSource="{Binding Series}" Margin="10,6,10,2">
             <ItemsControl.ItemsPanel>
@@ -144,7 +146,8 @@
                       <TextBlock Text="{Binding Detail}" Classes="muted" FontSize="11" />
                     </StackPanel>
                     <ToggleButton Padding="6,2" FontSize="11" Content="R" VerticalAlignment="Center"
-                                  IsChecked="{Binding RightAxis}" ToolTip.Tip="{l:Tr 'Use the right-hand Y axis'}" />
+                                  IsChecked="{Binding RightAxis}"
+                                  ToolTip.Tip="{l:Tr 'Plot on the right-hand Y axis (its own scale). Tip: right-click a field to graph it on the right.'}" />
                     <Button Padding="6,2" Content="✕" VerticalAlignment="Center" ToolTip.Tip="{l:Tr 'Remove'}"
                             Command="{Binding $parent[UserControl].((vm:LogBrowserViewModel)DataContext).RemoveSeriesCommand}"
                             CommandParameter="{Binding}" />

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
 using GMap.NET;
 using MissionPlanner.App.Controls.Logs;
@@ -43,6 +44,11 @@ public sealed partial class LogBrowserView : UserControl
 
         Graph.PointerMoved += OnGraphPointerMoved;
         Graph.PointerExited += (_, _) => SetCursor(null);
+
+        // Mission Planner's right click on a field: graph it against the right-hand Y axis, or
+        // remove it when graphed (the tree takes the press to select the row: handled releases too)
+        Fields.AddHandler(PointerReleasedEvent, OnFieldsPointerReleased, RoutingStrategies.Bubble, handledEventsToo: true);
+
         EventList.SelectionChanged += (_, _) =>
         {
             if (EventList.SelectedItem is LogEvent e)
@@ -98,7 +104,11 @@ public sealed partial class LogBrowserView : UserControl
         p.Legend.Alignment = Alignment.UpperLeft;
         p.Axes.Bottom.Label.Text = "Time (s)";
         p.Axes.Bottom.Label.FontSize = 13;
+        // the Y axes are titled with their lines' names (Rescale)
+        p.Axes.Left.Label.Text = "";
+        p.Axes.Left.Label.FontSize = 13;
         p.Axes.Right.Label.Text = "";
+        p.Axes.Right.Label.FontSize = 13;
         p.Axes.Margins(0.01, 0.08);
     }
 
@@ -173,7 +183,7 @@ public sealed partial class LogBrowserView : UserControl
         if (_lines.ContainsKey(s))
             return;
         var line = Graph.Plot.Add.SignalXY(s.X, s.Y, Color.FromHex(s.Color));
-        line.LegendText = s.Name;
+        line.LegendText = LegendText(s);
         line.LineWidth = 1.5f;
         line.Axes.YAxis = s.RightAxis ? Graph.Plot.Axes.Right : Graph.Plot.Axes.Left;
         _lines[s] = line;
@@ -193,7 +203,33 @@ public sealed partial class LogBrowserView : UserControl
         if (e.PropertyName != nameof(GraphSeries.RightAxis) || sender is not GraphSeries s || !_lines.TryGetValue(s, out var line))
             return;
         line.Axes.YAxis = s.RightAxis ? Graph.Plot.Axes.Right : Graph.Plot.Axes.Left;
+        line.LegendText = LegendText(s);
         Rescale(all: false);
+    }
+
+    /// <summary>Right-hand lines are marked in the legend, as Mission Planner marks them " R".</summary>
+    private static string LegendText(GraphSeries s) => s.RightAxis ? s.Name + " (R)" : s.Name;
+
+    private void OnFieldsPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        // a right click does not tick the checkbox itself (it answers the left button only)
+        if (_vm == null || e.InitialPressMouseButton != MouseButton.Right ||
+            (e.Source as StyledElement)?.DataContext is not LogTreeNode { IsField: true } node)
+            return;
+        _vm.ToggleField(node, rightAxis: true);
+        e.Handled = true;
+    }
+
+    /// <summary>An axis title: the names of its lines, the first two when there are more.</summary>
+    private static string AxisTitle(IEnumerable<GraphSeries> series)
+    {
+        var names = series.Select(s => s.Name).ToList();
+        return names.Count switch
+        {
+            0 => "",
+            <= 2 => string.Join(", ", names),
+            _ => string.Join(", ", names.Take(2)) + " …",
+        };
     }
 
     /// <summary>Fits the Y axes to the lines; with <paramref name="all"/> the time axis too.</summary>
@@ -202,13 +238,8 @@ public sealed partial class LogBrowserView : UserControl
         var p = Graph.Plot;
         var hasLines = _lines.Count > 0;
         p.Legend.IsVisible = hasLines;
-        var right = _lines.Keys.Where(s => s.RightAxis).Select(s => s.Name).ToList();
-        p.Axes.Right.Label.Text = right.Count switch
-        {
-            0 => "",
-            <= 2 => string.Join(", ", right),
-            _ => string.Join(", ", right.Take(2)) + " …",
-        };
+        p.Axes.Left.Label.Text = AxisTitle(_lines.Keys.Where(s => !s.RightAxis));
+        p.Axes.Right.Label.Text = AxisTitle(_lines.Keys.Where(s => s.RightAxis));
 
         if (!hasLines)
         {

@@ -55,6 +55,12 @@ public sealed partial class LogTreeNode : ObservableObject
     [ObservableProperty]
     private string? _color;
 
+    /// <summary>
+    /// Set just before ticking to graph the field against the right-hand Y axis (Mission Planner's
+    /// right click); taken, and reset, when the tick is handled.
+    /// </summary>
+    internal bool RightAxisRequested { get; set; }
+
     internal Action<LogTreeNode, bool>? CheckedChanged { get; set; }
 
     partial void OnIsCheckedChanged(bool value) => CheckedChanged?.Invoke(this, value);
@@ -448,8 +454,30 @@ public sealed partial class LogBrowserViewModel : PageViewModel, IDisposable
     public LogTreeNode? FindField(string type, string? instance, string field) =>
         AllFields().FirstOrDefault(n => n.Type == type && n.Field == field && (n.Instance ?? "") == (instance ?? ""));
 
+    /// <summary>
+    /// Mission Planner's clicks on a field: an unticked field is graphed, against the right-hand
+    /// Y axis (its own scale) when <paramref name="rightAxis"/> (a right click), the left one
+    /// otherwise; a ticked field is removed, whichever button.
+    /// </summary>
+    public void ToggleField(LogTreeNode node, bool rightAxis)
+    {
+        if (!node.IsField)
+            return;
+        if (node.IsChecked)
+        {
+            node.IsChecked = false;
+            return;
+        }
+
+        node.RightAxisRequested = rightAxis;
+        node.IsChecked = true;
+    }
+
     private async void OnNodeChecked(LogTreeNode node, bool isChecked)
     {
+        // a plain tick (the checkbox) is the left axis
+        var rightAxis = node.RightAxisRequested;
+        node.RightAxisRequested = false;
         if (!isChecked)
         {
             _checked.Remove(node);
@@ -481,7 +509,8 @@ public sealed partial class LogBrowserViewModel : PageViewModel, IDisposable
             }
 
             var (x, y, count, min, max) = result.Value;
-            Series.Add(new GraphSeries(node, node.Color ?? Palette[0], x, y, count, min, max));
+            // the axis is set before the add: the view places a line on its axis when it is added
+            Series.Add(new GraphSeries(node, node.Color ?? Palette[0], x, y, count, min, max) { RightAxis = rightAxis });
             SeriesCount = Series.Count;
             Status = null;
         }
