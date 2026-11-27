@@ -117,6 +117,84 @@ public class LogBrowserViewModelTests
     }
 
     [TestMethod]
+    public async Task RightClickGraphsAFieldOnTheRightAxisAndRemovesATickedOne()
+    {
+        var (vm, _) = await OpenAsync(LogTestFiles.BinaryLog(), ".bin");
+        using var _vm = vm;
+
+        var roll = vm.FindField("ATT", null, "Roll")!;
+        var pitch = vm.FindField("ATT", null, "Pitch")!;
+        var alt1 = vm.FindField("GPS", "1", "Alt")!;
+
+        // Mission Planner's right click: an unticked field goes on the right-hand axis
+        vm.ToggleField(roll, rightAxis: true);
+        Assert.IsTrue(roll.IsChecked);
+        await WaitFor(() => vm.Series.Count == 1 && !roll.IsBusy);
+        Assert.IsTrue(vm.Series.Single(s => s.Key == "ATT.Roll").RightAxis);
+
+        // the checkbox (a left click) stays on the left
+        alt1.IsChecked = true;
+        await WaitFor(() => vm.Series.Count == 2 && !alt1.IsBusy);
+        Assert.IsFalse(vm.Series.Single(s => s.Key == "GPS[1].Alt").RightAxis);
+
+        // and so does a left click through the same call
+        vm.ToggleField(pitch, rightAxis: false);
+        await WaitFor(() => vm.Series.Count == 3 && !pitch.IsBusy);
+        Assert.IsFalse(vm.Series.Single(s => s.Key == "ATT.Pitch").RightAxis);
+
+        // right-clicking a ticked field removes it, whichever axis it is on
+        vm.ToggleField(roll, rightAxis: true);
+        Assert.IsFalse(roll.IsChecked);
+        Assert.IsNull(roll.Color);
+        vm.ToggleField(alt1, rightAxis: true);
+        Assert.IsFalse(alt1.IsChecked);
+        CollectionAssert.AreEqual(new[] { "ATT.Pitch" }, vm.Series.Select(s => s.Key).ToArray());
+
+        // the right-hand choice is not remembered: ticking it again is the left axis
+        roll.IsChecked = true;
+        await WaitFor(() => vm.Series.Count == 2 && !roll.IsBusy);
+        Assert.IsFalse(vm.Series.Single(s => s.Key == "ATT.Roll").RightAxis);
+
+        // a type or an instance is not a field: nothing happens
+        var gps = vm.Nodes.Single(n => n.Name == "GPS");
+        vm.ToggleField(gps, rightAxis: true);
+        vm.ToggleField(gps.Children[0], rightAxis: true);
+        Assert.IsFalse(gps.IsChecked);
+        Assert.AreEqual(2, vm.Series.Count);
+
+        // Clear graph unticks right-hand fields too
+        vm.ToggleField(alt1, rightAxis: true);
+        await WaitFor(() => vm.Series.Count == 3 && !alt1.IsBusy);
+        Assert.IsTrue(vm.Series.Single(s => s.Key == "GPS[1].Alt").RightAxis);
+        vm.ClearGraphCommand.Execute(null);
+        Assert.IsFalse(alt1.IsChecked);
+        Assert.IsFalse(roll.IsChecked);
+        Assert.AreEqual(0, vm.Series.Count);
+        Assert.IsFalse(vm.HasGraph);
+    }
+
+    [TestMethod]
+    public async Task OpeningAnotherLogDropsRightHandLines()
+    {
+        var (vm, _) = await OpenAsync(LogTestFiles.BinaryLog(), ".bin");
+        using var _vm = vm;
+        vm.ToggleField(vm.FindField("ATT", null, "Roll")!, rightAxis: true);
+        await WaitFor(() => vm.Series.Count == 1);
+        Assert.IsTrue(vm.Series[0].RightAxis);
+
+        await vm.OpenFileAsync(vm.Source!.Path);
+        Assert.AreEqual(0, vm.Series.Count);
+        Assert.IsFalse(vm.HasGraph);
+
+        // the reopened log starts on the left again
+        var roll = vm.FindField("ATT", null, "Roll")!;
+        Assert.IsFalse(roll.IsChecked);
+        roll.IsChecked = true;
+        await WaitFor(() => vm.Series.Count == 1 && !roll.IsBusy);
+        Assert.IsFalse(vm.Series[0].RightAxis);
+    }
+
+    [TestMethod]
     public async Task EventTogglesFilterMarkers()
     {
         var (vm, _) = await OpenAsync(LogTestFiles.BinaryLog(), ".bin");
