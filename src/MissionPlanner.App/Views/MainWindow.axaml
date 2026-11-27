@@ -3,6 +3,7 @@
         xmlns:vm="using:MissionPlanner.App.Core.ViewModels"
         xmlns:l="using:MissionPlanner.App.Localization"
         xmlns:upd="using:MissionPlanner.App.Core.Updates"
+        xmlns:fd="using:MissionPlanner.App.Views.FlightData"
         x:Class="MissionPlanner.App.Views.MainWindow"
         x:DataType="vm:ShellViewModel"
         Title="{Binding Title}"
@@ -25,7 +26,7 @@
     <KeyBinding Gesture="Ctrl+J" Command="{Binding DeviceOpHotkeyCommand}" />
   </Window.KeyBindings>
 
-  <Grid RowDefinitions="72,Auto,*">
+  <Grid RowDefinitions="72,Auto,*,Auto">
 
     <!-- top bar -->
     <Border Grid.Row="0" Background="{DynamicResource Bg0}" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1">
@@ -181,6 +182,11 @@
                  Foreground="{DynamicResource Accent}" Background="Transparent" />
 
     <ContentControl Grid.Row="2" Content="{Binding CurrentPage}" />
+
+    <!-- a replayed tlog away from DATA: its time and controls stay in view (MAVLink Inspector, proximity radar, ...) -->
+    <Panel Grid.Row="3" IsVisible="{Binding ShowMiniPlayer}">
+      <fd:TlogMiniBar DataContext="{Binding Tlogs}" />
+    </Panel>
 
     <!-- a newer release (UpdateViewModel): download it, then install or show it -->
     <Border Grid.Row="2" x:DataType="vm:ShellViewModel" Classes="apptoast" IsVisible="{Binding Updates.IsBannerVisible}"

@@ -1,0 +1,50 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.FlightData.TlogMiniBar"
+             x:DataType="vm:TlogPlayerViewModel">
+
+  <!-- the log player in one row, at the bottom of the window on every screen but DATA -->
+  <Border Background="{DynamicResource Bg1}" BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0" Padding="10,4">
+    <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto,Auto" ColumnSpacing="10">
+      <Button Classes="accent" Width="34" Height="30" Padding="0" Command="{Binding PlayPauseCommand}"
+              HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+              ToolTip.Tip="{l:Tr 'Play or pause the log'}">
+        <Panel>
+          <Path Fill="{Binding $parent[Button].Foreground}" Width="14" Height="14" Stretch="Uniform"
+                Data="M7,4.5 L19.5,12 L7,19.5 Z" IsVisible="{Binding !IsPlaying}" />
+          <Path Fill="{Binding $parent[Button].Foreground}" Width="14" Height="14" Stretch="Uniform"
+                Data="M6.5,5 L10.5,5 L10.5,19 L6.5,19 Z M13.5,5 L17.5,5 L17.5,19 L13.5,19 Z" IsVisible="{Binding IsPlaying}" />
+        </Panel>
+      </Button>
+      <Button Grid.Column="1" Width="34" Height="30" Padding="0" Command="{Binding StopCommand}"
+              HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+              ToolTip.Tip="{l:Tr 'Stop playback and close the log'}">
+        <Path Fill="{Binding $parent[Button].Foreground}" Width="12" Height="12" Stretch="Uniform"
+              Data="M6.5,6.5 L17.5,6.5 L17.5,17.5 L6.5,17.5 Z" />
+      </Button>
+      <TextBlock Grid.Column="2" VerticalAlignment="Center" FontWeight="SemiBold">
+        <Run Text="{Binding ElapsedText}" />
+        <Run Text=" / " Foreground="{DynamicResource Muted}" />
+        <Run Text="{Binding DurationText}" Foreground="{DynamicResource Muted}" />
+      </TextBlock>
+      <Slider Grid.Column="3" x:Name="PositionSlider" Minimum="0" Maximum="100" SmallChange="0.5" LargeChange="5"
+              VerticalAlignment="Center" Margin="0,-6"
+              Value="{Binding PositionPercent}" IsEnabled="{Binding IsLoaded}"
+              ToolTip.Tip="{l:Tr 'Position in the log; drag to jump'}" />
+      <TextBlock Grid.Column="4" Text="{Binding PercentText}" Classes="muted" VerticalAlignment="Center" />
+      <ComboBox Grid.Column="5" Height="30" MinHeight="30" Padding="8,2" VerticalAlignment="Center"
+                ItemsSource="{Binding Speeds}" SelectedItem="{Binding SelectedSpeed}"
+                ToolTip.Tip="{l:Tr 'Playback speed'}">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:TlogSpeedOption">
+            <TextBlock Text="{l:TrBind {Binding Label}}" />
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+      <TextBlock Grid.Column="6" Text="{Binding FileName}" Classes="muted" MaxWidth="260" VerticalAlignment="Center"
+                 TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding FilePath}" />
+    </Grid>
+  </Border>
+</UserControl>

@@ -245,14 +245,35 @@ public sealed partial class ShellViewModel : ObservableObject
         return page;
     }
 
+    /// <summary>The DATA screen's telemetry log player, which the compact bar shows on the other screens.</summary>
+    public FlightData.TlogPlayerViewModel Tlogs => GetPage<FlightData.FlightDataViewModel>(Screen.Data).Tlogs;
+
+    /// <summary>
+    /// A log is loaded and DATA (with the full player) isn't showing: the compact player at the bottom of the
+    /// window keeps its time and controls in view, e.g. beside the MAVLink Inspector or the proximity radar.
+    /// </summary>
+    [ObservableProperty]
+    private bool _showMiniPlayer;
+
     /// <summary>Driven by a UI timer at about 20 Hz.</summary>
     public void Tick()
     {
         CurrentPage.Tick();
-        // the HUD window, 3D view and stream keep the HUD going while another screen is shown
         if (CurrentPage is not FlightData.FlightDataViewModel && _pages.TryGetValue(Screen.Data, out var data) &&
-            data is FlightData.FlightDataViewModel { NeedsBackgroundTick: true } flight)
-            flight.BackgroundTick();
+            data is FlightData.FlightDataViewModel flight)
+        {
+            // the HUD window, 3D view and stream keep the HUD going while another screen is shown
+            if (flight.NeedsBackgroundTick)
+                flight.BackgroundTick();
+            // DATA ticks its player itself; elsewhere the compact bar needs it
+            flight.Tlogs.Tick();
+            ShowMiniPlayer = flight.Tlogs.IsLoaded;
+        }
+        else
+        {
+            ShowMiniPlayer = false;
+        }
+
         Connection.Tick();
         if (++_tick % 20 == 0)
         {
