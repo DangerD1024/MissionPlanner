@@ -120,11 +120,11 @@
         <TabItem Header="{l:Tr 'DataFlash Logs'}" IsVisible="{Binding TabVisible[11]}">
           <StackPanel Margin="14" Spacing="10" HorizontalAlignment="Stretch">
             <TextBlock Classes="muted" TextWrapping="Wrap"
-                       Text="Logs recorded on the autopilot's SD card. Download them over the MAVLink link, or open one you already have." />
-            <Button Classes="accent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Height="40"
-                    Content="Download DataFlash Log Via Mavlink" Command="{Binding OpenLogDownloadCommand}" />
-            <Button Classes="accent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Height="40"
-                    Content="Review a Log" Command="{Binding OpenLogBrowserCommand}" />
+                       Text="{l:Tr 'Logs recorded on the autopilot\'s SD card. Download them over the MAVLink link, or open one you already have.'}" />
+            <Button Classes="accent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Height="40"
+                    Content="{l:Tr 'Download DataFlash Log Via Mavlink'}" Command="{Binding OpenLogDownloadCommand}" />
+            <Button Classes="accent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Height="40"
+                    Content="{l:Tr 'Review a Log'}" Command="{Binding OpenLogBrowserCommand}" />
           </StackPanel>
         </TabItem>
       </TabControl>

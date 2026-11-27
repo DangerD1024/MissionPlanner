@@ -12,7 +12,7 @@
     <StackPanel Spacing="12">
       <hwv:PageHeader Description="Compass/motor interference calibration: measures how much the motor current disturbs the compass and saves a compensation. Propellers on and the vehicle tied down; raise the throttle slowly to 50-75 %, then lower it and press Finish." />
       <Grid ColumnDefinitions="Auto,*">
-        <Button Name="Toggle" Classes="accent" MinWidth="120" Height="36" FontSize="15" HorizontalContentAlignment="Center"
+        <Button Name="Toggle" Classes="accent" MinWidth="120" Height="36" FontSize="15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                 Content="{l:TrBind {Binding ButtonText}}" Command="{Binding ToggleCommand}" />
         <TextBlock Grid.Column="1" Text="{Binding RatingText}" TextWrapping="Wrap" VerticalAlignment="Center" Margin="16,0,0,0"
                    Name="Rating" />

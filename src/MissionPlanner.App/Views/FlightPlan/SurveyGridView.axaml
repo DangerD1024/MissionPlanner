@@ -230,9 +230,9 @@
                        IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
             <Grid ColumnDefinitions="*,8,*">
               <Button Content="{l:Tr 'Cancel'}" Command="{Binding CancelCommand}" HorizontalAlignment="Stretch"
-                      HorizontalContentAlignment="Center" Height="34" IsCancel="True" />
+                      HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Height="34" IsCancel="True" />
               <Button Grid.Column="2" Classes="accent" Content="{l:Tr 'Accept'}" Command="{Binding AcceptCommand}"
-                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Height="34"
+                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Height="34"
                       ToolTip.Tip="{l:Tr 'Add the survey to the end of the mission'}" />
             </Grid>
           </StackPanel>
