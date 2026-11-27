@@ -43,9 +43,17 @@ public sealed partial class SpeechSettingsViewModel : PageViewModel, IDialogPage
         _lowAirTrigger = (decimal)SpeechOptions.Number(SpeechOptions.LowAirSpeedTriggerKey, 0);
         _linkLost = SpeechOptions.On(SpeechOptions.LinkLostKey, true);
         _statusSeverity = Settings.Instance.GetInt32("severity", 4);
+        Voice = new SpeechVoiceViewModel(AppSpeech.Engine, services.Dialogs);
     }
 
     public AppServices Services { get; }
+
+    /// <summary>Engine and voice: neural or system, the downloadable voices, speaker, speed, volume.</summary>
+    public SpeechVoiceViewModel Voice { get; }
+
+    public override void OnShown() => _ = Voice.LoadSystemVoicesAsync();
+
+    public override void Tick() => Voice.Tick();
 
     public event EventHandler<bool>? CloseRequested;
 
@@ -134,6 +142,7 @@ public sealed partial class SpeechSettingsViewModel : PageViewModel, IDialogPage
         s[SpeechOptions.LowAirSpeedKey] = LowAirText;
         s[SpeechOptions.LowAirSpeedTriggerKey] = N(LowAirTrigger, 0);
         s[SpeechOptions.LinkLostKey] = B(LinkLost);
+        Voice.Save();
         try
         {
             s.Save();
@@ -144,6 +153,7 @@ public sealed partial class SpeechSettingsViewModel : PageViewModel, IDialogPage
         }
 
         AppSpeech.ApplySettings();
+        AppSpeech.ApplyVoiceSettings();
         CloseRequested?.Invoke(this, true);
     }
 
