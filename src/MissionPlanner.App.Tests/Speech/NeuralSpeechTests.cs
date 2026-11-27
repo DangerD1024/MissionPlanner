@@ -119,6 +119,59 @@ public class NeuralSpeechTests
     }
 
     [TestMethod]
+    public void EachPlatformHasItsPlayerAndABrokenOneGivesWayToTheNext()
+    {
+        string? Has(string name, params string[] present) => present.Contains(name) ? "/usr/bin/" + name : null;
+
+        var all = (FallbackAudioPlayer)AudioPlayers.Detect(SpeechBackend.Os.Linux, n => Has(n, "pw-play", "paplay", "aplay"))!;
+        CollectionAssert.AreEqual(new[] { "pw-play", "paplay", "aplay" }, all.Players.Select(p => p.Name).ToArray(), "PipeWire, PulseAudio, ALSA");
+        var alsa = (ProcessAudioPlayer)AudioPlayers.Detect(SpeechBackend.Os.Linux, n => Has(n, "aplay"))!;
+        CollectionAssert.AreEqual(new[] { "-q" }, alsa.Arguments.ToArray());
+        Assert.IsNull(AudioPlayers.Detect(SpeechBackend.Os.Linux, _ => null));
+        Assert.AreEqual("afplay", AudioPlayers.Detect(SpeechBackend.Os.MacOs, n => Has(n, "afplay"))!.Name);
+
+        // pw-play installed but no PipeWire running: the same sound goes to the next player, which is kept
+        var broken = new ScriptedPlayer("pw-play", fails: true);
+        var working = new ScriptedPlayer("paplay", fails: false);
+        var chain = new FallbackAudioPlayer([broken, working]);
+        var p = chain.Play([1, 2, 3], TimeSpan.FromSeconds(1));
+        p.Wait(CancellationToken.None);
+        Assert.IsFalse(p.Failed);
+        Assert.AreEqual(1, broken.Count);
+        Assert.AreEqual(1, working.Count);
+        Assert.AreEqual("paplay", chain.Name);
+        chain.Play([4], TimeSpan.FromSeconds(1)).Wait(CancellationToken.None);
+        Assert.AreEqual(1, broken.Count, "not tried again");
+        Assert.AreEqual(2, working.Count);
+    }
+
+    private sealed class ScriptedPlayer(string name, bool fails) : IAudioPlayer
+    {
+        public int Count;
+
+        public string Name => name;
+
+        public IPlayback Play(byte[] wav, TimeSpan duration)
+        {
+            Count++;
+            return new Result(fails);
+        }
+
+        private sealed class Result(bool failed) : IPlayback
+        {
+            public bool Failed => failed;
+
+            public void Wait(CancellationToken cancel)
+            {
+            }
+
+            public void Stop()
+            {
+            }
+        }
+    }
+
+    [TestMethod]
     public void TheCacheDropsTheLeastRecentlyUsed()
     {
         var cache = new AudioCache(maxSamples: 30);

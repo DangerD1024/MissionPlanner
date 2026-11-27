@@ -69,6 +69,9 @@ public interface IPlayback
 
     /// <summary>Stops at once (app exit).</summary>
     void Stop();
+
+    /// <summary>After <see cref="Wait"/>: the player gave up (no sound server, no device), so the next one may be tried.</summary>
+    bool Failed => false;
 }
 
 /// <summary>Plays WAV audio on the computer's default output.</summary>
@@ -95,15 +98,72 @@ public static class AudioPlayers
             case SpeechBackend.Os.MacOs:
                 return find("afplay") is { } afplay ? new ProcessAudioPlayer(afplay, []) : null;
             default:
-                // PipeWire, PulseAudio, then ALSA: what a desktop has, in that order
+            {
+                // PipeWire, PulseAudio, then ALSA: what a desktop has, in that order; a program can be
+                // installed without its sound server running, so the next one is tried when it fails
+                var players = new List<IAudioPlayer>();
                 if (find("pw-play") is { } pw)
-                    return new ProcessAudioPlayer(pw, []);
+                    players.Add(new ProcessAudioPlayer(pw, []));
                 if (find("paplay") is { } pa)
-                    return new ProcessAudioPlayer(pa, []);
+                    players.Add(new ProcessAudioPlayer(pa, []));
                 if (find("aplay") is { } alsa)
-                    return new ProcessAudioPlayer(alsa, ["-q"]);
-                return null;
+                    players.Add(new ProcessAudioPlayer(alsa, ["-q"]));
+                return players.Count switch
+                {
+                    0 => null,
+                    1 => players[0],
+                    _ => new FallbackAudioPlayer(players),
+                };
+            }
         }
+    }
+}
+
+/// <summary>Plays with the first player that works, and keeps to it once one has failed.</summary>
+public sealed class FallbackAudioPlayer(IReadOnlyList<IAudioPlayer> players) : IAudioPlayer
+{
+    private static readonly ILog Log = LogManager.GetLogger(typeof(FallbackAudioPlayer));
+    private int _current;
+
+    public IReadOnlyList<IAudioPlayer> Players => players;
+
+    public string Name => players[Math.Min(_current, players.Count - 1)].Name;
+
+    public IPlayback Play(byte[] wav, TimeSpan duration) => new Attempt(this, wav, duration);
+
+    private sealed class Attempt : IPlayback
+    {
+        private readonly FallbackAudioPlayer _owner;
+        private readonly byte[] _wav;
+        private readonly TimeSpan _duration;
+        private int _index;
+        private IPlayback _playing;
+
+        public Attempt(FallbackAudioPlayer owner, byte[] wav, TimeSpan duration)
+        {
+            _owner = owner;
+            _wav = wav;
+            _duration = duration;
+            _index = Math.Min(owner._current, owner.Players.Count - 1);
+            _playing = owner.Players[_index].Play(wav, duration);
+        }
+
+        public bool Failed => _playing.Failed;
+
+        public void Wait(CancellationToken cancel)
+        {
+            _playing.Wait(cancel);
+            while (_playing.Failed && !cancel.IsCancellationRequested && _index + 1 < _owner.Players.Count)
+            {
+                Log.Info(_owner.Players[_index].Name + " could not play; trying " + _owner.Players[_index + 1].Name);
+                _index++;
+                _owner._current = Math.Max(_owner._current, _index);
+                _playing = _owner.Players[_index].Play(_wav, _duration);
+                _playing.Wait(cancel);
+            }
+        }
+
+        public void Stop() => _playing.Stop();
     }
 }
 
@@ -193,6 +253,9 @@ public sealed class ProcessAudioPlayer(string fileName, IReadOnlyList<string> ar
     private sealed class Running(Process process, string path, TimeSpan duration) : IPlayback
     {
         private int _waited;
+        private volatile bool _stopped;
+
+        public bool Failed { get; private set; }
 
         public void Wait(CancellationToken cancel)
         {
@@ -209,6 +272,7 @@ public sealed class ProcessAudioPlayer(string fileName, IReadOnlyList<string> ar
                 }
 
                 process.WaitForExit();
+                Failed = !_stopped && process.ExitCode != 0;
             }
             finally
             {
@@ -219,6 +283,7 @@ public sealed class ProcessAudioPlayer(string fileName, IReadOnlyList<string> ar
 
         public void Stop()
         {
+            _stopped = true;
             try
             {
                 if (!process.HasExited)

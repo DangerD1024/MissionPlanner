@@ -158,7 +158,8 @@ public sealed class NeuralSpeech : IDisposable
     private bool _engineSearched;
     private (string Id, ISpeechSynthesizer Synth)? _loaded;
     private (string Path, Phonemizer Phonemizer)? _phonemizer;
-    private (string Id, string Error)? _failed;
+    // read by the settings page on the UI thread: no lock, which a loading model holds for seconds
+    private volatile Failure? _failed;
     private volatile IPlayback? _playing;
 
     /// <param name="load">Loads a voice from its folder (tests pass a fake).</param>
@@ -226,13 +227,7 @@ public sealed class NeuralSpeech : IDisposable
             return OperatingSystem.IsLinux()
                 ? L.Tr("No audio player found: install pipewire (pw-play), pulseaudio-utils (paplay) or alsa-utils (aplay).")
                 : L.Tr("No audio player found.");
-        lock (_gate)
-        {
-            if (_failed is { } f && f.Id == voice.Id)
-                return f.Error;
-        }
-
-        return null;
+        return _failed is { } f && f.Id == voice.Id ? f.Error : null;
     }
 
     /// <summary>
@@ -348,9 +343,10 @@ public sealed class NeuralSpeech : IDisposable
                 _phonemizer = null;
             }
 
-            if (_failed is { } f && string.Equals(f.Id, voiceId, StringComparison.OrdinalIgnoreCase))
-                _failed = null;
         }
+
+        if (_failed is { } f && string.Equals(f.Id, voiceId, StringComparison.OrdinalIgnoreCase))
+            _failed = null;
 
         Cache.Clear();
     }
@@ -358,8 +354,7 @@ public sealed class NeuralSpeech : IDisposable
     /// <summary>Forget earlier failures and look for the player again (settings saved, voice installed).</summary>
     public void Reset()
     {
-        lock (_gate)
-            _failed = null;
+        _failed = null;
         _playerSearched = false;
     }
 
@@ -432,8 +427,7 @@ public sealed class NeuralSpeech : IDisposable
     private bool Fail(VoiceInfo voice, string error, Exception ex)
     {
         Log.Warn("voice " + voice.Id, ex);
-        lock (_gate)
-            _failed = (voice.Id, error);
+        _failed = new Failure(voice.Id, error);
         Problem = error;
         return false;
     }
@@ -447,4 +441,6 @@ public sealed class NeuralSpeech : IDisposable
             _loaded = null;
         }
     }
+
+    private sealed record Failure(string Id, string Error);
 }
