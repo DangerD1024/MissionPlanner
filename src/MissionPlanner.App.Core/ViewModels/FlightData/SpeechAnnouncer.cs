@@ -227,6 +227,25 @@ public static class AppSpeech
     /// <summary>Re-reads the master switch after the settings changed.</summary>
     public static void ApplySettings() => Engine.speechEnable = SpeechOptions.Enabled;
 
+    /// <summary>The engine or voice settings changed: retry a voice that failed, load the chosen one.</summary>
+    public static void ApplyVoiceSettings()
+    {
+        Engine.Neural?.Reset();
+        if (Engine.speechEnable)
+            Engine.Prepare();
+    }
+
+    /// <summary>
+    /// App exit: stop talking (and any player program) at once. The voice model is left to the process exit,
+    /// so closing never waits for a sentence being prepared.
+    /// </summary>
+    public static void Shutdown()
+    {
+        Engine.speechEnable = false;
+        Engine.SpeakAsyncCancelAll();
+        Speech.ProcessAudioPlayer.CleanUp();
+    }
+
     private static string Expand(string text)
     {
         var s = _session;

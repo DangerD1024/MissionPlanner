@@ -64,6 +64,7 @@ public static class AppStartup
 
     public static void Shutdown()
     {
+        ViewModels.FlightData.AppSpeech.Shutdown();
         try
         {
             Settings.Instance.Save();
