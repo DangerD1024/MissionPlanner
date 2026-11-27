@@ -505,3 +505,30 @@ public class ToolsInspectorGraphTests
         Assert.AreEqual("roll = 0.7", graph.Latest);
     }
 }
+
+[TestClass]
+public class InspectorReplayTests
+{
+    /// <summary>The classic "MAVLink Inspector" button during a tlog replay used to land on the Full Parameter List.</summary>
+    [TestMethod]
+    public void TheInspectorIsThereWhileATlogIsLoaded()
+    {
+        var services = MissionPlanner.App.Tests.FlightData.FakeUi.Services(out _);
+        var config = new ConfigViewModel(services);
+        Assert.IsFalse(config.Show("MAVLink Inspector"), "no link and no log");
+
+        services.Session.Mav.logplaybackfile = new BinaryReader(new MemoryStream(new byte[16]));
+        try
+        {
+            Assert.IsTrue(config.Show("MAVLink Inspector"), "a loaded log (playing or paused) feeds the inspector");
+            Assert.AreEqual("MAVLink Inspector", config.SelectedItem?.Title);
+            Assert.IsFalse(config.Show("MAVFtp"), "MAVFTP still needs a live vehicle");
+        }
+        finally
+        {
+            services.Session.Mav.logplaybackfile = null;
+        }
+
+        Assert.IsFalse(config.Show("MAVLink Inspector"), "gone again once the log is closed");
+    }
+}

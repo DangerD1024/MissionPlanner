@@ -22,6 +22,7 @@ public sealed class ConfigViewModel : MenuScreenViewModel
         Add(Page("Full Parameter Tree", () => new FullParameterTreeViewModel(s), Ready));
         Add(Page("User Params", () => new UserParamsViewModel(s), Ready));
         Add(Page("MAVFtp", () => new MavFtpViewModel(s), () => Connected));
-        Add(Page("MAVLink Inspector", () => new InspectorViewModel(s), () => Connected));
+        // a replayed tlog feeds the inspector like a live link (as in Mission Planner)
+        Add(Page("MAVLink Inspector", () => new InspectorViewModel(s), () => Connected || Replaying));
     }
 }

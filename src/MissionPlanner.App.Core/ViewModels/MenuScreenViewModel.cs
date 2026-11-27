@@ -50,6 +50,9 @@ public abstract partial class MenuScreenViewModel : PageViewModel
 
     protected bool Connected => Services.Session.IsConnected;
 
+    /// <summary>A telemetry log is loaded for replay (playing or paused): its packets go through the link as a vehicle's would.</summary>
+    protected bool Replaying => Services.Session.Mav.logplaybackfile != null;
+
     protected bool HasParam(params string[] names) => names.Any(Services.Params.Has);
 
     protected MissionPlanner.ArduPilot.Firmwares Firmware => Services.Session.Cs.firmware;
