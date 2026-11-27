@@ -27,4 +27,7 @@
   <!-- the bundled dfu-util, as the app ships it, so a test can check it lands in an output folder and runs -->
   <Import Project="..\MissionPlanner.App\Tools\dfu-util\dfu-util.targets" />
 
+  <!-- the native neural speech engine, as the app ships it (the engine's tests load it; voices come from a local test archive) -->
+  <Import Project="..\MissionPlanner.App\Tools\sherpa-onnx\sherpa-onnx.targets" />
+
 </Project>

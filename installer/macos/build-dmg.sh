@@ -69,6 +69,11 @@ chmod 755 "$dfu/dfu-util"
 xattr -cr "$app"
 codesign --force --sign - "$dfu/libusb-1.0.0.dylib"
 codesign --force --sign - "$dfu/dfu-util"
+# the neural speech engine (src/MissionPlanner.App/Tools/sherpa-onnx), loaded by the app: signed the same way
+for lib in libsherpa-onnx-c-api.dylib libonnxruntime.dylib; do
+    [ -f "$app/Contents/MacOS/$lib" ] || { echo "the speech engine's $lib is missing from the publish" >&2; exit 1; }
+    codesign --force --sign - "$app/Contents/MacOS/$lib"
+done
 codesign --force --deep --sign - "$app"
 codesign --verify --deep "$app"
 

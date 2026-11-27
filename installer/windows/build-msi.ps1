@@ -40,6 +40,10 @@ dotnet publish src\MissionPlanner.App -c Release -r $Runtime --self-contained tr
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed" }
 # the MSI takes the whole publish folder, Tools\dfu-util included
 if (-not (Test-Path (Join-Path $publish "Tools\dfu-util\dfu-util.exe"))) { throw "the bundled dfu-util is missing from the publish" }
+# the neural speech engine (src\MissionPlanner.App\Tools\sherpa-onnx) next to the app; the MSI takes it with the folder
+foreach ($lib in "sherpa-onnx-c-api.dll", "onnxruntime.dll") {
+    if (-not (Test-Path (Join-Path $publish $lib))) { throw "the speech engine's $lib is missing from the publish" }
+}
 
 # 2. SDL2 (cached between runs)
 $cache = Join-Path $root "bin\cache"

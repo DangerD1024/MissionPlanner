@@ -37,6 +37,10 @@
     <PackageReference Include="SSH.NET" Version="2026.0.0" />
     <!-- heights above the ellipsoid for NMEA and Cursor on Target, as Mission Planner -->
     <PackageReference Include="GeoidHeightsDotNet" Version="1.0.1" />
+    <!-- neural speech (Speech/): the managed sherpa-onnx API only. The native engine comes with the desktop
+         app (MissionPlanner.App/Tools/sherpa-onnx/sherpa-onnx.targets), so the phone builds, which reference
+         this project too, carry no native libraries and keep the system voice -->
+    <PackageReference Include="org.k2fsa.sherpa.onnx" Version="$(SherpaOnnxVersion)" ExcludeAssets="native" />
   </ItemGroup>
 
   <ItemGroup>

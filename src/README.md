@@ -12,7 +12,7 @@ left menus on SETUP and CONFIG (pages appear only when they apply to the connect
 
 | Screen | Contents |
 |---|---|
-| DATA | HUD with video (right-click: RTSP, UDP H.264/H.265, MPEG-TS, MJPEG or a GStreamer pipeline); tabs Quick (6 configurable values), PreFlight, Gauges, Servo/Relay, Aux Function, Payload, Transponder, Actions (mode, arm/disarm, Auto/Loiter/RTL, set WP, change alt/speed, Do Action), Messages, Status, Telemetry Logs (tlog playback), DataFlash Logs (download window, log browser with graphs and GPS track); map with vehicle, track, mission/fence/rally, heading lines, Fly To Here, Set Home Here; live tuning graph |
+| DATA | HUD with video (right-click: RTSP, UDP H.264/H.265, MPEG-TS, MJPEG or a GStreamer pipeline); tabs Quick (6 configurable values), PreFlight, Gauges, Servo/Relay, Aux Function, Payload, Transponder, Actions (mode, arm/disarm, Auto/Loiter/RTL, set WP, change alt/speed, Do Action, Speech: announcements with a downloaded neural voice or the system voice), Messages, Status, Telemetry Logs (tlog playback), DataFlash Logs (download window, log browser with graphs and GPS track); map with vehicle, track, mission/fence/rally, heading lines, Fly To Here, Set Home Here; live tuning graph |
 | PLAN | Mission / fence / rally editor: map editing (click, drag, insert, polygon tools), waypoint grid with per-command headers from `mavcmd.xml`, home, file load/save (QGC WPL), read/write to the vehicle, Survey (Grid) dialog |
 | SETUP | Install Firmware (manifest, board detection, bootloader upload; STM32 DFU flashing of the bootloader + firmware .hex with the bundled dfu-util for boards running iNav, Betaflight or nothing), Frame Type, Accel / Compass / Radio calibration (optional QGroundControl-style channel mapping), Servo Output (with a Motor layout tab: frame type, motor order wizard, motor direction, reversed-direction switch), Serial Ports, ESC Calibration, Flight Modes, FailSafe, Battery Monitor, Motor Test, Rangefinder, Airspeed, Optical Flow, OSD, Mount, Parachute, CompassMot, ADSB, HW ID, Initial Parameters, RTK/GPS Inject, Joystick, SiK Radio, DroneCAN, Terminal |
 | CONFIG | Basic / Extended Tuning (Mission Planner layouts per vehicle), Standard / Advanced Params, Full Parameter List (value lists, bitmask editor, compare, file load/save, reboot), Full Parameter Tree, User Params, MAVFtp browser, MAVLink Inspector |
@@ -97,11 +97,22 @@ to flash boards in STM32 DFU mode (bundled copy first, then PATH; on Apple Silic
 Homebrew first). Windows needs the WinUSB driver for "STM32 BOOTLOADER" (Zadig); Linux needs the udev rule from
 HELP › Allow USB access.
 
+`src/MissionPlanner.App/Tools/sherpa-onnx/` adds the neural speech engine: sherpa-onnx 2.0.3 (Apache-2.0,
+no GPL code) with ONNX Runtime 1.28.2 (MIT), from the `org.k2fsa.sherpa.onnx.runtime.<rid>` NuGet packages
+for linux-x64, linux-arm64, win-x64, win-x86, win-arm64, osx-x64 and osx-arm64. `App.Core` references only
+the managed API (`ExcludeAssets="native"`, so the phone apps carry no native engine and keep their speech);
+`sherpa-onnx.targets` adds the runtime's libraries next to the app and `README.txt` with the licences to
+`Tools/sherpa-onnx/`. No voice is bundled: DATA › Actions › Speech... › Engine & voice downloads them
+(Kokoro, Kitten TTS; Apache-2.0) from sherpa-onnx's `tts-models` release; the system voice speaks until one is
+ready, or when the engine cannot run (`App.Core/Speech/`: catalogue, download store, lexicon phonemizer,
+engine, players).
+
 ## Data and settings
 
 Shared with the WinForms app: the data folder (`~/.local/share/Mission Planner/` on Linux, the
 usual folders on Windows/macOS) — map tile cache, parameter documentation, logs, SITL binaries.
-Settings are kept separately in `config.next.xml` so the two apps never overwrite each other.
+Settings are kept separately in `config.next.xml` so the two apps never overwrite each other. Neural voices
+are downloaded to `voices/` in the data folder (per user).
 
 ## Notes for contributors
 

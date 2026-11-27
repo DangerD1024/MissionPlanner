@@ -43,6 +43,7 @@ public sealed partial class SpeechSettingsViewModel : PageViewModel, IDialogPage
         _lowAirTrigger = (decimal)SpeechOptions.Number(SpeechOptions.LowAirSpeedTriggerKey, 0);
         _linkLost = SpeechOptions.On(SpeechOptions.LinkLostKey, true);
         _statusSeverity = SpeechOptions.Severity;
+        Voice = new SpeechVoiceViewModel(AppSpeech.Engine, services.Dialogs);
     }
 
     /// <summary>Opens the dialog (DATA > Actions "Speech...", SETTINGS > Speech).</summary>
@@ -50,6 +51,13 @@ public sealed partial class SpeechSettingsViewModel : PageViewModel, IDialogPage
         services.Windows.ShowDialogAsync(new SpeechSettingsViewModel(services), 760, 820);
 
     public AppServices Services { get; }
+
+    /// <summary>Engine and voice: neural or system, the downloadable voices, speaker, speed, volume.</summary>
+    public SpeechVoiceViewModel Voice { get; }
+
+    public override void OnShown() => _ = Voice.LoadSystemVoicesAsync();
+
+    public override void Tick() => Voice.Tick();
 
     public event EventHandler<bool>? CloseRequested;
 
@@ -130,6 +138,7 @@ public sealed partial class SpeechSettingsViewModel : PageViewModel, IDialogPage
         s[SpeechOptions.LowAirSpeedKey] = LowAirText;
         s[SpeechOptions.LowAirSpeedTriggerKey] = N(LowAirTrigger, 0);
         s[SpeechOptions.LinkLostKey] = B(LinkLost);
+        Voice.Save();
         try
         {
             s.Save();
@@ -139,8 +148,9 @@ public sealed partial class SpeechSettingsViewModel : PageViewModel, IDialogPage
             // kept in memory; saved with the next settings write
         }
 
-        // the switches on SETTINGS and DATA > Actions follow
+        // the switches on SETTINGS and DATA > Actions follow; a changed engine or voice is loaded
         AppSpeech.ApplySettings(Services);
+        AppSpeech.ApplyVoiceSettings();
         CloseRequested?.Invoke(this, true);
     }
 

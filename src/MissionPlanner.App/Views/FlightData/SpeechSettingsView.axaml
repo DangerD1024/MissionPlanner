@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             xmlns:sp="using:MissionPlanner.App.Core.Speech"
              xmlns:l="using:MissionPlanner.App.Localization"
              x:Class="MissionPlanner.App.Views.FlightData.SpeechSettingsView"
              x:DataType="vm:SpeechSettingsViewModel"
@@ -27,16 +28,137 @@
     <Style Selector="CheckBox.head">
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
+    <Style Selector="TextBlock.head">
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBlock.warn">
+      <Setter Property="Foreground" Value="{DynamicResource Warn}" />
+    </Style>
+    <Style Selector="Border.voice">
+      <Setter Property="Background" Value="{DynamicResource Bg1}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="8,6" />
+    </Style>
+    <Style Selector="Border.voice.selected">
+      <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+      <Setter Property="Background" Value="{DynamicResource AccentSoft}" />
+    </Style>
+    <Style Selector="Border.badge">
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="5,1" />
+      <Setter Property="Background" Value="{DynamicResource Accent}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.badge TextBlock">
+      <Setter Property="FontSize" Value="10.5" />
+      <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
+    </Style>
   </UserControl.Styles>
 
   <Grid RowDefinitions="Auto,*,Auto" Margin="14">
     <StackPanel Spacing="4" Margin="0,0,0,10">
       <TextBlock Classes="h2" Text="{l:Tr 'Speech'}" />
-      <TextBlock Classes="muted" FontSize="12" Text="{Binding BackendText}" TextWrapping="Wrap" />
+      <TextBlock Classes="muted" FontSize="12" Classes.warn="{Binding Voice.StatusIsWarning}" Text="{Binding Voice.StatusText}" TextWrapping="Wrap" />
     </StackPanel>
 
     <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
       <StackPanel Spacing="8">
+        <Border Classes="opt">
+          <StackPanel Spacing="8">
+            <TextBlock Classes="head" Text="{l:Tr 'Engine &amp; voice'}" />
+            <StackPanel Orientation="Horizontal" Spacing="18">
+              <RadioButton GroupName="speechengine" Content="{l:Tr 'Neural voice (downloaded)'}" IsChecked="{Binding Voice.UseNeural}"
+                           ToolTip.Tip="{l:Tr 'A natural voice that runs on this computer; download one below. The system voice speaks until one is ready.'}" />
+              <RadioButton GroupName="speechengine" Content="{l:Tr 'System voice'}" IsChecked="{Binding Voice.UseSystem}" />
+            </StackPanel>
+
+            <StackPanel Spacing="6" IsVisible="{Binding Voice.UseNeural}">
+              <ItemsControl ItemsSource="{Binding Voice.Voices}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Spacing="6" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:VoiceItemViewModel">
+                    <Border Classes="voice" Classes.selected="{Binding IsSelected}">
+                      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                        <RadioButton GroupName="neuralvoice" IsChecked="{Binding IsSelected, Mode=OneWay}" Command="{Binding SelectCommand}"
+                                     VerticalAlignment="Top" ToolTip.Tip="{l:Tr 'Speak with this voice'}" />
+                        <StackPanel Grid.Column="1" Spacing="2">
+                          <WrapPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Margin="0,0,8,0" VerticalAlignment="Center" />
+                            <Border Classes="badge" IsVisible="{Binding Recommended}">
+                              <TextBlock Text="{l:Tr 'Recommended'}" />
+                            </Border>
+                          </WrapPanel>
+                          <TextBlock Classes="caption" Text="{Binding Description}" TextWrapping="Wrap" />
+                          <TextBlock Classes="caption" Text="{Binding Details}" TextWrapping="Wrap" />
+                          <TextBlock Classes="caption" Text="{Binding License}" TextWrapping="Wrap" ToolTip.Tip="{Binding LicenseUrl}" />
+                          <TextBlock Classes="caption" Classes.warn="{Binding Failed}" Text="{Binding StateText}" TextWrapping="Wrap" />
+                          <ProgressBar Minimum="0" Maximum="100" Value="{Binding Progress}" IsIndeterminate="{Binding ProgressUnknown}"
+                                       Height="6" MinHeight="6" IsVisible="{Binding IsBusy}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Spacing="6" VerticalAlignment="Center">
+                          <Button Classes="accent" Content="{l:Tr 'Download'}" Command="{Binding DownloadCommand}" IsVisible="{Binding CanDownload}" />
+                          <Button Content="{l:Tr 'Cancel'}" Command="{Binding CancelCommand}" IsVisible="{Binding IsBusy}" />
+                          <Button Content="{l:Tr 'Delete'}" Command="{Binding DeleteCommand}" IsVisible="{Binding CanDelete}" />
+                        </StackPanel>
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <Grid ColumnDefinitions="170,*,64" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                <TextBlock Classes="caption" Text="{l:Tr 'Speaker'}" />
+                <ComboBox Grid.Column="1" ItemsSource="{Binding Voice.Speakers}" SelectedItem="{Binding Voice.SelectedSpeaker}" HorizontalAlignment="Stretch">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SpeakerItem">
+                      <TextBlock Text="{Binding Label}" />
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Grid.Row="1" Classes="caption" Text="{l:Tr 'Speed'}" />
+                <Slider Grid.Row="1" Grid.Column="1" Minimum="{Binding Voice.MinSpeed}" Maximum="{Binding Voice.MaxSpeed}" Value="{Binding Voice.Speed}"
+                        SmallChange="0.05" LargeChange="0.25" TickFrequency="0.05" IsSnapToTickEnabled="True" />
+                <TextBlock Grid.Row="1" Grid.Column="2" Classes="caption" Text="{Binding Voice.SpeedText}" />
+                <TextBlock Grid.Row="2" Classes="caption" Text="{l:Tr 'Volume'}" />
+                <Slider Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding Voice.Volume}"
+                        SmallChange="5" LargeChange="10" TickFrequency="5" IsSnapToTickEnabled="True" />
+                <TextBlock Grid.Row="2" Grid.Column="2" Classes="caption" Text="{Binding Voice.VolumeText}" />
+              </Grid>
+            </StackPanel>
+
+            <TextBlock Classes="caption" FontWeight="SemiBold" Margin="0,4,0,0" Text="{Binding Voice.SystemProgramText}" />
+            <Grid ColumnDefinitions="170,*,64" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8" IsEnabled="{Binding Voice.SystemHasOptions}">
+              <TextBlock Classes="caption" Text="{l:Tr 'Voice'}" />
+              <ComboBox Grid.Column="1" ItemsSource="{Binding Voice.SystemVoiceList}" SelectedItem="{Binding Voice.SelectedSystemVoice}" HorizontalAlignment="Stretch"
+                        ToolTip.Tip="{l:Tr 'The voices installed on this computer for its own speech program'}">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="sp:SystemVoice">
+                    <TextBlock Text="{Binding Label}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+              <TextBlock Grid.Row="1" Classes="caption" Text="{l:Tr 'Speed'}" />
+              <Slider Grid.Row="1" Grid.Column="1" Minimum="{Binding Voice.MinSpeed}" Maximum="{Binding Voice.MaxSpeed}" Value="{Binding Voice.SystemSpeed}"
+                      SmallChange="0.05" LargeChange="0.25" TickFrequency="0.05" IsSnapToTickEnabled="True" />
+              <TextBlock Grid.Row="1" Grid.Column="2" Classes="caption" Text="{Binding Voice.SystemSpeedText}" />
+              <TextBlock Grid.Row="2" Classes="caption" Text="{l:Tr 'Volume'}" />
+              <Slider Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding Voice.SystemVolume}"
+                      SmallChange="5" LargeChange="10" TickFrequency="5" IsSnapToTickEnabled="True" />
+              <TextBlock Grid.Row="2" Grid.Column="2" Classes="caption" Text="{Binding Voice.SystemVolumeText}" />
+            </Grid>
+
+            <Button Content="{l:Tr 'Test voice'}" Command="{Binding Voice.TestVoiceCommand}" HorizontalAlignment="Left"
+                    ToolTip.Tip="{l:Tr 'Say \'Mode changed to Loiter. Battery 50 percent.\' with the choices above (before saving)'}" />
+          </StackPanel>
+        </Border>
+
         <Border Classes="opt">
           <StackPanel Spacing="6">
             <CheckBox Classes="head" Content="{l:Tr 'Enable speech'}" IsChecked="{Binding Enabled}" />

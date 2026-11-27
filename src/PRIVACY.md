@@ -23,6 +23,8 @@ your device, in the app's own storage. Removing the app removes them.
   area being viewed, as any map app's do, and are covered by the provider's own privacy policy.
 - **Place search** (desktop): a place name you search for is sent to OpenStreetMap Nominatim.
 - **Updates** (desktop): the app asks GitHub for the latest release of Mission Planner 3.
+- **Neural voices** (desktop): a voice you choose to download in the speech settings comes from the
+  sherpa-onnx project's releases on GitHub. Speech is then made on your computer; no text is sent anywhere.
 
 ## Location
 
