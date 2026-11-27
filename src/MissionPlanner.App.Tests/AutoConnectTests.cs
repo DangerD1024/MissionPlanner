@@ -238,6 +238,54 @@ public class AutoConnectTests
         Assert.AreEqual(LinkSpec.UdpListen(14550), spec);
     }
 
+    /// <summary>
+    /// A MatekH743 is two USB serial ports ("-if00", "-if02"), both answering MAVLink: after Disconnect on
+    /// one, auto-connect used to connect straight back through the other.
+    /// </summary>
+    [TestMethod]
+    [Timeout(40000, CooperativeCancellation = true)]
+    public async Task DisconnectHoldsEveryUsbPortOfThatFlightController()
+    {
+        var probed = new System.Collections.Concurrent.ConcurrentBag<string>();
+        var scans = 0;
+        using var svc = new AutoConnectService(() => true)
+        {
+            ProbeUdp = () => false,
+            ProbeTcp = (_, _) => false,
+            ResolvePort = p => p,
+            PortDevice = p => p is "/dev/ttyACM1" or "/dev/ttyACM2" ? "usb:/sys/devices/usb1/1-2" : p == "/dev/ttyACM7" ? "usb:/sys/devices/usb1/1-3" : null,
+            ListPorts = () =>
+            {
+                Interlocked.Increment(ref scans);
+                return ["/dev/ttyACM1", "/dev/ttyACM2"];
+            },
+            ProbeSerial = (port, _, _, _) =>
+            {
+                probed.Add(port);
+                return true;
+            },
+        };
+        var found = new TaskCompletionSource<LinkSpec>();
+        svc.Found += (spec, _) => found.TrySetResult(spec);
+        var status = "";
+        svc.StatusChanged += s => status = s;
+
+        svc.HoldOff(LinkSpec.Serial("/dev/ttyACM1", 115200));
+        Assert.IsTrue(svc.IsHeld(LinkSpec.Serial("/dev/ttyACM2")), "the same flight controller's other port");
+        Assert.IsFalse(svc.IsHeld(LinkSpec.Serial("/dev/ttyACM7")), "another flight controller");
+        svc.Start();
+
+        await WaitScans(() => scans, 3);
+        Assert.IsFalse(found.Task.IsCompleted, "no connecting back through the second port");
+        Assert.AreEqual(0, probed.Count, "neither port is opened");
+        StringAssert.Contains(status, "ttyACM1 and its other USB ports until it is unplugged");
+
+        // connecting by hand to either port is the user's choice: the whole board is released
+        svc.Release(LinkSpec.Serial("/dev/ttyACM2", 115200));
+        Assert.IsFalse(svc.IsHeld(LinkSpec.Serial("/dev/ttyACM1")));
+        Assert.IsFalse(svc.IsHeld(LinkSpec.Serial("/dev/ttyACM2")));
+    }
+
     [TestMethod]
     [Timeout(20000, CooperativeCancellation = true)]
     public async Task AHeldPortDoesNotStopTheScanFindingAnotherVehicle()

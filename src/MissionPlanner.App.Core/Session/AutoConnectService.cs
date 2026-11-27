@@ -77,12 +77,21 @@ public sealed class AutoConnectService : IDisposable
     /// <summary>Replaceable for tests: the device a serial port name stands for (by-id links resolved).</summary>
     public Func<string, string> ResolvePort { get; set; } = RealPath;
 
+    /// <summary>
+    /// Replaceable for tests: the USB device a serial port belongs to (null when unknown). A flight
+    /// controller can have two USB serial ports (MatekH743: "-if00" and "-if02"); a Disconnect holds them all.
+    /// </summary>
+    public Func<string, string?> PortDevice { get; set; } = UsbDevices.DeviceOf;
+
     /// <summary>How long a held UDP/TCP vehicle must stay silent to count as gone.</summary>
     public TimeSpan GoneAfter { get; set; } = TimeSpan.FromSeconds(10);
 
-    private sealed class Hold(string key, string label, bool network)
+    private sealed class Hold(string key, string label, bool network, string? device = null)
     {
         public string Key { get; } = key;
+
+        /// <summary>The USB device of a held serial port: its other ports are the same vehicle.</summary>
+        public string? Device { get; } = device;
         public string Label { get; } = label;
         public bool Network { get; } = network;
         public DateTime LastHeard { get; set; } = DateTime.UtcNow;
@@ -103,10 +112,11 @@ public sealed class AutoConnectService : IDisposable
             LinkKind.UdpListen => "UDP " + spec.Value,
             _ => "TCP " + spec.Value,
         };
+        var device = spec.Kind == LinkKind.Serial ? DeviceOf(spec.Address) : null;
         lock (_holds)
         {
-            _holds.RemoveAll(h => h.Key == key);
-            _holds.Add(new Hold(key, label, spec.Kind != LinkKind.Serial));
+            _holds.RemoveAll(h => h.Key == key || (device != null && h.Device == device));
+            _holds.Add(new Hold(key, label, spec.Kind != LinkKind.Serial, device));
         }
     }
 
@@ -114,8 +124,10 @@ public sealed class AutoConnectService : IDisposable
     public void Release(LinkSpec spec)
     {
         var key = Key(spec);
+        // connecting by hand to any port of a held flight controller releases all of them
+        var device = spec.Kind == LinkKind.Serial && HasDeviceHolds() ? DeviceOf(spec.Address) : null;
         lock (_holds)
-            _holds.RemoveAll(h => h.Key == key);
+            _holds.RemoveAll(h => h.Key == key || (device != null && h.Device == device));
     }
 
     public void ReleaseAll()
@@ -128,7 +140,35 @@ public sealed class AutoConnectService : IDisposable
     {
         var key = Key(spec);
         lock (_holds)
-            return _holds.Any(h => h.Key == key);
+        {
+            if (_holds.Any(h => h.Key == key))
+                return true;
+        }
+
+        // another USB port of a held flight controller
+        if (spec.Kind != LinkKind.Serial || !HasDeviceHolds() || DeviceOf(spec.Address) is not { } device)
+            return false;
+        lock (_holds)
+            return _holds.Any(h => h.Device == device);
+    }
+
+    private bool HasDeviceHolds()
+    {
+        lock (_holds)
+            return _holds.Any(h => h.Device != null);
+    }
+
+    private string? DeviceOf(string port)
+    {
+        try
+        {
+            return PortDevice(port);
+        }
+        catch (Exception ex)
+        {
+            Log.Debug("usb device of " + port, ex);
+            return null;
+        }
     }
 
     private string Key(LinkSpec spec) => spec.Kind switch
@@ -184,7 +224,9 @@ public sealed class AutoConnectService : IDisposable
         {
             if (_holds.Count == 0)
                 return "Searching for a vehicle…";
-            var parts = _holds.Select(h => h.Network ? h.Label + " until the vehicle stops sending" : h.Label + " until it is unplugged");
+            var parts = _holds.Select(h => h.Network ? h.Label + " until the vehicle stops sending"
+                : h.Device != null ? h.Label + " and its other USB ports until it is unplugged"
+                : h.Label + " until it is unplugged");
             return "Searching for a vehicle… (skipping " + string.Join(", ", parts) + ")";
         }
     }
