@@ -154,10 +154,28 @@ public class VoiceStoreTests
     }
 
     [TestMethod]
+    public void FreeSpaceIsTheDriveTheFolderIsOn()
+    {
+        // the test data folder (under the temporary folder, often its own tmpfs) against its mounted drive
+        var folder = SpeechTestSupport.NewFolder("space");
+        var full = Path.GetFullPath(folder) + Path.DirectorySeparatorChar;
+        var drive = DriveInfo.GetDrives()
+            .Where(d => full.StartsWith(d.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar,
+                OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+            .MaxBy(d => d.RootDirectory.FullName.Length);
+        Assert.IsNotNull(drive);
+        var free = VoiceStore.FreeSpace(folder);
+        Assert.IsNotNull(free);
+        // free space moves while other tests write: same drive within 64 MB
+        Assert.AreEqual(drive.AvailableFreeSpace, free.Value, 64L * 1024 * 1024);
+    }
+
+    [TestMethod]
     public async Task ACancelledDownloadLeavesNothing()
     {
         var root = SpeechTestSupport.NewFolder("voices");
         var started = new TaskCompletionSource();
+        // plenty of room whatever this computer's disks hold
         var store = new VoiceStore(root, async (_, path, _, cancel) =>
         {
             await File.WriteAllTextAsync(path + ".part", "partial", cancel);
@@ -170,7 +188,7 @@ public class VoiceStoreTests
             {
                 File.Delete(path + ".part"); // as FileDownloader does
             }
-        });
+        }, _ => long.MaxValue);
 
         var install = store.InstallAsync(Kokoro);
         await started.Task.WaitAsync(TimeSpan.FromSeconds(10));

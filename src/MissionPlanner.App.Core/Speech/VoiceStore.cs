@@ -369,11 +369,37 @@ public sealed class VoiceStore
         ? $"{bytes / (1024.0 * 1024 * 1024):0.0} GB"
         : $"{Math.Max(1, (long)Math.Round(bytes / (1024.0 * 1024)))} MB";
 
-    private static long? FreeSpace(string folder)
+    /// <summary>
+    /// Free bytes where the folder is stored: the mounted drive that holds it (on Linux and macOS the path
+    /// root "/" is only one of them: /tmp, /home or a second disk can be another), null if unknown.
+    /// </summary>
+    internal static long? FreeSpace(string folder)
     {
         try
         {
-            return new DriveInfo(Path.GetPathRoot(Path.GetFullPath(folder))!).AvailableFreeSpace;
+            var full = Path.GetFullPath(folder);
+            var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+            DriveInfo? best = null;
+            foreach (var drive in DriveInfo.GetDrives())
+            {
+                string root;
+                try
+                {
+                    root = drive.RootDirectory.FullName;
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+
+                var prefix = root.EndsWith(Path.DirectorySeparatorChar) ? root : root + Path.DirectorySeparatorChar;
+                if ((full + Path.DirectorySeparatorChar).StartsWith(prefix, comparison) &&
+                    (best == null || root.Length > best.RootDirectory.FullName.Length))
+                    best = drive;
+            }
+
+            best ??= new DriveInfo(Path.GetPathRoot(full)!);
+            return best.AvailableFreeSpace;
         }
         catch (Exception)
         {
