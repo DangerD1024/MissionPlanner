@@ -53,6 +53,7 @@ public sealed partial class MapSettingsViewModel : PageViewModel, IDialogPage
         _displayHeading = MapOptions.DisplayHeading;
         _displayNavBearing = MapOptions.DisplayNavBearing;
         _displayTarget = MapOptions.DisplayTarget;
+        _showAirports = MapOptions.ShowAirports;
         _lineLength = MapOptions.LineLength;
         _loading = false;
     }
@@ -134,6 +135,12 @@ public sealed partial class MapSettingsViewModel : PageViewModel, IDialogPage
     partial void OnDisplayNavBearingChanged(bool value) => Store(MapOptions.DisplayNavBearingKey, value.ToString());
 
     partial void OnDisplayTargetChanged(bool value) => Store(MapOptions.DisplayTargetKey, value.ToString());
+
+    /// <summary>Medium and large airports with Mission Planner's circle around them, on the DATA and PLAN maps.</summary>
+    [ObservableProperty]
+    private bool _showAirports;
+
+    partial void OnShowAirportsChanged(bool value) => Store(MapOptions.ShowAirportsKey, value.ToString());
 
     /// <summary>Length of the vehicle's lines, pixels.</summary>
     [ObservableProperty]

@@ -22,6 +22,9 @@ public static class MapOptions
     /// <summary>The GMap.NET <see cref="GMap.NET.AccessMode"/> name.</summary>
     public const string AccessModeKey = "mapCache";
 
+    /// <summary>Mission Planner's "Show Airports" (on unless switched off).</summary>
+    public const string ShowAirportsKey = "showairports";
+
     /// <summary>
     /// Points kept for the flown track when nothing is set. Mission Planner's default is 200 points taken every
     /// 0.3 s; this app keeps a point every 1.5 m instead, and has kept 2000 of them from the start.
@@ -41,6 +44,8 @@ public static class MapOptions
         Math.Clamp(Settings.Instance.GetInt32(TrackLengthKey, DefaultTrackLength), MinTrackLength, MaxTrackLength);
 
     public static bool DisplayCog => Settings.Instance.GetBoolean(DisplayCogKey, true);
+
+    public static bool ShowAirports => Settings.Instance.GetBoolean(ShowAirportsKey, true);
 
     public static bool DisplayHeading => Settings.Instance.GetBoolean(DisplayHeadingKey, true);
 

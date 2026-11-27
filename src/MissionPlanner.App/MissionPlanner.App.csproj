@@ -43,6 +43,8 @@
     <Content Include="..\..\SerialOptionRules.json" Link="SerialOptionRules.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\acsimplepids.xml" Link="acsimplepids.xml" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\checklistDefault.xml" Link="checklistDefault.xml" CopyToOutputDirectory="PreserveNewest" />
+    <!-- OurAirports list for the maps' airports overlay (Map settings > Show airports), as Mission Planner ships it -->
+    <Content Include="..\..\airports.csv" Link="airports.csv" CopyToOutputDirectory="PreserveNewest" />
     <!-- the icon for the Linux applications-menu entry (Help > Add to applications menu) -->
     <Content Include="Assets\mission-planner-128.png" Link="mission-planner-128.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

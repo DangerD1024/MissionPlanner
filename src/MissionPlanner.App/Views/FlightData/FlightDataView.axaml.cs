@@ -191,6 +191,12 @@ public sealed partial class FlightDataView : UserControl
         SizeHud(LeftColumn.Bounds.Size);
         LayoutMapArea();
         ApplySwap();
+        // airports under everything else (Map settings > Show airports)
+        Map.Layers.Add(new AirportsLayer(vm.Services.Airports));
+        vm.Services.Airports.Loaded -= OnAirportsLoaded;
+        vm.Services.Airports.Loaded += OnAirportsLoaded;
+        vm.Services.MapSettingsChanged -= OnMapSettingsChanged;
+        vm.Services.MapSettingsChanged += OnMapSettingsChanged;
         Map.Layers.Add(new MissionLayer(vm.MapModel));
         Map.Layers.Add(new PhotoLayer(vm.MapModel));
         Map.Layers.Add(new TrackLayer(vm.MapModel));
@@ -205,6 +211,12 @@ public sealed partial class FlightDataView : UserControl
     }
 
     private void OnPoisChanged(object? sender, EventArgs e) => Map.InvalidateVisual();
+
+    /// <summary>The airport list was read (on a worker thread): draw it.</summary>
+    private void OnAirportsLoaded(object? sender, EventArgs e) => Avalonia.Threading.Dispatcher.UIThread.Post(Map.InvalidateVisual);
+
+    /// <summary>A map setting changed (airports on or off, ...): draw again.</summary>
+    private void OnMapSettingsChanged(object? sender, EventArgs e) => Map.InvalidateVisual();
 
     // the moving base reports from its reader thread
     private void OnGcsLocationChanged(object? sender, EventArgs e) => Avalonia.Threading.Dispatcher.UIThread.Post(Map.InvalidateVisual);

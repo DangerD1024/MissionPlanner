@@ -76,6 +76,8 @@ public sealed partial class FlightPlanView : UserControl
         if (vm == null)
             return;
 
+        // airports under everything else (Map settings > Show airports)
+        Map.Layers.Add(new AirportsLayer(vm.Services.Airports));
         Map.Layers.Add(new KmlOverlayLayer(vm));
         Map.Layers.Add(new FenceShapesLayer(vm));
         Map.Layers.Add(new MissionRouteLayer(vm));
@@ -89,6 +91,10 @@ public sealed partial class FlightPlanView : UserControl
         Map.Layers.Add(new GcsLocationLayer(vm.Services.GcsLocation));
         vm.Services.Pois.Changed -= OnPoisChanged;
         vm.Services.Pois.Changed += OnPoisChanged;
+        vm.Services.Airports.Loaded -= OnAirportsLoaded;
+        vm.Services.Airports.Loaded += OnAirportsLoaded;
+        vm.Services.MapSettingsChanged -= OnMapSettingsChanged;
+        vm.Services.MapSettingsChanged += OnMapSettingsChanged;
         vm.Services.GcsLocation.Changed -= OnGcsLocationChanged;
         vm.Services.GcsLocation.Changed += OnGcsLocationChanged;
 
@@ -254,6 +260,12 @@ public sealed partial class FlightPlanView : UserControl
     // ---- map context menu ----------------------------------------------------------------------
 
     private void OnPoisChanged(object? sender, EventArgs e) => Map.InvalidateVisual();
+
+    /// <summary>The airport list was read (on a worker thread): draw it.</summary>
+    private void OnAirportsLoaded(object? sender, EventArgs e) => Avalonia.Threading.Dispatcher.UIThread.Post(Map.InvalidateVisual);
+
+    /// <summary>A map setting changed (airports on or off, ...): draw again.</summary>
+    private void OnMapSettingsChanged(object? sender, EventArgs e) => Map.InvalidateVisual();
 
     // the moving base reports from its reader thread
     private void OnGcsLocationChanged(object? sender, EventArgs e) => Dispatcher.UIThread.Post(Map.InvalidateVisual);

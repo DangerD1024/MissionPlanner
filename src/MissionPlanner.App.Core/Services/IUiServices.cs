@@ -157,6 +157,11 @@ public sealed class AppServices
     /// <summary>The map settings page (gear button on the DATA and PLAN maps, SETTINGS > Map); one for the app.</summary>
     public ViewModels.FlightData.MapSettingsViewModel MapSettings => _mapSettings ??= new ViewModels.FlightData.MapSettingsViewModel(this);
 
+    private Maps.AirportCatalog? _airports;
+
+    /// <summary>The airports the DATA and PLAN maps mark (Map settings > Show airports); read on first use.</summary>
+    public Maps.AirportCatalog Airports => _airports ??= new Maps.AirportCatalog(Maps.AirportCatalog.DefaultPath);
+
     /// <summary>Raised on the UI thread when a map setting changed (<see cref="Maps.MapOptions"/>); the maps apply it at once.</summary>
     public event EventHandler? MapSettingsChanged;
 
