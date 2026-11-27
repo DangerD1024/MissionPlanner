@@ -1,0 +1,22 @@
+<Project>
+  <!--
+    The native neural speech engine (sherpa-onnx with onnxruntime) for the desktop app. MissionPlanner.App.Core
+    references only sherpa-onnx's managed API (ExcludeAssets="native"), so the phone builds carry no native
+    libraries; this adds the runtime package of the platform being built: `dotnet publish -r <rid>` takes that
+    runtime's, a build without a runtime takes this machine's. The libraries land next to the app (the .NET
+    host finds them there); README.txt and the licences go to Tools/sherpa-onnx/. Imported by
+    MissionPlanner.App and MissionPlanner.App.Tests. Voices are not bundled: the app downloads them.
+  -->
+  <PropertyGroup>
+    <MpSherpaOnnxRid>$(RuntimeIdentifier)</MpSherpaOnnxRid>
+    <MpSherpaOnnxRid Condition="'$(MpSherpaOnnxRid)' == ''">$(NETCoreSdkPortableRuntimeIdentifier)</MpSherpaOnnxRid>
+    <MpSherpaOnnxSupported Condition="'$(MpSherpaOnnxRid)' == 'linux-x64' or '$(MpSherpaOnnxRid)' == 'linux-arm64' or '$(MpSherpaOnnxRid)' == 'win-x64' or '$(MpSherpaOnnxRid)' == 'win-x86' or '$(MpSherpaOnnxRid)' == 'win-arm64' or '$(MpSherpaOnnxRid)' == 'osx-x64' or '$(MpSherpaOnnxRid)' == 'osx-arm64'">true</MpSherpaOnnxSupported>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(MpSherpaOnnxSupported)' == 'true'">
+    <PackageReference Include="org.k2fsa.sherpa.onnx.runtime.$(MpSherpaOnnxRid)" Version="$(SherpaOnnxVersion)" />
+    <Content Include="$(MSBuildThisFileDirectory)README.txt;$(MSBuildThisFileDirectory)LICENSE.sherpa-onnx.txt;$(MSBuildThisFileDirectory)LICENSE.onnxruntime.txt"
+             Link="Tools\sherpa-onnx\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+</Project>

@@ -53,4 +53,7 @@
   </ItemGroup>
   <Import Project="Tools\dfu-util\dfu-util.targets" />
 
+  <!-- the neural speech engine (sherpa-onnx, onnxruntime) for this runtime, next to the app (Tools/sherpa-onnx/README.txt) -->
+  <Import Project="Tools\sherpa-onnx\sherpa-onnx.targets" />
+
 </Project>

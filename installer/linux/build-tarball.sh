@@ -26,6 +26,10 @@ chmod 755 "$stage/$name/MissionPlanner.App" "$stage/$name/createdump"
 dfu="$stage/$name/Tools/dfu-util/dfu-util"
 [ -f "$dfu" ] || { echo "the bundled dfu-util is missing from the publish ($dfu)" >&2; exit 1; }
 chmod 755 "$dfu"
+# the neural speech engine (src/MissionPlanner.App/Tools/sherpa-onnx), next to the app
+for lib in libsherpa-onnx-c-api.so libonnxruntime.so; do
+    [ -f "$stage/$name/$lib" ] || { echo "the speech engine's $lib is missing from the publish" >&2; exit 1; }
+done
 
 out="bin/$name-$rid.tar.gz"
 tar -C "$stage" --owner=0 --group=0 -czf "$out" "$name"
