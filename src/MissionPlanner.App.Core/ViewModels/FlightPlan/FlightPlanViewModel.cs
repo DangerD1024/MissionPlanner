@@ -416,6 +416,10 @@ public sealed partial class FlightPlanViewModel : PageViewModel
             RequestZoom(pts);
     }
 
+    /// <summary>The gear button over the map: the map settings shared with DATA and SETTINGS.</summary>
+    [RelayCommand]
+    private Task OpenMapSettingsAsync() => FlightData.MapSettingsViewModel.ShowAsync(Services);
+
     // ---- files -------------------------------------------------------------------------------
 
     private static readonly FileFilter[] WaypointFilters =

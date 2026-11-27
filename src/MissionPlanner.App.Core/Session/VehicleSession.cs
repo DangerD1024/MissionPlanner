@@ -147,7 +147,12 @@ public sealed class VehicleSession : IAsyncDisposable
 
         try
         {
-            Mav.BaseStream = LinkFactory.Create(spec);
+            var link = LinkFactory.Create(spec);
+            // SETTINGS > Connection: the ESP32 RTS fix and "reset on USB connect" (DTR pulse) for a serial port,
+            // before the link is the reader's, as Mission Planner holds its reader off for the reset
+            if (link is SerialPort)
+                await Task.Run(() => ConnectOptions.BeforeOpen(link), CancellationToken.None).ConfigureAwait(false);
+            Mav.BaseStream = link;
             // log the whole session, parameter download included, as the WinForms app does
             StartTlog();
 

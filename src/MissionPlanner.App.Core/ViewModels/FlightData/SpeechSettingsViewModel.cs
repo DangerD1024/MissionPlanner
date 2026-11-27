@@ -42,8 +42,12 @@ public sealed partial class SpeechSettingsViewModel : PageViewModel, IDialogPage
         _lowAirText = SpeechOptions.Text(SpeechOptions.LowAirSpeedKey, SpeechOptions.LowAirSpeedDefault);
         _lowAirTrigger = (decimal)SpeechOptions.Number(SpeechOptions.LowAirSpeedTriggerKey, 0);
         _linkLost = SpeechOptions.On(SpeechOptions.LinkLostKey, true);
-        _statusSeverity = Settings.Instance.GetInt32("severity", 4);
+        _statusSeverity = SpeechOptions.Severity;
     }
+
+    /// <summary>Opens the dialog (DATA > Actions "Speech...", SETTINGS > Speech).</summary>
+    public static Task ShowAsync(AppServices services) =>
+        services.Windows.ShowDialogAsync(new SpeechSettingsViewModel(services), 760, 820);
 
     public AppServices Services { get; }
 
@@ -52,21 +56,13 @@ public sealed partial class SpeechSettingsViewModel : PageViewModel, IDialogPage
     public string AltitudeUnit => Units.Altitude;
 
     /// <summary>Which program speaks, for the header.</summary>
-    public string BackendText => AppSpeech.Engine.BackendName is { } name
-        ? $"Speech uses {name}."
-        : SpeechBackend.Current switch
-        {
-            SpeechBackend.Os.Linux => "No speech program found: install speech-dispatcher (spd-say) or espeak-ng.",
-            SpeechBackend.Os.MacOs => "No speech program found (the system's 'say').",
-            _ => "No speech program found (Windows PowerShell with System.Speech).",
-        };
+    public string BackendText => AppSpeech.BackendText;
 
     public string PlaceholderHelp =>
         "Placeholders: {mode} {wpn} {alt} {wpa} {gsp} {asp} {vsp} {batv} {batp} {curr} {hdop} {satcount} {rssi} {disthome} {timeinair} {altunit} {speedunit}";
 
     /// <summary>MAV_SEVERITY names: status texts at or above this are spoken (and shown on the HUD).</summary>
-    public IReadOnlyList<string> Severities { get; } =
-        ["Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Info", "Debug"];
+    public IReadOnlyList<string> Severities => SpeechOptions.Severities;
 
     [ObservableProperty] private bool _enabled;
     [ObservableProperty] private bool _armedOnly;
@@ -110,7 +106,7 @@ public sealed partial class SpeechSettingsViewModel : PageViewModel, IDialogPage
 
         s[SpeechOptions.EnableKey] = B(Enabled);
         s[SpeechOptions.ArmedOnlyKey] = B(ArmedOnly);
-        s["severity"] = Math.Clamp(StatusSeverity, 0, 7).ToString(CultureInfo.InvariantCulture);
+        s[SpeechOptions.SeverityKey] = Math.Clamp(StatusSeverity, 0, 7).ToString(CultureInfo.InvariantCulture);
         s[SpeechOptions.Waypoint.Enabled] = B(Waypoint);
         s[SpeechOptions.Waypoint.Text] = WaypointText;
         s[SpeechOptions.Mode.Enabled] = B(Mode);
@@ -143,7 +139,8 @@ public sealed partial class SpeechSettingsViewModel : PageViewModel, IDialogPage
             // kept in memory; saved with the next settings write
         }
 
-        AppSpeech.ApplySettings();
+        // the switches on SETTINGS and DATA > Actions follow
+        AppSpeech.ApplySettings(Services);
         CloseRequested?.Invoke(this, true);
     }
 

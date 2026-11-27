@@ -43,9 +43,33 @@ public static class MapTiles
 
             GMaps.Instance.PrimaryCache = cache;
             PurgeBlockedOsmTilesOnce(cache.CacheLocation);
-            GMaps.Instance.Mode = AccessMode.ServerAndCache;
+            // Mission Planner's map access mode (server and cache, server only, cache only)
+            GMaps.Instance.Mode = MapOptions.AccessMode;
             _initialized = true;
         }
+    }
+
+    /// <summary>Where tiles come from now (<see cref="MapOptions.AccessMode"/> at start).</summary>
+    public static AccessMode AccessMode
+    {
+        get
+        {
+            Initialize();
+            return GMaps.Instance.Mode;
+        }
+    }
+
+    /// <summary>Raised (on the caller's thread) when <see cref="SetAccessMode"/> changed where tiles come from; maps fetch theirs again.</summary>
+    public static event Action? AccessModeChanged;
+
+    /// <summary>Switches where tiles come from at once, as Mission Planner's map cache box does.</summary>
+    public static void SetAccessMode(AccessMode mode)
+    {
+        Initialize();
+        if (GMaps.Instance.Mode == mode)
+            return;
+        GMaps.Instance.Mode = mode;
+        AccessModeChanged?.Invoke();
     }
 
     /// <summary>

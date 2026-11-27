@@ -93,18 +93,24 @@
                             Zoom="{Binding Zoom}" />
         </Panel>
 
-        <!-- distances for the mouse position, as Mission Planner's top-left labels -->
-        <Border Classes="overlay" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10"
-                IsHitTestVisible="False" MinWidth="170">
-          <StackPanel Spacing="1">
-            <TextBlock Text="{Binding DistanceText}" FontWeight="SemiBold" FontSize="13" />
-            <TextBlock Text="{Binding PrevText}" FontSize="12" />
-            <TextBlock Text="{Binding HomeDistanceText}" FontSize="12" />
-            <TextBlock Text="{Binding TerrainText}" FontSize="12" Classes="muted" />
-            <TextBlock Text="{Binding PointerText}" FontSize="11" Classes="muted" FontFamily="monospace"
-                       IsVisible="{Binding PointerText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-          </StackPanel>
-        </Border>
+        <!-- top left: map settings, then the distances for the mouse position (Mission Planner's top-left labels) -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10" Spacing="6">
+          <Border Classes="overlay" Padding="3" CornerRadius="6" VerticalAlignment="Top">
+            <Button Padding="6,3" MinHeight="26" Command="{Binding OpenMapSettingsCommand}" ToolTip.Tip="{l:Tr 'Map settings'}">
+              <Path Classes="icon" Data="{StaticResource IconSettings}" Width="16" Height="16" Stretch="Uniform" />
+            </Button>
+          </Border>
+          <Border Classes="overlay" VerticalAlignment="Top" IsHitTestVisible="False" MinWidth="170">
+            <StackPanel Spacing="1">
+              <TextBlock Text="{Binding DistanceText}" FontWeight="SemiBold" FontSize="13" />
+              <TextBlock Text="{Binding PrevText}" FontSize="12" />
+              <TextBlock Text="{Binding HomeDistanceText}" FontSize="12" />
+              <TextBlock Text="{Binding TerrainText}" FontSize="12" Classes="muted" />
+              <TextBlock Text="{Binding PointerText}" FontSize="11" Classes="muted" FontFamily="monospace"
+                         IsVisible="{Binding PointerText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
 
         <!-- drawing a polygon: left clicks add points -->
         <Border Classes="overlay" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10"

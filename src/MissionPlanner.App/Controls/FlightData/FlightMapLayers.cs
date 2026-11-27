@@ -279,8 +279,6 @@ public sealed class MissionLayer(FlightMapModel model) : MapLayer
 /// <summary>Vehicle icon (by type), heading lines, home and guided target.</summary>
 public sealed class VehicleLayer(FlightMapModel model) : MapLayer
 {
-    private const double LineLength = 500; // pixels, as Mission Planner
-
     private static readonly IPen HeadingPen = MapPaint.LinePen(MapPaint.HeadingColor);
     private static readonly IPen NavPen = MapPaint.LinePen(MapPaint.NavBearingColor);
     private static readonly IPen TargetPen = MapPaint.LinePen(MapPaint.TargetBearingColor);
@@ -336,15 +334,20 @@ public sealed class VehicleLayer(FlightMapModel model) : MapLayer
             MapPaint.DrawOutlined(ctx, string.Create(CultureInfo.InvariantCulture, $"Guided {m.GuidedAlt:0}"), 11, MapPaint.White, g + new Point(14, 6));
         }
 
-        // lines first, so the icon sits on top
-        Line(ctx, TrackPen, p, m.GroundCourse);
+        // lines first, so the icon sits on top; which ones and how long (pixels) are map settings, as in Mission Planner
+        var length = m.LineLength;
+        if (m.ShowCog)
+            Line(ctx, TrackPen, p, m.GroundCourse, length);
         if (m.ShowNavLines)
         {
-            Line(ctx, NavPen, p, m.NavBearing);
-            Line(ctx, TargetPen, p, m.TargetBearing);
+            if (m.ShowNavBearing)
+                Line(ctx, NavPen, p, m.NavBearing, length);
+            if (m.ShowTarget)
+                Line(ctx, TargetPen, p, m.TargetBearing, length);
         }
 
-        Line(ctx, HeadingPen, p, m.Heading);
+        if (m.ShowHeading)
+            Line(ctx, HeadingPen, p, m.Heading, length);
 
         var rotate = Matrix.CreateRotation(m.Heading * Math.PI / 180);
         using (ctx.PushTransform(rotate * Matrix.CreateTranslation(p.X + 2, p.Y + 3)))
@@ -353,10 +356,10 @@ public sealed class VehicleLayer(FlightMapModel model) : MapLayer
             DrawIcon(ctx, m.Kind, shadow: false);
     }
 
-    private static void Line(DrawingContext ctx, IPen pen, Point from, double bearingDeg)
+    private static void Line(DrawingContext ctx, IPen pen, Point from, double bearingDeg, double length)
     {
         var a = bearingDeg * Math.PI / 180;
-        ctx.DrawLine(pen, from, new Point(from.X + Math.Sin(a) * LineLength, from.Y - Math.Cos(a) * LineLength));
+        ctx.DrawLine(pen, from, new Point(from.X + Math.Sin(a) * length, from.Y - Math.Cos(a) * length));
     }
 
     private static void DrawIcon(DrawingContext ctx, VehicleIconKind kind, bool shadow)

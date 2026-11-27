@@ -85,7 +85,9 @@ comparison of both code bases (Nov 2026). Ticked items are done. Items marked *w
 - [ ] Full parameter list: Load presaved, Reset to default, Commit params
 - [ ] OSD parameter slots (OSD_PARAM_CONFIG)
 - [ ] MAVFtp: download burst
-- [ ] Planner settings: track length, map line toggles, ADS-B display, GCS sysid, load WPs on connect, slow-machine mode, …
+- [x] Planner settings: speech (SETTINGS), GCS sysid, reset on USB connect, ESP32 RTS fix, load WPs on connect, no RC receiver;
+  map settings (gear button on the DATA / PLAN maps): track length, vehicle line toggles and length, map cache mode
+- [ ] Planner settings still to port: ADS-B display, airports, map rotation, turn radius, slow-machine mode, …
 - *won't port*: Ateryx pages (vehicle no longer exists)
 
 ## Bigger systems

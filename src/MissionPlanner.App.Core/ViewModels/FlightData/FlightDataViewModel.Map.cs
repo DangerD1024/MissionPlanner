@@ -502,6 +502,10 @@ public sealed partial class FlightDataViewModel
         }, "Home position set", "The vehicle rejected the new home position");
     }
 
+    /// <summary>The gear button over the map: track length, vehicle lines, tiles (shared with PLAN and SETTINGS).</summary>
+    [RelayCommand]
+    private Task OpenMapSettingsAsync() => MapSettingsViewModel.ShowAsync(Services);
+
     public void ClearTrack()
     {
         Photos.Clear();
