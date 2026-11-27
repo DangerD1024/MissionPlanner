@@ -96,8 +96,10 @@
         <!-- top left: map settings, then the distances for the mouse position (Mission Planner's top-left labels) -->
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10" Spacing="6">
           <Border Classes="overlay" Padding="3" CornerRadius="6" VerticalAlignment="Top">
-            <Button Padding="6,3" MinHeight="26" Command="{Binding OpenMapSettingsCommand}" ToolTip.Tip="{l:Tr 'Map settings'}">
-              <Path Classes="icon" Data="{StaticResource IconSettings}" Width="16" Height="16" Stretch="Uniform" />
+            <Button Padding="9,3" MinHeight="26" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                  Command="{Binding OpenMapSettingsCommand}" ToolTip.Tip="{l:Tr 'Map settings'}">
+              <Path Classes="icon" Data="{StaticResource IconGear}" Width="17" Height="17" Stretch="Uniform" StrokeThickness="1.4"
+                  HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Button>
           </Border>
           <Border Classes="overlay" VerticalAlignment="Top" IsHitTestVisible="False" MinWidth="170">
