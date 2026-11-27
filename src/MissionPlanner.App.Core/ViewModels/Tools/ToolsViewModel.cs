@@ -205,7 +205,7 @@ public sealed partial class ToolsViewModel : MenuScreenViewModel
             Open("Split DFLog", "split dflog into x pieces", LogToolsTitle),
             Open("signing", "mavlink2 signing configuration", "MAVLink signing"),
             Open("extract gps_inject", "extract rtcm data from tlog", LogToolsTitle),
-            Open("Proximity", "display the proximity ui", "Proximity"),
+            Do("Proximity", "display the proximity ui", a.OpenProximityCommand),
             Open("Follow Swarm", "swarm style", "Follow Swarm"),
             Open("Manage Command List", "Manage Planner's Command List", "Planner command list"),
             Do("DFU Mode", "DFU Mode", c.RebootToDfuCommand),

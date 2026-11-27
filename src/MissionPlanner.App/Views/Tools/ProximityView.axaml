@@ -7,15 +7,18 @@
              x:DataType="vm:ProximityViewModel">
   <Grid RowDefinitions="Auto,Auto,*" Margin="24,20" RowSpacing="12">
     <tv:ToolHeader />
-    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8">
+    <!-- wraps in a narrow radar window -->
+    <WrapPanel Grid.Row="1" ItemSpacing="8" LineSpacing="8">
       <Button Content="{l:Tr 'Zoom in'}" Command="{Binding ZoomInCommand}" ToolTip.Tip="{l:Tr 'Smaller radius (+ key, or the mouse wheel)'}" />
       <Button Content="{l:Tr 'Zoom out'}" Command="{Binding ZoomOutCommand}" ToolTip.Tip="{l:Tr 'Larger radius (- key, or the mouse wheel)'}" />
       <Button Content="{l:Tr 'Vehicle smaller'}" Command="{Binding SmallerCommand}" ToolTip.Tip="[" />
       <Button Content="{l:Tr 'Vehicle larger'}" Command="{Binding LargerCommand}" ToolTip.Tip="]" />
+      <Button Content="{l:Tr 'Open in window'}" Command="{Binding OpenInWindowCommand}" IsVisible="{Binding CanOpenWindow}"
+              ToolTip.Tip="{l:Tr 'A radar window of its own for the selected vehicle, as Mission Planner opens one. Open several to watch more vehicles at once.'}" />
       <TextBlock Text="{Binding RangeText}" VerticalAlignment="Center" Classes="muted" />
       <TextBlock Text="{Binding Summary}" VerticalAlignment="Center" />
       <TextBlock Text="{Binding VerticalText}" VerticalAlignment="Center" Classes="muted" />
-    </StackPanel>
+    </WrapPanel>
     <Border Grid.Row="2" Classes="card" Padding="0" ClipToBounds="True">
       <tv:ProximityRadar x:Name="Radar" Frame="{Binding Frame}" Focusable="True"
                          Background="{DynamicResource Bg1}" Foreground="{DynamicResource Text}" MinHeight="300" />
