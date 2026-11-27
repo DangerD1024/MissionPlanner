@@ -62,6 +62,9 @@ public sealed class App : Application
             window.Opened += (_, _) =>
                 Console.WriteLine($"[startup] first window shown {Program.SinceProcessStart.TotalMilliseconds:F0} ms after process start");
             desktop.MainWindow = window;
+            // closing the main window ends the app, as in Mission Planner: pop-out windows (radar, log
+            // browser, EKF...) have no owner and would otherwise keep it running; they are closed with it
+            desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnMainWindowClose;
 
             // one UI tick drives every on-screen telemetry readout (20 Hz)
             var timer = new DispatcherTimer(TimeSpan.FromMilliseconds(50), DispatcherPriority.Background, (_, _) =>

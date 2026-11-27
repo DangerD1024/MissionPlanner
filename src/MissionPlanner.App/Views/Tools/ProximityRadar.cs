@@ -46,6 +46,8 @@ public sealed class ProximityRadar : Control
         var frame = Frame ?? ProximityFrame.Empty;
         var c = new Point(w / 2, h / 2);
         var scale = ProximityGeometry.CmPerPixel(frame.RangeCm, w, h);
+        if (!double.IsFinite(scale) || scale <= 0 || !Finite(c.X, c.Y))
+            return;
 
         // range rings and their distances
         foreach (var ring in ProximityGeometry.Rings(frame.RangeCm))
@@ -69,17 +71,21 @@ public sealed class ProximityRadar : Control
 
         foreach (var s in frame.Sectors)
         {
+            // a NaN or infinite reading would make NaN geometry (Mission Planner shows a red X there): skip it
             var r = ProximityGeometry.RadiusPx(s.DistanceCm, frame.RangeCm, scale);
-            if (r <= 0.5)
+            if (!double.IsFinite(r) || r <= 0.5 || Arc(c, r, s.StartDeg, s.EndDeg) is not { } arc)
                 continue;
-            ctx.DrawGeometry(null, s.IsCustom ? ObstaclePen : SensorPen, Arc(c, r, s.StartDeg, s.EndDeg));
+            ctx.DrawGeometry(null, s.IsCustom ? ObstaclePen : SensorPen, arc);
             if (!s.IsCustom)
             {
                 var (x, y) = ProximityGeometry.Point(c.X, c.Y, s.CenterDeg, r + 14);
-                Text(ctx, (s.DistanceCm / 100).ToString("0.0", CultureInfo.CurrentCulture) + "m", new Point(x, y), RingText, centre: true);
+                if (Finite(x, y))
+                    Text(ctx, (s.DistanceCm / 100).ToString("0.0", CultureInfo.CurrentCulture) + "m", new Point(x, y), RingText, centre: true);
             }
         }
     }
+
+    private static bool Finite(double x, double y) => double.IsFinite(x) && double.IsFinite(y);
 
     private void DrawVehicle(DrawingContext ctx, Point c, double size)
     {
@@ -100,13 +106,16 @@ public sealed class ProximityRadar : Control
         ctx.DrawGeometry(brush, null, g);
     }
 
-    private static StreamGeometry Arc(Point c, double r, double from, double to)
+    /// <summary>The arc of a sector, or null when its end points are not finite.</summary>
+    private static StreamGeometry? Arc(Point c, double r, double from, double to)
     {
-        var g = new StreamGeometry();
-        using var s = g.Open();
         var sweep = Math.Clamp(to - from, 0.5, 359.5);
         var (x0, y0) = ProximityGeometry.Point(c.X, c.Y, from, r);
         var (x1, y1) = ProximityGeometry.Point(c.X, c.Y, from + sweep, r);
+        if (!double.IsFinite(sweep) || !Finite(x0, y0) || !Finite(x1, y1))
+            return null;
+        var g = new StreamGeometry();
+        using var s = g.Open();
         s.BeginFigure(new Point(x0, y0), false);
         s.ArcTo(new Point(x1, y1), new Size(r, r), 0, sweep > 180, SweepDirection.Clockwise);
         s.EndFigure(false);

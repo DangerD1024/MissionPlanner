@@ -220,6 +220,10 @@ public sealed partial class ClassicActionsViewModel(AppServices services)
     [RelayCommand]
     private void OpenLogBrowser() => Services.Windows.Show(new Logs.LogBrowserViewModel(Services));
 
+    /// <summary>The old "Proximity": a radar window for the selected vehicle, as Mission Planner opens one.</summary>
+    [RelayCommand]
+    private void OpenProximity() => ProximityViewModel.OpenWindow(Services);
+
     /// <summary>The old "MAVLink Inspector": CONFIG > MAVLink Inspector.</summary>
     [RelayCommand]
     private void OpenInspector() => Services.RequestMenuPage(Screen.Config, "MAVLink Inspector");
