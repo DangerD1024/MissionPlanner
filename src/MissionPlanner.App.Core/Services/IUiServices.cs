@@ -144,6 +144,24 @@ public sealed class AppServices
     internal void OnStreamRateChanged(ViewModels.ConfigScreens.PlannerSettings.StreamGroup group) =>
         StreamRateChanged?.Invoke(this, group);
 
+    /// <summary>
+    /// Raised (on the caller's thread, the UI thread) when the speech settings changed: the switch on SETTINGS,
+    /// the one on DATA > Actions, or the Speech dialog. Every place that shows them follows.
+    /// </summary>
+    public event EventHandler? SpeechSettingsChanged;
+
+    internal void OnSpeechSettingsChanged() => SpeechSettingsChanged?.Invoke(this, EventArgs.Empty);
+
+    private ViewModels.FlightData.MapSettingsViewModel? _mapSettings;
+
+    /// <summary>The map settings page (gear button on the DATA and PLAN maps, SETTINGS > Map); one for the app.</summary>
+    public ViewModels.FlightData.MapSettingsViewModel MapSettings => _mapSettings ??= new ViewModels.FlightData.MapSettingsViewModel(this);
+
+    /// <summary>Raised on the UI thread when a map setting changed (<see cref="Maps.MapOptions"/>); the maps apply it at once.</summary>
+    public event EventHandler? MapSettingsChanged;
+
+    internal void OnMapSettingsChanged() => MapSettingsChanged?.Invoke(this, EventArgs.Empty);
+
     /// <summary>Raised by <see cref="Notify"/>; the shell shows it as a toast.</summary>
     public event EventHandler<Notification>? Notified;
 

@@ -322,6 +322,8 @@ public sealed partial class ConnectionViewModel : ObservableObject
             ProgressText = "Connecting…";
             await _services.Session.ConnectAsync(spec, getParams: true, progress, _connectCancel.Token);
             Connected?.Invoke(this, EventArgs.Empty);
+            // SETTINGS > Load waypoints on connect; an auto-connect keeps planned points instead of asking
+            _ = Mission.MissionOnConnect.RunAsync(_services, ask: !quiet);
             return true;
         }
         catch (OperationCanceledException)

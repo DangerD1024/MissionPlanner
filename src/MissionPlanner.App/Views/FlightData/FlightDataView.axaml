@@ -263,6 +263,9 @@
           <Button Content="{l:Tr '2D + 3D'}" Padding="10,3" MinHeight="26" Classes.accent="{Binding IsSplitMap}"
                   Command="{Binding ShowMapViewCommand}" CommandParameter="{x:Static vm:MapViewMode.Split}"
                   ToolTip.Tip="{l:Tr 'Map on top, 3D view below'}" />
+          <Button Padding="6,3" MinHeight="26" Command="{Binding OpenMapSettingsCommand}" ToolTip.Tip="{l:Tr 'Map settings'}">
+            <Path Classes="icon" Data="{StaticResource IconSettings}" Width="16" Height="16" Stretch="Uniform" />
+          </Button>
         </StackPanel>
       </Border>
       </Grid>

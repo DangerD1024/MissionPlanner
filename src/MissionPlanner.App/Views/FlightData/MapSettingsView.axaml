@@ -1,0 +1,105 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MissionPlanner.App.Core.ViewModels.FlightData"
+             xmlns:cfg="using:MissionPlanner.App.Core.ViewModels.ConfigScreens"
+             xmlns:l="using:MissionPlanner.App.Localization"
+             x:Class="MissionPlanner.App.Views.FlightData.MapSettingsView"
+             x:DataType="vm:MapSettingsViewModel"
+             Background="{DynamicResource Bg1}">
+
+  <UserControl.Styles>
+    <Style Selector="Border.opt">
+      <Setter Property="Background" Value="{DynamicResource Bg2}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="10,8" />
+    </Style>
+    <Style Selector="TextBlock.head">
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="0,0,0,6" />
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBlock.caption">
+      <Setter Property="FontSize" Value="11.5" />
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="14">
+    <StackPanel Spacing="4" Margin="0,0,0,10">
+      <TextBlock Classes="h2" Text="{l:Tr 'Map settings'}" />
+      <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                 Text="{l:Tr 'For the DATA and PLAN maps. Changes apply at once and are saved.'}" />
+    </StackPanel>
+
+    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Spacing="8">
+
+        <!-- imagery and tiles -->
+        <Border Classes="opt">
+          <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6">
+            <TextBlock Grid.ColumnSpan="2" Classes="head" Text="{l:Tr 'Imagery'}" />
+            <TextBlock Grid.Row="1" Classes="label" Text="{l:Tr 'Default map'}" />
+            <ComboBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding MapProviders}"
+                      SelectedItem="{Binding SelectedMapProvider}" MaxDropDownHeight="420"
+                      ToolTip.Tip="{l:Tr 'The imagery the map screens start with.'}" />
+            <TextBlock Grid.Row="2" Classes="label" Text="{l:Tr 'Map tiles'}" />
+            <ComboBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch"
+                      ItemsSource="{x:Static vm:MapSettingsViewModel.AccessModes}" SelectedItem="{Binding AccessMode}">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="cfg:UnitChoice">
+                  <TextBlock Text="{l:TrBind {Binding Label}}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Grid.Row="3" Grid.Column="1" Classes="caption"
+                       Text="{l:Tr 'Cache only shows the tiles downloaded before, for flying without internet. Mission Planner\'s map cache setting.'}" />
+          </Grid>
+        </Border>
+
+        <!-- flown track -->
+        <Border Classes="opt">
+          <Grid ColumnDefinitions="130,140,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="6">
+            <TextBlock Grid.ColumnSpan="3" Classes="head" Text="{l:Tr 'Track'}" />
+            <TextBlock Grid.Row="1" Classes="label" Text="{l:Tr 'Track length'}" />
+            <ComboBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding TrackLengths}"
+                      SelectedItem="{Binding TrackLength}" MaxDropDownHeight="420" />
+            <TextBlock Grid.Row="1" Grid.Column="2" Classes="label" Margin="8,0,0,0" Text="{l:Tr 'points'}" />
+            <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Classes="caption"
+                       Text="{l:Tr 'Positions kept for the flown track on the DATA map, one every 1.5 m or more. The newest stay when it gets shorter.'}" />
+          </Grid>
+        </Border>
+
+        <!-- what is drawn on the map; more overlays (airports, ...) are added as check boxes here -->
+        <Border Classes="opt">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="head" Text="{l:Tr 'On the map'}" />
+            <CheckBox Content="{l:Tr 'Display heading'}" IsChecked="{Binding DisplayHeading}"
+                      ToolTip.Tip="{l:Tr 'Red line: where the vehicle points'}" />
+            <CheckBox Content="{l:Tr 'Display nav bearing'}" IsChecked="{Binding DisplayNavBearing}"
+                      ToolTip.Tip="{l:Tr 'Green line: the course the autopilot wants (while navigating)'}" />
+            <CheckBox Content="{l:Tr 'Display target'}" IsChecked="{Binding DisplayTarget}"
+                      ToolTip.Tip="{l:Tr 'Orange line: towards the waypoint being flown to (while navigating)'}" />
+            <CheckBox Content="{l:Tr 'Display COG'}" IsChecked="{Binding DisplayCog}"
+                      ToolTip.Tip="{l:Tr 'Black line: the GPS course over the ground'}" />
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2,0,0">
+              <TextBlock Classes="label" Text="{l:Tr 'Line length'}" />
+              <NumericUpDown Value="{Binding LineLength}" Minimum="10" Maximum="2000"
+                             Increment="10" FormatString="0" Width="130" />
+              <TextBlock Classes="label" Text="{l:Tr 'pixels'}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+      </StackPanel>
+    </ScrollViewer>
+
+    <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+      <Button Grid.Column="1" Content="{l:Tr 'Close'}" Classes="accent" Command="{Binding CloseCommand}" IsDefault="True" IsCancel="True" />
+    </Grid>
+  </Grid>
+</UserControl>

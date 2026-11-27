@@ -38,6 +38,15 @@ public static class SpeechOptions
 
     public static bool Enabled => Settings.Instance.GetBoolean(EnableKey);
 
+    /// <summary>Status texts at or above this MAV_SEVERITY are spoken; the library reads the key itself.</summary>
+    public const string SeverityKey = "severity";
+
+    public static int Severity => Math.Clamp(Settings.Instance.GetInt32(SeverityKey, 4), 0, 7);
+
+    /// <summary>MAV_SEVERITY names in order (0 = Emergency), the choices for <see cref="Severity"/>.</summary>
+    public static IReadOnlyList<string> Severities { get; } =
+        ["Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Info", "Debug"];
+
     public static bool ArmedOnly => Settings.Instance.GetBoolean(ArmedOnlyKey);
 
     public static bool On(string key, bool fallback = false) => Settings.Instance.GetBoolean(key, fallback);
@@ -226,6 +235,58 @@ public static class AppSpeech
 
     /// <summary>Re-reads the master switch after the settings changed.</summary>
     public static void ApplySettings() => Engine.speechEnable = SpeechOptions.Enabled;
+
+    /// <summary>Re-reads the settings (the Speech dialog saved them) and tells every switch that shows them.</summary>
+    public static void ApplySettings(AppServices services)
+    {
+        ApplySettings();
+        services.OnSpeechSettingsChanged();
+    }
+
+    /// <summary>
+    /// Mission Planner's "Enable Speech", wherever the switch is (SETTINGS, DATA > Actions): saved under its
+    /// key, applied, and announced so the other switches follow. Turning it off stops what is being said.
+    /// </summary>
+    public static void SetEnabled(AppServices services, bool on)
+    {
+        Settings.Instance[SpeechOptions.EnableKey] = on.ToString(); // "True" / "False", as the library compares
+        Save();
+        ApplySettings();
+        if (!on)
+            Engine.SpeakAsyncCancelAll();
+        services.OnSpeechSettingsChanged();
+    }
+
+    /// <summary>The lowest severity of vehicle messages that is spoken (0 Emergency ... 7 Debug).</summary>
+    public static void SetSeverity(AppServices services, int severity)
+    {
+        Settings.Instance[SpeechOptions.SeverityKey] = Math.Clamp(severity, 0, 7).ToString(CultureInfo.InvariantCulture);
+        Save();
+        services.OnSpeechSettingsChanged();
+    }
+
+    /// <summary>Which program speaks, for the speech settings.</summary>
+    public static string BackendText => Engine.BackendName is { } name
+        ? $"Speech uses {name}."
+        : SpeechBackend.Current switch
+        {
+            SpeechBackend.Os.Linux => "No speech program found: install speech-dispatcher (spd-say) or espeak-ng.",
+            SpeechBackend.Os.MacOs => "No speech program found (the system's 'say').",
+            _ => "No speech program found (Windows PowerShell with System.Speech).",
+        };
+
+    private static void Save()
+    {
+        try
+        {
+            Settings.Instance.Save();
+        }
+        catch (Exception ex)
+        {
+            // kept in memory; saved with the next settings write
+            Log.Warn("settings save", ex);
+        }
+    }
 
     private static string Expand(string text)
     {

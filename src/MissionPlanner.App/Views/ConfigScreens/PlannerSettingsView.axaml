@@ -66,15 +66,72 @@
         </Grid>
       </Border>
 
-      <!-- map -->
+      <!-- speech (also DATA > Actions) -->
       <Border Classes="card">
-        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto">
+        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+          <TextBlock Grid.ColumnSpan="2" Classes="h2" Text="{l:Tr 'Speech'}" Margin="0,0,0,10" />
+          <CheckBox Grid.Row="1" Grid.Column="1" Content="{l:Tr 'Enable speech'}" IsChecked="{Binding SpeechEnabled}"
+                    ToolTip.Tip="{l:Tr 'Spoken announcements: mode, waypoint, arm/disarm, warnings, vehicle messages'}" />
+          <TextBlock Grid.Row="2" Classes="label" Text="{l:Tr 'Speak status texts of severity'}" TextWrapping="Wrap" Margin="0,6,12,0" />
+          <ComboBox Grid.Row="2" Grid.Column="1" Width="200" Margin="0,6,0,0" ItemsSource="{Binding SpeechSeverities}"
+                    SelectedIndex="{Binding SpeechSeverity}"
+                    ToolTip.Tip="{l:Tr 'Vehicle messages at or above this level are spoken and shown on the HUD'}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="x:String">
+                <TextBlock Text="{l:TrBind {Binding}}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Grid.Row="3" Grid.Column="1" Margin="0,10,0,0" Content="{l:Tr 'Speech settings…'}"
+                  Command="{Binding OpenSpeechSettingsCommand}" ToolTip.Tip="{l:Tr 'Choose what is announced'}" />
+          <TextBlock Grid.Row="4" Grid.Column="1" Classes="muted" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"
+                     Text="{l:Tr 'The same switch as Speech on DATA > Actions.'}" />
+        </Grid>
+      </Border>
+
+      <!-- map (the rest of the map settings: the gear button on the DATA and PLAN maps) -->
+      <Border Classes="card">
+        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto">
           <TextBlock Grid.ColumnSpan="2" Classes="h2" Text="{l:Tr 'Map'}" Margin="0,0,0,10" />
           <TextBlock Grid.Row="1" Classes="label" Text="{l:Tr 'Default map'}" />
-          <ComboBox Grid.Row="1" Grid.Column="1" Width="340" ItemsSource="{Binding MapProviders}"
-                    SelectedItem="{Binding SelectedMapProvider}" MaxDropDownHeight="420" />
+          <ComboBox Grid.Row="1" Grid.Column="1" Width="340" ItemsSource="{Binding Map.MapProviders}"
+                    SelectedItem="{Binding Map.SelectedMapProvider}" MaxDropDownHeight="420" />
           <TextBlock Grid.Row="2" Grid.Column="1" Classes="muted" FontSize="12" Margin="0,6,0,0"
                      Text="{l:Tr 'The imagery the map screens start with.'}" />
+          <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
+            <Button Command="{Binding OpenMapSettingsCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <Path Classes="icon" Data="{StaticResource IconSettings}" Width="16" Height="16" Stretch="Uniform" />
+                <TextBlock Text="{l:Tr 'Map settings…'}" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+            <TextBlock Classes="muted" FontSize="12" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="400"
+                       Text="{l:Tr 'Track length, vehicle lines and map tiles; also the gear button on the DATA and PLAN maps.'}" />
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- connection -->
+      <Border Classes="card">
+        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+          <TextBlock Grid.ColumnSpan="2" Classes="h2" Text="{l:Tr 'Connection'}" Margin="0,0,0,10" />
+          <TextBlock Grid.Row="1" Classes="label" Text="{l:Tr 'GCS ID'}" />
+          <TextBox Grid.Row="1" Grid.Column="1" Width="90" HorizontalAlignment="Left"
+                   Text="{Binding GcsId, UpdateSourceTrigger=LostFocus}" />
+          <TextBlock Grid.Row="2" Grid.Column="1" Classes="muted" FontSize="12" Margin="0,4,0,8" TextWrapping="Wrap"
+                     Text="{l:Tr 'The MAVLink system ID this ground station sends with, 1 to 255 (255 by default). Give each ground station on the same vehicle its own.'}" />
+          <CheckBox Grid.Row="3" Grid.Column="1" Content="{l:Tr 'Reset on USB connect (toggle DTR)'}" IsChecked="{Binding ResetOnConnect}" />
+          <TextBlock Grid.Row="4" Grid.Column="1" Classes="muted" FontSize="12" Margin="28,0,0,6" TextWrapping="Wrap"
+                     Text="{l:Tr 'Pulses DTR and RTS before a serial port opens, which restarts boards wired for it (APM 2 and similar).'}" />
+          <CheckBox Grid.Row="5" Grid.Column="1" Content="{l:Tr 'Disable RTS reset on ESP32 SerialUSB'}" IsChecked="{Binding Esp32RtsFix}" />
+          <TextBlock Grid.Row="6" Grid.Column="1" Classes="muted" FontSize="12" Margin="28,0,0,6" TextWrapping="Wrap"
+                     Text="{l:Tr 'For ESP32 boards that restart when their USB serial port opens; mainly needed on Windows.'}" />
+          <CheckBox Grid.Row="7" Grid.Column="1" Content="{l:Tr 'Load waypoints on connect'}" IsChecked="{Binding LoadWaypointsOnConnect}" />
+          <TextBlock Grid.Row="8" Grid.Column="1" Classes="muted" FontSize="12" Margin="28,0,0,6" TextWrapping="Wrap"
+                     Text="{l:Tr 'Reads the vehicle\'s mission into PLAN after connecting; planned points are not replaced without asking.'}" />
+          <CheckBox Grid.Row="9" Grid.Column="1" Content="{l:Tr 'No RC receiver'}" IsChecked="{Binding NoRcReceiver}" />
+          <TextBlock Grid.Row="10" Grid.Column="1" Classes="muted" FontSize="12" Margin="28,0,0,0" TextWrapping="Wrap"
+                     Text="{l:Tr 'For vehicles flown without an RC receiver: no \'No RC Receiver\' warning on the HUD.'}" />
         </Grid>
       </Border>
 

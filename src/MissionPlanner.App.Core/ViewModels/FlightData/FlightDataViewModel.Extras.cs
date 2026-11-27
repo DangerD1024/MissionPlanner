@@ -88,6 +88,10 @@ public sealed partial class FlightDataViewModel : IFlightCommands
         AuxFunctions = new AuxFunctionViewModel(Services, this);
         Payload = new PayloadViewModel(Services, this);
 
+        // map settings (gear button on the map, SETTINGS > Map): track length and vehicle lines, applied at once
+        MapModel.ApplyOptions();
+        Services.MapSettingsChanged += (_, _) => MapModel.ApplyOptions();
+
         // reader thread: only a dictionary update under a short lock
         MapModel.ShowPhotos = Settings.Instance.GetBoolean("next_cam_overlap", false);
         Services.Session.Mav.OnPacketReceived += (_, msg) =>
@@ -97,7 +101,8 @@ public sealed partial class FlightDataViewModel : IFlightCommands
         };
 
         AppSpeech.Install(Services.Session);
-        _speechEnabled = SpeechOptions.Enabled;
+        // the same switch is on SETTINGS (and in the Speech dialog)
+        Services.SpeechSettingsChanged += (_, _) => OnPropertyChanged(nameof(SpeechEnabled));
     }
 
     /// <summary>The view-model of a tab that has one (the extra tabs and the logs).</summary>
@@ -169,28 +174,17 @@ public sealed partial class FlightDataViewModel : IFlightCommands
 
     // ---- speech -------------------------------------------------------------------------------
 
-    private bool _speechEnabled;
-
-    /// <summary>Mission Planner's "Enable Speech" (settings key speechenable).</summary>
+    /// <summary>Mission Planner's "Enable Speech" (settings key speechenable), the same switch as on SETTINGS.</summary>
     public bool SpeechEnabled
     {
-        get => _speechEnabled;
+        get => SpeechOptions.Enabled;
         set
         {
-            if (!SetProperty(ref _speechEnabled, value))
-                return;
-            Settings.Instance[SpeechOptions.EnableKey] = value.ToString();
-            AppSpeech.ApplySettings();
-            if (!value)
-                AppSpeech.Engine.SpeakAsyncCancelAll();
+            if (value != SpeechOptions.Enabled)
+                AppSpeech.SetEnabled(Services, value);
         }
     }
 
     [RelayCommand]
-    private async Task OpenSpeechSettingsAsync()
-    {
-        await Services.Windows.ShowDialogAsync(new SpeechSettingsViewModel(Services), 760, 820);
-        _speechEnabled = SpeechOptions.Enabled;
-        OnPropertyChanged(nameof(SpeechEnabled));
-    }
+    private Task OpenSpeechSettingsAsync() => SpeechSettingsViewModel.ShowAsync(Services);
 }

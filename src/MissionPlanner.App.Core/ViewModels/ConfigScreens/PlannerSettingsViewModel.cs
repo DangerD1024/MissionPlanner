@@ -1,10 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using GMap.NET.MapProviders;
 using log4net;
 using MissionPlanner.App.Core.Localization;
-using MissionPlanner.App.Core.Maps;
 using MissionPlanner.App.Core.Services;
+using MissionPlanner.App.Core.ViewModels.FlightData;
 using MissionPlanner.Utilities;
 
 namespace MissionPlanner.App.Core.ViewModels.ConfigScreens;
@@ -217,7 +216,7 @@ public static class PlannerSettings
     }
 
     /// <summary>
-    /// Applies the stored rates and units to the libraries, as Mission Planner does at start-up.
+    /// Applies the stored rates, units and GCS ID to the libraries, as Mission Planner does at start-up.
     /// Safe to call more than once.
     /// </summary>
     public static void ApplyStored()
@@ -229,12 +228,14 @@ public static class PlannerSettings
         }
 
         ApplyUnits();
+        ConnectOptions.ApplyGcsId();
     }
 }
 
 /// <summary>
-/// Planner: application settings (Mission Planner's ConfigPlanner): map, log folder, parameter
-/// documentation, telemetry rates and display units. Changes apply and save immediately.
+/// Planner: application settings (Mission Planner's ConfigPlanner): language, theme, speech, map,
+/// connection options, log folder, parameter documentation, telemetry rates and display units.
+/// Changes apply and save immediately, under Mission Planner's settings keys.
 /// </summary>
 public sealed partial class PlannerSettingsViewModel : PageViewModel
 {
@@ -302,9 +303,18 @@ public sealed partial class PlannerSettingsViewModel : PageViewModel
         _selectedTheme = Themes.FirstOrDefault(t => t.Name == services.Themes.Current) ?? Themes[0];
         PlannerSettings.ApplyStored();
 
-        MapProviders = MapProviderNames();
-        var stored = Settings.Instance[MapProviderKey];
-        _selectedMapProvider = MapProviders.FirstOrDefault(p => p == stored) ?? MapProviders.FirstOrDefault();
+        // speech: the same switch as DATA > Actions and the Speech dialog
+        services.SpeechSettingsChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(SpeechEnabled));
+            OnPropertyChanged(nameof(SpeechSeverity));
+        };
+
+        _gcsId = ConnectOptions.GcsId;
+        _resetOnConnect = ConnectOptions.ResetOnConnect;
+        _esp32RtsFix = ConnectOptions.Esp32RtsFix;
+        _loadWaypointsOnConnect = ConnectOptions.LoadWaypoints;
+        _noRcReceiver = ConnectOptions.NoRcReceiver;
 
         _logDirectory = Settings.Instance.LogDir;
 
@@ -335,38 +345,97 @@ public sealed partial class PlannerSettingsViewModel : PageViewModel
     [RelayCommand]
     private void OpenTools() => Services.ShowScreen(ViewModels.Screen.Tools);
 
-    // ---- map
+    // ---- speech
 
-    public IReadOnlyList<string> MapProviders { get; }
-
-    [ObservableProperty]
-    private string? _selectedMapProvider;
-
-    partial void OnSelectedMapProviderChanged(string? value)
+    /// <summary>Mission Planner's "Enable Speech" (speechenable): the same switch as DATA > Actions.</summary>
+    public bool SpeechEnabled
     {
-        if (_loading || value == null)
-            return;
-        Settings.Instance[MapProviderKey] = value;
-        Save();
+        get => SpeechOptions.Enabled;
+        set
+        {
+            if (value != SpeechOptions.Enabled)
+                AppSpeech.SetEnabled(Services, value);
+        }
     }
 
-    private static IReadOnlyList<string> MapProviderNames()
-    {
-        var names = MapTiles.CommonProviders.Select(p => p.Name).ToList();
-        try
-        {
-            names.AddRange(GMapProviders.List
-                .Where(p => p != null && p is not EmptyProvider)
-                .Select(p => p.Name)
-                .Where(n => !string.IsNullOrEmpty(n) && !names.Contains(n))
-                .OrderBy(n => n, StringComparer.OrdinalIgnoreCase));
-        }
-        catch (Exception ex)
-        {
-            Log.Warn("map providers", ex);
-        }
+    public IReadOnlyList<string> SpeechSeverities => SpeechOptions.Severities;
 
-        return names.Distinct().ToList();
+    /// <summary>Vehicle messages at or above this MAV_SEVERITY are spoken (severity), as in the Speech dialog.</summary>
+    public int SpeechSeverity
+    {
+        get => SpeechOptions.Severity;
+        set
+        {
+            // a combo box that loses its selection reports -1
+            if (value >= 0 && value != SpeechOptions.Severity)
+                AppSpeech.SetSeverity(Services, value);
+        }
+    }
+
+    /// <summary>Every announcement and its text (the dialog DATA > Actions "Speech..." opens).</summary>
+    [RelayCommand]
+    private Task OpenSpeechSettingsAsync() => SpeechSettingsViewModel.ShowAsync(Services);
+
+    // ---- map
+
+    /// <summary>The map settings page; the card shows its default map, the dialog the rest.</summary>
+    public MapSettingsViewModel Map => Services.MapSettings;
+
+    [RelayCommand]
+    private Task OpenMapSettingsAsync() => MapSettingsViewModel.ShowAsync(Services);
+
+    // ---- connection
+
+    private int _gcsId;
+
+    /// <summary>The MAVLink system ID this ground station sends with (gcsid, 1 to 255, Mission Planner's 255 by default).</summary>
+    public int GcsId
+    {
+        get => _gcsId;
+        set
+        {
+            var id = Math.Clamp(value, 1, 255);
+            if (id != _gcsId && !_loading)
+            {
+                _gcsId = ConnectOptions.SetGcsId(id);
+                Save();
+            }
+
+            // shows the clamped value when the entry was out of range
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Pulse DTR and RTS on a serial port before connecting, so the board restarts (CHK_resetapmonconnect).</summary>
+    [ObservableProperty]
+    private bool _resetOnConnect;
+
+    /// <summary>Keep RTS from resetting an ESP32 when its USB serial port opens (CHK_rtsresetesp32).</summary>
+    [ObservableProperty]
+    private bool _esp32RtsFix;
+
+    /// <summary>Read the vehicle's mission into the plan after connecting (loadwpsonconnect).</summary>
+    [ObservableProperty]
+    private bool _loadWaypointsOnConnect;
+
+    /// <summary>The vehicle flies without an RC receiver: no "No RC Receiver" warning (norcreceiver).</summary>
+    [ObservableProperty]
+    private bool _noRcReceiver;
+
+    partial void OnResetOnConnectChanged(bool value) => StoreFlag(ConnectOptions.ResetOnConnectKey, value);
+
+    partial void OnEsp32RtsFixChanged(bool value) => StoreFlag(ConnectOptions.Esp32RtsKey, value);
+
+    partial void OnLoadWaypointsOnConnectChanged(bool value) => StoreFlag(ConnectOptions.LoadWaypointsKey, value);
+
+    partial void OnNoRcReceiverChanged(bool value) => StoreFlag(ConnectOptions.NoRcReceiverKey, value);
+
+    private void StoreFlag(string key, bool value)
+    {
+        if (_loading)
+            return;
+        Settings.Instance[key] = value.ToString(); // "True" / "False", as Mission Planner and the library read them
+        Save();
     }
 
     // ---- logs

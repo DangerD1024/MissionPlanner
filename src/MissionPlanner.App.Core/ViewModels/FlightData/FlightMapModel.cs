@@ -254,6 +254,13 @@ public sealed class FlightMapModel
     public bool ShowNavLines;
     public VehicleIconKind Kind;
 
+    /// <summary>Map settings: which of Mission Planner's vehicle lines are drawn, and their length in pixels.</summary>
+    public bool ShowCog = true;
+    public bool ShowHeading = true;
+    public bool ShowNavBearing = true;
+    public bool ShowTarget = true;
+    public double LineLength = Maps.MapOptions.DefaultLineLength;
+
     /// <summary>Label of the waypoint being flown to (MISSION_CURRENT), "" if none.</summary>
     public string CurrentWp = "";
 
@@ -277,4 +284,16 @@ public sealed class FlightMapModel
     /// <summary>Photos of this flight (CAMERA_FEEDBACK) and whether their footprints are drawn.</summary>
     public IReadOnlyList<PhotoFootprint> Photos = [];
     public bool ShowPhotos;
+
+    /// <summary>Takes the track length and the vehicle lines from the map settings (<see cref="Maps.MapOptions"/>).</summary>
+    public void ApplyOptions()
+    {
+        Track.Resize(Maps.MapOptions.TrackLength);
+        ShowCog = Maps.MapOptions.DisplayCog;
+        ShowHeading = Maps.MapOptions.DisplayHeading;
+        ShowNavBearing = Maps.MapOptions.DisplayNavBearing;
+        ShowTarget = Maps.MapOptions.DisplayTarget;
+        LineLength = Maps.MapOptions.LineLength;
+        Version++;
+    }
 }

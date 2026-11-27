@@ -4,15 +4,15 @@ namespace MissionPlanner.App.Core.ViewModels.FlightData;
 public readonly record struct TrackPoint(double Lat, double Lng);
 
 /// <summary>
-/// The vehicle's recent ground track: a fixed-size ring of points, each at least
-/// <see cref="MinSpacing"/> metres from the previous one, so hovering or slow flight does not
-/// fill it with duplicates. Adding never allocates. UI thread only.
+/// The vehicle's recent ground track: a ring of points, each at least <see cref="MinSpacing"/>
+/// metres from the previous one, so hovering or slow flight does not fill it with duplicates.
+/// Adding never allocates; <see cref="Resize"/> changes how many are kept. UI thread only.
 /// </summary>
 public sealed class TrackBuffer
 {
     private const double MetresPerDegree = 111_319.49;
 
-    private readonly TrackPoint[] _points;
+    private TrackPoint[] _points;
     private int _start;
 
     public TrackBuffer(int capacity = 2000, double minSpacingMetres = 1.5)
@@ -73,6 +73,24 @@ public sealed class TrackBuffer
 
         Version++;
         return true;
+    }
+
+    /// <summary>Keeps up to <paramref name="capacity"/> points from now on; the newest stay when it shrinks.</summary>
+    public void Resize(int capacity)
+    {
+        if (capacity < 2)
+            throw new ArgumentOutOfRangeException(nameof(capacity));
+        if (capacity == _points.Length)
+            return;
+
+        var keep = Math.Min(Count, capacity);
+        var points = new TrackPoint[capacity];
+        for (var i = 0; i < keep; i++)
+            points[i] = this[Count - keep + i];
+        _points = points;
+        _start = 0;
+        Count = keep;
+        Version++;
     }
 
     public void Clear()

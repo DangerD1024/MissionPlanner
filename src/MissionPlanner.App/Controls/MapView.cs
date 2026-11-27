@@ -493,11 +493,21 @@ public sealed class MapView : Control
         }
     }
 
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        MapTiles.AccessModeChanged += OnAccessModeChanged;
+    }
+
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnDetachedFromVisualTree(e);
+        MapTiles.AccessModeChanged -= OnAccessModeChanged;
         DropTiles();
     }
+
+    /// <summary>Map settings switched between server and cache: fetch the tiles again (a missing one may now load).</summary>
+    private void OnAccessModeChanged() => Dispatcher.UIThread.Post(ReloadTiles);
 
     /// <summary>Forgets the tiles shown so far and fetches them again (the provider's imagery changed).</summary>
     public void ReloadTiles()
