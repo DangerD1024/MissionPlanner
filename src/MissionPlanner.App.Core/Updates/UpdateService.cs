@@ -17,6 +17,9 @@ namespace MissionPlanner.App.Core.Updates;
 /// <summary>A published release: its version, page, and the installer for this computer (if there is one).</summary>
 public sealed record ReleaseInfo(string Version, string PageUrl, string? AssetName, string? AssetUrl, long AssetSize, string? Sha256, string Notes);
 
+/// <summary>Where a web address ended up after its redirects, and the size of what is there.</summary>
+public sealed record WebProbe(Uri Url, long Length);
+
 /// <summary>Reads GitHub's "latest release" answer and compares versions such as 3.0.4b.</summary>
 public static partial class UpdateCheck
 {
@@ -24,6 +27,49 @@ public static partial class UpdateCheck
     public const string Repository = "DangerD1024/MissionPlanner";
 
     public static string LatestUrl => $"https://api.github.com/repos/{Repository}/releases/latest";
+
+    /// <summary>The release page: redirects to the latest release's tag, and is not under the API's hourly limit.</summary>
+    public static string LatestPageUrl => $"https://github.com/{Repository}/releases/latest";
+
+    public static string DownloadUrl(string tag, string name) =>
+        $"https://github.com/{Repository}/releases/download/{Uri.EscapeDataString(tag)}/{Uri.EscapeDataString(name)}";
+
+    /// <summary>
+    /// The latest release without the API, which allows only 60 requests an hour per network without a
+    /// GitHub account (several computers behind one router run out): <see cref="LatestPageUrl"/> redirects
+    /// to the release's tag, and each installer is at a fixed address named after the version. No notes or
+    /// checksum this way; the download is still checked for its size. Installers are only looked for when
+    /// the release is newer than <paramref name="current"/>. Null when the answer is not a release.
+    /// </summary>
+    public static async Task<ReleaseInfo?> FromReleasePageAsync(Func<string, CancellationToken, Task<WebProbe?>> probe,
+        IReadOnlyList<string> assetSuffixes, string? current, CancellationToken cancel)
+    {
+        if (await probe(LatestPageUrl, cancel).ConfigureAwait(false) is not { } latest)
+            return null;
+        var m = TagPathRegex().Match(latest.Url.AbsolutePath);
+        if (!m.Success)
+            return null;
+        var tag = Uri.UnescapeDataString(m.Groups[1].Value);
+        var version = tag.TrimStart('v', 'V');
+        if (ParseVersion(version) == null)
+            return null;
+        var page = latest.Url.GetLeftPart(UriPartial.Path);
+        if (current == null || IsNewer(version, current))
+        {
+            foreach (var suffix in assetSuffixes)
+            {
+                var name = $"MissionPlanner-{version}-{suffix}";
+                var url = DownloadUrl(tag, name);
+                if (await probe(url, cancel).ConfigureAwait(false) is { } asset)
+                    return new ReleaseInfo(version, page, name, url, asset.Length, null, "");
+            }
+        }
+
+        return new ReleaseInfo(version, page, null, null, 0, null, "");
+    }
+
+    [GeneratedRegex(@"/releases/tag/([^/]+)/?$")]
+    private static partial Regex TagPathRegex();
 
     /// <summary>The installer this computer needs: "win-x64.msi", "linux-x64.tar.gz", "linux-arm64.tar.gz"; null elsewhere.</summary>
     public static string? AssetSuffix(OSPlatform? os = null, Architecture? arch = null) => AssetSuffixes(os, arch).LastOrDefault();
@@ -146,6 +192,7 @@ public sealed partial class UpdateViewModel : ObservableObject
     private readonly AppServices _services;
     private readonly Func<string, CancellationToken, Task<string>> _getJson;
     private readonly Func<string, Stream, IProgress<long>, CancellationToken, Task> _download;
+    private readonly Func<string, CancellationToken, Task<WebProbe?>>? _probe;
     private CancellationTokenSource? _downloadCancel;
 
     public UpdateViewModel(AppServices services)
@@ -165,17 +212,31 @@ public sealed partial class UpdateViewModel : ObservableObject
                     total += n;
                     progress.Report(total);
                 }
+            },
+            async (url, c) =>
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Head, url);
+                using var response = await DefaultHttp.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, c).ConfigureAwait(false);
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    return null;
+                response.EnsureSuccessStatusCode();
+                return new WebProbe(response.RequestMessage?.RequestUri ?? new Uri(url), response.Content.Headers.ContentLength ?? 0);
             })
     {
     }
 
-    /// <summary>For tests: any way of fetching the release and the file.</summary>
+    /// <summary>
+    /// For tests: any way of fetching the release and the file. <paramref name="probe"/> follows a web
+    /// address's redirects (null when nothing is there): the way to the release when the API refuses.
+    /// </summary>
     public UpdateViewModel(AppServices services, Func<string, CancellationToken, Task<string>> getJson,
-        Func<string, Stream, IProgress<long>, CancellationToken, Task> download)
+        Func<string, Stream, IProgress<long>, CancellationToken, Task> download,
+        Func<string, CancellationToken, Task<WebProbe?>>? probe = null)
     {
         _services = services;
         _getJson = getJson;
         _download = download;
+        _probe = probe;
         _checkAtStartup = Settings.Instance.GetBoolean(CheckKey, true);
     }
 
@@ -270,9 +331,23 @@ public sealed partial class UpdateViewModel : ObservableObject
             if (release == null)
                 error = "The release information could not be read.";
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException or IOException or InvalidOperationException)
+        catch (Exception ex) when (IsCheckFailure(ex))
         {
-            error = ex.Message;
+            error = Describe(ex);
+        }
+
+        // the API allows 60 requests an hour per network without a GitHub account; the release page has no such limit
+        if (release == null && _probe != null)
+        {
+            try
+            {
+                release = await UpdateCheck.FromReleasePageAsync(_probe, UpdateCheck.AssetSuffixes(), CurrentVersion, CancellationToken.None)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception ex) when (IsCheckFailure(ex))
+            {
+                // the API's reason is the one to show
+            }
         }
 
         await _services.Dispatcher.InvokeAsync(() =>
@@ -301,6 +376,16 @@ public sealed partial class UpdateViewModel : ObservableObject
             IsBannerVisible = manual || Settings.Instance[SkipKey] != release.Version;
         }).ConfigureAwait(false);
     }
+
+    private static bool IsCheckFailure(Exception ex) =>
+        ex is HttpRequestException or TaskCanceledException or JsonException or IOException or InvalidOperationException or UriFormatException;
+
+    private static string Describe(Exception ex) => ex is HttpRequestException
+    {
+        StatusCode: System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.TooManyRequests
+    }
+        ? "GitHub is turning away update checks from this network for now (too many requests); try again later."
+        : ex.Message;
 
     [RelayCommand]
     private Task Download() => DownloadAsync();

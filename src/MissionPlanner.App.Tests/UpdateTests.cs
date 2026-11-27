@@ -244,4 +244,97 @@ public class UpdateTests
         Assert.IsFalse(vm.IsBusy);
         Assert.AreEqual("Could not check for updates: No such host", vm.StatusText);
     }
+
+    private static HttpRequestException RateLimited() =>
+        new("Response status code does not indicate success: 403 (rate limit exceeded).", null, System.Net.HttpStatusCode.Forbidden);
+
+    /// <summary>The release page and its downloads as github.com answers them: latest redirects to the tag.</summary>
+    private static Func<string, CancellationToken, Task<WebProbe?>> ReleasePage(string tag, long size, List<string> asked) => (url, _) =>
+    {
+        asked.Add(url);
+        if (url == UpdateCheck.LatestPageUrl)
+            return Task.FromResult<WebProbe?>(new WebProbe(new Uri($"https://github.com/{UpdateCheck.Repository}/releases/tag/{tag}"), 0));
+        return Task.FromResult(url.Contains("/releases/download/") ? new WebProbe(new Uri("https://example.invalid/blob"), size) : null);
+    };
+
+    [TestMethod]
+    public async Task RateLimitedApiFallsBackToTheReleasePage()
+    {
+        var services = FakeUi.Services(out _);
+        var bytes = "fake installer"u8.ToArray();
+        var asked = new List<string>();
+        var vm = new UpdateViewModel(services, (_, _) => throw RateLimited(),
+            async (url, target, progress, _) =>
+            {
+                asked.Add("download " + url);
+                await target.WriteAsync(bytes);
+                progress.Report(bytes.Length);
+            },
+            ReleasePage("v3.0.5b", bytes.Length, asked))
+        {
+            CurrentVersion = "3.0.4b",
+            DownloadFolder = _folder,
+        };
+
+        await vm.CheckAtStartupAsync();
+
+        Assert.IsTrue(vm.IsBannerVisible, vm.StatusText);
+        Assert.AreEqual("Mission Planner 3.0.5b is available (you have 3.0.4b).", vm.BannerText);
+        Assert.AreEqual($"https://github.com/{UpdateCheck.Repository}/releases/tag/v3.0.5b", vm.Available!.PageUrl);
+        if (UpdateCheck.AssetSuffixes().FirstOrDefault() is not { } suffix)
+            return; // no installer for this platform
+        var name = "MissionPlanner-3.0.5b-" + suffix;
+        Assert.AreEqual(name, vm.Available.AssetName);
+        Assert.AreEqual($"https://github.com/{UpdateCheck.Repository}/releases/download/v3.0.5b/{name}", vm.Available.AssetUrl);
+        Assert.AreEqual(bytes.Length, vm.Available.AssetSize);
+
+        await vm.DownloadAsync();
+        Assert.IsNotNull(vm.DownloadedFile, vm.StatusText);
+        Assert.AreEqual("download " + vm.Available.AssetUrl, asked.Last());
+        CollectionAssert.AreEqual(bytes, File.ReadAllBytes(vm.DownloadedFile!));
+    }
+
+    [TestMethod]
+    public async Task ReleasePageLooksForInstallersOnlyWhenNewer()
+    {
+        var services = FakeUi.Services(out _);
+        var asked = new List<string>();
+        var vm = new UpdateViewModel(services, (_, _) => throw RateLimited(), (_, _, _, _) => Task.CompletedTask,
+            ReleasePage("v3.0.5b", 7, asked))
+        {
+            CurrentVersion = "3.0.5b",
+        };
+
+        await vm.CheckNowCommand.ExecuteAsync(null);
+
+        Assert.AreEqual("You have the latest version (3.0.5b).", vm.StatusText);
+        Assert.IsFalse(vm.IsBannerVisible);
+        CollectionAssert.AreEqual(new[] { UpdateCheck.LatestPageUrl }, asked);
+    }
+
+    [TestMethod]
+    public async Task RefusedEverywhereSaysWhyInPlainWords()
+    {
+        var services = FakeUi.Services(out _);
+        var vm = new UpdateViewModel(services, (_, _) => throw RateLimited(), (_, _, _, _) => Task.CompletedTask,
+            (_, _) => throw new HttpRequestException("No such host"))
+        {
+            CurrentVersion = "3.0.4b",
+        };
+
+        await vm.CheckNowCommand.ExecuteAsync(null);
+
+        Assert.IsFalse(vm.IsBannerVisible);
+        Assert.IsFalse(vm.IsBusy);
+        StringAssert.StartsWith(vm.StatusText, "Could not check for updates: GitHub is turning away update checks");
+        Assert.IsFalse(vm.StatusText.Contains("403"), vm.StatusText);
+    }
+
+    [TestMethod]
+    public async Task TheReleasePageAnswerMustBeARelease()
+    {
+        Assert.IsNull(await UpdateCheck.FromReleasePageAsync((_, _) =>
+                Task.FromResult<WebProbe?>(new WebProbe(new Uri($"https://github.com/{UpdateCheck.Repository}/releases"), 0)),
+            ["linux-x64.tar.gz"], "3.0.4b", CancellationToken.None), "no release yet: the page has no tag");
+    }
 }
