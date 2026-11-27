@@ -96,12 +96,27 @@ public class ConnectionBarTests
             var ex = await Assert.ThrowsAsync<ConnectException>(() => session.ConnectAsync(LinkSpec.Parse("udp:" + port), getParams: false));
             StringAssert.Contains(ex.Message, $"UDP port {port}");
             StringAssert.Contains(ex.Message, "Firewall");
+            StringAssert.Contains(ex.Message, "no other program");
             Assert.AreEqual(LinkState.Disconnected, session.State);
         }
         finally
         {
             VehicleSession.UdpFirstPacketTimeout = saved;
         }
+    }
+
+    [TestMethod]
+    [Timeout(20000, CooperativeCancellation = true)]
+    public async Task UdpPortTakenByAnotherProgramSaysSo()
+    {
+        // another ground station already listening on the port (no address sharing)
+        using var other = new System.Net.Sockets.UdpClient(0);
+        var port = ((System.Net.IPEndPoint)other.Client.LocalEndPoint!).Port;
+
+        await using var session = new VehicleSession();
+        var ex = await Assert.ThrowsAsync<ConnectException>(() => session.ConnectAsync(LinkSpec.Parse("udp:" + port), getParams: false));
+        StringAssert.Contains(ex.Message, $"UDP port {port} is already in use by another program");
+        Assert.AreEqual(LinkState.Disconnected, session.State);
     }
 
     [TestMethod]

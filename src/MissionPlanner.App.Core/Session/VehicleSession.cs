@@ -183,13 +183,18 @@ public sealed class VehicleSession : IAsyncDisposable
                 throw new ConnectException(
                     $"Nothing arrived on UDP port {spec.Value} in {UdpFirstPacketTimeout.TotalSeconds:0} s.\n\n" +
                     "Check that the vehicle, radio or companion computer sends MAVLink to this computer's address and to this port, " +
+                    "that no other program (another Mission Planner, for example) is listening on the same port, " +
                     "and that Windows Firewall allows Mission Planner 3 (Windows asks the first time; on a Public network the answer may have been No).");
+            if (udp != null && PortInUse(reporter.Error))
+                throw new ConnectException(PortInUseMessage(spec.Value), reporter.Error);
             if (reporter.Error != null || !Mav.BaseStream.IsOpen)
                 throw new ConnectException(reporter.ErrorMessage ?? "The link closed while connecting.", reporter.Error);
         }
         catch (Exception ex) when (ex is not OperationCanceledException and not ConnectException)
         {
             await FailConnectAsync(stop).ConfigureAwait(false);
+            if (spec.Kind == LinkKind.UdpListen && PortInUse(ex))
+                throw new ConnectException(PortInUseMessage(spec.Value), ex);
             throw new ConnectException(ex.Message, ex);
         }
         catch
@@ -208,6 +213,22 @@ public sealed class VehicleSession : IAsyncDisposable
         SetState(LinkState.Connected);
         _monitor = Task.Run(() => MonitorLoop(stop.Token), CancellationToken.None);
     }
+
+    /// <summary>The port is taken: another program (often another ground station) is already listening on it.</summary>
+    private static bool PortInUse(Exception? ex)
+    {
+        for (var e = ex; e != null; e = e.InnerException)
+        {
+            if (e is System.Net.Sockets.SocketException { SocketErrorCode: System.Net.Sockets.SocketError.AddressAlreadyInUse })
+                return true;
+        }
+
+        return false;
+    }
+
+    private static string PortInUseMessage(int port) =>
+        $"UDP port {port} is already in use by another program on this computer (another Mission Planner, for example), " +
+        "so its packets don't reach Mission Planner 3.\n\nClose that program or connect on another port.";
 
     private async Task FailConnectAsync(CancellationTokenSource stop)
     {
