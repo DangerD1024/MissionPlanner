@@ -11,7 +11,7 @@
 
   <!-- The app's version, shown in the window title and on Help. Change this one line for each release. -->
   <PropertyGroup>
-    <MissionPlannerVersion>3.0.7b</MissionPlannerVersion>
+    <MissionPlannerVersion>3.0.8b</MissionPlannerVersion>
   </PropertyGroup>
 
   <!-- neural speech (sherpa-onnx): the managed API in App.Core and the native engine of the desktop app
