@@ -65,6 +65,12 @@ public sealed class SherpaSynthesizer : ISpeechSynthesizer
                 throw new InvalidDataException(L.Format("{0} is missing from the voice folder: delete the voice and download it again.", file));
         }
 
+        // sherpa-onnx opens files with ANSI paths on Windows: hand a non-ASCII folder over by its short name
+        directory = NativePaths.ForNative(directory)
+                    ?? throw new InvalidDataException(L.Format(
+                        "The speech engine cannot open files in {0} (the folder name has letters it cannot read). Delete the voice and download it again: it is then kept in a folder it can open.",
+                        directory));
+
         var config = new OfflineTtsConfig();
         config.Model.NumThreads = Threads;
         config.Model.Debug = 0;

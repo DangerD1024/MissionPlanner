@@ -116,12 +116,12 @@ public sealed partial class FirmwareViewModel : PageViewModel
             return;
         IsLoading = true;
         ErrorText = "";
-        ManifestText = "Downloading the firmware list…";
+        ManifestText = L.Tr("Downloading the firmware list…");
         try
         {
             var catalog = await FirmwareManifest.LoadAsync(force);
             _catalog = catalog;
-            ManifestText = $"{catalog.Uploadable.Count:N0} firmware files for {catalog.Uploadable.Select(f => f.Platform).Distinct().Count():N0} boards.";
+            ManifestText = L.Format("{0:N0} firmware files for {1:N0} boards.", catalog.Uploadable.Count, catalog.Uploadable.Select(f => f.Platform).Distinct().Count());
             foreach (var t in Tiles)
                 t.Update(catalog, SelectedRelease.Type);
             RebuildPortRows(Ports.Select(p => p.Device).ToList());
@@ -205,7 +205,7 @@ public sealed partial class FirmwareViewModel : PageViewModel
     }
 
     public string PortsText => Ports.Count == 0
-        ? "No serial ports. Plug the board in with a USB cable."
+        ? L.Tr("No serial ports. Plug the board in with a USB cable.")
         : Ports.Any(p => p.IsRecognised)
             ? ""
             : "No board recognised from its USB details. Use \"Detect bootloader\" and replug the board, or pick a file in All options.";

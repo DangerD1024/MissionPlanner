@@ -93,8 +93,8 @@ public sealed partial class FullParameterListViewModel : ParamPageViewModel
         get
         {
             var s = VisibleRows.Count == _all.Count
-                ? $"{_all.Count} parameters"
-                : $"{VisibleRows.Count} of {_all.Count} parameters";
+                ? L.Format("{0} parameters", _all.Count)
+                : L.Format("{0} of {1} parameters", VisibleRows.Count, _all.Count);
             if (Edits.Count > 0)
                 s += $" · {Edits.Count} unsaved";
             return s;

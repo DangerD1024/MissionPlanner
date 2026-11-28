@@ -171,9 +171,9 @@ public sealed partial class PayloadViewModel : PageViewModel
                 ?.Values.FirstOrDefault(v => v.Key == t).Value ?? t.ToString("0", CultureInfo.InvariantCulture) : null;
             MountText = type switch
             {
-                null => IsConnected ? "No mount parameters on this vehicle" : "Connect to a vehicle",
-                0 => "No mount configured (MNT1_TYPE = None)",
-                _ => $"Mount: {typeName}",
+                null => L.Tr(IsConnected ? "No mount parameters on this vehicle" : "Connect to a vehicle"),
+                0 => L.Tr("No mount configured (MNT1_TYPE = None)"),
+                _ => L.Format("Mount: {0}", typeName),
             };
             SetRange(Param("MNT1_PITCH_MIN") ?? -90, Param("MNT1_PITCH_MAX") ?? 30, Param("MNT1_YAW_MIN") ?? -180,
                 Param("MNT1_YAW_MAX") ?? 180);

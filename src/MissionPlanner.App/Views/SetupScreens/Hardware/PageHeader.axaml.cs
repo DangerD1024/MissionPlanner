@@ -26,7 +26,7 @@ public sealed partial class PageHeader : UserControl
         base.OnPropertyChanged(change);
         if (change.Property == DescriptionProperty)
         {
-            DescriptionText.Text = Description;
+            DescriptionText.Text = MissionPlanner.App.Core.Localization.L.Tr(Description);
             DescriptionText.IsVisible = !string.IsNullOrEmpty(Description);
         }
     }

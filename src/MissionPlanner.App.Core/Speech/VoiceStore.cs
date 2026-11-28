@@ -59,8 +59,11 @@ public sealed class VoiceStore
         _freeSpace = freeSpace ?? FreeSpace;
     }
 
-    /// <summary>The voices folder in the user's data folder.</summary>
-    public static string DefaultRoot => Path.Combine(Settings.GetUserDataDirectory(), "voices");
+    /// <summary>
+    /// The voices folder in the user's data folder, or ProgramData on Windows when the speech engine cannot
+    /// open files there (a non-ASCII path on a drive without short names; see <see cref="NativePaths"/>).
+    /// </summary>
+    public static string DefaultRoot => NativePaths.VoicesRoot(Path.Combine(Settings.GetUserDataDirectory(), "voices"));
 
     public string Root { get; }
 

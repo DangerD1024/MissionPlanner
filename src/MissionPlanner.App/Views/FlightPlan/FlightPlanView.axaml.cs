@@ -165,7 +165,7 @@ public sealed partial class FlightPlanView : UserControl
             return;
         var headers = _vm.Headers;
         for (var i = 0; i < headers.Count && FirstValueColumn + i < Rows.Columns.Count; i++)
-            Rows.Columns[FirstValueColumn + i].Header = headers[i];
+            Rows.Columns[FirstValueColumn + i].Header = MissionPlanner.App.Core.Localization.L.Tr(headers[i]);
     }
 
     private void UpdateTexts()
@@ -180,9 +180,9 @@ public sealed partial class FlightPlanView : UserControl
             ? ""
             : _vm.MissionType switch
             {
-                MAVLink.MAV_MISSION_TYPE.FENCE => "No fence. Draw a polygon (right click › Draw Polygon), then right click › Fence.",
-                MAVLink.MAV_MISSION_TYPE.RALLY => "No rally points. Click the map to add one.",
-                _ => "No waypoints. Click the map to add one, or Load File / Read.",
+                MAVLink.MAV_MISSION_TYPE.FENCE => MissionPlanner.App.Core.Localization.L.Tr("No fence. Draw a polygon (right click › Draw Polygon), then right click › Fence."),
+                MAVLink.MAV_MISSION_TYPE.RALLY => MissionPlanner.App.Core.Localization.L.Tr("No rally points. Click the map to add one."),
+                _ => MissionPlanner.App.Core.Localization.L.Tr("No waypoints. Click the map to add one, or Load File / Read."),
             };
         HintText.Text = _vm.PolygonMode
             ? "Click: add polygon point · drag a square to move it · right click for more"
@@ -415,13 +415,13 @@ public sealed partial class FlightPlanView : UserControl
 
     private static MenuItem Item(string header, Action action, bool enabled = true)
     {
-        var item = new MenuItem { Header = header, IsEnabled = enabled };
+        var item = new MenuItem { Header = MissionPlanner.App.Core.Localization.L.Tr(header), IsEnabled = enabled };
         item.Click += (_, _) => action();
         return item;
     }
 
     private static MenuItem Sub(string header, params Control[] children) =>
-        new() { Header = header, ItemsSource = children };
+        new() { Header = MissionPlanner.App.Core.Localization.L.Tr(header), ItemsSource = children };
 }
 
 internal static class DataGridExtensions

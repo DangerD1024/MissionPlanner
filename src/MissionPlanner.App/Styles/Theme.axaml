@@ -105,6 +105,12 @@
     <Setter Property="FontWeight" Value="SemiBold" />
   </Style>
 
+  <!-- every button's caption in the middle: buttons given a height or stretched by their row otherwise show
+       it at the top (a value set on the button itself still wins) -->
+  <Style Selector="Button, ToggleButton, RepeatButton, DropDownButton, SplitButton">
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+
   <!-- primary action buttons in Mission Planner green -->
   <Style Selector="Button.accent">
     <Setter Property="Background" Value="{DynamicResource Accent}" />

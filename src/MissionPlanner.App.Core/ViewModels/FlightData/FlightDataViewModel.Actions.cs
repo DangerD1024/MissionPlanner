@@ -300,6 +300,11 @@ public sealed partial class FlightDataViewModel
 
     public string SpeedUnit => Units.Speed;
 
+    /// <summary>Captions of the altitude and speed boxes with their unit, translated.</summary>
+    public string AltitudeCaption => L.Format("Altitude ({0})", AltitudeUnit);
+
+    public string SpeedCaption => L.Format("Speed ({0})", SpeedUnit);
+
     [RelayCommand]
     private Task ChangeAltitudeAsync()
     {

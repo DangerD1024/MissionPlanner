@@ -35,6 +35,9 @@ public class AutoConnectTests
         var exe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Mission Planner", "sitl", "ArduCopter.exe");
         if (!OperatingSystem.IsWindows() || !File.Exists(exe) || AutoConnectService.IsListening(5760))
             Assert.Inconclusive("needs the Windows SITL and a free port 5760");
+        // a Mission Planner running on this computer with Auto-connect on takes the simulator's one TCP client
+        if (Process.GetProcessesByName("MissionPlanner.App").Length > 0)
+            Assert.Inconclusive("Mission Planner is running here; its auto-connect would take the simulator's connection");
 
         var dir = Path.Combine(TestEnvironment.DataRoot, "sitl-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);

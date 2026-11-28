@@ -57,7 +57,8 @@
                     SelectedItem="{Binding SelectedTheme}">
             <ComboBox.ItemTemplate>
               <DataTemplate x:DataType="svc:ThemeInfo">
-                <TextBlock Text="{l:TrBind {Binding Name}}" />
+                <!-- theme names stay as they are (product-like names) -->
+                <TextBlock Text="{Binding Name}" />
               </DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>
@@ -78,7 +79,7 @@
                     ToolTip.Tip="{l:Tr 'Vehicle messages at or above this level are spoken and shown on the HUD'}">
             <ComboBox.ItemTemplate>
               <DataTemplate x:DataType="x:String">
-                <TextBlock Text="{l:TrBind {Binding}}" />
+                <TextBlock Text="{Binding}" />
               </DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>

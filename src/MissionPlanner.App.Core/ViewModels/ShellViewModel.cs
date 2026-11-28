@@ -288,7 +288,7 @@ public sealed partial class HelpViewModel() : PageViewModel("Help")
 {
     public bool IsLinux { get; } = OperatingSystem.IsLinux();
 
-    public const string DiscussUrl = "https://discuss.ardupilot.org/t/mission-planner-3-0-rewritten-cross-platform-ui-windows-linux-native-net-10/";
+    public const string DiscussUrl = "https://discuss.ardupilot.org/t/mission-planner-3-0-rewritten-cross-platform-ui-windows-linux-macos-native-net-10/";
     public const string DocsUrl = "https://ardupilot.org/planner/";
     public const string IssuesUrl = "https://github.com/" + MissionPlanner.App.Core.Updates.UpdateCheck.Repository + "/issues";
     public const string ReleasesUrl = "https://github.com/" + MissionPlanner.App.Core.Updates.UpdateCheck.Repository + "/releases";

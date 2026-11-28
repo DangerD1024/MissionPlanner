@@ -64,7 +64,7 @@ public sealed partial class ServoChannelRow : ObservableObject
     {
         _owner = owner;
         Channel = channel;
-        _name = Settings.Instance[$"Servo{channel}_desc"] is { Length: > 0 } d ? d : $"Servo {channel}";
+        _name = Settings.Instance[$"Servo{channel}_desc"] is { Length: > 0 } d ? d : L.Format("Servo {0}", channel);
     }
 
     public int Channel { get; }

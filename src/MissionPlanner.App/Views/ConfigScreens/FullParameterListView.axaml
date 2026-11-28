@@ -26,7 +26,7 @@
     <ProgressBar Height="3" MinHeight="3" CornerRadius="0" IsIndeterminate="True" Background="Transparent"
                  Foreground="{DynamicResource Accent}" IsVisible="{Binding IsBusy}" />
 
-    <Grid Grid.Row="1" ColumnDefinitions="190,*,200">
+    <Grid Grid.Row="1" ColumnDefinitions="190,*,260">
 
       <!-- prefix groups -->
       <Border Background="{DynamicResource Bg1}" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,1,0">
@@ -81,9 +81,9 @@
               </DataGridTemplateColumn.CellEditingTemplate>
             </DataGridTemplateColumn>
 
-            <DataGridTextColumn Header="{l:Tr 'Default'}" Width="76" MinWidth="50" Binding="{Binding DefaultText}" IsReadOnly="True" />
+            <DataGridTextColumn Header="{l:Tr 'Default'}" Width="100" MinWidth="60" Binding="{Binding DefaultText}" IsReadOnly="True" />
 
-            <DataGridTextColumn Header="{l:Tr 'Units'}" Width="70" MinWidth="44" Binding="{Binding Units}" IsReadOnly="True" />
+            <DataGridTextColumn Header="{l:Tr 'Units'}" Width="90" MinWidth="50" Binding="{Binding Units}" IsReadOnly="True" />
 
             <DataGridTemplateColumn Header="{l:Tr 'Options'}" Width="160" MinWidth="100" IsReadOnly="True">
               <DataGridTemplateColumn.CellTemplate>

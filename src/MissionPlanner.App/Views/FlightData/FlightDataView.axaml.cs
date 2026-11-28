@@ -116,34 +116,18 @@ public sealed partial class FlightDataView : UserControl
             },
         };
 
-        // right-click the tab headers: choose which tabs show (Mission Planner's "Customize")
-        // (the headers handle the press themselves, so this listens to handled releases too)
+        // right-click the tab headers, or the gear at their right: choose which tabs show (Mission Planner's
+        // "Customize"); the headers handle the press themselves, so this listens to handled releases too
         DataTabs.AddHandler(PointerReleasedEvent, (_, e) =>
         {
             // only a right click on the tab headers: the tabs' content has its own menus
             if (_vm == null || e.InitialPressMouseButton != MouseButton.Right ||
                 (e.Source as Avalonia.Visual)?.FindAncestorOfType<TabItem>(includeSelf: true) == null)
                 return;
-            var menu = new ContextMenu();
-            var items = new List<Control>();
-            var names = new[] { "Quick", "Actions", "Messages", "PreFlight", "Gauges", "Transponder", "Status", "Servo/Relay",
-                "Aux Function", "Payload", "Telemetry Logs", "DataFlash Logs" };
-            foreach (var tab in Enum.GetValues<FlightDataTab>())
-            {
-                var t = tab;
-                var item = new MenuItem
-                {
-                    Header = L.Tr(names[(int)t]), ToggleType = MenuItemToggleType.CheckBox,
-                    IsChecked = _vm.TabVisible[(int)t], IsEnabled = t != FlightDataTab.Quick,
-                };
-                item.Click += (_, _) => _vm.SetTabVisible(t, !_vm.TabVisible[(int)t]);
-                items.Add(item);
-            }
-
-            menu.ItemsSource = items;
-            menu.Open(DataTabs);
+            ShowTabsMenu(DataTabs);
             e.Handled = true;
         }, Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
+        TabsMenuButton.Click += (_, _) => ShowTabsMenu(TabsMenuButton);
         Map.UserPanned += (_, _) => _vm?.OnUserPanned();
         Map.PointerPositionChanged += (_, p) => _vm?.OnPointerMoved(p.Lat, p.Lng);
         Map.MapContextRequested += OnMapContext;
@@ -358,4 +342,28 @@ public sealed partial class FlightDataView : UserControl
         item.Click += (_, _) => action();
         return item;
     }
+    /// <summary>The tabs with a tick each; unticking hides a tab (Quick always shows). Saved for the next start.</summary>
+    private void ShowTabsMenu(Control placementTarget)
+    {
+        if (_vm == null)
+            return;
+        var names = new[] { "Quick", "Actions", "Messages", "PreFlight", "Gauges", "Transponder", "Status", "Servo/Relay",
+            "Aux Function", "Payload", "Telemetry Logs", "DataFlash Logs" };
+        var items = new List<Control>();
+        foreach (var tab in Enum.GetValues<FlightDataTab>())
+        {
+            var t = tab;
+            var item = new MenuItem
+            {
+                Header = L.Tr(names[(int)t]), ToggleType = MenuItemToggleType.CheckBox,
+                IsChecked = _vm.TabVisible[(int)t], IsEnabled = t != FlightDataTab.Quick,
+            };
+            item.Click += (_, _) => _vm.SetTabVisible(t, !_vm.TabVisible[(int)t]);
+            items.Add(item);
+        }
+
+        var menu = new ContextMenu { ItemsSource = items, PlacementTarget = placementTarget };
+        menu.Open(placementTarget);
+    }
+
 }

@@ -286,6 +286,8 @@ public sealed partial class FlightDataViewModel : PageViewModel
         TabVisible[(int)tab] = visible;
         Settings.Instance[HiddenTabsKey] = string.Join(',',
             Enum.GetValues<FlightDataTab>().Where(t => !TabVisible[(int)t]).Select(t => t.ToString()));
+        // written at once: the choice survives the next start even if the app does not close normally
+        Settings.Instance.Save();
         if (!visible && SelectedTabIndex == (int)tab)
             SelectedTabIndex = (int)FlightDataTab.Quick;
     }

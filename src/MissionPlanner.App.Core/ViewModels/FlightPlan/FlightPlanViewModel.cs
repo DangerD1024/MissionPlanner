@@ -208,16 +208,16 @@ public sealed partial class FlightPlanViewModel : PageViewModel
     // ---- readouts (top-left of the map) ------------------------------------------------------
 
     [ObservableProperty]
-    private string _distanceText = "Distance: 0 m";
+    private string _distanceText = L.Format("Distance: {0}", "0 m");
 
     [ObservableProperty]
-    private string _prevText = "Prev: -";
+    private string _prevText = L.Tr("Prev: -");
 
     [ObservableProperty]
-    private string _homeDistanceText = "Home: -";
+    private string _homeDistanceText = L.Tr("Home: -");
 
     [ObservableProperty]
-    private string _terrainText = "Terrain: -";
+    private string _terrainText = L.Tr("Terrain: -");
 
     [ObservableProperty]
     private string _pointerText = "";
@@ -691,14 +691,14 @@ public sealed partial class FlightPlanViewModel : PageViewModel
         {
             var d = PlanGeometry.Distance(last, position);
             var az = PlanGeometry.Bearing(last, position);
-            PrevText = $"Prev: {MissionEditing.FormatDistance(d)}  AZ: {az.ToString("0", inv)}°";
+            PrevText = L.Format("Prev: {0}  AZ: {1}°", MissionEditing.FormatDistance(d), az.ToString("0", inv));
         }
         else
         {
-            PrevText = "Prev: -";
+            PrevText = L.Tr("Prev: -");
         }
 
-        HomeDistanceText = Home is { } h ? "Home: " + MissionEditing.FormatDistance(PlanGeometry.Distance(h, position)) : "Home: -";
+        HomeDistanceText = Home is { } h ? L.Format("Home: {0}", MissionEditing.FormatDistance(PlanGeometry.Distance(h, position))) : L.Tr("Home: -");
         RequestTerrain(position);
     }
 
@@ -721,7 +721,7 @@ public sealed partial class FlightPlanViewModel : PageViewModel
                     p = _terrainWanted;
 
                 var alt = TerrainLookup(p.Lat, p.Lng);
-                var text = alt is { } a ? $"Terrain: {a.ToString("0", CultureInfo.InvariantCulture)} m" : "Terrain: loading…";
+                var text = alt is { } a ? L.Format("Terrain: {0} m", a.ToString("0", CultureInfo.InvariantCulture)) : L.Tr("Terrain: loading…");
                 Services.Dispatcher.Post(() => TerrainText = text);
 
                 lock (_terrainGate)
@@ -1092,7 +1092,7 @@ public sealed partial class FlightPlanViewModel : PageViewModel
         MissionGeometry = PlanGeometry.ForMission(Home, Store.Mission, Store.WaypointRadius, Store.LoiterRadius);
         FenceGeometry = PlanGeometry.ForFence(Home, Store.Fence);
         RallyGeometry = PlanGeometry.ForRally(Store.Rally);
-        DistanceText = "Distance: " + MissionEditing.FormatDistance(MissionGeometry.TotalDistance);
+        DistanceText = L.Format("Distance: {0}", MissionEditing.FormatDistance(MissionGeometry.TotalDistance));
         OnPropertyChanged(nameof(CurrentGeometry));
         MapChanged?.Invoke(this, EventArgs.Empty);
     }

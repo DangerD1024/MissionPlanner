@@ -363,7 +363,7 @@ public sealed partial class UpdateViewModel : ObservableObject
             {
                 Available = null;
                 IsBannerVisible = false;
-                StatusText = $"You have the latest version ({CurrentVersion}).";
+                StatusText = L.Format("You have the latest version ({0}).", CurrentVersion);
                 return;
             }
 

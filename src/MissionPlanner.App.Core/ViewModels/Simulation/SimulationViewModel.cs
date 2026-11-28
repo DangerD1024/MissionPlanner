@@ -91,7 +91,7 @@ public sealed partial class SimulationViewModel : PageViewModel
 
     public string SitlDir { get; }
 
-    public string HostText => "Simulator build: " + SitlPlatform.Describe(Host);
+    public string HostText => L.Format("Simulator build: {0}", SitlPlatform.Describe(Host));
 
     public bool IsSupported => Host != SitlHost.Unsupported;
 

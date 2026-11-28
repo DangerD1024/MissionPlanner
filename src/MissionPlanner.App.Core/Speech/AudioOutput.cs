@@ -305,7 +305,6 @@ public sealed class ProcessAudioPlayer(string fileName, IReadOnlyList<string> ar
 [SupportedOSPlatform("windows")]
 public sealed class WinMmAudioPlayer : IAudioPlayer
 {
-    private const uint SndAsync = 0x0001;
     private const uint SndNoDefault = 0x0002;
     private const uint SndMemory = 0x0004;
 
@@ -313,37 +312,73 @@ public sealed class WinMmAudioPlayer : IAudioPlayer
 
     public IPlayback Play(byte[] wav, TimeSpan duration)
     {
+        // Played synchronously on a thread of its own: PlaySound then returns when the device has really
+        // played the last sample. The asynchronous form reports no end, and stopping it after the audio's
+        // length cut the end of each sentence on devices that start late (Bluetooth, USB headsets).
         var pin = GCHandle.Alloc(wav, GCHandleType.Pinned);
-        if (!PlaySound(pin.AddrOfPinnedObject(), IntPtr.Zero, SndMemory | SndAsync | SndNoDefault))
+        var playing = new Playing(pin);
+        var thread = new Thread(() =>
         {
-            pin.Free();
-            throw new IOException("Windows could not play the sound (PlaySound failed).");
-        }
-
-        return new Playing(pin, duration);
+            try
+            {
+                playing.Ok = PlaySound(pin.AddrOfPinnedObject(), IntPtr.Zero, SndMemory | SndNoDefault);
+            }
+            finally
+            {
+                playing.Finished.Set();
+            }
+        })
+        {
+            IsBackground = true,
+            Name = "speech playback",
+        };
+        thread.Start();
+        return playing;
     }
 
     [DllImport("winmm.dll", EntryPoint = "PlaySoundW", SetLastError = true)]
     private static extern bool PlaySound(IntPtr sound, IntPtr module, uint flags);
 
-    private sealed class Playing(GCHandle pin, TimeSpan duration) : IPlayback
+    private sealed class Playing(GCHandle pin) : IPlayback
     {
-        private int _done;
+        private int _freed;
+
+        public ManualResetEventSlim Finished { get; } = new();
+
+        public bool Ok { get; set; }
 
         public void Wait(CancellationToken cancel)
         {
-            // PlaySound reports no end: wait for the audio's length, then make sure it has stopped before
-            // the buffer is released
-            cancel.WaitHandle.WaitOne(duration + TimeSpan.FromMilliseconds(120));
-            Stop();
+            try
+            {
+                Finished.Wait(cancel);
+            }
+            catch (OperationCanceledException)
+            {
+                Stop();
+                return;
+            }
+
+            Free();
         }
+
+        /// <summary>PlaySound refused the sound (no audio device): the next player may be tried.</summary>
+        public bool Failed => Finished.IsSet && !Ok;
 
         public void Stop()
         {
-            if (Interlocked.Exchange(ref _done, 1) == 1)
-                return;
-            PlaySound(IntPtr.Zero, IntPtr.Zero, 0);
-            pin.Free();
+            // a null sound stops the one playing, which ends the synchronous call on the playback thread
+            if (!Finished.IsSet)
+                PlaySound(IntPtr.Zero, IntPtr.Zero, 0);
+            Finished.Wait(TimeSpan.FromSeconds(2));
+            Free();
+        }
+
+        // the buffer stays pinned until PlaySound has returned
+        private void Free()
+        {
+            if (Finished.IsSet && Interlocked.Exchange(ref _freed, 1) == 0)
+                pin.Free();
         }
     }
 }

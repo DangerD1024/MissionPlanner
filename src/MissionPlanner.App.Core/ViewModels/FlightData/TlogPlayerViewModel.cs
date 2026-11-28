@@ -107,7 +107,7 @@ public sealed partial class TlogPlayerViewModel : PageViewModel
     private string _logClockText = "";
 
     [ObservableProperty]
-    private string _statusText = IdleText;
+    private string _statusText = L.Tr(IdleText);
 
     [ObservableProperty]
     private bool _statusIsError;
@@ -177,7 +177,7 @@ public sealed partial class TlogPlayerViewModel : PageViewModel
         FileName = "";
         FilePath = "";
         DetailsText = "";
-        SetStatus(IdleText);
+        SetStatus(L.Tr(IdleText));
         Refresh();
     }
 

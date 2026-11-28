@@ -37,7 +37,7 @@
           <StackPanel Spacing="4">
             <TextBlock Classes="muted" Text="{l:Tr 'GIMBAL ANGLES'}" FontSize="11" FontWeight="Bold" />
             <Grid ColumnDefinitions="*,Auto" Margin="0,6,0,0">
-              <TextBlock Text="Roll" VerticalAlignment="Center" />
+              <TextBlock Text="{l:Tr 'Roll'}" VerticalAlignment="Center" />
               <TextBlock Grid.Column="1" Classes="h1" FontSize="22" Text="{Binding RollText}" />
             </Grid>
             <Grid ColumnDefinitions="*,Auto">

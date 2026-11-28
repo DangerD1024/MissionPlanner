@@ -139,13 +139,13 @@ public sealed partial class TransponderViewModel : PageViewModel
     /// <summary>IDENT works without a uAvionix status too (DO_ADSB_OUT_IDENT).</summary>
     public bool CanIdent => _commands.IsConnected;
 
-    public string LinkText => Link switch
+    public string LinkText => L.Tr(Link switch
     {
         TransponderLink.Connected => "Transponder connected",
         TransponderLink.Lost => "Transponder status lost",
         TransponderLink.Offline => "Transponder offline",
         _ => "Connect to transponder",
-    };
+    });
 
     [ObservableProperty]
     private bool _modeA;

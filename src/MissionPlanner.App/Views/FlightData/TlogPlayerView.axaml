@@ -13,15 +13,16 @@
 
   <UserControl.Styles>
     <!-- filled transport glyphs in the button's text colour -->
+    <!-- the content presenter's colour, which greys out with a disabled button (the button's own does not) -->
     <Style Selector="Path.glyph">
-      <Setter Property="Fill" Value="{Binding $parent[Button].Foreground}" />
-      <Setter Property="Width" Value="16" />
-      <Setter Property="Height" Value="16" />
+      <Setter Property="Fill" Value="{Binding $self.(TextElement.Foreground)}" />
+      <Setter Property="Width" Value="12" />
+      <Setter Property="Height" Value="12" />
       <Setter Property="Stretch" Value="Uniform" />
       <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
     <Style Selector="Button.transport">
-      <Setter Property="Height" Value="40" />
+      <Setter Property="Height" Value="32" />
       <Setter Property="HorizontalAlignment" Value="Stretch" />
       <Setter Property="HorizontalContentAlignment" Value="Center" />
       <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -64,10 +65,11 @@
 
       <!-- the file -->
       <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-        <Button Classes="accent" Command="{Binding LoadLogCommand}" Height="40" Padding="14,0"
+        <Button Classes="accent" Command="{Binding LoadLogCommand}" Height="32" Padding="12,0"
                 VerticalContentAlignment="Center" ToolTip.Tip="{l:Tr 'Open a telemetry log (.tlog) and play it'}">
           <StackPanel Orientation="Horizontal" Spacing="6">
-            <Path Classes="icon" Data="{StaticResource IconFolder}" Width="20" Height="20" Stretch="Uniform" />
+            <Path Classes="icon" Data="{StaticResource IconFolder}" Width="16" Height="16" Stretch="Uniform"
+                  Stroke="{Binding $self.(TextElement.Foreground)}" />
             <TextBlock Text="{l:Tr 'Load Log'}" VerticalAlignment="Center" FontWeight="SemiBold" />
           </StackPanel>
         </Button>

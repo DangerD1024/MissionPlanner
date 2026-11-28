@@ -338,7 +338,7 @@ public abstract partial class FriendlyParamsViewModel : PageViewModel
     {
         get
         {
-            var s = VisibleItems.Count == _all.Count ? $"{_all.Count} parameters" : $"{VisibleItems.Count} of {_all.Count} parameters";
+            var s = VisibleItems.Count == _all.Count ? L.Format("{0} parameters", _all.Count) : L.Format("{0} of {1} parameters", VisibleItems.Count, _all.Count);
             if (_edits.Count > 0)
                 s += $" · {_edits.Count} unsaved";
             return s;

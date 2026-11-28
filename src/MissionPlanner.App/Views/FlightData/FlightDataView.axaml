@@ -27,6 +27,20 @@
     <Style Selector="TabControl.fd">
       <Setter Property="Padding" Value="0" />
     </Style>
+    <!-- room on the right of the tab headers for the gear button -->
+    <Style Selector="TabControl.fd /template/ ItemsPresenter#PART_ItemsPresenter">
+      <Setter Property="Margin" Value="0,0,30,0" />
+    </Style>
+    <Style Selector="Button.tabsgear">
+      <Setter Property="Width" Value="28" />
+      <Setter Property="Height" Value="28" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0,3,2,0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
+    </Style>
     <Style Selector="TabControl.fd > TabItem">
       <Setter Property="FontSize" Value="12.5" />
       <Setter Property="FontWeight" Value="SemiBold" />
@@ -83,7 +97,8 @@
         </Panel>
       </Border>
 
-      <TabControl Grid.Row="1" Classes="fd" SelectedIndex="{Binding SelectedTabIndex}" x:Name="DataTabs">
+      <Panel Grid.Row="1">
+      <TabControl Classes="fd" SelectedIndex="{Binding SelectedTabIndex}" x:Name="DataTabs">
         <TabItem Header="{l:Tr 'Quick'}" IsVisible="{Binding TabVisible[0]}">
           <views:FlightDataQuick />
         </TabItem>
@@ -128,6 +143,13 @@
           </StackPanel>
         </TabItem>
       </TabControl>
+        <!-- which tabs show: the same menu as a right click on the tab headers (saved) -->
+        <Button x:Name="TabsMenuButton" Classes="tabsgear" HorizontalAlignment="Right" VerticalAlignment="Top"
+                ToolTip.Tip="{l:Tr 'Show or hide tabs'}">
+          <Path Data="{StaticResource IconGear}" Width="15" Height="15" Stretch="Uniform"
+                Fill="{Binding $self.(TextElement.Foreground)}" />
+        </Button>
+      </Panel>
     </Grid>
 
     <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="{DynamicResource Line}" />

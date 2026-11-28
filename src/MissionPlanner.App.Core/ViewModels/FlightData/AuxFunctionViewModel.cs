@@ -156,7 +156,7 @@ public sealed partial class AuxFunctionViewModel : PageViewModel
         if (fromVehicle.Count > 0)
         {
             _fromVehicleDocs = true;
-            Apply(fromVehicle, "Functions from the vehicle's parameter documentation (RCn_OPTION).");
+            Apply(fromVehicle, L.Tr("Functions from the vehicle's parameter documentation (RCn_OPTION)."));
             return;
         }
 

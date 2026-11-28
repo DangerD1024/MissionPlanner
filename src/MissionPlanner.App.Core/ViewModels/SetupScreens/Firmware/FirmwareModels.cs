@@ -23,7 +23,7 @@ public sealed partial class VehicleTile : ObservableObject
     /// <summary>Key of the tile's drawing in the view ("copter", "plane"...).</summary>
     public string Icon { get; }
 
-    [ObservableProperty] private string _versionText = "loading…";
+    [ObservableProperty] private string _versionText = L.Tr("loading…");
 
     [ObservableProperty] private bool _isAvailable;
 
@@ -33,7 +33,7 @@ public sealed partial class VehicleTile : ObservableObject
     {
         Newest = catalog?.Newest(Type, release);
         IsAvailable = Newest != null;
-        VersionText = catalog == null ? "loading…" : Newest == null ? "not available" : FirmwareCatalog.VersionLabel(Newest);
+        VersionText = catalog == null ? L.Tr("loading…") : Newest == null ? L.Tr("not available") : FirmwareCatalog.VersionLabel(Newest);
     }
 
     /// <summary>The six vehicle types Mission Planner offers.</summary>

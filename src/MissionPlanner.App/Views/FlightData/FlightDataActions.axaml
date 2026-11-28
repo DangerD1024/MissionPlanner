@@ -59,7 +59,7 @@
         </Grid>
 
         <Grid ColumnDefinitions="*,120" ColumnSpacing="6" RowDefinitions="Auto,Auto">
-          <TextBlock Classes="caption" Text="{Binding AltitudeUnit, StringFormat='Altitude ({0})'}" />
+          <TextBlock Classes="caption" Text="{Binding AltitudeCaption}" />
           <NumericUpDown Grid.Row="1" Value="{Binding NewAltitude}" Minimum="-1000" Maximum="100000" Increment="5"
                          FormatString="0.#" />
           <Button Grid.Row="1" Grid.Column="1" Content="{l:Tr 'Change Alt'}" Classes="accent" Command="{Binding ChangeAltitudeCommand}"
@@ -67,7 +67,7 @@
         </Grid>
 
         <Grid ColumnDefinitions="*,120" ColumnSpacing="6" RowDefinitions="Auto,Auto">
-          <TextBlock Classes="caption" Text="{Binding SpeedUnit, StringFormat='Speed ({0})'}" />
+          <TextBlock Classes="caption" Text="{Binding SpeedCaption}" />
           <NumericUpDown Grid.Row="1" Value="{Binding NewSpeed}" Minimum="0" Maximum="1000" Increment="1" FormatString="0.#" />
           <Button Grid.Row="1" Grid.Column="1" Content="{l:Tr 'Change Speed'}" Classes="accent" Command="{Binding ChangeSpeedCommand}"
                   IsEnabled="{Binding CanCommand}" />
